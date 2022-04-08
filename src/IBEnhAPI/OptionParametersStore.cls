@@ -35,18 +35,9 @@ Option Explicit
 '@================================================================================
 
 Public Type IndexEntry
-'    StartIndex          As Long
-'    EndIndex            As Long
-'    NumberOfEntries     As Long
     ExpiriesBuilder     As ExpiriesBuilder
     StrikesBuilder      As StrikesBuilder
 End Type
-
-'Private Type ParameterEntry
-'    Next                As Long
-'    Expiry              As String
-'    Strike              As Double
-'End Type
 
 '@================================================================================
 ' Constants
@@ -64,12 +55,7 @@ Private mStrikesBuilder                             As New StrikesBuilder
 Private mExpiriesIndex                              As SortedDictionary
 Private mStrikesIndex                               As SortedDictionary
 
-'Private mParameters()                               As ParameterEntry
-'Private mParametersNextIndex                        As Long
-
-Private mIsComplete                                   As Boolean
-
-Private mCacheDate                                  As Date
+Private mIsComplete                                 As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -78,8 +64,6 @@ Private mCacheDate                                  As Date
 Private Sub Class_Initialize()
 Set mExpiriesIndex = CreateSortedDictionary(KeyTypeString)
 Set mStrikesIndex = CreateSortedDictionary(KeyTypeFloat)
-'ReDim mParameters(127) As ParameterEntry
-mCacheDate = Now
 End Sub
 
 '@================================================================================
@@ -96,10 +80,6 @@ End Sub
 
 Friend Property Get IsComplete() As Boolean
 IsComplete = mIsComplete
-End Property
-
-Friend Property Get IsExpired() As Boolean
-IsExpired = gIsCacheEntryExpired(mCacheDate)
 End Property
 
 '@================================================================================
@@ -131,12 +111,10 @@ Assert Not mIsComplete, "Parameters store already complete"
 
 Dim lStrikeIndexEntry As IndexEntry
 getIndexEntry mStrikesIndex, pStrike, lStrikeIndexEntry, True
-'addEntryToList lStrikeIndexEntry, pStrike, pExpiry
 lStrikeIndexEntry.ExpiriesBuilder.Add pExpiry
 
 Dim lExpiryIndexEntry As IndexEntry
 getIndexEntry mExpiriesIndex, pExpiry, lExpiryIndexEntry, False
-'addEntryToList lStrikeIndexEntry, pStrike, pExpiry
 lExpiryIndexEntry.StrikesBuilder.Add pStrike
 
 Exit Sub
@@ -229,36 +207,6 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-'Private Sub addEntryToList( _
-'                ByRef pIndexEntry As IndexEntry, _
-'                ByVal pStrike As Double, _
-'                ByVal pExpiry As String)
-'Const ProcName As String = "addEntryToList"
-'On Error GoTo Err
-'
-'Dim lNewEntryIndex As Long: lNewEntryIndex = allocateEntry
-'mParameters(pIndexEntry.EndIndex).Next = lNewEntryIndex
-'pIndexEntry.EndIndex = lNewEntryIndex
-'
-'mParameters(lNewEntryIndex).Expiry = pExpiry
-'mParameters(lNewEntryIndex).Strike = pStrike
-'
-'pIndexEntry.NumberOfEntries = pIndexEntry.NumberOfEntries + 1
-'
-'Exit Sub
-'
-'Err:
-'gHandleUnexpectedError ProcName, ModuleName
-'End Sub
-
-'Private Function allocateEntry() As Long
-'If mParametersNextIndex > UBound(mParameters) Then
-'    ReDim Preserve mParameters(2 * (UBound(mParameters) + 1) - 1) As ParameterEntry
-'End If
-'allocateEntry = mParametersNextIndex
-'mParametersNextIndex = mParametersNextIndex + 1
-'End Function
-
 Private Sub getIndexEntry( _
                 ByRef pIndexDict As SortedDictionary, _
                 ByVal pKey As Variant, _
@@ -275,11 +223,6 @@ Private Sub InitialiseHeader( _
                 ByVal pForExpiries As Boolean)
 Const ProcName As String = "InitialiseHeader"
 On Error GoTo Err
-
-'pHeader.StartIndex = allocateEntry
-'mParameters(pHeader.StartIndex).Next = NullIndex
-
-'pHeader.EndIndex = pHeader.StartIndex
 
 If pForExpiries Then
     Set pHeader.ExpiriesBuilder = New ExpiriesBuilder

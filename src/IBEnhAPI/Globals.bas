@@ -288,13 +288,17 @@ Public Function gFetchOptionExpiries( _
 Const ProcName As String = "gFetchOptionExpiries"
 On Error GoTo Err
 
-Dim lFetchTask As New OptionParametersRequestTask
-lFetchTask.Initialise pContractRequester, pContractCache, pUnderlyingContractSpecifier, OptionParameterTypeExpiries, pExchange, "", pStrike, pCookie
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching option expiries for", ModuleName, ProcName, pUnderlyingContractSpecifier.ToString, LogLevelDetail
-
-StartTask lFetchTask, PriorityLow
-
-Set gFetchOptionExpiries = lFetchTask.Future
+Dim lFetcher As New OptionParametersRequester
+Set gFetchOptionExpiries = lFetcher.Fetch( _
+                                        pContractRequester, _
+                                        pContractCache, _
+                                        pUnderlyingContractSpecifier, _
+                                        OptionParameterTypeExpiries, _
+                                        pExchange, _
+                                        "", _
+                                        pStrike, _
+                                        pCookie)
 
 Exit Function
 
@@ -312,13 +316,17 @@ Public Function gFetchOptionStrikes( _
 Const ProcName As String = "gFetchOptionStrikes"
 On Error GoTo Err
 
-Dim lFetchTask As New OptionParametersRequestTask
-lFetchTask.Initialise pContractRequester, pContractCache, pUnderlyingContractSpecifier, OptionParameterTypeStrikes, pExchange, pExpiry, 0#, pCookie
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching option strikes for", ModuleName, ProcName, pUnderlyingContractSpecifier.ToString, LogLevelDetail
-
-StartTask lFetchTask, PriorityLow
-
-Set gFetchOptionStrikes = lFetchTask.Future
+Dim lFetcher As New OptionParametersRequester
+Set gFetchOptionStrikes = lFetcher.Fetch( _
+                                        pContractRequester, _
+                                        pContractCache, _
+                                        pUnderlyingContractSpecifier, _
+                                        OptionParameterTypeStrikes, _
+                                        pExchange, _
+                                        pExpiry, _
+                                        0#, _
+                                        pCookie)
 
 Exit Function
 
@@ -373,7 +381,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+'UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 Public Function gGetSessionTimes(ByVal pSessionTimesString As String) As SessionTimes
@@ -574,7 +582,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
-    gOrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
+    gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
     gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)

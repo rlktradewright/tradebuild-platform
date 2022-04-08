@@ -392,6 +392,12 @@ lDateExpiry = lMatch.SubMatches(5)
 Dim lRelativeExpiry As String
 lRelativeExpiry = lMatch.SubMatches(6)
 
+AssertArgument (lDateExpiry = "" And lRelativeExpiry = "") Or _
+                lSecType = SecTypeFuture Or _
+                lSecType = SecTypeFuturesOption Or _
+                lSecType = SecTypeOption Or _
+                lSecType = SecTypeNone, _
+                lSecTypeStr & " contracts cannot have an expiry specification"
 AssertArgument lDateExpiry = "" Or lRelativeExpiry = "", "Supplying both date-based and relative expiry is not permitted"
 
 Dim lExchange As String
@@ -592,6 +598,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function gGetCurrentQuarterExpiry() As String
+Dim year As Long: year = DatePart("yyyy", Now)
+Dim quarter As Long: quarter = (Int((DatePart("m", Now) + 2) / 3)) * 3
+gGetCurrentQuarterExpiry = CStr(year) & Format(quarter, "00")
+End Function
+
 Public Function gGetNextQuarterExpiry() As String
 Dim year As Long: year = DatePart("yyyy", Now)
 Dim nextQuarter As Long: nextQuarter = (Int((DatePart("m", Now) + 2) / 3) + 1) * 3
@@ -688,7 +700,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+'UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 Public Function gIsContractExpired(ByVal pContract As IContract) As Boolean
@@ -1261,6 +1273,7 @@ addExchangeCode "LAVA"
 addExchangeCode "LIFFE"
 addExchangeCode "LIFFE_NF"
 addExchangeCode "LSE"
+addExchangeCode "LSEETF"
 addExchangeCode "LSEIOB1"
 addExchangeCode "LSSF"
 addExchangeCode "LTSE"

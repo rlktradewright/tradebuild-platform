@@ -63,10 +63,10 @@ Private mTwsContracts                               As EnumerableCollection
 
 Private mContractCache                              As ContractCache
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
-
-Private mTwsRequestId                               As Long
+Private WithEvents mCachedContractsFutureWaiter     As FutureWaiter
+Attribute mCachedContractsFutureWaiter.VB_VarHelpID = -1
+Private WithEvents mRulesetFutureWaiter             As FutureWaiter
+Attribute mRulesetFutureWaiter.VB_VarHelpID = -1
 
 Private mCancelled                                  As Boolean
 
@@ -78,13 +78,21 @@ Private mNumberOfUnresolvedContracts                As Long
 
 Private mReturnTwsContracts                         As Boolean
 
+Private mSelfRef                                    As Object
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mFutureWaiter = New FutureWaiter
-mTwsRequestId = NullIndex
+Set mSelfRef = Me
+Set mCachedContractsFutureWaiter = New FutureWaiter
+Set mRulesetFutureWaiter = New FutureWaiter
+End Sub
+
+Private Sub Class_Terminate()
+Const ProcName As String = "Class_Terminate"
+gLogger.Log "ContractsFetcher terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
 End Sub
 
 '@================================================================================
@@ -95,13 +103,7 @@ Private Sub IContractDetailsConsumer_EndContracts(ByVal pRequestId As Long)
 Const ProcName As String = "IContractDetailsConsumer_EndContracts"
 On Error GoTo Err
 
-gLogger.Log "End contracts notified", ProcName, ModuleName, LogLevelDetail
-
-If mTwsRequestId = NullIndex Then
-    ' there must have been a cancellation before the EndContracts
-    ' notification was received
-    Exit Sub
-End If
+gLogger.Log "End contracts notified for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
 
 mFinishedRetrieval = True
 mTaskContext.Continue
@@ -121,7 +123,26 @@ Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
 gLogger.Log "Contract notified: " & pTwsContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
-processTwsContract pTwsContract
+
+If Not IsValidExchangeCode(pTwsContract.Specifier.Exchange) Then
+    gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pTwsContract.Specifier.Exchange, pModName:=ModuleName, pProcName:=ProcName
+    Exit Sub
+End If
+    
+Dim lContract As IContract
+Set lContract = gTwsContractToContract(pTwsContract)
+
+If Not mContractsForCachingBuilder.Contracts.Contains(lContract.Specifier) Then
+    addCacheEntries lContract, pTwsContract
+    mTwsContracts.Add pTwsContract
+    mContractsForCachingBuilder.Add lContract
+    processPriceIncrementRuleset lContract, pTwsContract
+
+    If Not mCancelled Then
+        If mReturnTwsContracts Then mRequestManager.NotifyTwsContract pTwsContract
+    End If
+
+End If
 
 Exit Sub
 
@@ -133,14 +154,13 @@ Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal
 Const ProcName As String = "IContractDetailsConsumer_NotifyError"
 On Error GoTo Err
 
-gLogger.Log "Error notified: " & pErrorCode & ": " & pErrorMsg, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Error notified for: " & mContractSpecifier.ToString & _
+            "; (" & pErrorCode & ") " & pErrorMsg, ProcName, ModuleName, LogLevelDetail
 
-mContractsForCachingFutureBuilder.Fail pErrorCode, pErrorMsg, ProcName
+If Not mCancelled And pErrorCode <> 200 Then mRequestManager.NotifyFetchError Me, pErrorCode, pErrorMsg
 
-mTwsRequestId = NullIndex
-
-mRequestManager.NotifyFetchError Me, pErrorCode, pErrorMsg
-mTaskContext.Finish Empty, False
+mFinishedRetrieval = True
+mTaskContext.Continue
 
 Exit Sub
 
@@ -161,7 +181,6 @@ End Sub
 '@================================================================================
 
 Private Sub ITask_Cancel()
-Cancel
 End Sub
 
 Private Sub ITask_Run()
@@ -179,18 +198,17 @@ If mFromCache Then
     Static sTwsContractsEn As Enumerator
     
     Dim lDone As Boolean
-
     If Not mReturnTwsContracts Then
         If sContractsEn Is Nothing Then Set sContractsEn = mCachedContracts.Enumerator
         If sContractsEn.MoveNext Then
-            mRequestManager.NotifyContract sContractsEn.Current
+            If Not mCancelled Then mRequestManager.NotifyContract sContractsEn.Current
         Else
             lDone = True
         End If
     Else
         If sTwsContractsEn Is Nothing Then Set sTwsContractsEn = mTwsContracts.Enumerator
         If sTwsContractsEn.MoveNext Then
-            mRequestManager.NotifyTwsContract sTwsContractsEn.Current
+            If Not mCancelled Then mRequestManager.NotifyTwsContract sTwsContractsEn.Current
         Else
             lDone = True
         End If
@@ -198,22 +216,24 @@ If mFromCache Then
     
     If lDone Then
         gLog "Finished fetching cached contract details for", ModuleName, ProcName, mContractSpecifier.ToString, LogLevelDetail
+        If Not mCancelled Then mRequestManager.NotifyFetchCompleted Me
         mTaskContext.Finish Empty, False
-        mRequestManager.NotifyFetchCompleted Me
+        Set mSelfRef = Nothing
     End If
 Else
     Dim lContractsEn As Enumerator
     Set lContractsEn = mResolvedContracts.Enumerator
     
     If lContractsEn.MoveNext Then
-        mRequestManager.NotifyContract lContractsEn.Current
+        If Not mCancelled Then mRequestManager.NotifyContract lContractsEn.Current
         lContractsEn.Remove
     ElseIf mFinishedRetrieval And mNumberOfUnresolvedContracts = 0 Then
-        gLog "Finished fetching contract details from IBAPI for", ModuleName, ProcName, mContractSpecifier.ToString, LogLevelDetail
-        mTaskContext.Finish Empty, False
         mContractsForCachingFutureBuilder.Value = mContractsForCachingBuilder.Contracts
         mContractsForCachingFutureBuilder.Complete
-        mRequestManager.NotifyFetchCompleted Me
+        gLog "Finished fetching contract details from IBAPI for", ModuleName, ProcName, mContractSpecifier.ToString, LogLevelDetail
+        If Not mCancelled Then mRequestManager.NotifyFetchCompleted Me
+        mTaskContext.Finish Empty, False
+        Set mSelfRef = Nothing
     Else
         mTaskContext.Suspend -1
     End If
@@ -234,11 +254,38 @@ ITask_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
-' mFutureWaiter Event Handlers
+' mCachedContractsFutureWaiter Event Handlers
 '@================================================================================
 
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
+Private Sub mCachedContractsFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mCachedContractsFutureWaiter_WaitCompleted"
+On Error GoTo Err
+
+If ev.Future.IsFaulted Then
+    mRequestManager.NotifyFetchError Me, ev.Future.ErrorNumber, ev.Future.ErrorMessage
+    Exit Sub
+End If
+
+If ev.Future.IsCancelled Then Exit Sub
+If mCancelled Then Exit Sub
+
+Set mCachedContracts = ev.Future.Value
+mFromCache = True
+gLogger.Log "Await completed for " & mCachedContracts.Count & " cached contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+StartTask Me, PriorityNormal
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mRulesetFutureWaiter Event Handlers
+'@================================================================================
+
+Private Sub mRulesetFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mRulesetFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsFaulted Then
@@ -248,19 +295,12 @@ End If
 
 If ev.Future.IsCancelled Then Exit Sub
 
-If TypeOf ev.Future.Value Is PriceIncrementRuleset Then
-    Dim lContract As IContract
-    Set lContract = ev.ContinuationData
-    gLogger.Log "Resolved contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
-    mResolvedContracts.Add lContract
-    mNumberOfUnresolvedContracts = mNumberOfUnresolvedContracts - 1
-    mTaskContext.Continue
-Else
-    Set mCachedContracts = ev.Future.Value
-    mFromCache = True
-    gLogger.Log "Await completed for " & mCachedContracts.Count & " cached contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-    StartTask Me, PriorityNormal
-End If
+Dim lContract As IContract
+Set lContract = ev.ContinuationData
+gLogger.Log "Resolved contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+mResolvedContracts.Add lContract
+mNumberOfUnresolvedContracts = mNumberOfUnresolvedContracts - 1
+mTaskContext.Continue
 
 Exit Sub
 
@@ -281,10 +321,7 @@ Const ProcName As String = "Cancel"
 On Error GoTo Err
 
 mCancelled = True
-If mTwsRequestId <> NullIndex Then
-    mContractRequester.CancelRequest mTwsRequestId
-    mTwsRequestId = NullIndex
-End If
+gLogger.Log "Request cancelled for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 
@@ -322,7 +359,7 @@ ElseIf mContractCache.GetContractsFutureBuilder( _
                                     lCachedContractsFutureBuilder, _
                                     mTwsContracts) Then
     gLog "Awaiting cached contract details for", ModuleName, ProcName, mContractSpecifier.ToString, LogLevelDetail
-    mFutureWaiter.Add lCachedContractsFutureBuilder.Future
+    mCachedContractsFutureWaiter.Add lCachedContractsFutureBuilder.Future
 Else
     gLog "Fetching contract details from IBAPI for", ModuleName, ProcName, mContractSpecifier.ToString, LogLevelDetail
     Set mResolvedContracts = New EnumerableCollection
@@ -415,7 +452,7 @@ mContractsForCachingBuilder.ContractSpecifier = pContractSpec
 
 mContractCache.SetContractsFutureBuilder pContractSpec, mContractsForCachingFutureBuilder, mTwsContracts
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Request contract details for", ModuleName, ProcName, pContractSpec.ToString, LogLevelDetail
-mTwsRequestId = mContractRequester.RequestContractDetails(pContractSpec, Me)
+mContractRequester.RequestContractDetails pContractSpec, Me
 
 StartTask Me, PriorityNormal
 
@@ -453,36 +490,7 @@ If lRulesetFuture.IsAvailable Then
 Else
     gLogger.Log "Unresolved contract: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
     mNumberOfUnresolvedContracts = mNumberOfUnresolvedContracts + 1
-    mFutureWaiter.Add lRulesetFuture, CVar(pContract)
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processTwsContract( _
-                ByVal pTwsContract As TwsContract)
-Const ProcName As String = "processTwsContract"
-On Error GoTo Err
-
-If mCancelled Then Exit Sub
-
-If Not IsValidExchangeCode(pTwsContract.Specifier.Exchange) Then
-    gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pTwsContract.Specifier.Exchange, pModName:=ModuleName, pProcName:=ProcName
-    Exit Sub
-End If
-    
-Dim lContract As IContract
-Set lContract = gTwsContractToContract(pTwsContract)
-
-If Not mContractsForCachingBuilder.Contracts.Contains(lContract.Specifier) Then
-    addCacheEntries lContract, pTwsContract
-    mTwsContracts.Add pTwsContract
-    If mReturnTwsContracts Then mRequestManager.NotifyTwsContract pTwsContract
-    mContractsForCachingBuilder.Add lContract
-    processPriceIncrementRuleset lContract, pTwsContract
+    mRulesetFutureWaiter.Add lRulesetFuture, CVar(pContract)
 End If
 
 Exit Sub

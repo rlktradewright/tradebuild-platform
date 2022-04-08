@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "OptionParametersRequestTask"
+Attribute VB_Name = "OptionParametersRequester"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -23,7 +23,6 @@ Option Explicit
 '@================================================================================
 
 Implements IContractDetailsConsumer
-Implements ITask
 
 '@================================================================================
 ' Events
@@ -41,7 +40,7 @@ Implements ITask
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "OptionParametersRequestTask"
+Private Const ModuleName                            As String = "OptionParametersRequester"
 
 '@================================================================================
 ' Member variables
@@ -50,8 +49,6 @@ Private Const ModuleName                            As String = "OptionParameter
 Private mContractSpecifier                          As IContractSpecifier
 Private mContractRequester                          As ContractsTwsRequester
 
-Private mTaskContext                                As TaskContext
-
 Private mContractCache                              As ContractCache
 
 Private mCookie                                     As Variant
@@ -59,19 +56,31 @@ Private mCookie                                     As Variant
 Private mRequestType                                As OptionParameterTypes
 Private mRequestId                                  As Long
 
-Private WithEvents mFutureBuilder                   As FutureBuilder
-Attribute mFutureBuilder.VB_VarHelpID = -1
+Private mResultFutureBuilder                        As New FutureBuilder
+Attribute mResultFutureBuilder.VB_VarHelpID = -1
+Private mOptionParametersFutureBuilder              As FutureBuilder
+Attribute mOptionParametersFutureBuilder.VB_VarHelpID = -1
+
+Private WithEvents mFutureWaiter                    As FutureWaiter
+Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mExchange                                   As String
 Private mExpiry                                     As String
 Private mStrike                                     As Double
+
+Private mSelfRef                                    As Object
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mFutureBuilder = New FutureBuilder
+Set mFutureWaiter = New FutureWaiter
+End Sub
+
+Private Sub Class_Terminate()
+Const ProcName As String = "Class_Terminate"
+gLogger.Log "OptionParametersRequester terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
 End Sub
 
 '@================================================================================
@@ -86,22 +95,8 @@ Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestId As Lon
 Const ProcName As String = "IContractDetailsConsumer_EndOptionParameters"
 On Error GoTo Err
 
-mContractCache.EndOptionParameters mContractSpecifier
-
-Select Case mRequestType
-Case OptionParameterTypeExpiries
-    If GetExpiries Then
-        gLogger.Log "Option Expiries retrieved from Tws for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-        Exit Sub
-    End If
-Case OptionParameterTypeStrikes
-    If GetStrikes Then
-        gLogger.Log "Option Strikes retrieved from Tws for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-        Exit Sub
-    End If
-End Select
-
-mTaskContext.Finish Nothing, True
+mOptionParametersFutureBuilder.Value = Nothing
+mOptionParametersFutureBuilder.Complete
 
 Exit Sub
 
@@ -118,9 +113,9 @@ Const ProcName As String = "IContractDetailsConsumer_NotifyError"
 On Error GoTo Err
 
 mContractRequester.CancelRequest mRequestId
-mTaskContext.Error pErrorCode, pErrorMsg
 
-mFutureBuilder.Fail pErrorCode, pErrorMsg, ""
+mOptionParametersFutureBuilder.Fail pErrorCode, pErrorMsg, ""
+mResultFutureBuilder.Fail pErrorCode, pErrorMsg, ""
 
 Exit Sub
 
@@ -132,7 +127,14 @@ Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Lon
 
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Long, pExpirations() As String, pStrikes() As Double)
+Private Sub IContractDetailsConsumer_NotifyOptionParameter( _
+                ByVal pRequestId As Long, _
+                ByVal pExchange As String, _
+                ByVal pUnderlyingContractId As Long, _
+                ByVal pTradingClass As String, _
+                ByVal pMultiplier As Long, _
+                pExpirations() As String, _
+                pStrikes() As Double)
 Const ProcName As String = "IContractDetailsConsumer_NotifyOptionParameter"
 On Error GoTo Err
 
@@ -145,62 +147,35 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
-' ITask Interface Members
+' mFutureWaiter Event Handlers
 '@================================================================================
 
-Private Sub ITask_Cancel()
-doCancel
-End Sub
-
-Private Sub ITask_Run()
-Const ProcName As String = "ITask_Run"
+Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
-
-If mTaskContext.CancelPending Then
-    doCancel
-    Exit Sub
-End If
 
 Select Case mRequestType
 Case OptionParameterTypeExpiries
-    If GetExpiries Then
-        gLogger.Log "Option Expiries retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-        Exit Sub
+    Dim lExpiries As Expiries
+    If GetExpiries(lExpiries) Then
+        gLogger.Log "Option Expiries retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        mResultFutureBuilder.Value = lExpiries
+    Else
+        gLogger.Log "No Option Expiries retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     End If
 Case OptionParameterTypeStrikes
-    If GetStrikes Then
-        gLogger.Log "Option Strikes retrieved from cache for IContract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
-        Exit Sub
+    Dim lStrikes As Strikes
+    If GetStrikes(lStrikes) Then
+        gLogger.Log "Option Strikes retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        mResultFutureBuilder.Value = lStrikes
+    Else
+        gLogger.Log "No Option Strikes retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     End If
 End Select
 
-mRequestId = mContractRequester.RequestOptionParameters(mContractSpecifier, Me)
+mResultFutureBuilder.Complete
 
-mTaskContext.Suspend -1
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
-Set mTaskContext = Value
-End Property
-
-Private Property Get ITask_TaskName() As String
-ITask_TaskName = mTaskContext.Name
-End Property
-
-'@================================================================================
-' mFutureBuilder Event Handlers
-'@================================================================================
-
-Private Sub mFutureBuilder_Cancelled(ev As CancelledEventData)
-Const ProcName As String = "mFutureBuilder_Cancelled"
-On Error GoTo Err
-
-doCancel
+Set mSelfRef = Nothing
 
 Exit Sub
 
@@ -212,15 +187,11 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get Future() As IFuture
-Set Future = mFutureBuilder.Future
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
+Friend Function Fetch( _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
@@ -228,7 +199,7 @@ Friend Sub Initialise( _
                 ByVal pExchange As String, _
                 ByVal pExpiry As String, _
                 ByVal pStrike As Double, _
-                ByVal pCookie As Variant)
+                ByVal pCookie As Variant) As IFuture
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -241,44 +212,70 @@ mExpiry = pExpiry
 mStrike = pStrike
 gSetVariant mCookie, pCookie
 
-Exit Sub
+Select Case mRequestType
+Case OptionParameterTypeExpiries
+    Dim lExpiries As Expiries
+    If GetExpiries(lExpiries) Then
+        gLogger.Log "Option Expiries retrieved from cache for ontract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        Set Fetch = CreateFuture(lExpiries)
+        Exit Function
+    End If
+    
+    Set mSelfRef = Me
+    
+    If mContractCache.GetOptionParametersFutureBuilder(mContractSpecifier, mOptionParametersFutureBuilder) Then
+        gLogger.Log "Awaiting Option Expiries from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        mFutureWaiter.Add mOptionParametersFutureBuilder.Future
+        Set Fetch = mResultFutureBuilder.Future
+        Exit Function
+    End If
+    
+    gLogger.Log "Fetching Option Expiries from TWS for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    Set mOptionParametersFutureBuilder = New FutureBuilder
+    mContractCache.SetOptionParametersFutureBuilder mContractSpecifier, mOptionParametersFutureBuilder
+    mFutureWaiter.Add mOptionParametersFutureBuilder.Future
+    Set Fetch = mResultFutureBuilder.Future
+Case OptionParameterTypeStrikes
+    Dim lStrikes As Strikes
+    If GetStrikes(lStrikes) Then
+        gLogger.Log "Option Strikes retrieved from cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        Set Fetch = CreateFuture(lStrikes)
+        Exit Function
+    End If
+    
+    Set mSelfRef = Me
+    
+    If mContractCache.GetOptionParametersFutureBuilder(mContractSpecifier, mOptionParametersFutureBuilder) Then
+        gLogger.Log "Awaiting Option Strikes from cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        mFutureWaiter.Add mOptionParametersFutureBuilder.Future
+        Set Fetch = mResultFutureBuilder.Future
+        Exit Function
+    End If
+    
+    gLogger.Log "Fetching Option Strikes from TWS for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    Set mOptionParametersFutureBuilder = New FutureBuilder
+    mContractCache.SetOptionParametersFutureBuilder mContractSpecifier, mOptionParametersFutureBuilder
+    mFutureWaiter.Add mOptionParametersFutureBuilder.Future
+    Set Fetch = mResultFutureBuilder.Future
+End Select
+
+mRequestId = mContractRequester.RequestOptionParameters(mContractSpecifier, Me)
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub doCancel()
-Const ProcName As String = "doCancel"
-On Error GoTo Err
-
-mContractRequester.CancelRequest mRequestId
-
-mTaskContext.Finish Nothing, True
-
-mFutureBuilder.Cancel
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Function GetExpiries() As Boolean
+Private Function GetExpiries(ByRef pExpiries As Expiries) As Boolean
 Const ProcName As String = "getExpiries"
 On Error GoTo Err
 
-Dim lExpiries As Expiries
-Set lExpiries = mContractCache.GetOptionExpiries(mContractSpecifier, mExchange, mStrike)
-If Not lExpiries Is Nothing Then
-    mFutureBuilder.Value = lExpiries
-    mFutureBuilder.Complete
-    mTaskContext.Finish Empty, False
-    GetExpiries = True
-End If
+GetExpiries = mContractCache.GetOptionExpiries(mContractSpecifier, mExchange, mStrike, pExpiries)
 
 Exit Function
 
@@ -286,22 +283,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function GetStrikes() As Boolean
+Private Function GetStrikes(ByRef pStrikes As Strikes) As Boolean
 Const ProcName As String = "getStrikes"
 On Error GoTo Err
 
-Dim lStrikes As Strikes
-Set lStrikes = mContractCache.GetOptionStrikes(mContractSpecifier, mExchange, mExpiry)
-If Not lStrikes Is Nothing Then
-    mFutureBuilder.Value = lStrikes
-    mFutureBuilder.Complete
-    mTaskContext.Finish Empty, False
-    GetStrikes = True
-End If
+GetStrikes = mContractCache.GetOptionStrikes(mContractSpecifier, mExchange, mExpiry, pStrikes)
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
 

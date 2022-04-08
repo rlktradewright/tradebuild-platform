@@ -121,9 +121,7 @@ Private Sub IContractDetailsConsumer_EndContracts(ByVal pRequestId As Long)
 Const ProcName As String = "IContractDetailsConsumer_EndContracts"
 On Error GoTo Err
 
-If mRequests(pRequestId).State = StateRequestCancelling Then
-    releaseEntry pRequestId
-ElseIf mRequests(pRequestId).NumberReturned = 1 Then
+If mRequests(pRequestId).NumberReturned = 1 Then
     mRequests(pRequestId).Requester.EndContracts pRequestId
     releaseEntry pRequestId
 Else
@@ -156,7 +154,10 @@ Private Sub IContractDetailsConsumer_NotifyContract( _
 Const ProcName As String = "IContractDetailsConsumer_NotifyContract"
 On Error GoTo Err
 
-If mRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
+If mRequests(pRequestId).State = StateRequestCancelling Then
+    ' continue to process returned contracts, so they get added to
+    ' the cache
+End If
 
 If mRequests(pRequestId).NumberReturned = 0 Then
     mRequests(pRequestId).NumberReturned = 1
@@ -202,6 +203,8 @@ Private Sub IContractDetailsConsumer_NotifyMarketRule( _
 Const ProcName As String = "IContractDetailsConsumer_NotifyMarketRule"
 On Error GoTo Err
 
+gLogger.Log "Market rule notified: " & pMarketRuleId, ProcName, ModuleName, LogLevelDetail
+
 Dim lRequestEntry As MarketRuleRequestEntry
 lRequestEntry = mRulesetRequests.Item(CStr(pMarketRuleId))
 
@@ -229,7 +232,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Long, pExpirations() As String, pStrikes() As Double)
+Private Sub IContractDetailsConsumer_NotifyOptionParameter( _
+                ByVal pRequestId As Long, _
+                ByVal pExchange As String, _
+                ByVal pUnderlyingContractId As Long, _
+                ByVal pTradingClass As String, _
+                ByVal pMultiplier As Long, _
+                pExpirations() As String, _
+                pStrikes() As Double)
 Const ProcName As String = "IContractDetailsConsumer_NotifyOptionParameter"
 On Error GoTo Err
 
@@ -260,14 +270,13 @@ On Error GoTo Err
 
 Select Case pState
 Case ApiConnNotConnected
-    mTaskContext.Suspend -1
 Case ApiConnConnecting
 
 Case ApiConnConnected
     ' we'll assume that TWS has a server connection: if not,
     ' it will soon tell us
     mIsTwsConnectedToIBServers = True
-    mTaskContext.Continue
+    schedule
 Case ApiConnFailed
 
 End Select
@@ -287,7 +296,7 @@ Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnection
 On Error GoTo Err
 
 mIsTwsConnectedToIBServers = True
-doSchedule
+schedule
 
 Exit Sub
 
@@ -307,40 +316,32 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-doSchedule
-
-If mFirstPendingContractEntry <> NullIndex Then
-    Dim lIndex As Long
-    lIndex = mFirstPendingContractEntry
-    
-    With mRequests(lIndex)
-        If .State = StateRequestCancelling Then
-            .PendingContracts.ClearAsync
-            removeEntryFromPendingContractQueue lIndex
-            releaseEntry lIndex
-        Else
-            Dim en As Enumerator: Set en = .PendingContracts.Enumerator
-            If en.MoveNext Then
-                Dim lTwsContract As TwsContract
-                Set lTwsContract = en.Current
-                If .State <> StateRequestCancelling Then
-                    .Requester.NotifyContract lIndex, lTwsContract
-                End If
-                en.Remove
-            Else
-                If .State = StateRequestCompleted Then
-                    .Requester.EndContracts lIndex
-                    removeEntryFromPendingContractQueue lIndex
-                    releaseEntry lIndex
-                End If
-            End If
-        End If
-    End With
+If mFirstPendingContractEntry = NullIndex Then
+    mTaskContext.Suspend -1
+    Exit Sub
 End If
+
+Dim lIndex As Long
+lIndex = mFirstPendingContractEntry
+
+With mRequests(lIndex)
+    Dim en As Enumerator
+    Set en = .PendingContracts.Enumerator
+    If en.MoveNext Then
+        Dim lTwsContract As TwsContract
+        Set lTwsContract = en.Current
+        .Requester.NotifyContract lIndex, lTwsContract
+        en.Remove
+    ElseIf .State = StateRequestCompleted Then
+        .Requester.EndContracts lIndex
+        removeEntryFromPendingContractQueue lIndex
+        releaseEntry lIndex
+    End If
+End With
  
-If (mFirstRequestEntry = NullIndex Or mConcurrentRequests = mMaxConcurrentRequests) And _
-    mFirstPendingContractEntry = NullIndex _
-Then mTaskContext.Suspend -1
+'If (mFirstRequestEntry = NullIndex Or mConcurrentRequests = mMaxConcurrentRequests) And _
+'    mFirstPendingContractEntry = NullIndex _
+'Then mTaskContext.Suspend -1
 
 Exit Sub
 
@@ -424,8 +425,6 @@ Set mRequests(lIndex).Requester = pRequester
 addEntryToRequestQueue lIndex
 gLog "Queued request for", ModuleName, ProcName, pContractSpecifier.Key, LogLevelDetail
 
-Schedule
-
 RequestContractDetails = lIndex
 
 Exit Function
@@ -447,8 +446,6 @@ Set mRequests(lIndex).ContractSpec = pContractSpecifier
 Set mRequests(lIndex).Requester = pRequester
 
 addEntryToRequestQueue lIndex
-
-Schedule
 
 RequestOptionParameters = lIndex
 
@@ -478,7 +475,7 @@ Else
         Set lRulesetFutureBuilder = New FutureBuilder
         Set lRequestEntry.RulesetFutureBuilder = lRulesetFutureBuilder
         lRequestEntry.PriceMagnifier = pPriceMagnifier
-        lRequestEntry.RulesetID = pRulesetID
+        lRequestEntry.RulesetID = Abs(pRulesetID)
         mRulesetRequests.Add lRequestEntry, CStr(Abs(pRulesetID))
         mContractCache.SetRulesetFutureBuilder pRulesetID, lRequestEntry.RulesetFutureBuilder
         mTwsAPI.RequestMarketRule Abs(pRulesetID)
@@ -492,18 +489,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub Schedule()
-Const ProcName As String = "Schedule"
-On Error GoTo Err
-
-mTaskContext.Continue
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -515,6 +500,7 @@ On Error GoTo Err
 
 ' NB: don't change the state of the entry
 queueEntry pIndex, mFirstPendingContractEntry, mLastPendingContractEntry
+mTaskContext.Continue
 
 Exit Sub
 
@@ -529,6 +515,8 @@ On Error GoTo Err
 
 queueEntry pIndex, mFirstRequestEntry, mLastRequestEntry
 mRequests(pIndex).State = StateRequestQueued
+
+schedule
 
 Exit Sub
 
@@ -566,61 +554,8 @@ Const ProcName As String = "completeRequest"
 On Error GoTo Err
 
 If mConcurrentRequests > 0 Then mConcurrentRequests = mConcurrentRequests - 1
-Schedule
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub doSchedule()
-Const ProcName As String = "doSchedule"
-On Error GoTo Err
-
-If mFirstRequestEntry = NullIndex Then Exit Sub
-
-gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelDetail
-
-If mTwsAPI.ConnectionState <> TwsConnConnected Then
-    gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelDetail
-    mTaskContext.Suspend -1
-    Exit Sub
-End If
-
-If Not mIsTwsConnectedToIBServers Then
-    gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelDetail
-    mTaskContext.Suspend -1
-    Exit Sub
-End If
-
-Dim lIndex As Long: lIndex = mFirstRequestEntry
-Dim lCurrIndex As Long
-
-Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
-    lCurrIndex = lIndex
-    lIndex = mRequests(lIndex).Next
-    If mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeContracts Then
-        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
-        mTwsAPI.RequestContractDetails lCurrIndex, _
-                                        gContractSpecToTwsContractSpec(mRequests(lCurrIndex).ContractSpec)
-    ElseIf mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeOptionParameters Then
-        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting option parameters for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
-        mTwsAPI.RequestOptionParameters lCurrIndex, _
-                                        mRequests(lCurrIndex).ContractSpec.Symbol, _
-                                        IIf(mRequests(lCurrIndex).ContractSpec.SecType = TwsSecTypeFuture, _
-                                            mRequests(lCurrIndex).ContractSpec.Exchange, _
-                                            ""), _
-                                        mRequests(lCurrIndex).ContractSpec.SecType, _
-                                        mRequests(lCurrIndex).ContractSpec.ProviderProperties.GetParameterValue(ProviderPropertyContractID)
-    Else
-        Assert False, "Invalid request type"
-    End If
-    mConcurrentRequests = mConcurrentRequests + 1
-        
-    removeEntryFromRequestQueue lCurrIndex
-    mRequests(lCurrIndex).State = StateRequestInProgress
-Loop
+schedule
+mTaskContext.Continue
 
 Exit Sub
 
@@ -684,6 +619,58 @@ Const ProcName As String = "addEntryToRequestQueue"
 On Error GoTo Err
 
 unqueueEntry pIndex, mFirstRequestEntry, mLastRequestEntry
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub schedule()
+Const ProcName As String = "schedule"
+On Error GoTo Err
+
+If mFirstRequestEntry = NullIndex Then Exit Sub
+
+gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelDetail
+
+If mTwsAPI.ConnectionState <> TwsConnConnected Then
+    gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelDetail
+    Exit Sub
+End If
+
+If Not mIsTwsConnectedToIBServers Then
+    gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelDetail
+    Exit Sub
+End If
+
+Dim lIndex As Long: lIndex = mFirstRequestEntry
+Dim lCurrIndex As Long
+
+Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
+    lCurrIndex = lIndex
+    lIndex = mRequests(lIndex).Next
+    If mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeContracts Then
+        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
+        mTwsAPI.RequestContractDetails lCurrIndex, _
+                                        gContractSpecToTwsContractSpec(mRequests(lCurrIndex).ContractSpec)
+    ElseIf mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeOptionParameters Then
+        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting option parameters for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
+        mTwsAPI.RequestOptionParameters lCurrIndex, _
+                                        mRequests(lCurrIndex).ContractSpec.Symbol, _
+                                        IIf(mRequests(lCurrIndex).ContractSpec.SecType = TwsSecTypeFuture, _
+                                            mRequests(lCurrIndex).ContractSpec.Exchange, _
+                                            ""), _
+                                        mRequests(lCurrIndex).ContractSpec.SecType, _
+                                        mRequests(lCurrIndex).ContractSpec.ProviderProperties.GetParameterValue(ProviderPropertyContractID)
+    Else
+        Assert False, "Invalid request type"
+    End If
+    mConcurrentRequests = mConcurrentRequests + 1
+        
+    removeEntryFromRequestQueue lCurrIndex
+    mRequests(lCurrIndex).State = StateRequestInProgress
+Loop
 
 Exit Sub
 

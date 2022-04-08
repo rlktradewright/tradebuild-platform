@@ -64,10 +64,10 @@ End Enum
 '@================================================================================
 
 Public Type ContractCacheEntry
-    ContractsFutureBuilder          As FutureBuilder
-    Contracts                       As IContracts
-    TwsContracts                    As EnumerableCollection
-    CacheDate                       As Date
+    ContractsFutureBuilder  As FutureBuilder
+    Contracts               As IContracts
+    TwsContracts            As EnumerableCollection
+    CacheDate               As Date
 End Type
 
 Public Type MarketRuleRequestEntry
@@ -76,8 +76,14 @@ Public Type MarketRuleRequestEntry
     RulesetID               As Long
 End Type
 
+Public Type OptionParametersCacheEntry
+    OptionParametersFutureBuilder   As FutureBuilder
+    OptionParameters        As OptionParametersStore
+    CacheDate               As Date
+End Type
+
 Public Type OrderIdMapEntry
-    Order                   As Iorder
+    Order                   As IOrder
     OrderSubmitter          As OrderSubmitter
     Cancelled               As Boolean
     ParentId                As Long

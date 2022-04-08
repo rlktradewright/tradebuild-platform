@@ -47,8 +47,8 @@ Private Type TickerTableEntry
     TickStreamBuilder       As TickStreamBuilder
     Incarnation             As Long
     ContractFuture          As IFuture
-    TwsContract         As TwsContract
-    ConsumerContract        As IContract
+    TwsContract             As TwsContract
+    Contract                As IContract
     ConsumerTimeZone        As TimeZone
     ErrorListener           As IMarketDataErrorListener
     DataHasBeenReceived     As Boolean
@@ -271,51 +271,42 @@ With mMarketDataTable(lIndex)
     
     Select Case pTickType
     Case TwsTickTypes.TwsTickBid
-        .PrevBidValid = validPrice(lTick.Price, .PrevBid, "bid", .ConsumerContract)
+        .PrevBidValid = validPrice(lTick.Price, .PrevBid, "bid", .Contract)
         If Not .PrevBidValid Then Exit Sub
         lTick.TickType = TickTypeBid
         If lTick.Size = 0 And .PrevBidSize <> MaxLong Then lTick.Size = .PrevBidSize
         .PrevBid = lTick.Price
         If lTick.Size <> 0 Then .PrevBidSize = lTick.Size
-        If Not .TickSizeHasBeenSet Then
-            setTickSize lIndex, lTick.Price
-            .TickSizeHasBeenSet = True
-        End If
+        If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickAsk
-        .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .ConsumerContract)
+        .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .Contract)
         If Not .PrevAskValid Then Exit Sub
         lTick.TickType = TickTypeAsk
         If lTick.Size = 0 And .PrevAskSize <> MaxLong Then lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
-        If Not .TickSizeHasBeenSet Then
-            setTickSize lIndex, lTick.Price
-            .TickSizeHasBeenSet = True
-        End If
+        If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
 Case TwsTickTypes.TwsTickLast
-        .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .ConsumerContract)
+        .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .Contract)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
         If lTick.Size = 0 And .PrevTradeSize <> MaxLong Then lTick.Size = .PrevTradeSize
         .PrevTrade = lTick.Price
         If lTick.Size <> 0 Then .PrevTradeSize = lTick.Size
-        If Not .TickSizeHasBeenSet Then
-            setTickSize lIndex, lTick.Price
-            .TickSizeHasBeenSet = True
-        End If
+        If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickHigh
-        If Not validPrice(lTick.Price, .PrevHigh, "high", .ConsumerContract) Then Exit Sub
+        If Not validPrice(lTick.Price, .PrevHigh, "high", .Contract) Then Exit Sub
         lTick.TickType = TickTypeHighPrice
         .PrevHigh = lTick.Price
     Case TwsTickTypes.TwsTickLow
-        If Not validPrice(lTick.Price, .PrevLow, "low", .ConsumerContract) Then Exit Sub
+        If Not validPrice(lTick.Price, .PrevLow, "low", .Contract) Then Exit Sub
         lTick.TickType = TickTypeLowPrice
         .PrevLow = lTick.Price
     Case TwsTickTypes.TwsTickOpen
-        If Not validPrice(lTick.Price, .PrevOpen, "open", .ConsumerContract) Then Exit Sub
+        If Not validPrice(lTick.Price, .PrevOpen, "open", .Contract) Then Exit Sub
         lTick.TickType = TickTypeOpenPrice
         .PrevOpen = lTick.Price
     Case TwsTickTypes.TwsTickClose
-        If Not validPrice(lTick.Price, .PrevClose, "close", .ConsumerContract) Then Exit Sub
+        If Not validPrice(lTick.Price, .PrevClose, "close", .Contract) Then Exit Sub
         lTick.TickType = TickTypeClosePrice
         .PrevClose = lTick.Price
     End Select
@@ -533,7 +524,6 @@ With mMarketDataTable(lIndex)
     If .TickSizeHasBeenSet Then
     ElseIf lTick.Position = 0 Then
         setTickSize lIndex, lTick.Price
-        .TickSizeHasBeenSet = True
     End If
 End With
 
@@ -636,6 +626,14 @@ Dim lStreamId As Long
 Dim lIsMarketData As Boolean
 lIsMarketData = isStreamBuilderForMarketData(ev.Source, lStreamId)
 
+If lIsMarketData Then
+    gLogger.Log "State changed for market data stream " & lStreamId & _
+                ": " & ev.State, ProcName, ModuleName, LogLevelDetail
+Else
+    gLogger.Log "State changed for market depth stream " & lStreamId & _
+                ": " & ev.State, ProcName, ModuleName, LogLevelDetail
+End If
+
 If lStreamId = -1 Then
     ' already stopped - nothing to do
 ElseIf ev.State = TickStreamStates.TickStreamStateFinished Then
@@ -646,9 +644,9 @@ ElseIf ev.State = TickStreamStates.TickStreamStateFinished Then
     End If
 ElseIf ev.State = TickStreamStates.TickStreamStateRunning Then
     If lIsMarketData Then
-        If isReadyForData(mMarketDataTable, lStreamId) Then reqMarketData lStreamId
+        reqMarketData lStreamId
     Else
-        If isReadyForData(mMarketDepthTable, lStreamId) Then reqMarketDepth lStreamId
+        reqMarketDepth lStreamId
     End If
 End If
 
@@ -675,7 +673,8 @@ If Not mMarketDataTable(lStreamId).IsInUse Then Exit Sub
 If ev.Future.IsFaulted Then
     mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
     releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId, False
-ElseIf handleCompletedFuture(ev.Future, mMarketDataTable, lStreamId) Then
+Else
+    handleCompletedFuture ev.Future, mMarketDataTable, lStreamId, mTicksFutureWaiter
     reqMarketData lStreamId
 End If
 
@@ -703,7 +702,8 @@ If Not mMarketDepthTable(lStreamId).IsInUse Then Exit Sub
 If ev.Future.IsFaulted Then
     mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
     releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId, True
-ElseIf handleCompletedFuture(ev.Future, mMarketDepthTable, lStreamId) Then
+Else
+    handleCompletedFuture ev.Future, mMarketDepthTable, lStreamId, mDepthFutureWaiter
     reqMarketDepth lStreamId
 End If
 
@@ -982,7 +982,9 @@ pStreamId = getTableEntry( _
 
 gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
 
-prepareTickStream mMarketDataTable, pContractFuture, pStreamId, False
+prepareTickStream mMarketDataTable, pContractFuture, pStreamId, mTicksFutureWaiter
+reqMarketData pStreamId
+
 Set doCreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.TickStream
 
 Exit Function
@@ -1014,7 +1016,9 @@ mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
 gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
 
-prepareTickStream mMarketDepthTable, pContractFuture, pStreamId, True
+prepareTickStream mMarketDepthTable, pContractFuture, pStreamId, mDepthFutureWaiter
+reqMarketDepth pStreamId
+ 
 Set doCreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.TickStream
 
 
@@ -1067,6 +1071,29 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getContractsFromCache( _
+                ByVal pConsumerContract, _
+                ByRef pTickerTable() As TickerTableEntry, _
+                ByVal pStreamId As Long) As Boolean
+Const ProcName As String = "getContractsFromCache"
+On Error GoTo Err
+
+Dim lContract As IContract
+Dim lTwsContract As TwsContract
+If mContractCache.GetContract(pConsumerContract.Specifier, lContract, lTwsContract) Then
+    gLogger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
+    Set pTickerTable(pStreamId).Contract = lContract
+    Set pTickerTable(pStreamId).TwsContract = lTwsContract
+    setTickSize pStreamId, 0
+    getContractsFromCache = True
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function getIndexFromTickerId(ByVal pTickerId As Long) As Long
 getIndexFromTickerId = pTickerId Mod IncarnationIncrement
@@ -1136,30 +1163,42 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function handleCompletedFuture(ByVal pFuture As IFuture, ByRef pTickerTable() As TickerTableEntry, ByVal pStreamId As Long) As Boolean
+Private Sub handleCompletedFuture( _
+                ByVal pFuture As IFuture, _
+                ByRef pTickerTable() As TickerTableEntry, _
+                ByVal pStreamId As Long, _
+                ByVal pFutureWaiter As FutureWaiter)
 Const ProcName As String = "handleCompletedFuture"
 On Error GoTo Err
 
 If TypeOf pFuture.Value Is IContract Then
-    gLogger.Log "Got Contract", ProcName, ModuleName, LogLevelDetail
-    Dim lContract As IContract
-    Set lContract = pFuture.Value
-    Set pTickerTable(pStreamId).ConsumerContract = lContract
-    Set pTickerTable(pStreamId).ConsumerTimeZone = GetTimeZone(lContract.TimezoneName)
+    gLogger.Log "Got consumer contract", ProcName, ModuleName, LogLevelDetail
+    Dim lConsumerContract As IContract
+    Set lConsumerContract = pFuture.Value
+    Set pTickerTable(pStreamId).ConsumerTimeZone = GetTimeZone(lConsumerContract.TimezoneName)
+
+    If Not getContractsFromCache(lConsumerContract, pTickerTable, pStreamId) Then
+        pFutureWaiter.Add gContractFutureToTwsContractFuture( _
+                                    mContractRequester, _
+                                    pTickerTable(pStreamId).ContractFuture, _
+                                    mContractCache), _
+                            pStreamId
+    End If
+        
 ElseIf TypeOf pFuture.Value Is TwsContract Then
     gLogger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
     Set pTickerTable(pStreamId).TwsContract = pFuture.Value
+    Set pTickerTable(pStreamId).Contract = gTwsContractToContract(pFuture.Value)
+    setTickSize pStreamId, 0
 ElseIf TypeOf pFuture.Value Is Clock Then
     gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelDetail
 End If
 
-handleCompletedFuture = isReadyForData(pTickerTable, pStreamId)
-
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 
 Private Function incrementIncarnation( _
@@ -1188,12 +1227,32 @@ Private Function isReadyForData(ByRef pTickerTable() As TickerTableEntry, ByVal 
 Const ProcName As String = "isReadyForData"
 On Error GoTo Err
 
+isReadyForData = True
+
+Dim s As String
 With pTickerTable(pStreamId)
-    isReadyForData = Not .TwsContract Is Nothing And _
-                    Not .ConsumerContract Is Nothing And _
-                    .TickStreamBuilder.TickStream.ClockFuture.IsAvailable And _
-                    .TickStreamBuilder.TickStream.State = TickStreamStateRunning
+    If .TwsContract Is Nothing Then
+        isReadyForData = False
+        s = " no TWS contract;"
+    End If
+    
+    If .Contract Is Nothing Then
+        isReadyForData = False
+        s = s & " no contract;"
+    End If
+                    
+    If Not .TickStreamBuilder.TickStream.ClockFuture.IsAvailable Then
+        isReadyForData = False
+        s = s & " clock future not available;"
+    End If
+    
+    If .TickStreamBuilder.TickStream.State <> TickStreamStateRunning Then
+        isReadyForData = False
+        s = s & " state not running (state=" & .TickStreamBuilder.TickStream.State & ");"
+    End If
 End With
+
+gLogger.Log "Is ready for data: " & isReadyForData & "  " & s, ProcName, ModuleName, LogLevelDetail
 
 Exit Function
 
@@ -1238,18 +1297,37 @@ Private Sub prepareTickStream( _
                 ByRef pTickers() As TickerTableEntry, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pStreamId As Long, _
-                ByVal pIsMarketDepth As Boolean)
-Dim lContinuationData As Long
-lContinuationData = pStreamId + IIf(pIsMarketDepth, MarketDepthIdOffset, 0)
-Dim lFutureWaiter As FutureWaiter
-If pIsMarketDepth Then
-    Set lFutureWaiter = mDepthFutureWaiter
+                ByVal pFutureWaiter As FutureWaiter)
+Const ProcName As String = "prepareTickStream"
+On Error GoTo Err
+
+If pContractFuture.IsAvailable Then
+    gLogger.Log "Got Contract", ProcName, ModuleName, LogLevelDetail
+    Dim lConsumerContract As IContract
+    Set lConsumerContract = pContractFuture.Value
+    Set pTickers(pStreamId).ConsumerTimeZone = GetTimeZone(lConsumerContract.TimezoneName)
+
+    If Not getContractsFromCache(lConsumerContract, pTickers, pStreamId) Then
+        pFutureWaiter.Add gContractFutureToTwsContractFuture( _
+                                    mContractRequester, _
+                                    pContractFuture, _
+                                    mContractCache), _
+                            pStreamId
+    End If
 Else
-    Set lFutureWaiter = mTicksFutureWaiter
+    pFutureWaiter.Add pContractFuture, pStreamId
 End If
-lFutureWaiter.Add pContractFuture, lContinuationData
-lFutureWaiter.Add gContractFutureToTwsContractFuture(mContractRequester, pContractFuture, mContractCache), lContinuationData
-lFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, lContinuationData
+
+If pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture.IsAvailable Then
+    gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelDetail
+Else
+    pFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reEstablishData( _
@@ -1317,7 +1395,7 @@ With pTable(pIndex)
     .IsSnapShot = False
     Set .TwsContract = Nothing
     Set .ContractFuture = Nothing
-    Set .ConsumerContract = Nothing
+    Set .Contract = Nothing
     Set .ConsumerTimeZone = Nothing
     .DataHasBeenReceived = False
     .TickStreamBuilder.Finish
@@ -1357,20 +1435,8 @@ Const ProcName As String = "reqMarketData"
 On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
-If mMarketDataTable(pIndex).TwsContract Is Nothing Then
-    Assert Not mMarketDataTable(pIndex).ContractFuture Is Nothing, "Contract future is not available"
-    prepareTickStream mMarketDataTable, mMarketDataTable(pIndex).ContractFuture, pIndex, False
-ElseIf isFTSE100Index(mMarketDataTable(pIndex).TwsContract.Specifier) Then
-    ' because IB no longer offer realtime data for the FTSE 100 index, but do still
-    ' allow RequestRealTimeBars, we call that and use the returned bars to deduce
-    ' the relevant ticks
-    Dim lRTBRequester As New RealtimeBarRequester
-    lRTBRequester.Initialise Me
-    mHistoricalDataRequester.RequestRealtimeBars _
-                                    getTickerIdFromIndex(pIndex), _
-                                    mMarketDataTable(pIndex).TwsContract.Specifier, _
-                                    lRTBRequester
-Else
+
+If isReadyForData(mMarketDataTable, pIndex) Then
     mTwsAPI.RequestMarketData getTickerIdFromIndex(pIndex), _
                                 mMarketDataTable(pIndex).TwsContract.Specifier, _
                                 "", _
@@ -1390,11 +1456,11 @@ Const ProcName As String = "reqMarketDepth"
 On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
-If mMarketDepthTable(pIndex).TwsContract Is Nothing Then
-    Assert Not mMarketDepthTable(pIndex).ContractFuture Is Nothing, "Contract future is not available"
-    prepareTickStream mMarketDepthTable, mMarketDepthTable(pIndex).ContractFuture, pIndex, True
-Else
-    mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), mMarketDepthTable(pIndex).TwsContract.Specifier, mMarketDepthTable(pIndex).NumberOfRows
+
+If isReadyForData(mMarketDepthTable, pIndex) Then
+    mTwsAPI.RequestMarketDepth getMarketDepthIdFromIndex(pIndex), _
+                                mMarketDepthTable(pIndex).TwsContract.Specifier, _
+                                mMarketDepthTable(pIndex).NumberOfRows
 End If
 
 Exit Sub
@@ -1434,12 +1500,10 @@ Const ProcName As String = "setTickSize"
 On Error GoTo Err
 
 Dim lRulesetID As Long
-lRulesetID = CLng(mMarketDataTable(pStreamId).ConsumerContract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
-gLog "lRulesetID=" & lRulesetID, ModuleName, ProcName, , LogLevelDetail
+lRulesetID = CLng(mMarketDataTable(pStreamId).Contract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
 
 Dim lPriceMagnifier As Long
-lPriceMagnifier = CLng(mMarketDataTable(pStreamId).ConsumerContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
-gLog "lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName, , LogLevelDetail
+lPriceMagnifier = CLng(mMarketDataTable(pStreamId).Contract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
 
 Dim lRulesetFuture As IFuture
 Set lRulesetFuture = mContractRequester.RequestPriceIncrementRuleset(lRulesetID, lPriceMagnifier)
@@ -1448,7 +1512,14 @@ Assert lRulesetFuture.IsAvailable, "Ruleset future is not available"
 Dim lRuleset As PriceIncrementRuleset
 Set lRuleset = lRulesetFuture.Value
 
-mMarketDataTable(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lRuleset.GetIncrement(pPrice)
+Dim lIncrement As Double: lIncrement = lRuleset.GetIncrement(pPrice)
+If lIncrement <> 0 Then
+    gLogger.Log "lRulesetID=" & lRulesetID, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "lPriceMagnifier=" & lPriceMagnifier, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Tick size set to " & lIncrement, ProcName, ModuleName, LogLevelDetail
+    mMarketDataTable(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lIncrement
+    mMarketDataTable(pStreamId).TickSizeHasBeenSet = True
+End If
 
 Exit Sub
 
