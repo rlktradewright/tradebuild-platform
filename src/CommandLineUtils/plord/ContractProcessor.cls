@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IErrorListener
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -84,8 +86,22 @@ Set mPendingCommands = CreateSortedDictionary(KeyTypeDate)
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IErrorListener Interface Members
 '@================================================================================
+
+Private Sub IErrorListener_Notify(ev As ErrorEventData)
+Const ProcName As String = "IErrorListener_Notify"
+On Error GoTo Err
+
+gWriteErrorLine "Datasource error for " & gGetContractName(mContract) & _
+                ": (" & ev.ErrorCode & ") " & ev.ErrorMessage
+Finish
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' mOrderContext Event Handlers
@@ -185,6 +201,7 @@ mParameter = mContractResolver.StrikeSelectionParameter
 mUnderlyingExchangeName = mContractResolver.UnderlyingExchangeName
 
 Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pcontract), False)
+mDataSource.AddErrorListener Me
 mDataSource.StartMarketData
 
 If pScopeName = "" Then
