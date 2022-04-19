@@ -556,21 +556,31 @@ On Error GoTo Err
 
 Dim lSummary As PMS
 Set lSummary = pOpItem.Data
-If mPositionManagers.Contains(lSummary.Name) Then Exit Sub
 
-Dim lPm As New PositionManager
-lPm.PreInitialise mOrderManager, mMoneyManager
-
+Dim lPm As PositionManager
 Dim lRecoverable As IRecoverable
-Set lRecoverable = lPm
-lRecoverable.LoadRecoveryData pOpItem.RCN, lSummary
 
-mPositionManagers.Add lPm
-mPositionManagersByRecoveryContextName.Add lPm, pOpItem.RCN
+If Not mPositionManagers.Contains(lSummary.Name) Then
+    Set lPm = New PositionManager
+    lPm.PreInitialise mOrderManager, mMoneyManager
+    
+    Set lRecoverable = lPm
+    lRecoverable.LoadRecoveryData pOpItem.RCN, lSummary
+    
+    mPositionManagers.Add lPm
+    mFutureWaiter.Add lPm.ContractFuture, pOpItem
 
-mFutureWaiter.Add lPm.ContractFuture, pOpItem
+    mTaskContext.Suspend -1
+Else
+    Set lPm = mPositionManagers.Item(lSummary.Name)
+    
+    Set lRecoverable = lPm
+    lRecoverable.LoadRecoveryData pOpItem.RCN, lSummary
+End If
 
-mTaskContext.Suspend -1
+If Not mPositionManagersByRecoveryContextName.Contains(pOpItem.RCN) Then
+    mPositionManagersByRecoveryContextName.Add lPm, pOpItem.RCN
+End If
 
 Exit Sub
 
