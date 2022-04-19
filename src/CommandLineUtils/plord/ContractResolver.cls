@@ -143,18 +143,17 @@ With mContractSpec
         lStrikeStr = mParameter & gStrikeSelectionModeToString(mSelectionMode) & _
                     IIf(mUnderlyingExchangeName <> "", "," & mUnderlyingExchangeName, "")
     End If
-    
-    ContractName = IIf(.Symbol <> "", .Symbol, "") & _
-                    IIf(.LocalSymbol <> "", ";" & .LocalSymbol, "") & _
-                    ";" & SecTypeToShortString(.SecType) & _
-                    IIf(.Exchange <> "", ";" & .Exchange, "") & _
-                    IIf(.CurrencyCode <> "", ";" & .CurrencyCode, "") & _
-                    IIf(.Expiry <> "", ";" & .Expiry, "") & _
-                    IIf(lStrikeStr <> "", ";" & lStrikeStr, "") & _
-                    IIf(.Right <> OptNone, ";" & OptionRightToString(.Right), "") & _
-                    IIf(.Multiplier <> 1, ";" & .Multiplier, "")
-End With
 
+    ContractName = IIf(.LocalSymbol <> "", "[" & .LocalSymbol & "]", "") & _
+                    IIf(.SecType <> 0, SecTypeToShortString(.SecType) & ":", "") & _
+                    .Symbol & _
+                    IIf(.Right <> OptNone, "=" & Left$(OptionRightToString(.Right), 1), "") & _
+                    lStrikeStr & _
+                    IIf(.Expiry <> "", "(" & .Expiry & ")", "") & _
+                    IIf(.Exchange <> "", "@" & .Exchange, "") & _
+                    IIf(.CurrencyCode <> "", "$" & .CurrencyCode, "") & _
+                    IIf(.Multiplier <> 0, "'" & .Multiplier, "")
+End With
 End Property
 
 Friend Property Get StrikeSelectionMode() As OptionStrikeSelectionModes
