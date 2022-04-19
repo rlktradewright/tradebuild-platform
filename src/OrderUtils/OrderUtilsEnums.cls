@@ -217,6 +217,7 @@ End Enum
 Public Enum OrderContextChangeTypes
     OrderContextReadyStateChanged = 1
     OrderContextActiveStateChanged
+    OrderContextFinished
 End Enum
 
 Public Enum OrderStopTriggerMethods

@@ -46,6 +46,8 @@ Private Const ModuleName                            As String = "CloseoutProcess
 
 Private mOrderManager                               As New OrderManager
 
+Private mGroups                                     As Groups
+
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
@@ -140,6 +142,8 @@ Friend Sub CloseoutAll()
 Const ProcName As String = "CloseoutAll"
 On Error GoTo Err
 
+mGroups.DiscardPendingOrdersForAllGroups
+
 Dim lVar As Variant
 For Each lVar In mOrderManager.GetGroupNames
     Dim lGroupName As String: lGroupName = lVar
@@ -152,9 +156,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub CloseoutGroup(ByVal pGroupName As String)
+Friend Sub CloseoutGroup( _
+                ByVal pGroupName As String)
 Const ProcName As String = "CloseoutGroup"
 On Error GoTo Err
+
+mGroups.DiscardPendingOrdersForGroup pGroupName
 
 mFutureWaiter.Add mOrderManager.CloseGroupPositions( _
                                     pGroupName, _
@@ -162,7 +169,7 @@ mFutureWaiter.Add mOrderManager.CloseGroupPositions( _
                                     mPriceSpec, _
                                     , _
                                     gBracketOrderListener.Base)
-
+                                    
 Exit Sub
 
 Err:
@@ -171,10 +178,12 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
+                ByVal pGroups As Groups, _
                 ByVal pCloseoutMode As CloseoutModes, _
                 ByVal pPriceSpec As PriceSpecifier)
 Set mSelfRef = Me
 Set mOrderManager = pOrderManager
+Set mGroups = pGroups
 mCloseoutMode = pCloseoutMode
 Set mPriceSpec = pPriceSpec
 End Sub

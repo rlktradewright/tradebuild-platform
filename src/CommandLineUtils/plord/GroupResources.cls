@@ -84,11 +84,11 @@ Dim lNewContractProcessor As ContractProcessor
 Set lNewContractProcessor = ev.ContinuationData
 
 If ev.Future.IsFaulted Then
-    mContractProcessors.Remove lNewContractProcessor.Id
+    mContractProcessors.Remove lNewContractProcessor.ID
     Set mCurrentContractProcessor = Nothing
 ElseIf Not ev.Future.IsAvailable Then
 ElseIf ev.Future.Value Is Nothing Then
-    mContractProcessors.Remove lNewContractProcessor.Id
+    mContractProcessors.Remove lNewContractProcessor.ID
     Set mCurrentContractProcessor = Nothing
 Else
     Dim lContract As IContract: Set lContract = ev.Future.Value
@@ -106,11 +106,11 @@ Else
         If lNewContractProcessor Is mCurrentContractProcessor Then
             Set mCurrentContractProcessor = lExistingContractProcessor
         End If
-        mContractProcessors.Remove lNewContractProcessor.Id
+        mContractProcessors.Remove lNewContractProcessor.ID
         lNewContractProcessor.Finish
         
     Else
-        mContractProcessors.Remove lNewContractProcessor.Id
+        mContractProcessors.Remove lNewContractProcessor.ID
         mContractProcessors.Add lNewContractProcessor, lContractProcessorName
         lNewContractProcessor.Activate lContractProcessorName, _
                                         lContract, _
@@ -182,7 +182,7 @@ lContractResolver.Initialise pContractSpec, _
                             mMarketDataManager
 
 lContractProcessor.Initialise GenerateGUIDString, lContractResolver, pStageOrders
-mContractProcessors.Add lContractProcessor, lContractProcessor.Id
+mContractProcessors.Add lContractProcessor, lContractProcessor.ID
 Set mCurrentContractProcessor = lContractProcessor
 
 mFutureWaiter.Add lContractResolver.ContractFuture, lContractProcessor
@@ -220,8 +220,7 @@ Set mCurrentContractProcessor = Nothing
 
 Dim lOrderPlacer As OrderPlacer
 For Each lOrderPlacer In mOrderPlacers
-    lOrderPlacer.Finish
-    gPlaceOrdersTask.RemoveOrderPlacer lOrderPlacer
+    lOrderPlacer.Cancel "Purge"
 Next
 mOrderPlacers.Clear
 

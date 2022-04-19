@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "Groups"
 ' Member variables
 '@================================================================================
 
-Private mDict                                       As SortedDictionary
+Private mGroupsResources                                       As SortedDictionary
 
 Private mContractStore                              As IContractStore
 
@@ -59,7 +59,7 @@ Private mMoneyManager                               As MoneyManager
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mDict = CreateSortedDictionary(KeyTypeString)
+Set mGroupsResources = CreateSortedDictionary(KeyTypeString)
 End Sub
 
 '@================================================================================
@@ -75,7 +75,7 @@ End Sub
 '@================================================================================
 
 Friend Property Get Enumerator() As Enumerator
-Set Enumerator = mDict.Enumerator
+Set Enumerator = mGroupsResources.Enumerator
 End Property
 
 '@================================================================================
@@ -88,7 +88,7 @@ On Error GoTo Err
 
 Dim lResources As GroupResources
 
-If mDict.TryItem(UCase$(pGroupName), lResources) Then
+If mGroupsResources.TryItem(UCase$(pGroupName), lResources) Then
     Set Add = lResources
     Exit Function
 End If
@@ -102,7 +102,7 @@ lResources.Initialise pGroupName, _
                         mOrderSubmitterFactory, _
                         mMoneyManager
 
-mDict.Add lResources, UCase$(pGroupName)
+mGroupsResources.Add lResources, UCase$(pGroupName)
 
 Set Add = lResources
 
@@ -113,16 +113,47 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Clear()
-mDict.Clear
+mGroupsResources.Clear
 End Sub
 
 Friend Function Contains(ByVal pGroupName As String) As Boolean
-Contains = mDict.Contains(UCase$(pGroupName))
+Contains = mGroupsResources.Contains(UCase$(pGroupName))
 End Function
 
 Friend Function Count() As Long
-Count = mDict.Count
+Count = mGroupsResources.Count
 End Function
+
+Friend Sub DiscardPendingOrdersForAllGroups()
+Const ProcName As String = "DiscardPendingOrdersForAllGroups"
+On Error GoTo Err
+
+Dim lResources As GroupResources
+For Each lResources In mGroupsResources
+    doDiscardPendingOrdersForGroup lResources
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub DiscardPendingOrdersForGroup( _
+                ByVal pGroupName As String)
+Const ProcName As String = "DiscardPendingOrdersForGroup"
+On Error GoTo Err
+
+Dim lResources As GroupResources
+Set lResources = mGroupsResources.Item(pGroupName)
+
+doDiscardPendingOrdersForGroup lResources
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Friend Sub Initialise( _
                 ByVal pContractStore As IContractStore, _
@@ -143,7 +174,7 @@ Friend Function Item(ByVal pGroupName As String) As GroupResources
 Const ProcName As String = "Item"
 On Error GoTo Err
 
-Set Item = mDict.Item(UCase$(pGroupName))
+Set Item = mGroupsResources.Item(UCase$(pGroupName))
 
 Exit Function
 
@@ -157,7 +188,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Const ProcName As String = "NewEnum"
 On Error GoTo Err
 
-Set NewEnum = mDict.Enumerator
+Set NewEnum = mGroupsResources.Enumerator
 
 Exit Function
 
@@ -169,7 +200,7 @@ Friend Sub Remove(ByVal pGroupName As String)
 Const ProcName As String = "Remove"
 On Error GoTo Err
 
-mDict.Remove UCase$(pGroupName)
+mGroupsResources.Remove UCase$(pGroupName)
 
 Exit Sub
 
@@ -183,7 +214,7 @@ Friend Function TryItem( _
 Const ProcName As String = "TryItem"
 On Error GoTo Err
 
-TryItem = mDict.TryItem(UCase$(pGroupName), pItem)
+TryItem = mGroupsResources.TryItem(UCase$(pGroupName), pItem)
 
 Exit Function
 
@@ -194,4 +225,36 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub doDiscardPendingOrdersForGroup( _
+                ByVal pResources As GroupResources)
+Const ProcName As String = "doDiscardPendingOrdersForGroup"
+On Error GoTo Err
+
+Dim lCP As ContractProcessor
+For Each lCP In pResources.ContractProcessors
+    Dim lEnum As Enumerator: Set lEnum = lCP.PendingCommandsEnumerator
+    If lEnum.MoveNext Then
+        gWriteLineToConsole "Discarding commands for " & lCP.ContractName
+        Do
+            Dim lEntry As DictionaryEntry: Set lEntry = lEnum.Current
+            Dim p As PendingCommand: Set p = lEntry.Data
+            gWriteLineToConsole "    " & p.Command.name & " " & p.Params
+            lEnum.Remove
+        Loop While lEnum.MoveNext
+    End If
+Next
+
+Dim lOP As OrderPlacer
+For Each lOP In pResources.OrderPlacers
+    lOP.Cancel "Closeout"
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
 

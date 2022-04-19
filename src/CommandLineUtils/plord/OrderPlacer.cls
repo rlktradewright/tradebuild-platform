@@ -56,6 +56,8 @@ Private mTimezone                                   As TimeZone
 
 Private mMoneyManager                               As MoneyManager
 
+Private mGroupResources                             As GroupResources
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -72,12 +74,24 @@ Private Sub mOrderContextEv_Change(ev As ChangeEventData)
 Const ProcName As String = "mOrderContextEv_Change"
 On Error GoTo Err
 
-If ev.ChangeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
+Dim lChangeType As OrderContextChangeTypes: lChangeType = ev.ChangeType
 
-If Not isReadyForOrder Then Exit Sub
+Select Case lChangeType
+Case OrderContextChangeTypes.OrderContextActiveStateChanged
+    Exit Sub
+Case OrderContextChangeTypes.OrderContextReadyStateChanged
+    If Not isReadyForOrder Then
+        gWriteLineToConsole mBracketOrderSpec.ID & ": Order is pending: " & mOrderContextEv.NotReadyMessage, True
+        Exit Sub
+    End If
+    
+    Set mOrderContextEv = Nothing
+    gPlaceOrdersTask.AddOrderPlacer Me
+    
+Case OrderContextChangeTypes.OrderContextFinished
+    Cancel mOrderContextEv.NotReadyMessage
+End Select
 
-Set mOrderContextEv = Nothing
-gPlaceOrdersTask.AddOrderPlacer Me
 
 Exit Sub
 
@@ -93,17 +107,27 @@ End Sub
 ' Methods
 '@================================================================================
 
+Friend Sub Cancel( _
+                ByVal pReason As String)
+mGroupResources.OrderPlacers.Remove Me
+Set mGroupResources = Nothing
+gPlaceOrdersTask.RemoveOrderPlacer Me
+gWriteLineToConsole mBracketOrderSpec.ID & ": Order cancelled: " & pReason, True
+End Sub
+
 Friend Sub Initialise( _
                 ByVal pBracketOrderSpec As BracketOrderSpecification, _
                 ByVal pcontract As IContract, _
                 ByVal pOrderContext As OrderContext, _
                 ByVal pStageOrders As Boolean, _
-                ByVal pMoneyManager As MoneyManager)
+                ByVal pMoneyManager As MoneyManager, _
+                ByVal pGroupResources As GroupResources)
 Set mBracketOrderSpec = pBracketOrderSpec
 Set mContract = pcontract
 Set mOrderContext = pOrderContext
 mStageOrders = pStageOrders
 Set mMoneyManager = pMoneyManager
+Set mGroupResources = pGroupResources
 
 Set mTimezone = GetTimeZone(mContract.TimezoneName)
 End Sub
@@ -119,32 +143,33 @@ On Error GoTo Err
 
 Static sAttempts As Long
 
+Dim lPrefix As String: lPrefix = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " " & _
+                                mBracketOrderSpec.ID & ": "
+
 If sAttempts = 0 Then
-    gWriteLineToConsole _
-                "TIME " & _
+    LogMessage _
+                lPrefix & "TIME " & _
                 FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), _
-                                TimestampDateAndTimeISO8601), _
-                True
-    writeContractSpecToConsole
-    gWriteLineToConsole mBracketOrderSpec.ToString, True
+                                TimestampDateAndTimeISO8601)
+    LogMessage lPrefix & contractSpecToString
+    LogMessage lPrefix & mBracketOrderSpec.ToString
 End If
 sAttempts = sAttempts + 1
 
 If Not isReadyForOrder Then
     Set mOrderContextEv = mOrderContext
-    gWriteLineToConsole "Order is pending, waiting for the provider to be ready", True
+    gWriteLineToConsole lPrefix & "Order is pending: " & mOrderContext.NotReadyMessage, True
     Exit Function
 End If
 
 If sAttempts > 1 Then
-    gWriteLineToConsole "Provider is now ready", True
-    gWriteLineToConsole _
-                "TIME " & _
+    gWriteLineToConsole lPrefix & "Provider is now ready", True
+    LogMessage _
+                lPrefix & "TIME " & _
                 FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), _
-                                TimestampDateAndTimeISO8601), _
-                True
-    writeContractSpecToConsole
-    gWriteLineToConsole mBracketOrderSpec.ToString, True
+                                TimestampDateAndTimeISO8601)
+    LogMessage lPrefix & contractSpecToString
+    LogMessage lPrefix & mBracketOrderSpec.ToString
 End If
 
 mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
@@ -178,10 +203,11 @@ With mBracketOrderSpec
     End If
 
 
-    Set lBO = mOrderContext.CreateBracketOrder( _
+    Set lBO = mOrderContext.CreateBracketOrderWithId( _
                     .Action, _
                     .Quantity, _
                     lEntryOrder, _
+                    .ID, _
                     lStopLossOrder, _
                     lTargetOrder _
                     )
@@ -212,7 +238,7 @@ With mBracketOrderSpec
     If Not .RolloverSpec Is Nothing Then lBO.RolloverSpecification = .RolloverSpec
 End With
 
-gWriteLineToConsole lBO.Key & ": bracket order ready to be placed", True
+gWriteLineToConsole lPrefix & "bracket order ready to be placed", True
 
 mMoneyManager.MaxOrderCost = mBracketOrderSpec.MaxOrderCost
 mMoneyManager.LotSize = mBracketOrderSpec.LotSize
@@ -221,6 +247,9 @@ If lBO.State = BracketOrderStateSubmitted Then CreateBracketProfitCalculator lBO
 
 PlaceOrder = True
 
+mGroupResources.OrderPlacers.Remove Me
+Set mGroupResources = Nothing
+gPlaceOrdersTask.RemoveOrderPlacer Me
 Exit Function
 
 Err:
@@ -257,8 +286,8 @@ With mOrderContext
 End With
 End Function
 
-Private Sub writeContractSpecToConsole()
-Const ProcName As String = "writeContractSpecToConsole"
+Private Function contractSpecToString()
+Const ProcName As String = "contractSpecToString"
 On Error GoTo Err
 
 Dim s As String
@@ -274,13 +303,13 @@ If mContract.Specifier.Right <> OptNone Then
     s = s & gGenerateSwitch(RightSwitch, OptionRightToString(mContract.Specifier.Right))
     s = s & gGenerateSwitch(StrikeSwitch, mContract.Specifier.Strike)
 End If
-gWriteLineToConsole s, True
+LogMessage s
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 
 

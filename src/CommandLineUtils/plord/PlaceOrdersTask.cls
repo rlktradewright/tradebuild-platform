@@ -215,7 +215,14 @@ For Each lBOS In pContractProcessor.BracketOrders
     Dim lOrderPlacer As OrderPlacer
     Set lOrderPlacer = New OrderPlacer
     mGroups.Item(pContractProcessor.GroupName).OrderPlacers.Add lOrderPlacer
-    lOrderPlacer.Initialise lBOS, pContractProcessor.Contract, pContractProcessor.OrderContext, pStageOrders, mMoneyManager
+    lOrderPlacer.Initialise _
+                    lBOS, _
+                    pContractProcessor.Contract, _
+                    pContractProcessor.OrderContext, _
+                    pStageOrders, _
+                    mMoneyManager, _
+                    mGroups.Item(pContractProcessor.GroupName)
+
     Set mOrderPlacers(allocateEntry).OrderPlacer = lOrderPlacer
 Next
 pContractProcessor.ClearOrders

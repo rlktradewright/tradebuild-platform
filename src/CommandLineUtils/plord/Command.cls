@@ -82,15 +82,15 @@ For i = 0 To UBound(pNames)
 Next
 End Sub
 
-Friend Function parse(ByVal pName As String) As Boolean
+Friend Function Parse(ByVal pName As String) As Boolean
 Dim i As Long
 For i = 0 To UBound(mNames)
     If mNames(i) = UCase$(pName) Then
-        parse = True
+        Parse = True
         Exit Function
     End If
 Next
-parse = False
+Parse = False
 End Function
 
 '@================================================================================
