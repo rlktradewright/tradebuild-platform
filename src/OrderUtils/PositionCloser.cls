@@ -70,13 +70,17 @@ Private mLastExecutionReport                        As IExecutionReport
 Private mCloseoutMode                               As CloseoutModes
 Private mPriceSpec                                  As PriceSpecifier
 
-Private mBracketOrderFutureBuilder                  As New FutureBuilder
+Private mBracketOrderFutureBuilder                  As FutureBuilder
 
 Private mNumberOfActiveOrderContexts                As Long
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mBracketOrderFutureBuilder = New FutureBuilder
+End Sub
 
 '@================================================================================
 ' IChangeListener Interface Members
@@ -120,6 +124,8 @@ On Error GoTo Err
 If mPositionManager.HasBracketOrdersWithNonZeroSizes Then
 ElseIf mPositionManager.HasBracketOrdersWithNonZeroPendingSizes Then
 Else
+    mBracketOrderFutureBuilder.Value = Nothing
+    mBracketOrderFutureBuilder.Complete
     Exit Sub
 End If
 
@@ -226,6 +232,8 @@ On Error GoTo Err
 
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
 If mBalancingBracketOrderPlaced Then Exit Sub
+If mPositionManager.PositionSize = 0 Then Exit Sub
+
 
 If mBalancingBracketOrder Is Nothing Then
     placeBalancingOrder
