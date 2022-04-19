@@ -46,6 +46,7 @@ Private Const ModuleName                            As String = "PendingCommand"
 
 Public Command                                      As Command
 Public Params                                       As String
+Public OrderID                                      As String
 Public StageOrders                                  As Boolean
 
 '@================================================================================

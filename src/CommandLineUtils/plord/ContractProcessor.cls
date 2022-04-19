@@ -151,8 +151,8 @@ Friend Property Get GroupName() As String
 GroupName = mGroupName
 End Property
 
-Friend Property Get Id() As String
-Id = mId
+Friend Property Get ID() As String
+ID = mId
 End Property
 
 Friend Property Get IsReady()
@@ -258,7 +258,8 @@ Do While en.MoveNext
     Dim lPendingCommand As PendingCommand: Set lPendingCommand = lEntry.Data
     addPendingCommand lTimestamp, _
                         lPendingCommand.Command, _
-                        lPendingCommand.Params
+                        lPendingCommand.Params, _
+                        lPendingCommand.OrderID
 Loop
 
 If IsReady Then processPendingCommands
@@ -297,27 +298,29 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
-                ByVal pId As String, _
+                ByVal pID As String, _
                 ByVal pContractResolver As ContractResolver, _
                 ByVal pStageOrders As Boolean)
-mId = pId
+mId = pID
 Set mContractResolver = pContractResolver
 mStageOrders = pStageOrders
 End Sub
 
 Friend Sub ProcessBracketCommand( _
-                ByVal pParams As String)
+                ByVal pParams As String, _
+                ByVal pID As String)
 Const ProcName As String = "ProcessBracketCommand"
 On Error GoTo Err
 
 If mOrderContext Is Nothing Then
-    addPendingCommand GetTimestamp, gCommands.BracketCommand, pParams
+    addPendingCommand GetTimestamp, gCommands.BracketCommand, pParams, pID
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
     Exit Sub
 End If
 
 Set mBOSpec = New BracketOrderSpecification
 Set mBOSpec.Contract = mContract
+mBOSpec.ID = pID
 mBOSpec.EntryTIF = OrderTIFDay
 mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
 mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
@@ -369,7 +372,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ProcessBuyCommand( _
-                ByVal pParams As String) As Boolean
+                ByVal pParams As String, _
+                ByVal pID As String) As Boolean
 Const ProcName As String = "ProcessBuyCommand"
 On Error GoTo Err
 
@@ -378,9 +382,10 @@ If mOrderContext Is Nothing Then
     addPendingCommand GetTimestamp, _
                             gCommands.BuyCommand, _
                             pParams, _
+                            pID, _
                             OrderPendingMessage
 Else
-    ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams)
+    ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams, pID)
 End If
 
 Exit Function
@@ -390,7 +395,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function ProcessSellCommand( _
-                ByVal pParams As String) As Boolean
+                ByVal pParams As String, _
+                ByVal pID As String) As Boolean
 Const ProcName As String = "ProcessSellCommand"
 On Error GoTo Err
 
@@ -399,9 +405,10 @@ If mOrderContext Is Nothing Then
     addPendingCommand GetTimestamp, _
                             gCommands.SellCommand, _
                             pParams, _
+                            pID, _
                             OrderPendingMessage
 Else
-    ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams)
+    ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams, pID)
 End If
 
 Exit Function
@@ -418,6 +425,7 @@ If mOrderContext Is Nothing Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     addPendingCommand GetTimestamp, _
                             gCommands.EndBracketCommand, _
+                            "", _
                             "", _
                             OrderPendingMessage
     Exit Sub
@@ -620,6 +628,7 @@ If mOrderContext Is Nothing Then
     addPendingCommand GetTimestamp, _
                             gCommands.QuitCommand, _
                             "", _
+                            "", _
                             "Bracket order definition terminated"
     Exit Sub
 End If
@@ -796,6 +805,7 @@ Private Sub addPendingCommand( _
                 ByVal pTimestamp As Date, _
                 ByVal pCommand As Command, _
                 ByVal pParams As String, _
+                Optional ByVal pOrderId As String, _
                 Optional ByVal pMessage As String)
 Const ProcName As String = "addPendingCommand"
 On Error GoTo Err
@@ -803,6 +813,7 @@ On Error GoTo Err
 Dim lPendingCommand As New PendingCommand
 Set lPendingCommand.Command = pCommand
 lPendingCommand.Params = pParams
+lPendingCommand.OrderID = pOrderId
 mPendingCommands.Add lPendingCommand, pTimestamp
 If pMessage <> "" Then gWriteLineToConsole pMessage, True
 
@@ -1179,7 +1190,8 @@ End Function
 
 Private Function processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
-                ByVal pParams As String) As Boolean
+                ByVal pParams As String, _
+                ByVal pID As String) As Boolean
 Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
 
@@ -1187,6 +1199,7 @@ processBuyOrSellCommand = True
 
 Set mBOSpec = New BracketOrderSpecification
 Set mBOSpec.Contract = mContract
+mBOSpec.ID = pID
 mBOSpec.Action = pAction
 mBOSpec.EntryTIF = OrderTIFDay
 mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
@@ -1270,11 +1283,10 @@ On Error GoTo Err
 
 Dim c As PendingCommand
 For Each c In mPendingCommands
-    gWriteLineToConsole c.Command.Name & " " & c.Params, True
     If c.Command Is gCommands.BracketCommand Then
-        ProcessBracketCommand c.Params
+        ProcessBracketCommand c.Params, c.OrderID
     ElseIf c.Command Is gCommands.BuyCommand Then
-        ProcessBuyCommand c.Params
+        ProcessBuyCommand c.Params, c.OrderID
     ElseIf c.Command Is gCommands.EndBracketCommand Then
         ProcessEndBracketCommand
     ElseIf c.Command Is gCommands.EntryCommand Then
@@ -1284,7 +1296,7 @@ For Each c In mPendingCommands
     ElseIf c.Command Is gCommands.RolloverCommand Then
         ProcessRolloverCommand c.Params
     ElseIf c.Command Is gCommands.SellCommand Then
-        ProcessSellCommand c.Params
+        ProcessSellCommand c.Params, c.OrderID
     ElseIf c.Command Is gCommands.StopLossCommand Then
         ProcessStopLossCommand c.Params
     ElseIf c.Command Is gCommands.TargetCommand Then

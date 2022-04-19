@@ -999,6 +999,7 @@ If lCommand Is gCommands.ExitCommand Then
 End If
 
 Dim lContractProcessor As ContractProcessor: Set lContractProcessor = mCurrentGroup.CurrentContractProcessor
+Dim lID As String
 
 If lCommand Is gCommands.Help1Command Then
     gCon.WriteLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames
@@ -1015,16 +1016,26 @@ ElseIf lCommand Is gCommands.StageOrdersCommand Then
 ElseIf lCommand Is gCommands.GroupCommand Then
     processGroupCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BuyCommand Then
-    ProcessBuyCommand Params, lContractProcessor
+    lID = GenerateBracketOrderId
+    gWriteLineToConsole "Order id: " & lID, True
+    ProcessBuyCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.BuyAgainCommand Then
-    ProcessBuyAgainCommand Params, lContractProcessor
+    lID = GenerateBracketOrderId
+    gWriteLineToConsole "Order id: " & lID, True
+    ProcessBuyAgainCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.SellCommand Then
-    ProcessSellCommand Params, lContractProcessor
+    lID = GenerateBracketOrderId
+    gWriteLineToConsole "Order id: " & lID, True
+    ProcessSellCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.SellAgainCommand Then
-    ProcessSellAgainCommand Params, lContractProcessor
+    lID = GenerateBracketOrderId
+    gWriteLineToConsole "Order id: " & lID, True
+    ProcessSellAgainCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.BracketCommand Then
     mBracketOrderDefinitionInProgress = True
-    lContractProcessor.ProcessBracketCommand Params
+    lID = GenerateBracketOrderId
+    gWriteLineToConsole "Order id: " & lID, True
+    lContractProcessor.ProcessBracketCommand Params, lID
 ElseIf lCommand Is gCommands.EntryCommand Then
     lContractProcessor.ProcessEntryCommand Params
 ElseIf lCommand Is gCommands.StopLossCommand Then
@@ -1085,11 +1096,12 @@ End Sub
 
 Private Sub ProcessBuyCommand( _
                 ByVal pParams As String, _
-                ByVal pContractProcessor As ContractProcessor)
+                ByVal pContractProcessor As ContractProcessor, _
+                ByVal pID As String)
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionBuy, pParams, pContractProcessor
+processBuyOrSellCommand OrderActionBuy, pParams, pContractProcessor, pID
 
 Exit Sub
 
@@ -1099,7 +1111,8 @@ End Sub
 
 Private Sub ProcessBuyAgainCommand( _
                 ByVal pParams As String, _
-                ByVal pContractProcessor As ContractProcessor)
+                ByVal pContractProcessor As ContractProcessor, _
+                ByVal pID As String)
 Const ProcName As String = "ProcessBuyAgainCommand"
 On Error GoTo Err
 
@@ -1108,7 +1121,7 @@ If pContractProcessor Is Nothing Then
 ElseIf pContractProcessor.LatestBuyCommandParams = "" Then
     gWriteErrorLine "No Buy command to repeat", True
 Else
-    ProcessBuyCommand pContractProcessor.LatestBuyCommandParams, pContractProcessor
+    ProcessBuyCommand pContractProcessor.LatestBuyCommandParams, pContractProcessor, pID
 End If
 
 Exit Sub
@@ -1120,7 +1133,8 @@ End Sub
 Private Sub processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
                 ByVal pParams As String, _
-                ByVal pContractProcessor As ContractProcessor)
+                ByVal pContractProcessor As ContractProcessor, _
+                ByVal pID As String)
 Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
 
@@ -1147,9 +1161,9 @@ End If
 
 If Not pContractProcessor Is Nothing Then
     If pAction = OrderActionBuy Then
-        If pContractProcessor.ProcessBuyCommand(pParams) And Not mBatchOrders Then processOrders
+        If pContractProcessor.ProcessBuyCommand(pParams, pID) And Not mBatchOrders Then processOrders
     Else
-        If pContractProcessor.ProcessSellCommand(pParams) And Not mBatchOrders Then processOrders
+        If pContractProcessor.ProcessSellCommand(pParams, pID) And Not mBatchOrders Then processOrders
     End If
 Else
     gWriteErrorLine "No contract has been specified in this group", True
@@ -1167,11 +1181,12 @@ End Sub
 
 Private Sub ProcessSellCommand( _
                 ByVal pParams As String, _
-                ByVal pContractProcessor As ContractProcessor)
+                ByVal pContractProcessor As ContractProcessor, _
+                ByVal pID As String)
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionSell, pParams, pContractProcessor
+processBuyOrSellCommand OrderActionSell, pParams, pContractProcessor, pID
 
 Exit Sub
 
@@ -1181,7 +1196,8 @@ End Sub
 
 Private Sub ProcessSellAgainCommand( _
                 ByVal pParams As String, _
-                ByVal pContractProcessor As ContractProcessor)
+                ByVal pContractProcessor As ContractProcessor, _
+                ByVal pID As String)
 Const ProcName As String = "ProcessSellAgainCommand"
 On Error GoTo Err
 
@@ -1190,7 +1206,7 @@ If pContractProcessor Is Nothing Then
 ElseIf pContractProcessor.LatestSellCommandParams = "" Then
     gWriteErrorLine "No Sell command to repeat", True
 Else
-    ProcessSellCommand pContractProcessor.LatestSellCommandParams, pContractProcessor
+    ProcessSellCommand pContractProcessor.LatestSellCommandParams, pContractProcessor, pID
 End If
 
 Exit Sub
@@ -1291,7 +1307,7 @@ End If
 If lError Then Exit Sub
 
 Dim lCloseoutProcessor As New CloseoutProcessor
-lCloseoutProcessor.Initialise mOrderManager, lCloseoutMode, lPriceSpec
+lCloseoutProcessor.Initialise mOrderManager, mGroups, lCloseoutMode, lPriceSpec
 
 If lGroupName = AllGroups Then
     lCloseoutProcessor.CloseoutAll

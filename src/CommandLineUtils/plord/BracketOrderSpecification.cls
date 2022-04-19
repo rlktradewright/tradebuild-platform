@@ -46,6 +46,7 @@ Private Const ModuleName                            As String = "BracketOrderSpe
 ' Member variables
 '@================================================================================
 
+Public ID                                           As String
 Public Contract                                     As IContract
 Public Action                                       As OrderActions
 Public Quantity                                     As Long
