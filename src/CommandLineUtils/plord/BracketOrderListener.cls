@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IDeferredAction
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -58,6 +60,18 @@ End Sub
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
+
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+mBracketOrderListener.Remove Data
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' mBracketOrderListener Event Handlers
@@ -125,7 +139,13 @@ Dim s1 As String
 Select Case lChangeType
 Case BracketOrderCompleted
     s1 = "bracket order completed"
-    If Not lBO.HasRolloverSpecification Then mBracketOrderListener.Remove lBO
+    If Not lBO.HasRolloverSpecification Then
+        ' defer removing from the listener for a while to
+        ' allow time for any late error messages to arrive -
+        ' for example if the order size exceeds available
+        ' funds
+        DeferAction Me, lBO, 2, ExpiryTimeUnitSeconds
+    End If
 Case BracketOrderSelfCancelled
     s1 = "bracket order cancelled"
     mBracketOrderListener.Remove lBO
