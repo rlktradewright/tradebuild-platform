@@ -305,6 +305,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function GenerateBracketOrderId() As String
+GenerateBracketOrderId = GIdProvider.gNextId
+End Function
+
 Public Function GetOptionContract( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pAction As OrderActions, _

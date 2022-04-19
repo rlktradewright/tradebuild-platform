@@ -793,15 +793,42 @@ Public Function CreateBracketOrder( _
 Const ProcName As String = "CreateBracketOrder"
 On Error GoTo Err
 
+
+
+Set CreateBracketOrder = CreateBracketOrderWithId( _
+                            pAction, _
+                            pQuantity, _
+                            pEntryOrder, _
+                            GIdProvider.gNextId, _
+                            pStopLossOrder, _
+                            pTargetOrder)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateBracketOrderWithId( _
+                ByVal pAction As OrderActions, _
+                ByVal pQuantity As Long, _
+                ByVal pEntryOrder As IOrder, _
+                ByVal pId As String, _
+                Optional ByVal pStopLossOrder As IOrder, _
+                Optional ByVal pTargetOrder As IOrder) As IBracketOrder
+Const ProcName As String = "CreateBracketOrderWithId"
+On Error GoTo Err
+
 AssertArgument pQuantity > 0, "Quantity must be greater than zero"
 AssertArgument Not pEntryOrder Is Nothing, "Entry order cannot be Nothing"
+AssertArgument pId <> "", "Id must be supplied"
 
 AssertArgument gIsEntryOrderType(pEntryOrder.OrderType), "Invalid entry order type"
 If Not pStopLossOrder Is Nothing Then AssertArgument gIsStopLossOrderType(pStopLossOrder.OrderType), "Invalid stop-loss order type"
 If Not pTargetOrder Is Nothing Then AssertArgument gIsTargetOrderType(pTargetOrder.OrderType), "Invalid target order type"
 
 Dim lBracketOrder As New BracketOrder
-lBracketOrder.Initialise GIdProvider.gNextId, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
+lBracketOrder.Initialise pId, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
 lBracketOrder.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
 lBracketOrder.SetEntryOrder pEntryOrder
@@ -822,7 +849,7 @@ End If
 
 lBracketOrder.Checkpoint
 
-Set CreateBracketOrder = lBracketOrder
+Set CreateBracketOrderWithId = lBracketOrder
 
 gLogBracketOrderMessage "Created bracket order: " & vbCrLf & _
                         lBracketOrder.ToString, _
@@ -987,6 +1014,9 @@ Next
 Set mClosedBracketOrders = Nothing
 
 Set mOrderSubmitter = Nothing
+
+mNotReadyMessage = "Provider terminated"
+fireChange OrderContextFinished
 
 Exit Function
 
