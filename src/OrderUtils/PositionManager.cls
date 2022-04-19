@@ -1513,22 +1513,28 @@ Private Sub doFinish()
 Const ProcName As String = "doFinish"
 On Error GoTo Err
 
-mDataSource.RemoveGenericTickListener Me
-mDataSource.StopMarketData
-Set mDataSource = Nothing
+If Not mDataSource Is Nothing Then
+    mDataSource.RemoveGenericTickListener Me
+    mDataSource.StopMarketData
+    Set mDataSource = Nothing
+End If
 Set mSession = Nothing
 
 mChangeListeners.Clear
 mProfitListeners.Clear
 mRecoverableObjectListeners.Clear
 
-mOrderContexts.Finish
-Set mOrderContexts = Nothing
+If Not mOrderContexts Is Nothing Then
+    mOrderContexts.Finish
+    Set mOrderContexts = Nothing
+End If
 Set mMoneyManager = Nothing
 
-mOrderSubmitter.RemoveOrderSubmissionListener Me
-mOrderSubmitter.RemoveStateChangeListener Me
-Set mOrderSubmitter = Nothing
+If Not mOrderSubmitter Is Nothing Then
+    mOrderSubmitter.RemoveOrderSubmissionListener Me
+    mOrderSubmitter.RemoveStateChangeListener Me
+    Set mOrderSubmitter = Nothing
+End If
 
 Set mBracketOrders = Nothing
 Set mOrders = Nothing
@@ -1747,6 +1753,8 @@ End Sub
 Private Function needExistingBracketOrders() As Boolean
 Const ProcName As String = "needExistingBracketOrders"
 On Error GoTo Err
+
+If mOrderContexts Is Nothing Then Exit Function
 
 If mQuantityOutstanding <> 0 Or haveActiveBracketOrders Then
     needExistingBracketOrders = True
