@@ -53,7 +53,7 @@ Private mDataSource                                 As IMarketDataSource
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mContractSpec                               As IContractSpecifier
+Private mContract                                   As IContract
 
 '@================================================================================
 ' Class Event Handlers
@@ -64,7 +64,7 @@ Private mContractSpec                               As IContractSpecifier
 '@================================================================================
 
 Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
-mDataSource.RemoveGenericTickListener Me
+writeQuoteMessage
 Set mSelfRef = Nothing
 End Sub
 
@@ -81,21 +81,8 @@ Case Else
     Exit Sub
 End Select
 
-Static sContract As IContract
-If sContract Is Nothing Then Set sContract = mDataSource.ContractFuture.Value
-
-
-If Not (mDataSource.HasCurrentTick(TickTypeAsk) And _
-    mDataSource.HasCurrentTick(TickTypeBid)) Then
-ElseIf sContract.Specifier.SecType <> SecTypeCash And _
-        Not (mDataSource.HasCurrentTick(TickTypeTrade) And _
-            mDataSource.HasCurrentTick(TickTypeVolume)) Then
-Else
-    gWriteLineToConsole gPadStringRight(sContract.Specifier.LocalSymbol & _
-                                        "@" & sContract.Specifier.Exchange, _
-                                        20) & _
-                        GetCurrentTickSummary(mDataSource)
-    mDataSource.RemoveGenericTickListener Me
+If gotRequiredTicks Then
+    writeQuoteMessage
     mDataSource.Finish
     Set mSelfRef = Nothing
 End If
@@ -121,7 +108,7 @@ ElseIf ev.Future.IsCancelled Then
     gWriteErrorLine "Contract fetch cancelled", True
     Set mSelfRef = Nothing
 ElseIf ev.Future.IsAvailable Then
-    ' nothing to do
+    Set mContract = ev.Future.Value
 End If
 
 Exit Sub
@@ -146,14 +133,13 @@ Const ProcName As String = "FetchQuote"
 On Error GoTo Err
 
 Set mSelfRef = Me
-Set mContractSpec = pContractSpec
 
 Set mFutureWaiter = New FutureWaiter
 Dim lContractFuture As IFuture
 Set lContractFuture = FetchContract(pContractSpec, pContractStore)
 mFutureWaiter.Add lContractFuture
 
-Set mDataSource = pMarketDataManager.CreateSnapshotMarketDataSource(lContractFuture, False, pRefreshInterval:=5)
+Set mDataSource = pMarketDataManager.CreateSnapshotMarketDataSource(lContractFuture, False)
 
 mDataSource.AddGenericTickListener Me
 mDataSource.StartMarketData
@@ -168,6 +154,29 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function gotRequiredTicks() As Boolean
+If Not (mDataSource.HasCurrentTick(TickTypeAsk) And _
+    mDataSource.HasCurrentTick(TickTypeBid)) Then
+    gotRequiredTicks = False
+ElseIf mContract.Specifier.SecType <> SecTypeCash And _
+        Not (mDataSource.HasCurrentTick(TickTypeTrade) And _
+            mDataSource.HasCurrentTick(TickTypeVolume)) Then
+    gotRequiredTicks = True
+Else
+    gotRequiredTicks = False
+End If
+End Function
 
 
+Private Sub writeQuoteMessage()
+Const ProcName As String = "writeMessage"
+On Error GoTo Err
 
+gWriteLineToConsole gPadStringRight(gGetContractName(mContract), 20) & _
+                    GetCurrentTickSummary(mDataSource)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
