@@ -126,6 +126,7 @@ ElseIf mPositionManager.HasBracketOrdersWithNonZeroPendingSizes Then
 Else
     mBracketOrderFutureBuilder.Value = Nothing
     mBracketOrderFutureBuilder.Complete
+    RaiseEvent PositionClosed
     Exit Sub
 End If
 
