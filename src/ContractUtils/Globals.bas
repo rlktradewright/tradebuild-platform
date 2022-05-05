@@ -858,9 +858,9 @@ If pTickSize = 0 Then
 End If
 
 If pPrevValidPrice = 0 Or pPrevValidPrice = MaxDouble Then
-    If Abs(pPrice) / pTickSize > &H3FFFFF Then Exit Function ' note that Z index has ticksize 0.01
+    If Abs(pPrice) / pTickSize > &H7FFFFF Then Exit Function ' note that Z index has ticksize 0.01
                                                             ' so we need to allow plenty of room
-                                                            ' &H3FFFFF = 4194303
+                                                            ' &H7FFFFF = 8388607
     
     ' A first price of 0 is always considered invalid. Although some indexes can validly
     ' have zero values, it is unlikely on the very first price notified, and this check
