@@ -347,7 +347,7 @@ Case StateAllocated
 
 Case StateRequestQueued
     unqueueEntry pRequesterId
-    Schedule
+    schedule
 Case StateRequestInProgress
     mHistDataRequests(pRequesterId).State = StateRequestCancelling
     mTwsAPI.CancelHistoricalData pRequesterId
@@ -399,7 +399,7 @@ Friend Sub DisableHistoricalDataRequestPacing()
 Const ProcName As String = "DisableHistoricalDataRequestPacing"
 On Error GoTo Err
 
-AssertArgument Not mIsRequestPacingDisabled, "Hisotrical data request pacing is already disabled"
+AssertArgument Not mIsRequestPacingDisabled, "Historical data request pacing is already disabled"
 
 mIsRequestPacingDisabled = True
 Set mPacer = Nothing
@@ -483,7 +483,7 @@ mHistDataRequests(pRegistrationId).Request = pRequest
 
 queueEntry pRegistrationId, pPriority
 
-Schedule
+schedule
 
 Exit Sub
 
@@ -510,7 +510,7 @@ End With
 
 queueEntry lRegistrationId, False
 
-Schedule
+schedule
 
 Exit Sub
 
@@ -518,7 +518,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Schedule()
+Friend Sub schedule()
 Const ProcName As String = "Schedule"
 On Error GoTo Err
 
@@ -584,7 +584,7 @@ mHistDataRequests(pRequestId).DelayReason = ""
 If mConcurrentHistDataRequests > 0 Then
     mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 End If
-Schedule
+schedule
 
 Exit Sub
 

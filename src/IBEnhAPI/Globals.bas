@@ -154,7 +154,7 @@ With gContractSpecToTwsContractSpec
     .Expiry = IIf(Len(pContractSpecifier.Expiry) >= 6, pContractSpecifier.Expiry, "")
     .LocalSymbol = pContractSpecifier.LocalSymbol
     .Multiplier = pContractSpecifier.Multiplier
-    If .CurrencyCode = "GBP" Then .Multiplier = .Multiplier * 100
+    If pContractSpecifier.SecType = SecTypeStock Then .Multiplier = 0
     .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
     .SecType = gSecTypeToTwsSecType(pContractSpecifier.SecType)
     .Strike = pContractSpecifier.Strike
@@ -861,13 +861,19 @@ With pTwsContractSpec
     If lExchange = ExchangeSmart And .PrimaryExch <> "" Then
         lExchange = ExchangeSmartQualified & .PrimaryExch
     End If
+    Dim lMultiplier As Double
+    If .SecType = TwsSecTypeStock Then
+        lMultiplier = 1 / pPriceMagnifier
+    Else
+        lMultiplier = .Multiplier / pPriceMagnifier
+    End If
     Set lContractSpec = CreateContractSpecifier(.LocalSymbol, _
                                                 .Symbol, _
                                                 lExchange, _
                                                 gTwsSecTypeToSecType(.SecType), _
                                                 .CurrencyCode, _
                                                 .Expiry, _
-                                                .Multiplier / pPriceMagnifier, _
+                                                lMultiplier, _
                                                 .Strike, _
                                                 gTwsOptionRightToOptionRight(.OptRight))
     Dim p As New Parameters
