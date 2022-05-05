@@ -61,6 +61,8 @@ Private mMoneyManager                               As MoneyManager
 
 Private mMarketDataManager                          As IMarketDataManager
 
+Private mContractResolutionsAwaited                 As Boolean
+
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
@@ -70,11 +72,24 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
+'mFutureWaiter.DiagnosticID = "GroupResources"
 End Sub
 
 '@================================================================================
 ' mFutureWaiter Event Handlers
 '@================================================================================
+
+Private Sub mFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mFutureWaiter_WaitAllCompleted"
+On Error GoTo Err
+
+mContractResolutionsAwaited = False
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
@@ -84,14 +99,19 @@ Dim lNewContractProcessor As ContractProcessor
 Set lNewContractProcessor = ev.ContinuationData
 
 If ev.Future.IsFaulted Then
+    gWriteLineToConsole ev.Future.ErrorMessage & ": " & lNewContractProcessor.InitialContractSpec.ToString, True
     mContractProcessors.Remove lNewContractProcessor.ID
     Set mCurrentContractProcessor = Nothing
-ElseIf Not ev.Future.IsAvailable Then
+ElseIf ev.Future.IsCancelled Then
+    gWriteLineToConsole "Contract fetch cancelled: " & lNewContractProcessor.InitialContractSpec.ToString, True
+    mContractProcessors.Remove lNewContractProcessor.ID
+    Set mCurrentContractProcessor = Nothing
 ElseIf ev.Future.Value Is Nothing Then
     mContractProcessors.Remove lNewContractProcessor.ID
     Set mCurrentContractProcessor = Nothing
 Else
     Dim lContract As IContract: Set lContract = ev.Future.Value
+    gWriteLineToConsole "Contract is: " & gGetContractName(lContract), True
     
     Dim lExistingContractProcessor As ContractProcessor
     
@@ -119,7 +139,8 @@ Else
                                         mScopeName, _
                                         mGroupName, _
                                         mOrderSubmitterFactory, _
-                                        mMoneyManager
+                                        mMoneyManager, _
+                                        Me
     
     End If
 End If
@@ -136,10 +157,6 @@ End Sub
 
 Friend Property Get ContractProcessors() As EnumerableCollection
 Set ContractProcessors = mContractProcessors
-End Property
-
-Friend Property Let CurrentContractProcessor(ByVal Value As ContractProcessor)
-Set mCurrentContractProcessor = Value
 End Property
 
 Friend Property Get CurrentContractProcessor() As ContractProcessor
@@ -172,20 +189,20 @@ On Error GoTo Err
 Dim lContractProcessor As New ContractProcessor
 
 Dim lContractResolver As New ContractResolver
-lContractResolver.Initialise pContractSpec, _
-                            lContractProcessor, _
+mContractResolutionsAwaited = True
+mFutureWaiter.Add lContractResolver.ResolveContract(pContractSpec, _
                             mContractStore, _
                             pSelectionMode, _
                             pParameter, _
                             pOperator, _
                             pUnderlyingExchangeName, _
-                            mMarketDataManager
+                            mMarketDataManager), _
+                    lContractProcessor
 
-lContractProcessor.Initialise GenerateGUIDString, lContractResolver, pStageOrders
+lContractProcessor.Initialise pContractSpec, GenerateGUIDString, lContractResolver, pStageOrders
+
 mContractProcessors.Add lContractProcessor, lContractProcessor.ID
 Set mCurrentContractProcessor = lContractProcessor
-
-mFutureWaiter.Add lContractResolver.ContractFuture, lContractProcessor
 
 Set AddContractProcessor = lContractProcessor
 
@@ -194,6 +211,25 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Friend Sub CancelContractResolutions()
+Const ProcName As String = "CancelContractResolutions"
+On Error GoTo Err
+
+If Not mContractResolutionsAwaited Then Exit Sub
+
+gWriteLineToConsole "Cancelling contract resolution", True
+mFutureWaiter.Cancel
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub ClearCurrentContractProcessor()
+Set mCurrentContractProcessor = Nothing
+End Sub
 
 Friend Sub Initialise( _
                 ByVal pGroupName As String, _
@@ -210,6 +246,20 @@ Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
 Set mMoneyManager = pMoneyManager
+End Sub
+
+Friend Sub NotifyError( _
+                ByVal pContractProcessor As ContractProcessor)
+Const ProcName As String = "NotifyError"
+On Error GoTo Err
+
+mContractProcessors.Remove pContractProcessor.Name
+If pContractProcessor Is mCurrentContractProcessor Then Set mCurrentContractProcessor = Nothing
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Purge()

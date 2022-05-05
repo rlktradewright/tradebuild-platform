@@ -22,8 +22,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements IStateChangeListener
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -46,8 +44,8 @@ Private Const ModuleName                            As String = "ContractResolve
 ' Member variables
 '@================================================================================
 
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
+Private mContractFuture                             As IFuture
+Attribute mContractFuture.VB_VarHelpID = -1
 
 Private mContractStore                              As IContractStore
 
@@ -58,81 +56,17 @@ Private mParameter                                  As Long
 Private mOperator                                   As OptionStrikeSelectionOperators
 Private mUnderlyingExchangeName                     As String
 
-Private mFutureBuilder                              As New FutureBuilder
-
-Private mSelfRef                                    As Object
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' IStateChangeListener Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
-Const ProcName As String = "IStateChangeListener_Change"
-On Error GoTo Err
-
-Static sInputPauseEnded As Boolean
-
-Dim lState As OptionContractResolverStates: lState = ev.State
-Select Case lState
-Case OptionContractResolverStateWaitingForUnderlyingMarketPrice, _
-        OptionContractResolverStateFetchingInitialContract
-    ' the underlying contract has been found (or was not needed)
-    If Not sInputPauseEnded Then
-        sInputPauseEnded = True
-        gInputPaused = False
-    End If
-End Select
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If ev.Future.IsCancelled Then
-    gWriteErrorLine "Contract fetch was cancelled", True
-    gInputPaused = False
-    Set mSelfRef = Nothing
-    Exit Sub
-End If
-
-If ev.Future.IsFaulted Then
-    mFutureBuilder.Value = Nothing
-    mFutureBuilder.Complete
-    gWriteErrorLine ev.Future.ErrorMessage, True
-    gInputPaused = False
-    Set mSelfRef = Nothing
-    Exit Sub
-End If
-
-processTargetContract ev.Future.Value
-gInputPaused = False
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Property Get ContractFuture() As IFuture
-Set ContractFuture = mFutureBuilder.Future
-End Property
 
 Friend Property Get ContractName() As String
 With mContractSpec
@@ -180,8 +114,7 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-mFutureWaiter.Cancel
-mFutureBuilder.Cancel
+mContractFuture.Cancel
 
 Exit Sub
 
@@ -189,9 +122,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Initialise( _
+Friend Function ResolveContract( _
                 ByVal pContractSpec As IContractSpecifier, _
-                ByVal pContractProcessor As ContractProcessor, _
                 ByVal pContractStore As IContractStore, _
                 ByVal pSelectionMode As OptionStrikeSelectionModes, _
                 ByVal pParameter As Long, _
@@ -201,8 +133,6 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-Set mSelfRef = Me
-
 Set mContractSpec = pContractSpec
 Set mContractStore = pContractStore
 mSelectionMode = pSelectionMode
@@ -210,15 +140,13 @@ mParameter = pParameter
 mOperator = pOperator
 mUnderlyingExchangeName = pUnderlyingExchangeName
 
-Set mFutureWaiter = New FutureWaiter
-
 Select Case mSelectionMode
 Case OptionStrikeSelectionModeNone
-    mFutureWaiter.Add FetchContract(pContractSpec, mContractStore)
+    Set mContractFuture = FetchContract(pContractSpec, mContractStore)
 Case OptionStrikeSelectionModeExpenditure, _
         OptionStrikeSelectionModeDelta
     gWriteLineToConsole "Resolving contract", True
-    mFutureWaiter.Add GetOptionContract( _
+    Set mContractFuture = GetOptionContract( _
                             pContractSpec, _
                             OrderActionBuy, _
                             pContractStore, _
@@ -226,38 +154,22 @@ Case OptionStrikeSelectionModeExpenditure, _
                             mParameter, _
                             mOperator, _
                             pUnderlyingExchangeName, _
-                            pMarketDataManager, _
-                            Me)
+                            pMarketDataManager)
 Case Else
     Assert False, "Unexpected strike selection mode: " & pSelectionMode
 End Select
 
-Exit Sub
+Set ResolveContract = mContractFuture
+
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub processTargetContract(ByVal pcontract As IContract)
-Const ProcName As String = "processTargetContract"
-On Error GoTo Err
-
-mFutureBuilder.Value = pcontract
-mFutureBuilder.Complete
-If pcontract Is Nothing Then
-    gWriteLineToConsole "Contract not found: " & mContractSpec.ToString, True
-Else
-    gWriteLineToConsole "Contract is: " & gGetContractName(pcontract), True
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 

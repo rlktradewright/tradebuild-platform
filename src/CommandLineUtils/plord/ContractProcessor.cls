@@ -49,7 +49,9 @@ Private Const OrderPendingMessage                   As String = "Order is pendin
 '@================================================================================
 
 Private mId                                         As String
+Private mName                                       As String
 
+Private mInitialContractSpec                        As IContractSpecifier
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 
@@ -63,6 +65,7 @@ Private WithEvents mOrderContext                    As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
 
 Private mContractResolver                           As ContractResolver
+Private mGroupResources                             As GroupResources
 
 Private mGroupName                                  As String
 
@@ -95,6 +98,7 @@ On Error GoTo Err
 
 gWriteErrorLine "Datasource error for " & gGetContractName(mContract) & _
                 ": (" & ev.ErrorCode & ") " & ev.ErrorMessage
+mGroupResources.NotifyError Me
 Finish
 
 Exit Sub
@@ -155,6 +159,10 @@ Friend Property Get ID() As String
 ID = mId
 End Property
 
+Friend Property Get InitialContractSpec() As IContractSpecifier
+Set InitialContractSpec = mInitialContractSpec
+End Property
+
 Friend Property Get IsReady()
 IsReady = mOrderContext.IsReady
 End Property
@@ -165,6 +173,10 @@ End Property
 
 Friend Property Get LatestSellCommandParams() As String
 LatestSellCommandParams = mLatestSellCommandParams
+End Property
+
+Friend Property Get Name() As String
+Name = mName
 End Property
 
 Friend Property Get OrderContext() As OrderContext
@@ -187,9 +199,13 @@ Friend Sub Activate( _
                 ByVal pScopeName As String, _
                 ByVal pGroupName As String, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
-                ByVal pMoneyManager As MoneyManager)
+                ByVal pMoneyManager As MoneyManager, _
+                ByVal pGroupResources As GroupResources)
 Const ProcName As String = "Activate"
 On Error GoTo Err
+
+mName = pName
+Set mGroupResources = pGroupResources
 
 Set mContract = pcontract
 mGroupName = pGroupName
@@ -278,6 +294,8 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
+Set mGroupResources = Nothing
+
 If Not mContractResolver Is Nothing Then
     mContractResolver.Finish
     Set mContractResolver = Nothing
@@ -298,9 +316,11 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
+                ByVal pInitialContractSpec As IContractSpecifier, _
                 ByVal pID As String, _
                 ByVal pContractResolver As ContractResolver, _
                 ByVal pStageOrders As Boolean)
+Set mInitialContractSpec = pInitialContractSpec
 mId = pID
 Set mContractResolver = pContractResolver
 mStageOrders = pStageOrders

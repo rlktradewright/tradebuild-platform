@@ -1155,7 +1155,6 @@ If Not IsNumeric(Left$(lArg0, 1)) Then
                                         0, _
                                         OptionStrikeSelectionOperatorNone, _
                                         "")
-    
     pParams = Right$(pParams, Len(pParams) - Len(lArg0))
 End If
 
@@ -1336,7 +1335,7 @@ On Error GoTo Err
 If pParams = "" Then Exit Sub
 
 pParams = UCase$(pParams)
-If gCommands.HelpCommand.parse(pParams) Or gCommands.Help1Command.parse(pParams) Then
+If gCommands.HelpCommand.Parse(pParams) Or gCommands.Help1Command.Parse(pParams) Then
     showContractHelp
     Exit Sub
 End If
@@ -1364,6 +1363,7 @@ Else
 End If
 
 If lContractSpec Is Nothing Then
+    mCurrentGroup.ClearCurrentContractProcessor
     If Not pContractProcessor Is Nothing Then
         gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     Else
@@ -1379,8 +1379,6 @@ mCurrentGroup.AddContractProcessor lContractSpec, _
                                     lParameter, _
                                     lOperator, _
                                     lUnderlyingExchange
-
-gInputPaused = True
 
 Exit Sub
 

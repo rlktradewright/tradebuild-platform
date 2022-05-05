@@ -124,8 +124,8 @@ Friend Function Count() As Long
 Count = mGroupsResources.Count
 End Function
 
-Friend Sub DiscardPendingOrdersForAllGroups()
-Const ProcName As String = "DiscardPendingOrdersForAllGroups"
+Friend Sub DiscardPendingItemsForAllGroups()
+Const ProcName As String = "DiscardPendingItemsForAllGroups"
 On Error GoTo Err
 
 Dim lResources As GroupResources
@@ -139,9 +139,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub DiscardPendingOrdersForGroup( _
+Friend Sub DiscardPendingItemsForGroup( _
                 ByVal pGroupName As String)
-Const ProcName As String = "DiscardPendingOrdersForGroup"
+Const ProcName As String = "DiscardPendingItemsForGroup"
 On Error GoTo Err
 
 Dim lResources As GroupResources
@@ -226,20 +226,20 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Sub doDiscardPendingOrdersForGroup( _
+Private Sub discardPendingOrdersForGroup( _
                 ByVal pResources As GroupResources)
-Const ProcName As String = "doDiscardPendingOrdersForGroup"
+Const ProcName As String = "discardPendingOrdersForGroup"
 On Error GoTo Err
 
 Dim lCP As ContractProcessor
 For Each lCP In pResources.ContractProcessors
     Dim lEnum As Enumerator: Set lEnum = lCP.PendingCommandsEnumerator
     If lEnum.MoveNext Then
-        gWriteLineToConsole "Discarding commands for " & lCP.ContractName
+        gWriteLineToConsole "Discarding commands for " & lCP.ContractName, True
         Do
             Dim lEntry As DictionaryEntry: Set lEntry = lEnum.Current
             Dim p As PendingCommand: Set p = lEntry.Data
-            gWriteLineToConsole "    " & p.Command.name & " " & p.Params
+            gWriteLineToConsole "    " & p.Command.Name & " " & p.Params, True
             lEnum.Remove
         Loop While lEnum.MoveNext
     End If
@@ -249,6 +249,21 @@ Dim lOP As OrderPlacer
 For Each lOP In pResources.OrderPlacers
     lOP.Cancel "Closeout"
 Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub doDiscardPendingOrdersForGroup( _
+                ByVal pResources As GroupResources)
+Const ProcName As String = "doDiscardPendingOrdersForGroup"
+On Error GoTo Err
+
+discardPendingOrdersForGroup pResources
+pResources.CancelContractResolutions
+pResources.ClearCurrentContractProcessor
 
 Exit Sub
 

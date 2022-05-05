@@ -71,6 +71,7 @@ Private mSelfRef                                    As Object
 
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
+'mFutureWaiter.DiagnosticID = "CloseoutProcessor"
 End Sub
 
 '@================================================================================
@@ -142,13 +143,9 @@ Friend Sub CloseoutAll()
 Const ProcName As String = "CloseoutAll"
 On Error GoTo Err
 
-mGroups.DiscardPendingOrdersForAllGroups
+mGroups.DiscardPendingItemsForAllGroups
 
-Dim lVar As Variant
-For Each lVar In mOrderManager.GetGroupNames
-    Dim lGroupName As String: lGroupName = lVar
-    CloseoutGroup lGroupName
-Next
+mFutureWaiter.Add mOrderManager.CloseAllPositions(PositionTypeLive)
 
 Exit Sub
 
@@ -161,7 +158,7 @@ Friend Sub CloseoutGroup( _
 Const ProcName As String = "CloseoutGroup"
 On Error GoTo Err
 
-mGroups.DiscardPendingOrdersForGroup pGroupName
+mGroups.DiscardPendingItemsForGroup pGroupName
 
 mFutureWaiter.Add mOrderManager.CloseGroupPositions( _
                                     pGroupName, _

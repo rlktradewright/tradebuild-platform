@@ -286,7 +286,7 @@ With mOrderContext
 End With
 End Function
 
-Private Function contractSpecToString()
+Private Function contractSpecToString() As String
 Const ProcName As String = "contractSpecToString"
 On Error GoTo Err
 
@@ -303,7 +303,7 @@ If mContract.Specifier.Right <> OptNone Then
     s = s & gGenerateSwitch(RightSwitch, OptionRightToString(mContract.Specifier.Right))
     s = s & gGenerateSwitch(StrikeSwitch, mContract.Specifier.Strike)
 End If
-LogMessage s
+contractSpecToString = s
 
 Exit Function
 
