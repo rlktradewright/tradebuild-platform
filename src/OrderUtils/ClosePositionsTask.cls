@@ -106,7 +106,7 @@ Case PositionManagerChangeTypes.PositionClosed
 Case PositionManagerChangeTypes.PositionCloseFailed
     mNumberRemaining = mNumberRemaining - 1
     If pm.IsSimulated Then
-        mClosePositionsResult.AddSimluatedErrorMessage pm.ContractName & ": " & pm.PositionCloseErrorMessage
+        mClosePositionsResult.AddSimulatedErrorMessage pm.ContractName & ": " & pm.PositionCloseErrorMessage
         mClosePositionsResult.NumberOfSimulatedPositionsNotClosed = mClosePositionsResult.NumberOfSimulatedPositionsNotClosed + 1
     Else
         mClosePositionsResult.AddLiveErrorMessage pm.ContractName & ": " & pm.PositionCloseErrorMessage
@@ -129,7 +129,7 @@ Case PositionManagerChangeTypes.ProviderReadinessChanged
     End If
 End Select
 
-If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
+mTaskContext.Continue
 
 Exit Sub
 
@@ -195,7 +195,9 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-mBracketOrderListener.Add ev.Future.Value
+If ev.Future.Value Is Nothing Then Exit Sub
+
+If Not mBracketOrderListener Is Nothing Then mBracketOrderListener.Add ev.Future.Value
 
 Exit Sub
 

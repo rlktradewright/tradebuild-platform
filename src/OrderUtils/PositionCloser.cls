@@ -258,16 +258,11 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get BracketOrderFuture() As IFuture
-Set BracketOrderFuture = mBracketOrderFutureBuilder.Future
-End Property
-
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Friend Sub ClosePositions( _
+Friend Function ClosePositions( _
                 ByVal pPositionManager As PositionManager, _
                 ByVal pCloseoutMode As CloseoutModes, _
                 ByVal pPriceSpec As PriceSpecifier)
@@ -278,13 +273,15 @@ Set mPositionManager = pPositionManager
 mCloseoutMode = pCloseoutMode
 Set mPriceSpec = pPriceSpec
 
+Set ClosePositions = mBracketOrderFutureBuilder.Future
+
 DeferAction Me
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Friend Sub RecoverBalancingOrder( _
                 ByVal pBracketOrder As BracketOrder, _
@@ -427,21 +424,30 @@ Private Sub markToMarket()
 Const ProcName As String = "markToMarket"
 On Error GoTo Err
 
+Dim lNoTickAvailable As Boolean
+Dim lTradePrice As Double
+
 ' closeout non-zero-size bracket orders marking them to mnarket
 
-If Not mPositionManager.DataSource.HasCurrentTick(TickTypeTrade) Then
-    RaiseEvent PositionNotClosed("No trade tick available")
-    Exit Sub
+If mPositionManager.DataSource.HasCurrentTick(TickTypeTrade) Then
+    lTradePrice = mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
+Else
+    lNoTickAvailable = True
 End If
-
-Dim lTradePrice As Double: lTradePrice = mPositionManager.DataSource.CurrentTick(TickTypeTrade).Price
 
 Dim oc As OrderContext
 For Each oc In mOrderContexts
     If Not oc Is mBalancingOrderContext Then
         Dim lBracketOrder As IBracketOrder
         For Each lBracketOrder In oc.ClosedBracketOrders
-            If lBracketOrder.Size <> 0 Then
+            If lBracketOrder.Size = 0 Then
+                ' this is an order cancelled before any fills
+            Else
+                If lNoTickAvailable Then
+                    RaiseEvent PositionNotClosed("No trade tick available")
+                    Exit Sub
+                End If
+                
                 Dim lExec As Execution: Set lExec = oc.NewExecution(True)
                 lExec.GroupName = oc.GroupName
                 lExec.RecoveryContextName = oc.RecoveryContextName

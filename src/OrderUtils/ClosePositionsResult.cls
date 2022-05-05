@@ -117,7 +117,7 @@ Friend Sub AddLiveErrorMessage(ByVal pMessage As String)
 mLiveErrorMessages.Add pMessage
 End Sub
 
-Friend Sub AddSimluatedErrorMessage(ByVal pMessage As String)
+Friend Sub AddSimulatedErrorMessage(ByVal pMessage As String)
 mSimulatedErrorMessages.Add pMessage
 End Sub
 

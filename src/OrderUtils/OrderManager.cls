@@ -62,8 +62,6 @@ Private mMarketDataManager                          As IMarketDataManager
 
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 
-Private mBracketOrderListener                       As BracketOrderListener
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -146,7 +144,7 @@ Const ProcName As String = "CloseAllPositions"
 On Error GoTo Err
 
 Dim t As New ClosePositionsTask
-t.Initialise Me, False, Nothing, "", pTypes
+t.Initialise Me, CloseoutModeMarket, Nothing, "", pTypes
 Set CloseAllPositions = t.Future
 
 StartTask t, PriorityNormal
@@ -167,8 +165,6 @@ Const ProcName As String = "CloseGroupPositions"
 On Error GoTo Err
 
 AssertArgument pGroupName <> "", "Group name must be supplied"
-
-Set mBracketOrderListener = pBracketOrderListener
 
 Dim t As New ClosePositionsTask
 t.Initialise Me, pCloseoutMode, pPriceSpec, pGroupName, pTypes, pBracketOrderListener
