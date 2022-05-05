@@ -135,7 +135,11 @@ With pContractSpec
     AddString .Expiry, "Expiry"
     AddString .Strike, "Strike"
     AddString gTwsOptionRightToString(.OptRight), "Right"
-    AddString IIf(.Multiplier = 0, "", CStr(.Multiplier)), "Multiplier"
+    If .Multiplier = 0# Then
+        AddString "", "Multiplier"
+    Else
+        AddDouble .Multiplier, "Multiplier"
+    End If
     AddString .Exchange, "Exchange"
     If Not pIgnorePrimaryExchange Then AddString .PrimaryExch, "Primary Exchange"
     AddString .CurrencyCode, "Currency"
