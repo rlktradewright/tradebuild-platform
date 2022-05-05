@@ -977,6 +977,36 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gOptionStrikeSelectionModeToString( _
+                ByVal Value As OptionStrikeSelectionModes) As String
+Select Case Value
+Case OptionStrikeSelectionModeNone
+    gOptionStrikeSelectionModeToString = ""
+Case OptionStrikeSelectionModeIncrement
+    gOptionStrikeSelectionModeToString = "I"
+Case OptionStrikeSelectionModeExpenditure
+    gOptionStrikeSelectionModeToString = "$"
+Case OptionStrikeSelectionModeDelta
+    gOptionStrikeSelectionModeToString = "D"
+End Select
+End Function
+
+Public Function gOptionStrikeSelectionOperatorToString(ByVal Value As OptionStrikeSelectionOperators) As String
+Select Case Value
+Case OptionStrikeSelectionOperatorNone
+    gOptionStrikeSelectionOperatorToString = ""
+Case OptionStrikeSelectionOperatorLT
+    gOptionStrikeSelectionOperatorToString = "<"
+Case OptionStrikeSelectionOperatorLE
+    gOptionStrikeSelectionOperatorToString = "<="
+Case OptionStrikeSelectionOperatorGT
+    gOptionStrikeSelectionOperatorToString = ">"
+Case OptionStrikeSelectionOperatorGE
+    gOptionStrikeSelectionOperatorToString = ">="
+End Select
+
+End Function
+
 Public Function gOrderActionFromString(ByVal Value As String) As OrderActions
 Select Case UCase$(Value)
 Case ""
