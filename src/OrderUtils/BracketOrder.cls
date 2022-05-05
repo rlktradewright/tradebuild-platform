@@ -855,7 +855,7 @@ Private Sub IRecoverable_LoadRecoveryData( _
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-If mRecoveryContextName = "" Then mRecoveryContextName = pRecoveryContextName
+mRecoveryContextName = pRecoveryContextName
 
 Dim lSummary As BOS: Set lSummary = pData
 If mSummary.Key = "" Then

@@ -169,7 +169,7 @@ Private Sub IRecoverable_LoadRecoveryData( _
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-If mRecoveryContextName = "" Then mRecoveryContextName = pRecoveryContextName
+mRecoveryContextName = pRecoveryContextName
 
 Dim lExec As Execution
 Set lExec = pData

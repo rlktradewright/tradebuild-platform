@@ -282,6 +282,8 @@ On Error GoTo Err
 Dim lExec As Execution
 
 If mExecutions.Contains(pExecutionReport.Id) Then
+    gLog "Duplicate execution report received with id: " & pExecutionReport.Id, _
+            ProcName, ModuleName, , LogLevelDetail
     ' we've already had this notification
     Set lExec = mExecutions.Item(pExecutionReport.Id)
     lExec.SyncToExecutionReport pExecutionReport
@@ -289,6 +291,9 @@ If mExecutions.Contains(pExecutionReport.Id) Then
     mExecutions.NotifyChange lExec
     Exit Sub
 End If
+
+gLog "New execution report received with id: " & pExecutionReport.Id, _
+        ProcName, ModuleName, , LogLevelDetail
 
 If TypeOf pExecutionReport Is Execution Then
     Set lExec = pExecutionReport
@@ -309,11 +314,13 @@ lExec.SaveRecoveryInfo
 
 mExecutions.Add lExec
 
+processExecution lExec
+
 If Not mProcessingRecoveryData Then
     mOrders.Item(lExec.OrderId).NotifyFill lExec
 End If
 
-processExecution lExec
+notifyPositionChange lExec
 
 If Not mProcessingRecoveryData Then SaveRecoveryInfo
 
@@ -402,7 +409,7 @@ Private Sub IRecoverable_LoadRecoveryData( _
 Const ProcName As String = "IRecoverable_LoadRecoveryData"
 On Error GoTo Err
 
-If mRecoveryContextName = "" Then mRecoveryContextName = pRecoveryContextName
+mRecoveryContextName = pRecoveryContextName
 gAddExistingId mRecoveryContextName
 
 Dim lSummary As PMS: Set lSummary = pData
@@ -529,6 +536,8 @@ Private Sub mPositionCloser_PositionClosed()
 Const ProcName As String = "mPositionCloser_PositionClosed"
 On Error GoTo Err
 
+gLog "Closing positions succeeded for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
+
 mClosingPosition = False
 Set mPositionCloser = Nothing
 fireChange PositionClosed
@@ -542,6 +551,8 @@ End Sub
 Private Sub mPositionCloser_PositionNotClosed(ByVal pErrorMessage As String)
 Const ProcName As String = "mPositionCloser_PositionNotClosed"
 On Error GoTo Err
+
+gLog "Closing positions failed for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
 
 mClosingPosition = False
 
@@ -1130,15 +1141,18 @@ On Error GoTo Err
 
 checkInitialised
 
-If mClosingPosition Then Exit Function
+If mClosingPosition Then
+    Set ClosePositions = CreateFuture(Nothing)
+    Exit Function
+End If
+
+gLog "Closing positions for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
 
 mPositionCloseErrorMessage = ""
 mClosingPosition = True
 
 Set mPositionCloser = New PositionCloser
-mPositionCloser.ClosePositions Me, pCloseoutMode, pPriceSpec
-
-Set ClosePositions = mPositionCloser.BracketOrderFuture
+Set ClosePositions = mPositionCloser.ClosePositions(Me, pCloseoutMode, pPriceSpec)
 
 Exit Function
 
@@ -1770,6 +1784,54 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Sub notifyPositionChange(ByVal pExec As IExecutionReport)
+Const ProcName As String = "notifyPositionChange"
+On Error GoTo Err
+
+If mQuantityOutstanding <> 0 Then
+    'we need to notify the position change before the Profit
+    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
+
+    If mQuantityOutstanding < 0 Then
+        If mLastAsk <> 0 Then
+            calcProfits mLastAsk
+        End If
+    Else        ' mQuantityOutstanding > 0
+        If mLastBid <> 0 Then
+            calcProfits mLastBid
+        End If
+    End If
+Else
+    'we need to notify the position change after the final Profit
+    calcProfits
+    
+    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
+    gLogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+            FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+            mTradeStartTimezoneName & "," & _
+            mProfitThisTrade & "," & _
+            mMaxProfitThisTrade & "," & _
+            mMaxLossThisTrade, _
+            mSummary.IsSimulated, _
+            Me
+    mSummary.ProfitLastTrade = mProfitThisTrade
+    mSummary.DrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
+    mProfitThisTrade = 0
+    mMaxProfitThisTrade = 0
+    mMaxLossThisTrade = 0
+    mSummary.ProfitLastFlat = mSessionProfit
+    mDrawdownThisTrade = 0
+    
+    If Not mMoneyManager Is Nothing Then mMoneyManager.NotifyPositionFlat
+    
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub processAskTick(ByRef pTick As GenericTick)
 Const ProcName As String = "processAskTick"
 On Error GoTo Err
@@ -1825,44 +1887,6 @@ If gGetSignedQuantity(pExec) > 0 Then
     mSummary.CumBuyPrice = mSummary.CumBuyPrice + (pExec.Price * gGetSignedQuantity(pExec))
 Else
     mSummary.CumSellPrice = mSummary.CumSellPrice + (pExec.Price * pExec.Quantity)
-End If
-
-If mQuantityOutstanding <> 0 Then
-    'we need to notify the position change before the Profit
-    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
-
-    If mQuantityOutstanding < 0 Then
-        If mLastAsk <> 0 Then
-            calcProfits mLastAsk
-        End If
-    Else        ' mQuantityOutstanding > 0
-        If mLastBid <> 0 Then
-            calcProfits mLastBid
-        End If
-    End If
-Else
-    'we need to notify the position change after the final Profit
-    calcProfits
-    
-    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
-    gLogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
-            FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
-            mTradeStartTimezoneName & "," & _
-            mProfitThisTrade & "," & _
-            mMaxProfitThisTrade & "," & _
-            mMaxLossThisTrade, _
-            mSummary.IsSimulated, _
-            Me
-    mSummary.ProfitLastTrade = mProfitThisTrade
-    mSummary.DrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
-    mProfitThisTrade = 0
-    mMaxProfitThisTrade = 0
-    mMaxLossThisTrade = 0
-    mSummary.ProfitLastFlat = mSessionProfit
-    mDrawdownThisTrade = 0
-    
-    If Not mMoneyManager Is Nothing Then mMoneyManager.NotifyPositionFlat
-    
 End If
 
 Exit Sub

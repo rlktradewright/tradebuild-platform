@@ -38,6 +38,8 @@ Implements ITask
 Private Enum RecoveryStates
     RecoveryStateStarting
     RecoveryStateExtractingInfo
+    RecoveryStateCreatingPositionManagers
+    RecoveryStateCreatingDataSources
     RecoveryStateCreatingOrderContexts
     RecoveryStateWaitingForOrderContexts
     RecoveryStateProcessingInfo
@@ -87,12 +89,11 @@ Private mState                                      As RecoveryStates
 Private mPositionManagers                           As PositionManagers
 Private mPositionManagersByRecoveryContextName      As New EnumerableCollection
 
+Private mContractFetchesRemaining                   As Long
+
 Private mNumOrderContextsWaiting                    As Long
 
 Private mInMemoryStore                              As New InMemoryStore
-
-Private WithEvents mFutureWaiter                    As FutureWaiter
-Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mMoneyManager                               As IMoneyManager
 
@@ -104,7 +105,6 @@ Private Sub Class_Initialize()
 Set mBracketOrderRecoverers = New EnumerableCollection
 Set mOrderIdMap = New OrderIdMap
 Set mOrderIdToBracketOrderRecoverer = New EnumerableCollection
-Set mFutureWaiter = New FutureWaiter
 mState = RecoveryStateStarting
 End Sub
 
@@ -126,6 +126,7 @@ Then
     mNumOrderContextsWaiting = mNumOrderContextsWaiting - 1
     lOrderContext.RemoveChangeListener Me
     If mNumOrderContextsWaiting = 0 And mState = RecoveryStateWaitingForOrderContexts Then
+        gLog "All order contexts are ready", ProcName, ModuleName
         mState = RecoveryStateProcessingInfo
         mTaskContext.Continue
     End If
@@ -285,10 +286,12 @@ End If
     
 Static sDataStoreEn As Enumerator
 Static sInMemoryStoreEn As Enumerator
+Static sPositionManagersEn As Enumerator
 
 Dim lOpItem As OPI
 
 If mState = RecoveryStateStarting Then
+    gLog "Starting order recovery", ProcName, ModuleName
     If mRecoveryAgent Is Nothing Or mOrderSubmitterFactory Is Nothing Then
         mTaskContext.Finish mPositionManagers, False
         gLog "No order recovery undertaken - order submitter factory and/or order recovery agent is not configured", ProcName, ModuleName
@@ -298,6 +301,7 @@ If mState = RecoveryStateStarting Then
     gLog "Persisted order info processing started", ProcName, ModuleName
     mProcessingPersistedData = True
     Set sDataStoreEn = mDataStore.GetEnumeratorForScope(mScopeName)
+    gLog "Extracting recovery data", ProcName, ModuleName
     mState = RecoveryStateExtractingInfo
 
 ElseIf mState = RecoveryStateExtractingInfo Then
@@ -306,7 +310,6 @@ ElseIf mState = RecoveryStateExtractingInfo Then
         lInfo = sDataStoreEn.Current
         processOrderPersistenceInfo lInfo
     Else
-        mState = RecoveryStateCreatingOrderContexts
         If mInMemoryStore.StoreIsEmpty Then
             mProcessingPersistedData = False
             mDataStore.Clear mScopeName
@@ -315,26 +318,54 @@ ElseIf mState = RecoveryStateExtractingInfo Then
             Exit Sub
         End If
         Set sInMemoryStoreEn = mInMemoryStore.Enumerator
+        gLog "Creating position managers", ProcName, ModuleName
+        mState = RecoveryStateCreatingPositionManagers
+    End If
+ElseIf mState = RecoveryStateCreatingPositionManagers Then
+    If sInMemoryStoreEn.MoveNext Then
+        Set lOpItem = sInMemoryStoreEn.Current
+        
+        If TypeOf lOpItem.Data Is PMS Then ensurePositionManagerExists lOpItem
+    Else
+        Set sPositionManagersEn = mPositionManagers.Enumerator
+        mContractFetchesRemaining = mPositionManagers.Count
+        gLog "Creating data sources", ProcName, ModuleName
+        mState = RecoveryStateCreatingDataSources
+    End If
+ElseIf mState = RecoveryStateCreatingDataSources Then
+    If sPositionManagersEn.MoveNext Then
+        Dim lPm As PositionManager: Set lPm = sPositionManagersEn.Current
+        Dim lContract As IContract: Set lContract = lPm.ContractFuture.Value
+        
+        If IsContractExpired(lContract) Then
+            gLog "Discarding order recovery information for expired contract", ProcName, ModuleName, lContract.Specifier.ToString
+        Else
+            Dim lDataSource As MarketDataSource
+            Set lDataSource = mMarketDataManager.CreateMarketDataSource(lPm.ContractFuture, False)
+            lDataSource.StartMarketData
+            
+            lPm.CompleteRecoveryInitialisation mOrderSubmitterFactory.CreateOrderSubmitter(lDataSource), lDataSource, Me
+            
+            lPm.StartRecovery
+        End If
+    Else
+        Set sInMemoryStoreEn = mInMemoryStore.Enumerator
+        gLog "Creating order contexts", ProcName, ModuleName
+        mState = RecoveryStateCreatingOrderContexts
     End If
 ElseIf mState = RecoveryStateCreatingOrderContexts Then
     If sInMemoryStoreEn.MoveNext Then
         Set lOpItem = sInMemoryStoreEn.Current
-        
-        If TypeOf lOpItem.Data Is PMS Then
-            ensurePositionManagerExists lOpItem
-        ElseIf TypeOf lOpItem.Data Is BOS Then
-            Dim lPm As PositionManager
+        If TypeOf lOpItem.Data Is BOS Then
             Set lPm = GetPositionManager(lOpItem)
             
             If Not IsContractExpired(lPm.ContractFuture.Value) Then
-                Dim lBOS As BOS
-                Set lBOS = lOpItem.Data
+                Dim lBOS As BOS: Set lBOS = lOpItem.Data
                 getOrderContext lPm, lBOS.ContextName
             End If
         End If
     Else
         Set sInMemoryStoreEn = mInMemoryStore.Enumerator
-        mDataStore.Clear mScopeName
         
         On Error GoTo ErrWithRestoreData
         
@@ -343,6 +374,8 @@ ElseIf mState = RecoveryStateCreatingOrderContexts Then
             mState = RecoveryStateWaitingForOrderContexts
             mTaskContext.Suspend -1
         Else
+            mDataStore.Clear mScopeName
+            gLog "Processing recovery data", ProcName, ModuleName
             mState = RecoveryStateProcessingInfo
         End If
     End If
@@ -361,6 +394,7 @@ ElseIf mState = RecoveryStateProcessingInfo Then
         mProcessingPersistedData = False
         gLog "Persisted order info processing completed", ProcName, ModuleName
         
+        gLog "Recovering orders", ProcName, ModuleName
         mState = RecoveryStateRecoveringOrders
     End If
 ElseIf mState = RecoveryStateRecoveringOrders Then
@@ -413,47 +447,6 @@ End Property
 Private Property Get ITask_TaskName() As String
 ITask_TaskName = mTaskContext.Name
 End Property
-
-'@================================================================================
-' mFutureWaiter Event Handlers
-'@================================================================================
-
-Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mFutureWaiter_WaitCompleted"
-On Error GoTo Err
-
-If ev.Future.IsFaulted Then Err.Raise ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
-
-If Not ev.Future.IsAvailable Then Exit Sub
-
-Dim lOpItem As OPI
-Set lOpItem = ev.ContinuationData
-
-Dim lContract As IContract
-Set lContract = ev.Future.Value
-
-Dim lPm As PositionManager
-Set lPm = GetPositionManager(lOpItem)
-
-Dim lDataSource As MarketDataSource
-If IsContractExpired(lContract) Then
-    gLog "Discarding order recovery information for expired contract", ProcName, ModuleName, lContract.Specifier.ToString
-Else
-    Set lDataSource = mMarketDataManager.CreateMarketDataSource(lPm.ContractFuture, False)
-    lDataSource.StartMarketData
-    
-    lPm.CompleteRecoveryInitialisation mOrderSubmitterFactory.CreateOrderSubmitter(lDataSource), lDataSource, Me
-    
-    lPm.StartRecovery
-End If
-
-mTaskContext.Continue
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Properties
@@ -568,14 +561,8 @@ If Not mPositionManagers.Contains(lSummary.Name) Then
     lRecoverable.LoadRecoveryData pOpItem.RCN, lSummary
     
     mPositionManagers.Add lPm
-    mFutureWaiter.Add lPm.ContractFuture, pOpItem
-
-    mTaskContext.Suspend -1
 Else
     Set lPm = mPositionManagers.Item(lSummary.Name)
-    
-    Set lRecoverable = lPm
-    lRecoverable.LoadRecoveryData pOpItem.RCN, lSummary
 End If
 
 If Not mPositionManagersByRecoveryContextName.Contains(pOpItem.RCN) Then
@@ -617,9 +604,12 @@ Do While en.MoveNext
     Dim pm As PositionManager
     Set pm = en.Current
     
+    Dim lContract As IContract: Set lContract = pm.ContractFuture.Value
     If IsContractExpired(pm.ContractFuture.Value) Then
+        gLog "Finishing position manager for expired contract: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
         lPMsToFinish.Add pm
     ElseIf pm.PendingPositionSize = 0 And pm.PositionSize = 0 Then
+        gLog "Finishing inactive position manager contract: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
         lPMsToFinish.Add pm
     End If
 Loop
