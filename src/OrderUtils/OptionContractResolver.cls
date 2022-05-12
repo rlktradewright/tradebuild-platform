@@ -257,7 +257,7 @@ If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
                         mUnderlyingContract.Specifier
     fireStateChange OptionContractResolverStateFetchingStrikes
 ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
-    Dim lValue As Long
+    Dim lValue As Double
     Select Case mStrikeSelectionMode
     Case OptionStrikeSelectionModeExpenditure
         If ev.Tick.TickType <> TickTypeOptionModelPrice Then Exit Sub
@@ -284,7 +284,7 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     Set lDataSource = Nothing
     
     If lValue <> MaxDouble Then
-        logContractInfo lCandidateContract, "Contract", lValue
+        logContractInfo lCandidateContract, "Contract", CLng(lValue)
         checkIfTargetContractFound lCandidateContract, lValue
     End If
     
