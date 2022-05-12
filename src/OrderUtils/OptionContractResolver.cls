@@ -98,7 +98,6 @@ Private mContractsAwaitingMarketData                As Long
 
 Private mCancelledByClient                          As Boolean
 Private mCancelledBySystem                          As Boolean
-Private mFaulted                                    As Boolean
 
 Private mSelfRef                                    As Object
 
@@ -289,29 +288,10 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
         checkIfTargetContractFound lCandidateContract, lValue
     End If
     
-    If allContractsChecked Then
-        If needMoreContracts Then
-            fetchCandidateContracts mLastStrikeFetched, _
-                                    calcNumberOfStrikesToFetch, _
-                                    True, _
-                                    mLastStrikeFetched
-        ElseIf Not mTargetContract Is Nothing Then
-            processTargetContract
-            Set mSelfRef = Nothing
-        ElseIf mReverseDirection Then
-            processTargetContract
-            Set mSelfRef = Nothing
-        Else
-            ' the selection condition is not satsfied  -
-            ' this means we need to go the other way to find the desired strike
-            mReverseDirection = True
-            mLastStrikeFetched = 0
-            fetchCandidateContracts mInitialStrike, _
-                                    calcNumberOfStrikesToFetch, _
-                                    True, _
-                                    mLastStrikeFetched
-        End If
-    End If
+    mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
+    gLog "Snapshots remaining: " & mContractsAwaitingMarketData, ProcName, ModuleName, , LogLevelDetail
+    
+    checkAllProcessingCompleted
 End If
 
 Exit Sub
@@ -378,11 +358,10 @@ ElseIf ev.Future.IsFaulted Then
     End If
     
     If mState = OptionContractResolverStateFindingRequiredContract Then
-        mNumberOfCandidateContractsAwaited = mNumberOfCandidateContractsAwaited - 1
+        checkAllProcessingCompleted
         Exit Sub
     End If
     
-    mFaulted = True
     Exit Sub
 End If
 
@@ -444,6 +423,8 @@ Case OptionContractResolverStateFetchingCandidateContracts
         End If
     Next
     processTargetContract
+Case OptionContractResolverStateGotTargetContract
+    
 Case Else
     Assert False, "Unexpected state: " & mState
 End Select
@@ -478,7 +459,8 @@ ElseIf ev.Future.IsFaulted Then
             lContractSpec.ToString & ": " & _
             ev.Future.ErrorMessage, _
         ProcName, ModuleName
-    mFaulted = True
+    mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
+    Set mSelfRef = Nothing
     Exit Sub
 End If
 
@@ -673,8 +655,6 @@ Private Function allContractsChecked() As Boolean
 Const ProcName As String = "allContractsChecked"
 On Error GoTo Err
 
-mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
-gLog "Snapshots remaining: " & mContractsAwaitingMarketData, ProcName, ModuleName, , LogLevelDetail
 allContractsChecked = (mContractsAwaitingMarketData = 0) And _
                         (mNumberOfCandidateContractsAwaited = 0)
 
@@ -691,6 +671,40 @@ calcNumberOfStrikesToFetch = Int((mStrikes.Count + PercentStrikesToFetch - 1) * 
                                     PercentStrikesToFetch / 100#)
 If calcNumberOfStrikesToFetch < MinStrikesToFetch Then calcNumberOfStrikesToFetch = MinStrikesToFetch
 End Function
+
+Private Sub checkAllProcessingCompleted()
+Const ProcName As String = "checkAllProcessingCompleted"
+On Error GoTo Err
+
+If Not allContractsChecked Then Exit Sub
+
+If needMoreContracts Then
+    fetchCandidateContracts mLastStrikeFetched, _
+                            calcNumberOfStrikesToFetch, _
+                            True, _
+                            mLastStrikeFetched
+ElseIf Not mTargetContract Is Nothing Then
+    processTargetContract
+    Set mSelfRef = Nothing
+ElseIf mReverseDirection Then
+    processTargetContract
+    Set mSelfRef = Nothing
+Else
+    ' the selection condition is not satsfied  -
+    ' this means we need to go the other way to find the desired strike
+    mReverseDirection = True
+    mLastStrikeFetched = 0
+    fetchCandidateContracts mInitialStrike, _
+                            calcNumberOfStrikesToFetch, _
+                            True, _
+                            mLastStrikeFetched
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub checkIfTargetContractFound( _
                 ByVal pCandidateContract As IContract, _
