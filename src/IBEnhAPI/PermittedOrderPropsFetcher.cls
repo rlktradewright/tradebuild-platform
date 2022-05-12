@@ -225,6 +225,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "DEACT", _
             "DEACTDIS", _
             "DEACTEOD", _
+            "DUR", _
             "FOK", _
             "HPENNY"
         Case "IBDARK", _
@@ -247,14 +248,19 @@ For i = 0 To UBound(lOrderTypesStr)
             "PEGMKTVOL", _
             "PEGPRMVOL", _
             "PEGSRFVOL", _
+            "POSTATS", _
             "POSTONLY", _
             "PREOPGRTH", _
+            "PRICECHK", _
+            "REL2MID"
+        Case "RELPCTOFS", _
             "RELSTK", _
             "RPI", _
             "RTHIGNOPG", _
             "SCALE", _
             "SCALEODD", _
             "SCALERST", _
+            "SIZECHK", _
             "SMARTSTG"
         Case "SNAPMID", _
             "SNAPMKT", _

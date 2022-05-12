@@ -285,7 +285,7 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And .PrevAskSize <> MaxLong Then lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
         If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
-Case TwsTickTypes.TwsTickLast
+    Case TwsTickTypes.TwsTickLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .Contract)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
