@@ -620,6 +620,7 @@ On Error GoTo Err
 
 If mSplash Is Nothing Then Set mSplash = New fSplash
 mSplash.Show vbModeless
+mSplash.Theme = New BlackTheme
 mSplash.Initialise
 mSplash.Refresh
 SetWindowLong mSplash.hWnd, GWL_EXSTYLE, GetWindowLong(mSplash.hWnd, GWL_EXSTYLE) Or WS_EX_TOPMOST

@@ -112,6 +112,8 @@ Private Const ModuleName                            As String = "fSplash"
 ' Member variables
 '@================================================================================
 
+Private mTheme                                      As ITheme
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -166,6 +168,22 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Let Theme(ByVal Value As ITheme)
+Const ProcName As String = "Theme"
+On Error GoTo Err
+
+Set mTheme = Value
+If mTheme Is Nothing Then Exit Property
+
+Me.BackColor = mTheme.BackColor
+gApplyTheme mTheme, Me.Controls
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
 
 '@================================================================================
 ' Methods
