@@ -33,6 +33,8 @@ Public Const NullIndex                              As Long = -1
 
 Public Const ConfigSectionContract                  As String = "Contract"
 
+Public Const OneSecond                              As Double = 1# / 86400#
+
 '@================================================================================
 ' Member variables
 '@================================================================================

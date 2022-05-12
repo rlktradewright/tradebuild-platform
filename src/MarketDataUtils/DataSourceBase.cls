@@ -116,8 +116,10 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mIsSnapshot                                 As Boolean
 Private mSnapshotRefreshInterval                    As Long
+Private mSnapshotRefreshCount                       As Long
 Private WithEvents mSnapshotRefreshTLI              As TimerListItem
 Attribute mSnapshotRefreshTLI.VB_VarHelpID = -1
+Private mLastSnapshotRequestTimeUTC                 As Date
 
 Private mTimerList                                  As TimerList
 
@@ -185,7 +187,14 @@ If lDataStream Is mDepthTickStream Then
 ElseIf mIsSnapshot And _
         mSnapshotRefreshInterval <> 0 And _
         mSnapshotRefreshTLI Is Nothing Then
-        Set mSnapshotRefreshTLI = mTimerList.Add(Empty, mSnapshotRefreshInterval, ExpiryTimeUnitSeconds)
+    Dim lRestartInterval As Long
+    lRestartInterval = mSnapshotRefreshInterval - (GetTimestampUTC - mLastSnapshotRequestTimeUTC) / OneSecond
+    If lRestartInterval < 0 Then lRestartInterval = 1
+    gLogger.Log "Snapshot completed for: " & _
+                mContract.Specifier.ToString & _
+                "; restarting in " & lRestartInterval & " seconds", _
+                ProcName, ModuleName
+    Set mSnapshotRefreshTLI = mTimerList.Add(Empty, lRestartInterval, ExpiryTimeUnitSeconds)
 Else
     fireNoMorePriorityTicks ev
     mDataSources.NotifyMarketDataStreamFinished
@@ -287,6 +296,12 @@ If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
 
 Set mSnapshotRefreshTLI = Nothing
 initialiseTicks False
+
+mSnapshotRefreshCount = mSnapshotRefreshCount + 1
+gLogger.Log "Restarting snapshot for: " & _
+            mContract.Specifier.ToString & _
+            "; restart " & mSnapshotRefreshCount, _
+            ProcName, ModuleName
 RequestMarketData
 
 Exit Sub
@@ -1143,6 +1158,7 @@ On Error GoTo Err
 If mNumberOfMarketDataSubscriptions <> 1 Then Exit Sub
 
 If mIsSnapshot Then
+    mLastSnapshotRequestTimeUTC = GetTimestampUTC
     Set mDataTickStream = getDataManager.RequestMarketDataSnapshot(Me)
 Else
     Set mDataTickStream = getDataManager.RequestMarketData(Me)
