@@ -115,7 +115,7 @@ Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mIsSnapshot                                 As Boolean
-Private mSnapshotRefreshInterval                    As Long
+Private mSnapshotRefreshInterval                    As Double
 Private mSnapshotRefreshCount                       As Long
 Private WithEvents mSnapshotRefreshTLI              As TimerListItem
 Attribute mSnapshotRefreshTLI.VB_VarHelpID = -1
@@ -187,12 +187,19 @@ If lDataStream Is mDepthTickStream Then
 ElseIf mIsSnapshot And _
         mSnapshotRefreshInterval <> 0 And _
         mSnapshotRefreshTLI Is Nothing Then
-    Dim lRestartInterval As Long
+    Const DelayFuzz As Double = 0.5
+    Dim lRandomDelay As Double: lRandomDelay = 2# * DelayFuzz * Rnd(GetTimestamp) - DelayFuzz
+    Dim lRestartInterval As Double
     lRestartInterval = mSnapshotRefreshInterval - (GetTimestampUTC - mLastSnapshotRequestTimeUTC) / OneSecond
-    If lRestartInterval < 0 Then lRestartInterval = 1
+    If lRestartInterval < DelayFuzz Then
+        lRestartInterval = DelayFuzz + lRandomDelay
+    Else
+        lRestartInterval = lRestartInterval + lRandomDelay
+    End If
+    lRestartInterval = lRestartInterval + OneMillisec ' ensure delay is not zero
     gLogger.Log "Snapshot completed for: " & _
                 mContract.Specifier.ToString & _
-                "; restarting in " & lRestartInterval & " seconds", _
+                "; restarting in " & Format(lRestartInterval, "0.000") & " seconds", _
                 ProcName, ModuleName
     Set mSnapshotRefreshTLI = mTimerList.Add(Empty, lRestartInterval, ExpiryTimeUnitSeconds)
 Else
@@ -302,7 +309,7 @@ gLogger.Log "Restarting snapshot for: " & _
             mContract.Specifier.ToString & _
             "; restart " & mSnapshotRefreshCount, _
             ProcName, ModuleName
-RequestMarketData
+RequestMarketData True
 
 Exit Sub
 
@@ -371,7 +378,8 @@ Const ProcName As String = "AddMarketDataSubscription"
 On Error GoTo Err
 
 mNumberOfMarketDataSubscriptions = mNumberOfMarketDataSubscriptions + 1
-RequestMarketData
+RequestMarketData False
+
 
 Exit Sub
 
@@ -634,7 +642,7 @@ mStreamId = pStreamId
 mOptions = pOptions
 mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 mIsSnapshot = pIsSnapshot
-mSnapshotRefreshInterval = pRefreshInterval
+mSnapshotRefreshInterval = CDbl(pRefreshInterval)
 
 mNoImpliedTrades = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoImpliedTrades
 mNoVolumeAdjustments = mOptions And MarketDataSourceOptions.MarketDataSourceOptNoVolumeAdjustments
@@ -1151,11 +1159,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub RequestMarketData()
+Private Sub RequestMarketData(ByVal pRestartingSnapshot As Boolean)
 Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
 
-If mNumberOfMarketDataSubscriptions <> 1 Then Exit Sub
+If pRestartingSnapshot Then
+    ' always do this
+ElseIf mNumberOfMarketDataSubscriptions = 1 Then
+    ' first request, so do it
+ElseIf Not mIsSnapshot Then
+    ' already receiving data, so do nothing
+    Exit Sub
+ElseIf Not mSnapshotRefreshTLI Is Nothing Then
+    ' we are currently waiting to restart the snapshot, so
+    ' cancel the timer and do it now
+    mSnapshotRefreshTLI.Cancel
+    Set mSnapshotRefreshTLI = Nothing
+Else
+    ' we are currently receiving snapshot data, so let the
+    ' new subscriber receive it. If they don't get the data
+    ' they want they won't Finish the data source, so provided
+    ' they've set the snapshot refresh interval they'll get
+    ' another go
+    Exit Sub
+End If
 
 If mIsSnapshot Then
     mLastSnapshotRequestTimeUTC = GetTimestampUTC
