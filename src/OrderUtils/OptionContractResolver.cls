@@ -215,8 +215,6 @@ On Error GoTo Err
 
 Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
     
-gLog "mCancelledByClient=" & mCancelledByClient, ProcName, ModuleName, , LogLevelDetail
-
 If mCancelledByClient Then
     lDataSource.Finish
     gLog "mState=" & mState, ProcName, ModuleName, , LogLevelDetail
@@ -284,8 +282,10 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     Set lDataSource = Nothing
     
     If lValue <> MaxDouble Then
-        logContractInfo lCandidateContract, "Contract", CLng(lValue)
+        logContractInfo lCandidateContract, "Contract", Format(lValue, "0")
         checkIfTargetContractFound lCandidateContract, lValue
+    Else
+        logContractInfo lCandidateContract, "Contract", "not available"
     End If
     
     mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
@@ -1065,7 +1065,7 @@ End Function
 Private Sub logContractInfo( _
                 ByVal pContract As IContract, _
                 ByVal pText As String, _
-                ByVal pValue As Long)
+                ByVal pValue As String)
 gLogContractResolution pText & ": " & _
                         gGetContractName(pContract.Specifier) & _
                         "; strike: " & _
