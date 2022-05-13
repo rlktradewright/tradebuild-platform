@@ -1567,6 +1567,8 @@ If (pPrevPrice <> MaxDouble Or (pPrice <> 0# And pPrice <> -1# And pPrice <> -10
     IsValidPrice(pPrice, pPrevPrice, pContract.Specifier.SecType, pContract.TickSize) _
 Then
     validPrice = True
+ElseIf pPrice <> -1# Or pPrice <> -100# Then
+    ' don't log these very common ticks meaning 'no value'
 Else
     gLogger.Log "Invalid price rejected (" & pPriceType & "): " & _
                     "price=" & pPrice & _
