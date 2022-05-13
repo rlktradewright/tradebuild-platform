@@ -520,6 +520,10 @@ Private Sub listGroups()
 Const ProcName As String = "listGroups"
 On Error GoTo Err
 
+gWriteLineToConsole "Groups at " & _
+                    FormatTimestamp(GetTimestamp, _
+                                    TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & _
+                    ": ", True
 Dim lRes As GroupResources
 For Each lRes In mGroups
     Dim lGroupName As String: lGroupName = lRes.GroupName
@@ -548,6 +552,12 @@ Private Sub listPositions()
 Const ProcName As String = "listPositions"
 On Error GoTo Err
 
+Dim lQual As String: lQual = IIf(mOrderManager.PositionManagersLive.Count = 0, "none", "")
+gWriteLineToConsole "Positions at " & _
+                    FormatTimestamp(GetTimestamp, _
+                                    TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & _
+                    ": " & lQual, _
+                    True
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
@@ -572,6 +582,12 @@ Private Sub listTrades()
 Const ProcName As String = "listTrades"
 On Error GoTo Err
 
+Dim lQual As String: lQual = IIf(mOrderManager.PositionManagersLive.Count = 0, "none", "")
+gWriteLineToConsole "Trades at " & _
+                    FormatTimestamp(GetTimestamp, _
+                                    TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & _
+                    ": " & lQual, _
+                    True
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
