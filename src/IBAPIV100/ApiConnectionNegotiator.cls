@@ -167,7 +167,12 @@ On Error GoTo Err
 
 gLog "Connecting to Tws: negotiating API connection", ModuleName, ProcName
 mWriter.StartMessage "API"
-mWriter.AddRawString "v" & ApiServerVersions.MinV100Plus & ".." & ApiServerVersions.Max, "SupportedServerVersions"
+mWriter.AddRawString "v" & _
+                        ApiServerVersions.MinV100Plus & _
+                        ".." & _
+                        ApiServerVersions.Max & _
+                        " +PACEAPI", _
+                    "SupportedServerVersions"
 mWriter.Send forceLogMessage:=True
 
 Exit Sub
@@ -244,7 +249,6 @@ gLog "Server version", ModuleName, ProcName, CStr(mServerVersion), LogLevelSever
 gLog "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & " " & lTimezone, LogLevelSevere
 
 StartAPI pClientId, pOptionalCapabilities
-sendLogLevel
 
 gLog "API connection negotiated - awaiting nextValidId", ModuleName, ProcName
 
@@ -267,23 +271,6 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub sendLogLevel()
-Const ProcName As String = "sendLogLevel"
-On Error GoTo Err
-
-Const VERSION = 1
-
-mWriter.AddMessageId SET_SERVER_LOGLEVEL
-mWriter.AddString VERSION, "Version"
-mWriter.AddString TwsLogLevels.TwsLogLevelInformation, "Loglevel"
-mWriter.Send
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
 
 Private Sub StartAPI(ByVal pClientId As Long, pOptionalCapabilities As String)
 Const VERSION = 2

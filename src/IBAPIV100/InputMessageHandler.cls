@@ -101,6 +101,8 @@ On Error GoTo Err
 
 RaiseEvent ApiConnectionEstablished(pServerVersion)
 
+sendLogLevel
+
 Exit Sub
 
 Err:
@@ -384,6 +386,23 @@ If pMessageId = TwsSocketInMsgTypes.HISTORICAL_DATA And mServerVersion >= ApiSer
 If pMessageId = TwsSocketInMsgTypes.ORDER_STATUS And mServerVersion >= ApiServerVersions.MARKET_CAP_PRICE Then Exit Function
 messageHasVersion = pMessageId <= TwsSocketInMsgTypes.MaxIdWithVersion
 End Function
+
+Private Sub sendLogLevel()
+Const ProcName As String = "sendLogLevel"
+On Error GoTo Err
+
+Const VERSION = 2
+
+mWriter.AddMessageId SET_SERVER_LOGLEVEL
+mWriter.AddString VERSION, "Version"
+mWriter.AddString TwsLogLevels.TwsLogLevelInformation, "Loglevel"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
 
 Private Sub updateStats(ByVal pMessageId As Long, ByVal pMessageElapsedTime As Single)
 Static sEventCount As Long
