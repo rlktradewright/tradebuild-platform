@@ -272,6 +272,11 @@ RaiseEvent OrderError(pOrderId, pErrorCode, pErrorMsg)
 Exit Sub
 
 Err:
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
+    gLog "Order not in collection: id=" & pOrderId, _
+        ProcName, ModuleName, , LogLevelNormal
+        Exit Sub
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -342,6 +347,11 @@ RaiseEvent OrderMessage(pOrderId, pMessage)
 Exit Sub
 
 Err:
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
+    gLog "Order not in collection: id=" & pOrderId, _
+        ProcName, ModuleName, , LogLevelNormal
+        Exit Sub
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -354,6 +364,14 @@ mOrders(pOrderReport.Id).SyncToOrderReport pOrderReport
 Exit Sub
 
 Err:
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
+    gLog "Order not in collection: id=" & _
+            pOrderReport.Id & _
+            "; broker id=" & _
+            pOrderReport.BrokerId, _
+        ProcName, ModuleName, , LogLevelNormal
+        Exit Sub
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
@@ -368,6 +386,14 @@ lOrder.Status = pOrderStatusReport.Status
 Exit Sub
 
 Err:
+If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
+    gLog "Order not in collection: id=" & _
+            pOrderStatusReport.OrderId & _
+            "; broker id=" & _
+            pOrderStatusReport.BrokerId, _
+        ProcName, ModuleName, , LogLevelNormal
+        Exit Sub
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
