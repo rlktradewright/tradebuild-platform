@@ -407,11 +407,11 @@ On Error GoTo Err
 AssertArgument BarTimePeriod.Units <> TimePeriodNone, "Invalid time Units argument"
 
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
-                                                Timestamp, _
-                                                BarTimePeriod, _
-                                                offset, _
-                                                gNormaliseSessionTime(SessionStartTime), _
-                                                gNormaliseSessionTime(SessionEndTime))
+                                Timestamp, _
+                                BarTimePeriod, _
+                                offset, _
+                                gNormaliseSessionTime(SessionStartTime), _
+                                gNormaliseSessionTime(SessionEndTime))
 
 Exit Function
 

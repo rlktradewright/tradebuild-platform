@@ -22,7 +22,7 @@ Option Explicit
 Public Const ProjectName                        As String = "BarUtils27"
 Private Const ModuleName                        As String = "Globals"
 
-Public Const OneDay As Currency = 8640000       ' in centisecond units
+Public Const OneDayCentiSecs                    As Currency = 8640000
 
 Public Const MaxWorkingDaysPeryear              As Long = 262
 Public Const WorkingDaysPerWeek                 As Long = 5
@@ -117,7 +117,7 @@ Select Case BarTimePeriod.Units
         ' adjust if bar is at end of session but does not fit exactly into session
         
         Dim lNextSessionStartTimeSecs  As Currency
-        lNextSessionStartTimeSecs = gDateToCentiSeconds(GetSessionTimesIgnoringWeekend(gCentiSecondsToDate(startTimeSecs + OneDay), SessionStartTime, SessionEndTime).StartTime)
+        lNextSessionStartTimeSecs = gDateToCentiSeconds(GetSessionTimesIgnoringWeekend(gCentiSecondsToDate(startTimeSecs + OneDayCentiSecs), SessionStartTime, SessionEndTime).StartTime)
         If gBarEndTime > lNextSessionStartTimeSecs Then gBarEndTime = lNextSessionStartTimeSecs
 End Select
 
@@ -161,8 +161,8 @@ Case TimePeriodSecond, TimePeriodMinute, TimePeriodHour
     Dim barLengthSecs As Currency: barLengthSecs = gCalcBarLengthSeconds(BarTimePeriod)
     
     If timeSecs < sessionStartSecs Then
-        dayNumSecs = dayNumSecs - OneDay
-        timeSecs = timeSecs + OneDay
+        dayNumSecs = dayNumSecs - OneDayCentiSecs
+        timeSecs = timeSecs + OneDayCentiSecs
     End If
     gBarStartTime = dayNumSecs + _
                     sessionStartSecs + _
@@ -178,7 +178,7 @@ Case TimePeriodDay
 
         gBarStartTime = gDateToCentiSeconds(WorkingDayDate(1 + BarTimePeriod.Length * Int((workingDayNum - 1) / BarTimePeriod.Length), _
                                             dayNum)) + sessionStartSecs
-        If timeSecs < sessionStartSecs Then gBarStartTime = gBarStartTime - OneDay
+        If timeSecs < sessionStartSecs Then gBarStartTime = gBarStartTime - OneDayCentiSecs
     End If
 Case TimePeriodWeek
     Dim weekNum As Long
@@ -194,7 +194,7 @@ Case TimePeriodWeek
     End If
     gBarStartTime = gDateToCentiSeconds(WeekStartDateFromWeekNumber(1 + BarTimePeriod.Length * Int((weekNum - 1) / BarTimePeriod.Length), _
                                         dayNum) + SessionStartTime)
-    If sessionSpansMidnight Then gBarStartTime = gBarStartTime - OneDay
+    If sessionSpansMidnight Then gBarStartTime = gBarStartTime - OneDayCentiSecs
 Case TimePeriodMonth
     If sessionSpansMidnight And timeSecs >= sessionStartSecs Then dayNum = dayNum + 1
     Dim monthNum As Long: monthNum = Month(dayNum)
@@ -202,7 +202,7 @@ Case TimePeriodMonth
                                             1 + BarTimePeriod.Length * Int((monthNum - 1) / BarTimePeriod.Length), _
                                             dayNum) + _
                                         SessionStartTime)
-    If sessionSpansMidnight Then gBarStartTime = gBarStartTime - OneDay
+    If sessionSpansMidnight Then gBarStartTime = gBarStartTime - OneDayCentiSecs
 Case TimePeriodYear
     gBarStartTime = gDateToCentiSeconds(CDate(DateSerial(1900 + BarTimePeriod.Length * Int((Year(Timestamp) - 1900) / BarTimePeriod.Length), 1, 1)))
 Case TimePeriodVolume, _
@@ -256,7 +256,7 @@ SessionEndTime = SessionEndTime - Int(SessionEndTime)
 If SessionEndTime > SessionStartTime Then
     gCalcNumberOfBarsInSession = -Int(-(gDateToCentiSeconds(SessionEndTime) - gDateToCentiSeconds(SessionStartTime)) / gCalcBarLengthSeconds(BarTimePeriod))
 Else
-    gCalcNumberOfBarsInSession = -Int(-(OneDay + gDateToCentiSeconds(SessionEndTime) - gDateToCentiSeconds(SessionStartTime)) / gCalcBarLengthSeconds(BarTimePeriod))
+    gCalcNumberOfBarsInSession = -Int(-(OneDayCentiSecs + gDateToCentiSeconds(SessionEndTime) - gDateToCentiSeconds(SessionStartTime)) / gCalcBarLengthSeconds(BarTimePeriod))
 End If
 
 Exit Function
@@ -363,7 +363,7 @@ Else
 
     If datumBarStartSecs > gDateToCentiSeconds(lSessTimes.EndTime) Then
         ' specified Timestamp was between sessions
-        datumBarStartSecs = gBarEndTime(lSessTimes.EndTime, BarTimePeriod, SessionStartTime, SessionEndTime)
+        datumBarStartSecs = gDateToCentiSeconds(lSessTimes.EndTime)
     End If
     
     proposedStartSecs = gDateToCentiSeconds(lSessTimes.StartTime)
@@ -376,7 +376,7 @@ Else
     Else
         remainingOffset = offset - BarsFromSessStart
         Do While remainingOffset > 0
-            lSessTimes = GetSessionTimes(gCentiSecondsToDate(proposedStartSecs - OneDay), SessionStartTime, SessionEndTime)
+            lSessTimes = GetSessionTimes(gCentiSecondsToDate(proposedStartSecs - OneDayCentiSecs), SessionStartTime, SessionEndTime)
             
             If numBarsInSession >= remainingOffset Then
                 proposedStartSecs = gDateToCentiSeconds(lSessTimes.EndTime) - remainingOffset * barLengthSecs
@@ -602,22 +602,26 @@ AssertArgument (Int(pStartTime) = Int(pEndTime)) Or _
                 (pEndTime <= pStartTime + 1), _
                 "Invalid timespan for this function"
 
+Dim lBarLengthCentiSecs As Currency
+
 Select Case pTimePeriod.Units
     Case TimePeriodSecond
-        calcNumberOfBarsInTimespan = Int((86400# * (pEndTime - pStartTime) + pTimePeriod.Length - 1) / pTimePeriod.Length)
+        lBarLengthCentiSecs = pTimePeriod.Length * 100
     Case TimePeriodMinute
-        calcNumberOfBarsInTimespan = Int((1440# * (pEndTime - pStartTime) + pTimePeriod.Length - 1) / pTimePeriod.Length)
+        lBarLengthCentiSecs = pTimePeriod.Length * 60 * 100
     Case TimePeriodHour
-        calcNumberOfBarsInTimespan = Int((24# * (pEndTime - pStartTime) + pTimePeriod.Length - 1) / pTimePeriod.Length)
+        lBarLengthCentiSecs = pTimePeriod.Length * 3600 * 100
     Case TimePeriodDay
-        calcNumberOfBarsInTimespan = -Int(-((pEndTime - pStartTime) + pTimePeriod.Length - 1) / pTimePeriod.Length)
+        lBarLengthCentiSecs = pTimePeriod.Length * OneDayCentiSecs
     Case TimePeriodWeek
-        calcNumberOfBarsInTimespan = Int(((pEndTime - pStartTime) / 7 + pTimePeriod.Length - 1) / pTimePeriod.Length)
+        lBarLengthCentiSecs = pTimePeriod.Length * OneDayCentiSecs * WorkingDaysPerWeek
     Case TimePeriodMonth
-        calcNumberOfBarsInTimespan = Int(((Year(pEndTime) - Year(pStartTime)) * 12 + Month(pEndTime) - Month(pStartTime) + pTimePeriod.Length - 1) / pTimePeriod.Length)
+        lBarLengthCentiSecs = pTimePeriod.Length * OneDayCentiSecs * MinWorkingDaysPerMonth
     Case TimePeriodYear
-        calcNumberOfBarsInTimespan = Int((Year(pEndTime) - Year(pStartTime) + pTimePeriod.Length - 1) / pTimePeriod.Length)
+        lBarLengthCentiSecs = pTimePeriod.Length * OneDayCentiSecs * MinWorkingDaysPerYear
 End Select
+
+calcNumberOfBarsInTimespan = Int((gDateToCentiSeconds(pEndTime - pStartTime) + lBarLengthCentiSecs - 1) / lBarLengthCentiSecs)
 
 Exit Function
 
