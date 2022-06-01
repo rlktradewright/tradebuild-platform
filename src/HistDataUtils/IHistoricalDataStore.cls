@@ -93,8 +93,13 @@ Public Function CreateBarWriter( _
 End Function
 
 Public Function FetchBars( _
-                ByVal pBarDataSpecifierFuture As IFuture, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pBarDataSpecifier As BarDataSpecifier, _
+                Optional ByVal pSpecialFromTime As String, _
+                Optional ByVal pSpecialToTime As String, _
+                Optional ByVal pClockFuture As IFuture, _
                 Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDontReturnBars As Boolean, _
                 Optional ByVal pCookie As Variant) As IFuture
 End Function
 

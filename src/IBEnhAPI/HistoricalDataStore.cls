@@ -97,14 +97,26 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IHistoricalDataStore_FetchBars( _
-                ByVal pBarDataSpecifierFuture As IFuture, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pBarDataSpecifier As BarDataSpecifier, _
+                Optional ByVal pSpecialFromTime As String, _
+                Optional ByVal pSpecialToTime As String, _
+                Optional ByVal pClockFuture As IFuture, _
                 Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDonReturnBars As Boolean, _
                 Optional ByVal pCookie As Variant) As IFuture
 Const ProcName As String = "IHistoricalDataStore_FetchBars"
 On Error GoTo Err
 
-Set IHistoricalDataStore_FetchBars = FetchBars(pBarDataSpecifierFuture, pListener, pCookie)
-
+Set IHistoricalDataStore_FetchBars = FetchBars( _
+                                        pContractFuture, _
+                                        pBarDataSpecifier, _
+                                        pSpecialFromTime, _
+                                        pSpecialToTime, _
+                                        pClockFuture, _
+                                        pListener, _
+                                        pDonReturnBars, _
+                                        pCookie)
 
 Exit Function
 
@@ -225,19 +237,34 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBars( _
-                ByVal pBarDataSpecifierFuture As IFuture, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pBarDataSpecifier As BarDataSpecifier, _
+                Optional ByVal pSpecialFromTime As String, _
+                Optional ByVal pSpecialToTime As String, _
+                Optional ByVal pClockFuture As IFuture, _
                 Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDonReturnBars As Boolean, _
                 Optional ByVal pCookie As Variant) As IFuture
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
 Dim lHistDataFetchTask As New HistDataRequestTask
-lHistDataFetchTask.Initialise pBarDataSpecifierFuture, pListener, mHistDataRequester, mContractRequester, mContractCache, pCookie
+Set FetchBars = lHistDataFetchTask.Initialise( _
+                pContractFuture, _
+                pBarDataSpecifier, _
+                pClockFuture, _
+                pSpecialFromTime, _
+                pSpecialToTime, _
+                pListener, _
+                pDonReturnBars, _
+                mHistDataRequester, _
+                mContractRequester, _
+                mContractCache, _
+                pCookie)
 Dim lTc As TaskController
 Set lTc = StartTask(lHistDataFetchTask, PriorityLow, , pCookie)
 mTaskControllers.Add lTc
 lTc.AddTaskCompletionListener Me
-Set FetchBars = lHistDataFetchTask.BarsFuture
 
 Exit Function
 

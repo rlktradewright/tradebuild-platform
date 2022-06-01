@@ -52,6 +52,12 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 Private mTradingDB                                  As TradingDB
 
 Private mBarSpec                                    As BarDataSpecifier
+Private mSpecialFromTime                            As String
+Private mSpecialToTime                              As String
+
+Private mContract                                   As IContract
+Private mClockExpected                              As Boolean
+Private mClock                                      As Clock
 
 Private mListener                                   As IBarFetchListener
 Private mCookie                                     As Variant
@@ -113,8 +119,13 @@ ElseIf ev.Future.IsFaulted Then
 ElseIf TypeOf ev.Future.Value Is TradingDB Then
     Set mTradingDB = ev.Future.Value
     fetchIfReady
-ElseIf TypeOf ev.Future.Value Is BarDataSpecifier Then
-    Set mBarSpec = ev.Future.Value
+ElseIf TypeOf ev.Future.Value Is IContract Then
+    Set mContract = ev.Future.Value
+    trySetContract
+    fetchIfReady
+ElseIf TypeOf ev.Future.Value Is Clock Then
+    Set mClock = ev.Future.Value
+    trySetContract
     fetchIfReady
 ElseIf TypeOf ev.Future.Value Is Bars Then
     mFutureBuilder.Value = ev.Future.Value
@@ -156,9 +167,14 @@ End Sub
 Friend Sub Initialise( _
                 ByVal pHistDataStore As HistDataStore, _
                 ByVal pTradingDBFuture As IFuture, _
-                ByVal pBarDataSpecifierFuture As IFuture, _
-                ByVal pUseSynchronousReads As Boolean, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pBarDataSpecifier As IFuture, _
+                ByVal pSpecialFromTime As String, _
+                ByVal pSpecialToTime As String, _
+                ByVal pClockFuture As IFuture, _
                 ByVal pListener As IBarFetchListener, _
+                ByVal pDontReturnBars As Boolean, _
+                ByVal pUseSynchronousReads As Boolean, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -172,7 +188,17 @@ Else
     mFutureWaiter.Add pTradingDBFuture
 End If
 
-mFutureWaiter.Add pBarDataSpecifierFuture
+mFutureWaiter.Add pContractFuture
+If Not pClockFuture Is Nothing Then
+    mFutureWaiter.Add pClockFuture
+    mClockExpected = True
+End If
+
+Set mBarSpec = pBarDataSpecifier
+
+mSpecialFromTime = pSpecialFromTime
+mSpecialToTime = pSpecialToTime
+
 mFutureBuilder.Cookie = pCookie
 
 Set mListener = pListener
@@ -231,7 +257,10 @@ Private Sub fetchIfReady()
 Const ProcName As String = "fetchIfReady"
 On Error GoTo Err
 
-If mTradingDB Is Nothing Or mBarSpec Is Nothing Or mBarSpec.Contract Is Nothing Then Exit Sub
+If mTradingDB Is Nothing Or _
+    mBarSpec Is Nothing Or _
+    mBarSpec.Contract Is Nothing Or _
+    (mClockExpected And mClock Is Nothing) Then Exit Sub
 
 fetch
 
@@ -241,4 +270,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub trySetContract()
+If mContract Is Nothing Then Exit Sub
+If mClockExpected And mClock Is Nothing Then Exit Sub
+
+mBarSpec.SetContract mContract, mSpecialFromTime, mSpecialToTime, mClock
+End Sub
 

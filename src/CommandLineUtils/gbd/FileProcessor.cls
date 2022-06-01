@@ -84,6 +84,8 @@ Private mIncludeMillisecs                           As Boolean
 
 Private mEchoToStdOut                               As Boolean
 
+Private mFetchStartTime                             As Date
+                
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -201,6 +203,7 @@ Else
     mFutureWaiter.Add lTimeframe.BarsFuture
 End If
 
+mFetchStartTime = GetTimestampUTC
 lTicker.StartMarketData
 
 Set mReplayTaskController = mReplayController.StartReplay
@@ -273,7 +276,7 @@ Const ProcName As String = "mReplayTaskController_Completed"
 On Error GoTo Err
 
 Finish
-gNotifyFetchCompleted Me
+gNotifyFetchCompleted Me, (GetTimestampUTC - mFetchStartTime) * 86400
 Set mSelfRef = Nothing
 
 Exit Sub

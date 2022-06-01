@@ -63,13 +63,6 @@ Private Const StartEchoCommand                      As String = "STARTECHO"
 Private Const ResultFormatCommand                   As String = "RESULTFORMAT"
 Private Const EchoResultFormatCommand               As String = "ECHORESULTFORMAT"
 
-Private Const LatestParameter                       As String = "LATEST"
-Private Const TodayParameter                        As String = "TODAY"
-Private Const TomorrowParameter                     As String = "TOMORROW"
-Private Const YesterdayParameter                    As String = "YESTERDAY"
-Private Const EndOfWeekParameter                    As String = "ENDOFWEEK"
-Private Const StartOfWeekParameter                  As String = "STARTOFWEEK"
-Private Const StartOfPreviousWeekParameter          As String = "STARTOFPREVIOUSWEEK"
 Private Const DateFormatRawParameter                As String = "RAW"
 Private Const DateFormatISOParameter                As String = "ISO"
 Private Const DateFormatLocalParameter              As String = "LOCAL"
@@ -167,7 +160,9 @@ Private mTickfileName                               As String
 Private mLineNumber                                 As Long
 Private mContractSpec                               As IContractSpecifier
 Private mFrom                                       As Date
+Private mSpecialFrom                                As String
 Private mTo                                         As Date
+Private mSpecialTo                                  As String
 Private mNumber                                     As Long
 Private mTimePeriod                                 As TimePeriod
 Private mSessionOnly                                As Boolean
@@ -385,11 +380,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub gNotifyFetchCompleted(ByVal pProcessor As IProcessor)
+Public Sub gNotifyFetchCompleted( _
+                ByVal pProcessor As IProcessor, _
+                ByVal pDurationSecs As Double)
 Const ProcName As String = "gNotifyFetchCompleted"
 On Error GoTo Err
 
-gWriteLineToConsole "Fetch completed: " & _
+gWriteLineToConsole "Fetch completed in " & _
+            Format(pDurationSecs, "0.0") & " secs: " & _
             pProcessor.NumberOfBarsOutput & _
             " bars for contract: " & _
             gGetContractName(pProcessor.ContractSpec)
@@ -563,19 +561,19 @@ For Each lMatch In lMatches
         r = FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
     Case ToDateVariable
         If pProcessor.ToDate = MaxDate Then
-            r = LatestParameter
+            r = DateLatest
         Else
             r = FormatTimestamp(pProcessor.ToDate, mTimestampDateOnlyFormat)
         End If
     Case ToDateTimeVariable
         If pProcessor.ToDate = MaxDate Then
-            r = LatestParameter
+            r = DateLatest
         Else
             r = FormatTimestamp(pProcessor.ToDate, mTimestampFormat + TimestampNoMillisecs)
         End If
     Case ToTimeVariable
         If pProcessor.ToDate = MaxDate Then
-            r = LatestParameter
+            r = DateLatest
         Else
             r = FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
         End If
@@ -691,19 +689,19 @@ For Each lMatch In lMatches
         r = FormatTimestamp(pProcessor.FromDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
     Case ToDateVariable
         If pProcessor.ToDate = MaxDate Then
-            r = LatestParameter
+            r = DateLatest
         Else
             r = FormatTimestamp(pProcessor.ToDate, mTimestampDateOnlyFormat)
         End If
     Case ToDateTimeVariable
         If pProcessor.ToDate = MaxDate Then
-            r = LatestParameter
+            r = DateLatest
         Else
             r = FormatTimestamp(pProcessor.ToDate, mTimestampFormat + TimestampNoMillisecs)
         End If
     Case ToTimeVariable
         If pProcessor.ToDate = MaxDate Then
-            r = LatestParameter
+            r = DateLatest
         Else
             r = FormatTimestamp(pProcessor.ToDate, mTimestampTimeOnlyFormat + TimestampNoMillisecs)
         End If
@@ -773,7 +771,7 @@ Set gCon = GetConsole
 
 logProgramId
 
-mNumber = &H7FFFFFFF
+mNumber = AllBars
 mTo = MaxDate
 mNormaliseDailyBarTimestamps = True
 
@@ -1323,18 +1321,20 @@ On Error GoTo Err
 
 params = UCase$(params)
 
+mFrom = 0
+mSpecialFrom = ""
+
 If params = "" Then
-    mFrom = 0
 ElseIf IsDate(params) Then
     mFrom = CDate(params)
-ElseIf params = TodayParameter Then
-    mFrom = todayDate
-ElseIf params = YesterdayParameter Then
-    mFrom = yesterdayDate
-ElseIf params = StartOfWeekParameter Then
-    mFrom = Int(Now) - DatePart("w", Now, vbMonday) + vbMonday - 1
-ElseIf params = StartOfPreviousWeekParameter Then
-    mFrom = Int(Now) - DatePart("w", Now, vbMonday) + vbMonday - 8
+ElseIf params = DateToday Then
+    mSpecialFrom = params
+ElseIf params = DateYesterday Then
+    mSpecialFrom = params
+ElseIf params = DateStartOfWeek Then
+    mSpecialFrom = params
+ElseIf params = DateStartOfPreviousWeek Then
+    mSpecialFrom = params
 Else
     gWriteErrorLine "Invalid from date '" & params & "'"
 End If
@@ -1408,7 +1408,7 @@ On Error GoTo Err
 If IsInteger(params, 1) Then
     mNumber = CLng(params)
 ElseIf params = "-1" Or UCase$(params) = "ALL" Then
-    mNumber = &H7FFFFFFF
+    mNumber = AllBars
 Else
     gWriteErrorLine "Invalid number '" & params & "': must be an integer > 0 or -1 or 'ALL'"
 End If
@@ -1630,7 +1630,7 @@ Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(params, " ")
 
 If mDataSource <> FromFile And mContractSpec Is Nothing Then
     gWriteErrorLine "Cannot start - no contract specified"
-ElseIf mDataSource <> FromFile And mFrom = 0 And (mNumber = 0 Or mNumber = &H7FFFFFFF) Then
+ElseIf mDataSource <> FromFile And mFrom = 0 And mSpecialFrom = "" And mNumber = AllBars Then
     gWriteErrorLine "Cannot start - either 'from' time or number of bars must be specified"
 ElseIf mFrom > mTo And mTo <> 0 Then
     gWriteErrorLine "Cannot start - 'from' time must not be after 'to' time"
@@ -1688,6 +1688,8 @@ Else
                                 mContractSpec, _
                                 mFrom, _
                                 mTo, _
+                                mSpecialFrom, _
+                                mSpecialTo, _
                                 mNumber, _
                                 mTimePeriod, _
                                 mSessionOnly, _
@@ -1748,6 +1750,9 @@ Do
             LogMessage "con: " & lInputString
             processCommand lInputString
         End If
+'        Do While mProcessors.Count >= 1
+'            Wait 10
+'        Loop
     Else
         Wait 10
     End If
@@ -1987,20 +1992,23 @@ Const ProcName As String = "processToCommand"
 On Error GoTo Err
 
 params = UCase$(params)
+
+mTo = 0
+mSpecialTo = ""
+
 If params = "" Then
-    mTo = 0
-ElseIf params = LatestParameter Then
+ElseIf params = DateLatest Then
     mTo = MaxDate
 ElseIf IsDate(params) Then
     mTo = CDate(params)
-ElseIf params = TodayParameter Then
-    mTo = todayDate
-ElseIf params = YesterdayParameter Then
-    mTo = yesterdayDate
-ElseIf params = TomorrowParameter Then
-    mTo = tomorrowDate
-ElseIf params = EndOfWeekParameter Then
-    mTo = Int(Now) - DatePart("w", Now, vbMonday) + vbFriday - 1
+ElseIf params = DateToday Then
+    mSpecialTo = params
+ElseIf params = DateYesterday Then
+    mSpecialTo = params
+ElseIf params = DateTomorrow Then
+    mSpecialTo = params
+ElseIf params = DateEndOfWeek Then
+    mSpecialTo = params
 Else
     gWriteErrorLine "Invalid to date '" & params & "'"
 End If
@@ -2220,7 +2228,7 @@ Set mTWSConnectionMonitor = New TWSConnectionMonitor
 lTwsClient.AddTwsConnectionStateListener mTWSConnectionMonitor
 
 Set mHistDataStore = lTwsClient.GetHistoricalDataStore
-lTwsClient.DisableHistoricalDataRequestPacing
+'lTwsClient.DisableHistoricalDataRequestPacing
 
 Set mContractStore = lTwsClient.GetContractStore
     

@@ -102,13 +102,26 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IHistoricalDataStore_FetchBars( _
-                ByVal pBarDataSpecifierFuture As IFuture, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pBarDataSpecifier As BarDataSpecifier, _
+                Optional ByVal pSpecialFromTime As String, _
+                Optional ByVal pSpecialToTime As String, _
+                Optional ByVal pClockFuture As IFuture, _
                 Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDontReturnBars As Boolean, _
                 Optional ByVal pCookie As Variant) As IFuture
 Const ProcName As String = "IHistoricalDataStore_FetchBars"
 On Error GoTo Err
 
-Set IHistoricalDataStore_FetchBars = FetchBars(pBarDataSpecifierFuture, pListener, pCookie)
+Set IHistoricalDataStore_FetchBars = FetchBars( _
+                                            pContractFuture, _
+                                            pBarDataSpecifier, _
+                                            pSpecialFromTime, _
+                                            pSpecialToTime, _
+                                            pClockFuture, _
+                                            pListener, _
+                                            pDontReturnBars, _
+                                            pCookie)
 
 Exit Function
 
@@ -247,14 +260,29 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBars( _
-                ByVal pBarDataSpecifierFuture As IFuture, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pBarDataSpecifier As BarDataSpecifier, _
+                Optional ByVal pSpecialFromTime As String, _
+                Optional ByVal pSpecialToTime As String, _
+                Optional ByVal pClockFuture As IFuture, _
                 Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDontReturnBars As Boolean, _
                 Optional ByVal pCookie As Variant) As IFuture
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
 Dim lBuilder As New BarsFutureBuilder
-lBuilder.Initialise Me, mTradingDBFuture, pBarDataSpecifierFuture, mUseSynchronousReads, pListener, pCookie
+lBuilder.Initialise Me, _
+                    mTradingDBFuture, _
+                    pContractFuture, _
+                    pBarDataSpecifier, _
+                    pSpecialFromTime, _
+                    pSpecialToTime, _
+                    pClockFuture, _
+                    pListener, _
+                    pDontReturnBars, _
+                    mUseSynchronousReads, _
+                    pCookie
 mFetchBuilders.Add lBuilder
 
 Set FetchBars = lBuilder.BarsFuture

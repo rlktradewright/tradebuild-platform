@@ -168,7 +168,8 @@ Public Function FetchBars( _
                 Optional ByVal pCustomSessionEndTime As Date, _
                 Optional ByVal pIncludeBarsOutsideSession As Boolean, _
                 Optional ByVal pBarType As BarTypes = BarTypeTrade, _
-                Optional ByVal pListener As IBarFetchListener) As Bars
+                Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDontReturnBars As Boolean) As Bars
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
@@ -212,6 +213,7 @@ Public Function FetchBarsAsync( _
                 Optional ByVal pBarType As BarTypes = BarTypeTrade, _
                 Optional ByVal pCookie As Variant, _
                 Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDontReturnBars As Boolean, _
                 Optional ByVal pTaskName As String) As IFuture
 Const ProcName As String = "FetchbarsAsync"
 On Error GoTo Err

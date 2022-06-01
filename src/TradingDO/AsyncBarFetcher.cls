@@ -226,6 +226,7 @@ End Property
 Friend Function FetchBarsAsync( _
                 ByVal pSpecifier As BarDataSpecifier, _
                 ByVal pListener As IBarFetchListener, _
+                ByVal pDontReturnBars As Boolean, _
                 ByVal cookie As Variant, _
                 ByVal taskName As String) As TaskController
 Const ProcName As String = "FetchBarsAsync"
@@ -242,7 +243,8 @@ Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
                                             IIf(mSpecifier.MaxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.MaxNumberOfBars), _
-                                            mSpecifier.NormaliseDailyTimestamps)
+                                            mSpecifier.NormaliseDailyTimestamps, _
+                                            Not pDontReturnBars)
 
 mSessionTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 

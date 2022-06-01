@@ -146,7 +146,7 @@ If mHistDataRequests(pRequestId).State = StateRequestCancelling Then Exit Sub
 
 Dim lHistDataRequestTask As HistDataRequestTask
 Set lHistDataRequestTask = mHistDataRequests(pRequestId).Requester
-lHistDataRequestTask.NotifyBar pBar
+lHistDataRequestTask.NotifyTwsBar pBar
 
 Exit Sub
 

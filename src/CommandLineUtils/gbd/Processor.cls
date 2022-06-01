@@ -63,6 +63,8 @@ Private mTickSize                                   As Double
 
 Private mFromDate                                   As Date
 Private mToDate                                     As Date
+Private mSpecialFromDate                            As String
+Private mSpecialToDate                              As String
 Private mNumber                                     As Long
 Private mTimePeriod                                 As TimePeriod
 Private mSessionOnly                                As Boolean
@@ -79,6 +81,8 @@ Private mAppend                                     As Boolean
 Private mNumberOfBarsOutput                         As Long
 
 Private mEchoToStdOut                               As Boolean
+
+Private mFetchStartTime                             As Date
                 
 '@================================================================================
 ' Class Event Handlers
@@ -112,7 +116,7 @@ Const ProcName As String = "IBarFetchListener_FetchCompleted"
 On Error GoTo Err
 
 If mStopListening Then Exit Sub
-gNotifyFetchCompleted Me
+gNotifyFetchCompleted Me, (GetTimestampUTC - mFetchStartTime) * 86400
 
 Exit Sub
 
@@ -151,6 +155,7 @@ Const ProcName As String = "IBarFetchListener_FetchStarted"
 On Error GoTo Err
 
 If mStopListening Then Exit Sub
+mFetchStartTime = GetTimestampUTC
 gNotifyFetchStarted Me
 
 Exit Sub
@@ -349,6 +354,8 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
     gNotifyFetchFailed Me, ev.Future.ErrorMessage
     mStopListening = True
+ElseIf ev.Future.Value Is Nothing Then
+    ' bars fetch has completed
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     mSecType = mContract.Specifier.SecType
@@ -361,7 +368,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
                                 IIf(mSessionOnly, mContract.SessionStartTime, mContract.FullSessionStartTime), _
                                 IIf(mSessionOnly, mContract.SessionEndTime, mContract.FullSessionEndTime)).StartTime
         End If
-        If mToDate <> MaxDate Then
+        If mToDate <> 0 And mToDate <> MaxDate Then
             mToDate = GetSessionTimes( _
                                 Int(mToDate) + 0.5, _
                                 IIf(mSessionOnly, mContract.SessionStartTime, mContract.FullSessionStartTime), _
@@ -369,22 +376,28 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
         End If
     End If
     
-    
-    Set mFetchFuture = mHistDataStore.FetchBars( _
-                            CreateBarDataSpecifierFuture( _
-                                ev.Future, _
+    Dim lBarDataSpec As BarDataSpecifier
+    Set lBarDataSpec = CreateBarDataSpecifier( _
                                 mTimePeriod, _
                                 mFromDate, _
                                 mToDate, _
                                 mNumber, _
                                 BarTypes.BarTypeTrade, _
-                                CreateClockFuture(ev.Future), _
-                                , _
+                                False, _
                                 Not mSessionOnly, _
                                 mNormaliseDailyBarTimestamps, _
                                 mSessionStartTime, _
-                                mSessionEndTime), _
-                            Me)
+                                mSessionEndTime)
+    
+    ' Note no Bars object will be returned
+    Set mFetchFuture = mHistDataStore.FetchBars( _
+                            ev.Future, _
+                            lBarDataSpec, _
+                            mSpecialFromDate, _
+                            mSpecialToDate, _
+                            pListener:=Me, _
+                            pDontReturnBars:=True)
+                            
     mFutureWaiter.Add mFetchFuture
 End If
 
@@ -420,6 +433,8 @@ Friend Sub Initialise( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pFromDate As Date, _
                 ByVal pToDate As Date, _
+                ByVal pSpecialFromDate As String, _
+                ByVal pSpecialToDate As String, _
                 ByVal pNumber As Long, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pSessionOnly As Boolean, _
@@ -436,6 +451,8 @@ Set mContractStore = pContractStore
 Set mHistDataStore = pHistDataStore
 Set mContractSpec = pContractSpec
 mFromDate = pFromDate
+mSpecialFromDate = pSpecialFromDate
+mSpecialToDate = pSpecialToDate
 mToDate = pToDate
 mNumber = pNumber
 Set mTimePeriod = pTimePeriod

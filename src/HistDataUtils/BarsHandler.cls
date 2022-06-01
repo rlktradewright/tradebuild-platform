@@ -260,9 +260,25 @@ Private Function fetchLatestBar( _
 Const ProcName As String = "fetchLatestBar"
 On Error GoTo Err
 
-Dim lBarSpecFuture As IFuture
-Set lBarSpecFuture = gCreateBarDataSpecifierFuture(pContractFuture, pTimePeriod, 0, 0, 2, pBarType, pClockFuture, False, True, False, 0, 0)
-Set fetchLatestBar = pHistDataStore.FetchBars(lBarSpecFuture, Nothing)
+Dim lBarSpec As BarDataSpecifier
+Set lBarSpec = gCreateBarDataSpecifier( _
+                            pTimePeriod, _
+                            0, _
+                            0, _
+                            2, _
+                            pBarType, _
+                            False, _
+                            True, _
+                            False, _
+                            0, _
+                            0)
+Set fetchLatestBar = pHistDataStore.FetchBars( _
+                                pContractFuture, _
+                                lBarSpec, _
+                                "", _
+                                "", _
+                                pClockFuture, _
+                                Nothing)
 
 Exit Function
 

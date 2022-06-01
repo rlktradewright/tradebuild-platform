@@ -137,7 +137,8 @@ End Property
 
 Friend Function FetchBars( _
                 ByVal pSpecifier As BarDataSpecifier, _
-                ByVal pListener As IBarFetchListener) As Bars
+                ByVal pListener As IBarFetchListener, _
+                ByVal pDontReturnBars As Boolean) As Bars
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
@@ -150,7 +151,8 @@ Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
                                             createNewSessionBuilder(mInstrument).Session, _
                                             mInstrument.TickSize, _
                                             IIf(mSpecifier.MaxNumberOfBars = &H7FFFFFFF, 0, mSpecifier.MaxNumberOfBars), _
-                                            mSpecifier.NormaliseDailyTimestamps)
+                                            mSpecifier.NormaliseDailyTimestamps, _
+                                            Not pDontReturnBars)
 
 If gUseTickData(mSpecifier.BarTimePeriod.Units) Then
     fetchBarsUsingTickdata

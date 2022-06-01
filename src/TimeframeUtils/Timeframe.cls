@@ -127,19 +127,23 @@ If Not lFetchInitialBars Then
     RaiseEvent BarsLoaded
 Else
     Set mBarFetchListener = mBarStudy.InitialBarFetchListener
-    Set mInitialBarsFuture = mHistDataStore.FetchBars(CreateBarDataSpecifierFuture(mContractFuture, _
-                                                                mTimePeriod, _
-                                                                mFromTime, _
-                                                                mToTime, _
-                                                                mMaxNumberOfBars, _
-                                                                mBarType, _
-                                                                mClockFuture, _
-                                                                mExcludeCurrentbar, _
-                                                                mIncludeBarsOutsideSession, _
-                                                                , _
-                                                                mCustomSessionStartTime, _
-                                                                mCustomSessionEndTime), _
-                                                    mBarFetchListener)
+    Dim lBarSpec As BarDataSpecifier
+    Set lBarSpec = CreateBarDataSpecifier( _
+                        mTimePeriod, _
+                        mFromTime, _
+                        mToTime, _
+                        mMaxNumberOfBars, _
+                        mBarType, _
+                        mExcludeCurrentbar, _
+                        mIncludeBarsOutsideSession, _
+                        , _
+                        mCustomSessionStartTime, _
+                        mCustomSessionStartTime)
+    Set mInitialBarsFuture = mHistDataStore.FetchBars( _
+                                        mContractFuture, _
+                                        lBarSpec, _
+                                        pClockFuture:=mClockFuture, _
+                                        pListener:=mBarFetchListener)
     mFutureWaiter.Add mInitialBarsFuture
 End If
 

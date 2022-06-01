@@ -749,7 +749,8 @@ Public Function FetchBars( _
                 Optional ByVal pCustomSessionEndTime As Date, _
                 Optional ByVal pIncludeBarsOutsideSession As Boolean, _
                 Optional ByVal pBarType As BarTypes = BarTypeTrade, _
-                Optional ByVal pListener As IBarFetchListener) As Bars
+                Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDontReturnBars As Boolean) As Bars
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
@@ -769,20 +770,23 @@ Case Else
 End Select
 
 Dim Specifier As BarDataSpecifier
-Set Specifier = New BarDataSpecifier
-Specifier.BarTimePeriod = pBarTimePeriod
-Specifier.BarType = pBarType
-Specifier.FromDate = pFromDate
-Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
-Specifier.MaxNumberOfBars = pMaxNumberOfBars
-Specifier.ToDate = pToDate
-Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
+Set Specifier = CreateBarDataSpecifier( _
+                                pBarTimePeriod, _
+                                pFromDate, _
+                                pToDate, _
+                                pMaxNumberOfBars, _
+                                pBarType, _
+                                False, _
+                                pIncludeBarsOutsideSession, _
+                                False, _
+                                pCustomSessionStartTime, _
+                                pCustomSessionEndTime)
 
 Dim bf As BarFetcher
 Set bf = New BarFetcher
 bf.Initialise mDB, Me
 
-Set FetchBars = bf.FetchBars(Specifier, pListener)
+Set FetchBars = bf.FetchBars(Specifier, pListener, pDontReturnBars)
 Set bf = Nothing
 
 Exit Function
@@ -801,6 +805,7 @@ Public Function FetchBarsAsync( _
                 Optional ByVal pIncludeBarsOutsideSession As Boolean, _
                 Optional ByVal pBarType As BarTypes = BarTypeTrade, _
                 Optional ByVal pListener As IBarFetchListener, _
+                Optional ByVal pDontReturnBars As Boolean, _
                 Optional ByVal pCookie As Variant, _
                 Optional ByVal pTaskName As String) As IFuture
 Const ProcName As String = "FetchbarsAsync"
@@ -821,19 +826,23 @@ Case Else
     AssertArgument False, "Bar time unit not supported"
 End Select
 
-Dim Specifier As New BarDataSpecifier
-Specifier.BarTimePeriod = pBarTimePeriod
-Specifier.BarType = pBarType
-Specifier.FromDate = pFromDate
-Specifier.IncludeBarsOutsideSession = pIncludeBarsOutsideSession
-Specifier.MaxNumberOfBars = pMaxNumberOfBars
-Specifier.ToDate = pToDate
-Specifier.SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
+Dim Specifier As BarDataSpecifier
+Set Specifier = CreateBarDataSpecifier( _
+                                pBarTimePeriod, _
+                                pFromDate, _
+                                pToDate, _
+                                pMaxNumberOfBars, _
+                                pBarType, _
+                                False, _
+                                pIncludeBarsOutsideSession, _
+                                False, _
+                                pCustomSessionStartTime, _
+                                pCustomSessionEndTime)
 
 Dim bf As New AsyncBarFetcher
 bf.Initialise mDB, Me
 
-bf.FetchBarsAsync Specifier, pListener, pCookie, pTaskName
+bf.FetchBarsAsync Specifier, pListener, pDontReturnBars, pCookie, pTaskName
 
 Set FetchBarsAsync = bf.BarsFuture
 
