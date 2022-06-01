@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#345.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#377.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Historical Data Tester"
    ClientHeight    =   10380
@@ -247,15 +247,15 @@ Private Sub BasicTestButton_Click()
 Const ProcName As String = "BasicTestButton_Click"
 On Error GoTo Err
 
-Dim lBarSpecFuture As IFuture
+Dim lBarSpec As BarDataSpecifier
 Dim lContractSpec As IContractSpecifier
 
-Set lContractSpec = CreateContractSpecifier("ZZ8", "Z", "ICEEU", SecTypeFuture, "GBP", "201812")
+Set lContractSpec = CreateContractSpecifier("ESM2", "ES", "GLOBEX", SecTypeFuture, "USD", "202206")
 
-Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
+Set lBarSpec = CreateBarDataSpecifier( _
                 GetTimePeriod(1, TimePeriodMinute), _
-                CDate("2017/11/01 08:00"), _
-                CDate("2017/12/15 12:00"), _
+                CDate("2022/05/25 10:00"), _
+                CDate("2022/05/25 13:00"), _
                 10000, _
                 BarTypeTrade, _
                 , _
@@ -264,7 +264,7 @@ Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, m
                 CDate("08:00"), _
                 CDate("17:30"))
 
-FetchBars lContractSpec, lBarSpecFuture
+FetchBars FetchContract(lContractSpec, mContractStore, pCookie:=lContractSpec), lBarSpec, lContractSpec
 
 Exit Sub
 
@@ -285,13 +285,13 @@ Const ProcName As String = "FetchConstRangeButton_Click"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = CreateContractSpecifier("ZZ8", "Z", "ICEEU", SecTypeFuture, "GBP", "201812")
+Set lContractSpec = CreateContractSpecifier("ESM2", "ES", "GLOBEX", SecTypeFuture, "USD", "202206")
 
-Dim lBarSpecFuture As IFuture
-Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
+Dim lBarSpec As BarDataSpecifier
+Set lBarSpec = CreateBarDataSpecifier( _
                 GetTimePeriod(10, TimePeriodTickMovement), _
-                CDate("2018/11/01 08:00"), _
-                CDate("2018/12/15 12:00"), _
+                CDate("2022/05/25 10:00"), _
+                CDate("2022/05/25 13:00"), _
                 500, _
                 BarTypeTrade, _
                 , _
@@ -300,7 +300,7 @@ Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, m
                 CDate("08:00"), _
                 CDate("17:30"))
 
-FetchBars lContractSpec, lBarSpecFuture
+FetchBars FetchContract(lContractSpec, mContractStore, pCookie:=lContractSpec), lBarSpec, lContractSpec
 
 Exit Sub
 
@@ -312,12 +312,12 @@ Private Sub FetchYearsDataButton_Click()
 Const ProcName As String = "FetchYearsDataButton_Click"
 On Error GoTo Err
 
-Dim lBarSpecFuture As IFuture
+Dim lBarSpec As BarDataSpecifier
 Dim lContractSpec As IContractSpecifier
 
 Set lContractSpec = ContractSpecBuilder1.ContractSpecifier
 
-Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
+Set lBarSpec = CreateBarDataSpecifier( _
                 GetTimePeriod(1, TimePeriodMinute), _
                 CDate(Int(Now - 365#)), _
                 Now, _
@@ -327,7 +327,7 @@ Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, m
                 , _
                 True)
 
-FetchBars lContractSpec, lBarSpecFuture
+FetchBars FetchContract(lContractSpec, mContractStore, pCookie:=lContractSpec), lBarSpec, lContractSpec
 
 Exit Sub
 
@@ -505,12 +505,12 @@ Friend Function FetchBarsForFTSEStock(ByVal pSymbol As String) As IFuture
 Const ProcName As String = "FetchBarsForFTSEStock"
 On Error GoTo Err
 
-Dim lBarSpecFuture As IFuture
+Dim lBarSpec As BarDataSpecifier
 Dim lContractSpec As IContractSpecifier
 
 Set lContractSpec = CreateContractSpecifier(pSymbol, , "LSE", SecTypeStock, "GBP")
 
-Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, mContractStore), _
+Set lBarSpec = CreateBarDataSpecifier( _
                 GetTimePeriod(20, TimePeriodSecond), _
                 Now - 7#, _
                 Now, _
@@ -522,7 +522,7 @@ Set lBarSpecFuture = CreateBarDataSpecifierFuture(FetchContract(lContractSpec, m
                 CDate("08:00"), _
                 CDate("16:30"))
 
-Set FetchBarsForFTSEStock = FetchBars(lContractSpec, lBarSpecFuture)
+Set FetchBarsForFTSEStock = FetchBars(FetchContract(lContractSpec, mContractStore, pCookie:=lContractSpec), lBarSpec, lContractSpec)
 
 Exit Function
 
@@ -549,12 +549,18 @@ ManyFetchButton1.Enabled = True
 ManyFetchButton2.Enabled = True
 End Sub
 
-Private Function FetchBars(ByVal pContractSpec As IContractSpecifier, ByVal pBarSpecFuture As IFuture) As IFuture
+Private Function FetchBars(ByVal pContractFuture As IFuture, ByVal pBarSpec As BarDataSpecifier, pCookie As Variant) As IFuture
 Const ProcName As String = "FetchBars"
 On Error GoTo Err
 
 Dim lFetcher As New BarFetcher
-Set FetchBars = lFetcher.Fetch(pBarSpecFuture, mHistDataStore, pContractSpec, (ShowBarOnReceiptCheck.Value = vbChecked), (ShowBarsAtEndCheck.Value = vbChecked))
+Set FetchBars = lFetcher.Fetch( _
+                    pBarSpec, _
+                    mHistDataStore, _
+                    pContractFuture, _
+                    (ShowBarOnReceiptCheck.Value = vbChecked), _
+                    (ShowBarsAtEndCheck.Value = vbChecked), _
+                    pCookie)
 
 Exit Function
 

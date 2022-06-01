@@ -127,16 +127,17 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-Dim lContractSpec As IContractSpecifier
-Set lContractSpec = ev.Future.Cookie
-
+Dim lContractSpec As IContractSpecifier: Set lContractSpec = ev.Future.Cookie
 If ev.Future.IsFaulted Then
     LogMessage "Error " & ev.Future.ErrorNumber & " for " & lContractSpec.ToString & vbCrLf & _
                         ev.Future.ErrorMessage & vbCrLf & _
                         ev.Future.ErrorSource
 ElseIf ev.Future.IsCancelled Then
     LogMessage "Historical data fetch cancelled for " & lContractSpec.ToString
-Else
+ElseIf TypeOf ev.Future.Value Is IContract Then
+    Dim lContract As IContract: Set lContract = ev.Future.Value
+    Set mContractSpec = lContract.Specifier
+ElseIf TypeOf ev.Future.Value Is Bars Then
     Set mbars = ev.Future.Value
 End If
 
@@ -155,19 +156,24 @@ End Sub
 '@================================================================================
 
 Friend Function Fetch( _
-                ByVal pBarSpecFuture As IFuture, _
+                ByVal pBarSpec As BarDataSpecifier, _
                 ByVal pHistDataStore As IHistoricalDataStore, _
-                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pContractFuture As IFuture, _
                 ByVal pShowEachBar As Boolean, _
-                ByVal pShowAllBarsAtEnd As Boolean) As IFuture
+                ByVal pShowAllBarsAtEnd As Boolean, _
+                ByVal pCookie As Variant) As IFuture
 Const ProcName As String = "Fetch"
 On Error GoTo Err
 
-Set mContractSpec = pContractSpec
 mShowEachBar = pShowEachBar
 mShowAllBarsAtEnd = pShowAllBarsAtEnd
-Set Fetch = pHistDataStore.FetchBars(pBarSpecFuture, Me, pContractSpec)
+Set Fetch = pHistDataStore.FetchBars( _
+                            pContractFuture, _
+                            pBarSpec, _
+                            pListener:=Me, _
+                            pCookie:=pCookie)
 mFutureWaiter.Add Fetch
+mFutureWaiter.Add pContractFuture
 
 Exit Function
 
