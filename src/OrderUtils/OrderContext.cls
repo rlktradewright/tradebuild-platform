@@ -23,6 +23,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IStateChangeListener
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -103,6 +105,11 @@ Private mTickSize                               As Double
 
 Private mNotReadyMessage                        As String
 
+Private mAccountDataProvider                    As IAccountDataProvider
+Private mCurrencyConverter                      As ICurrencyConverter
+
+Private mFixedAccountBalance                    As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -119,8 +126,21 @@ Debug.Print "OrderContext terminated"
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IStateChangeListener Interface Members
 '@================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+If TypeOf ev.Source Is ICurrencyConverter Then fireChange OrderContextReadyStateChanged
+    
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' mFutureWaiter Event Handlers
@@ -220,8 +240,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Friend Property Let FixedAccountBalance(ByVal Value As Double)
+mFixedAccountBalance = Value
+End Property
+
 Friend Property Get GroupName() As String
 GroupName = mGroupName
+End Property
+
+Friend Property Let IsAccountProviderReady(ByVal Value As Boolean)
+Const ProcName As String = "isAccountProviderReady"
+On Error GoTo Err
+
+fireChange OrderContextReadyStateChanged
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsActive() As Boolean
@@ -911,7 +947,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As BracketOrder, _
+Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As IBracketOrder, _
                     ByVal pCheckMoneyManagement As Boolean, _
                     ByVal pAddToActiveBracketOrders As Boolean)
 Const ProcName As String = "ExecuteBracketOrderEx"
@@ -925,6 +961,20 @@ FixupEntryOrder pBracketOrder.EntryOrder
 fixupStopLossOrder pBracketOrder.StopLossOrder
 fixupTargetOrder pBracketOrder.TargetOrder
 
+Dim msg As String
+If TypeOf pBracketOrder Is IAutoSizingBracket Then
+    Dim lBracketOrder As IAutoSizingBracket: Set lBracketOrder = pBracketOrder
+    
+    If lBracketOrder.AutosizeType = BracketAutosizeNone Then
+    ElseIf mAccountDataProvider Is Nothing Then
+        Assert False, "No account data provider has been configured"
+    ElseIf lBracketOrder.AutosizeValue = 0 Then
+        Assert False, "Invalid autosize value"
+    ElseIf Not autoSize(lBracketOrder) Then
+        Exit Sub
+    End If
+End If
+
 If pCheckMoneyManagement And Not mIsSimulated Then
     Dim lOrigQuantity As Long
     lOrigQuantity = pBracketOrder.EntryOrder.Quantity
@@ -932,7 +982,6 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     Dim lNewQuantity As Long
     lNewQuantity = lOrigQuantity
     If Not mOrderAuthoriser Is Nothing Then
-        Dim msg As String
         If Not mOrderAuthoriser.AllowOrder( _
                                 pBracketOrder, _
                                 mTimerList.Clock.Timestamp, _
@@ -983,7 +1032,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub ExecuteBracketOrder(ByVal pBracketOrder As BracketOrder, _
+Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder, _
                     Optional pCheckMoneyManagement As Boolean)
 Const ProcName As String = "ExecuteBracketOrder"
 On Error GoTo Err
@@ -1118,7 +1167,9 @@ Friend Sub Initialise( _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
                 ByVal pSimulatedClockFuture As IFuture, _
-                ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr)
+                ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -1136,6 +1187,8 @@ Set mAccumulatedBracketOrders = pAccumulatedBracketOrders
 Set mAccumulatedOrders = pAccumulatedOrders
 
 Set mBracketOrderRecoveryController = pBracketOrderRecoveryController
+Set mAccountDataProvider = pAccountDataProvider
+Set mCurrencyConverter = pCurrencyConverter
 
 Set mContractFuture = pContractFuture
 If mContractFuture.IsAvailable Then
@@ -1202,6 +1255,40 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function IsReadyForAutoSize( _
+                ByVal pAutosizeType As BracketAutosizeTypes, _
+                ByVal pCurrency As String) As Boolean
+Const ProcName As String = "IsReadyForAutoSize"
+On Error GoTo Err
+
+IsReadyForAutoSize = True
+Select Case pAutosizeType
+Case BracketAutosizeNone
+Case BracketAutosizeMonetaryAmount
+    If mDataSource.HasCurrentTick(TickTypeAsk) Then
+    ElseIf mDataSource.HasCurrentTick(TickTypeBid) Then
+    ElseIf mDataSource.HasCurrentTick(TickTypeTrade) Then
+    Else
+        IsReadyForAutoSize = False
+    End If
+Case BracketAutosizePercentOfAccount
+    If Not IsAccountProviderReady Then IsReadyForAutoSize = False
+    If Not mCurrencyConverter.IsReadyCurrencies(mAccountDataProvider.BaseCurrency, "USD") Then
+        mCurrencyConverter.AddStateChangeListener mAccountDataProvider.BaseCurrency, "USD", Me
+        IsReadyForAutoSize = False
+    End If
+    If Not mCurrencyConverter.IsReadyCurrencies(mContract.Specifier.CurrencyCode, "USD") Then
+        mCurrencyConverter.AddStateChangeListener mContract.Specifier.CurrencyCode, "USD", Me
+        IsReadyForAutoSize = False
+    End If
+End Select
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function IsReadyForBracketOrder( _
                 ByVal pBracketOrder As IBracketOrder) As Boolean
 Const ProcName As String = "IsReadyForBracketOrder"
@@ -1210,6 +1297,11 @@ On Error GoTo Err
 If Not IsReady Then Exit Function
 
 If Not IsReadyTickSize() Then Exit Function
+
+If TypeOf pBracketOrder Is IAutoSizingBracket Then
+    Dim lBracket As IAutoSizingBracket: Set lBracket = pBracketOrder
+    If Not IsReadyForAutoSize(lBracket.AutosizeType, pBracketOrder.Contract.Specifier.CurrencyCode) Then Exit Function
+End If
 
 If Not isReadyForOrder(pBracketOrder.EntryOrder) Then Exit Function
 
@@ -1540,6 +1632,136 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function autoSize( _
+                ByVal pBracketOrder As IAutoSizingBracket) As Boolean
+Const ProcName As String = "autoSize"
+On Error GoTo Err
+
+Dim lBracketOrder As IBracketOrder: Set lBracketOrder = pBracketOrder
+
+Dim lMessage As String
+Dim lQuantity As Long
+
+If pBracketOrder.AutosizeType = BracketAutosizeMonetaryAmount Then
+    lQuantity = autoSizeAmount(pBracketOrder.AutosizeValue, _
+                                pBracketOrder.LotSize, _
+                                lBracketOrder.LongPosition, _
+                                lMessage)
+Else
+    lQuantity = autoSizePercent(pBracketOrder.AutosizeValue, _
+                                pBracketOrder.LotSize, _
+                                lBracketOrder.LongPosition, _
+                                lMessage)
+End If
+
+gLogBracketOrderMessage lMessage, _
+                        mDataSource, _
+                        mContract, _
+                        lBracketOrder.Key, _
+                        mIsSimulated, _
+                        Me
+
+If lQuantity <> 0 Then
+    lBracketOrder.SetNewEntryQuantity lQuantity
+    lBracketOrder.Update
+    autoSize = True
+Else
+    lBracketOrder.Cancel
+    autoSize = False
+End If
+
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function autoSizeAmount( _
+                ByVal pAmount As Double, _
+                ByVal pLotSize As Long, _
+                ByVal pIsLong As Boolean, _
+                ByRef pMessage As String) As Long
+Const ProcName As String = "autoSizeAmount"
+On Error GoTo Err
+
+Dim lPrice As Double
+
+If pIsLong Then
+    If mDataSource.HasCurrentTick(TickTypeAsk) Then
+        lPrice = mDataSource.CurrentTick(TickTypeAsk).Price
+    ElseIf mDataSource.HasCurrentTick(TickTypeTrade) Then
+        lPrice = mDataSource.CurrentTick(TickTypeTrade).Price
+    ElseIf mDataSource.HasCurrentTick(TickTypeBid) Then
+        lPrice = mDataSource.CurrentTick(TickTypeBid).Price
+    End If
+Else
+    If mDataSource.HasCurrentTick(TickTypeBid) Then
+        lPrice = mDataSource.CurrentTick(TickTypeBid).Price
+    ElseIf mDataSource.HasCurrentTick(TickTypeTrade) Then
+        lPrice = mDataSource.CurrentTick(TickTypeTrade).Price
+    ElseIf mDataSource.HasCurrentTick(TickTypeAsk) Then
+        lPrice = mDataSource.CurrentTick(TickTypeAsk).Price
+    End If
+End If
+
+Dim lQuantity As Long
+If lPrice = 0 Then
+    pMessage = "No price currently available to size order"
+    autoSizeAmount = 0
+Else
+    lQuantity = Int(pAmount / (mContract.Specifier.Multiplier * lPrice))
+    If pLotSize <> 0 Then lQuantity = pLotSize * Int(lQuantity / pLotSize)
+    
+    If lQuantity <> 0 Then
+        pMessage = "Order quantity set to " & lQuantity
+    Else
+        pMessage = "Order quantity reduced to 0 due to lack of funds"
+    End If
+End If
+
+autoSizeAmount = lQuantity
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function autoSizePercent( _
+                ByVal pPercent As Double, _
+                ByVal pLotSize As Long, _
+                ByVal pIsLong As Boolean, _
+                ByRef pMessage As String) As Long
+Const ProcName As String = "autoSizePercent"
+On Error GoTo Err
+
+Dim lAccountBalance As Double
+If mFixedAccountBalance <> 0# Then
+    lAccountBalance = mFixedAccountBalance
+Else
+    lAccountBalance = CDbl(mAccountDataProvider.GetAccountValue("NetLiquidation", mAccountDataProvider.BaseCurrency).Value)
+End If
+
+If mContract.Specifier.CurrencyCode <> mAccountDataProvider.BaseCurrency Then
+    If mAccountDataProvider.BaseCurrency <> "USD" Then
+        lAccountBalance = mCurrencyConverter.Convert(lAccountBalance, mAccountDataProvider.BaseCurrency, "USD")
+    End If
+    If mContract.Specifier.CurrencyCode <> "USD" Then
+        lAccountBalance = mCurrencyConverter.Convert(lAccountBalance, "USD", mContract.Specifier.CurrencyCode)
+    End If
+End If
+
+Dim lAmount As Double
+lAmount = Int(pPercent * lAccountBalance / 100#)
+autoSizePercent = autoSizeAmount(lAmount, pLotSize, pIsLong, pMessage)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub fireChange(ByVal pChangeType As OrderContextChangeTypes)
 Const ProcName As String = "fireChange"
 On Error GoTo Err
@@ -1693,6 +1915,10 @@ End Function
 Private Function getOrderContexts() As OrderContexts
 Set getOrderContexts = mOrderContextsRef.Target
 End Function
+
+Private Property Get IsAccountProviderReady() As Boolean
+IsAccountProviderReady = (mAccountDataProvider.State = AccountProviderReady)
+End Property
 
 Private Function isDataSourceRunning()
 If mDataSource Is Nothing Then

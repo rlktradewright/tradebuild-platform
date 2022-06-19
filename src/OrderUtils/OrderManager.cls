@@ -11,7 +11,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-
 Option Explicit
 
 ''
@@ -188,14 +187,16 @@ Public Function CreateOrderContexts( _
                 Optional ByVal pOrderAuthoriser As IOrderAuthoriser, _
                 Optional ByVal pAccumulatedBracketOrders As BracketOrders, _
                 Optional ByVal pAccumulatedOrders As Orders, _
-                Optional ByVal pSimulatedClockFuture As IFuture) As OrderContexts
+                Optional ByVal pSimulatedClockFuture As IFuture, _
+                Optional ByVal pAccountDataProvider As IAccountDataProvider, _
+                Optional ByVal pCurrencyConverter As ICurrencyConverter) As OrderContexts
 Const ProcName As String = "CreateOrderContexts"
 On Error GoTo Err
 
 AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
 
-Set CreateOrderContexts = CreateOrderContextsEx(pName, pContractFuture, pOrderSubmitter, Nothing, pDataSource, pGroupName, "", pIsSimulated, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture)
+Set CreateOrderContexts = CreateOrderContextsEx(pName, pContractFuture, pOrderSubmitter, Nothing, pDataSource, pGroupName, "", pIsSimulated, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture, pAccountDataProvider, pCurrencyConverter)
 
 Exit Function
 
@@ -215,7 +216,9 @@ Friend Function CreateOrderContextsEx( _
                 ByVal pOrderAuthoriser As IOrderAuthoriser, _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
-                ByVal pSimulatedClockFuture As IFuture) As OrderContexts
+                ByVal pSimulatedClockFuture As IFuture, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter) As OrderContexts
 Const ProcName As String = "CreateOrderContextsEx"
 On Error GoTo Err
 
@@ -223,7 +226,7 @@ AssertArgument Not pContractFuture Is Nothing, "pContractFuture is Nothing"
 AssertArgument Not pOrderSubmitter Is Nothing, "pOrderSubmitter is Nothing"
 
 Dim lOrderContexts As New OrderContexts
-lOrderContexts.Initialise pName, Me, pGroupName, pRecoveryContextName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture, pBracketOrderRecoveryController
+lOrderContexts.Initialise pName, Me, pGroupName, pRecoveryContextName, pIsSimulated, pContractFuture, pDataSource, pOrderSubmitter, pOrderAuthoriser, pAccumulatedBracketOrders, pAccumulatedOrders, pSimulatedClockFuture, pBracketOrderRecoveryController, pAccountDataProvider, pCurrencyConverter
 If pIsSimulated Then
     mOrderContextsCollectionSimulated.Add lOrderContexts, pName
 Else
@@ -244,11 +247,13 @@ Public Function CreatePositionManager( _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pIsSimulated As Boolean, _
-                Optional ByVal pMoneyManager As IMoneyManager) As PositionManager
+                Optional ByVal pMoneyManager As IMoneyManager, _
+                Optional ByVal pAccountDataProvider As IAccountDataProvider, _
+                Optional ByVal pCurrencyConverter As ICurrencyConverter) As PositionManager
 Const ProcName As String = "CreatePositionManager"
 On Error GoTo Err
 
-Set CreatePositionManager = createPosnManager(pName, pOrderSubmitterFactory, pDataSource, "", pGroupName, pIsSimulated, pMoneyManager)
+Set CreatePositionManager = createPosnManager(pName, pOrderSubmitterFactory, pDataSource, "", pGroupName, pIsSimulated, pMoneyManager, pAccountDataProvider, pCurrencyConverter)
 
 Exit Function
 
@@ -263,13 +268,15 @@ Public Function CreateRecoverablePositionManager( _
                 ByVal pScopeName As String, _
                 Optional ByVal pGroupName As String, _
                 Optional ByVal pIsSimulated As Boolean, _
-                Optional ByVal pMoneyManager As IMoneyManager) As PositionManager
+                Optional ByVal pMoneyManager As IMoneyManager, _
+                Optional ByVal pAccountDataProvider As IAccountDataProvider, _
+                Optional ByVal pCurrencyConverter As ICurrencyConverter) As PositionManager
 Const ProcName As String = "CreateRecoverablePositionManager"
 On Error GoTo Err
 
 Assert pScopeName <> "", "pScopeName must be supplied"
 
-Set CreateRecoverablePositionManager = createPosnManager(pName, pOrderSubmitterFactory, pDataSource, pScopeName, pGroupName, pIsSimulated, pMoneyManager)
+Set CreateRecoverablePositionManager = createPosnManager(pName, pOrderSubmitterFactory, pDataSource, pScopeName, pGroupName, pIsSimulated, pMoneyManager, pAccountDataProvider, pCurrencyConverter)
 
 Exit Function
 
@@ -426,7 +433,9 @@ Private Function createPosnManager( _
                 ByVal pScopeName As String, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
-                ByVal pMoneyManager As IMoneyManager) As PositionManager
+                ByVal pMoneyManager As IMoneyManager, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter) As PositionManager
 Const ProcName As String = "createPosnManager"
 On Error GoTo Err
 
@@ -460,7 +469,9 @@ Else
                     lRecoveryContextName, _
                     pGroupName, _
                     pIsSimulated, _
-                    pMoneyManager
+                    pMoneyManager, _
+                    pAccountDataProvider, _
+                    pCurrencyConverter
     
     If pIsSimulated Then
         mPositionManagersSimulated.Add lPm
