@@ -352,6 +352,7 @@ On Error GoTo Err
 Static sAccountDataProvider As AccountDataProvider
 If sAccountDataProvider Is Nothing Then
     Set sAccountDataProvider = New AccountDataProvider
+    mTwsAPI.AccountDataConsumer = sAccountDataProvider
     sAccountDataProvider.Initialise mTwsAPI
 End If
 
@@ -375,6 +376,24 @@ If sContractStore Is Nothing Then
 End If
 
 Set GetContractStore = sContractStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function GetCurrencyConverter() As ICurrencyConverter
+Const ProcName As String = "GetCurrencyConverter"
+On Error GoTo Err
+
+Static sCurrencyConverter As CurrencyConverter
+If sCurrencyConverter Is Nothing Then
+    Set sCurrencyConverter = New CurrencyConverter
+    sCurrencyConverter.Initialise GetContractStore, GetMarketDataFactory
+End If
+
+Set GetCurrencyConverter = sCurrencyConverter
 
 Exit Function
 
