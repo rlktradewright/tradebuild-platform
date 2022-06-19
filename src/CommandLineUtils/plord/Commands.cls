@@ -61,6 +61,10 @@ Private Const ResetCommandName                      As String = "RESET"
 Private Const RolloverCommandName                   As String = "ROLLOVER"
 Private Const SellCommandName                       As String = "SELL"
 Private Const SellAgainCommandName                  As String = "S"
+Private Const SetBalanceCommandName                 As String = "SETBALANCE"
+Private Const SetFundsCommandName                   As String = "SETFUNDS"
+Private Const SetGroupFundsCommandName              As String = "SETGROUPFUNDS"
+Private Const ShowBalanceCommandName                As String = "SHOWBALANCE"
 Private Const StageOrdersCommandName                As String = "STAGEORDERS"
 Private Const StopLossCommandName                   As String = "STOPLOSS"
 Private Const TargetCommandName                     As String = "TARGET"
@@ -90,6 +94,10 @@ Private mResetCommand                               As New Command
 Private mRolloverCommand                            As New Command
 Private mSellCommand                                As New Command
 Private mSellAgainCommand                           As New Command
+Private mSetBalanceComand                           As New Command
+Private mSetFundsCommand                            As New Command
+Private mSetGroupFundsCommand                       As New Command
+Private mShowBalanceComand                          As New Command
 Private mStageOrdersCommand                         As New Command
 Private mStopLossCommand                            As New Command
 Private mTargetCommand                              As New Command
@@ -125,6 +133,10 @@ addCommand mResetCommand, ResetCommandName
 addCommand mRolloverCommand, RolloverCommandName
 addCommand mSellCommand, SellCommandName
 addCommand mSellAgainCommand, SellAgainCommandName
+addCommand mSetBalanceComand, SetBalanceCommandName
+addCommand mSetFundsCommand, SetFundsCommandName
+addCommand mSetGroupFundsCommand, SetGroupFundsCommandName
+addCommand mShowBalanceComand, ShowBalanceCommandName
 addCommand mStageOrdersCommand, StageOrdersCommandName
 addCommand mStopLossCommand, StopLossCommandName
 addCommand mTargetCommand, TargetCommandName
@@ -228,6 +240,22 @@ Friend Property Get SellAgainCommand() As Command
 Set SellAgainCommand = mSellAgainCommand
 End Property
 
+Friend Property Get SetBalanceCommand() As Command
+Set SetBalanceCommand = mSetBalanceComand
+End Property
+
+Friend Property Get SetFundsCommand() As Command
+Set SetFundsCommand = mSetFundsCommand
+End Property
+
+Friend Property Get SetGroupFundsCommand() As Command
+Set SetGroupFundsCommand = mSetGroupFundsCommand
+End Property
+
+Friend Property Get ShowBalanceCommand() As Command
+Set ShowBalanceCommand = mShowBalanceComand
+End Property
+
 Friend Property Get StageOrdersCommand() As Command
 Set StageOrdersCommand = mStageOrdersCommand
 End Property
@@ -251,7 +279,7 @@ On Error GoTo Err
 Dim i As Long
 For i = 0 To UBound(mCommands)
     If mCommands(i) Is Nothing Then Exit Function
-    If mCommands(i).parse(pCommandName) Then
+    If mCommands(i).Parse(pCommandName) Then
         Set ParseCommand = mCommands(i)
         Exit Function
     End If

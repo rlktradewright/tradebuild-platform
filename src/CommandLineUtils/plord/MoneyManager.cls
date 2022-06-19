@@ -110,7 +110,7 @@ Else
     End If
 End If
 
-If pMessage <> "" Then gWriteLineToConsole pBracketOrder.Key & ":" & pMessage, True
+If pMessage <> "" Then gWriteLineToConsole pBracketOrder.Key & ":" & pMessage
 
 Exit Function
 

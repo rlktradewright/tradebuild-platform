@@ -58,10 +58,14 @@ Private mOrderManager                               As OrderManager
 Private mScopeName                                  As String
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 Private mMoneyManager                               As MoneyManager
+Private mAccountDataProvider                        As IAccountDataProvider
+Private mCurrencyConverter                          As ICurrencyConverter
 
 Private mMarketDataManager                          As IMarketDataManager
 
 Private mContractResolutionsAwaited                 As Boolean
+
+Private mFixedAccountBalance                        As Double
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -99,11 +103,11 @@ Dim lNewContractProcessor As ContractProcessor
 Set lNewContractProcessor = ev.ContinuationData
 
 If ev.Future.IsFaulted Then
-    gWriteLineToConsole ev.Future.ErrorMessage & ": " & lNewContractProcessor.InitialContractSpec.ToString, True
+    gWriteLineToConsole ev.Future.ErrorMessage & ": " & lNewContractProcessor.InitialContractSpec.ToString
     mContractProcessors.Remove lNewContractProcessor.ID
     Set mCurrentContractProcessor = Nothing
 ElseIf ev.Future.IsCancelled Then
-    gWriteLineToConsole "Contract fetch cancelled: " & lNewContractProcessor.InitialContractSpec.ToString, True
+    gWriteLineToConsole "Contract fetch cancelled: " & lNewContractProcessor.InitialContractSpec.ToString
     mContractProcessors.Remove lNewContractProcessor.ID
     Set mCurrentContractProcessor = Nothing
 ElseIf ev.Future.Value Is Nothing Then
@@ -111,7 +115,7 @@ ElseIf ev.Future.Value Is Nothing Then
     Set mCurrentContractProcessor = Nothing
 Else
     Dim lContract As IContract: Set lContract = ev.Future.Value
-    gWriteLineToConsole "Contract is: " & gGetContractName(lContract), True
+    gWriteLineToConsole "Contract is: " & gGetContractName(lContract)
     
     Dim lExistingContractProcessor As ContractProcessor
     
@@ -163,6 +167,15 @@ Friend Property Get CurrentContractProcessor() As ContractProcessor
 Set CurrentContractProcessor = mCurrentContractProcessor
 End Property
 
+Friend Property Let FixedAccountBalance(ByVal Value As Double)
+If Value = mFixedAccountBalance Then Exit Property
+mFixedAccountBalance = Value
+Dim lCP As ContractProcessor
+For Each lCP In mContractProcessors
+    lCP.FixedAccountBalance = mFixedAccountBalance
+Next
+End Property
+
 Friend Property Get GroupName() As String
 GroupName = mGroupName
 End Property
@@ -199,7 +212,14 @@ mFutureWaiter.Add lContractResolver.ResolveContract(pContractSpec, _
                             mMarketDataManager), _
                     lContractProcessor
 
-lContractProcessor.Initialise pContractSpec, GenerateGUIDString, lContractResolver, pStageOrders
+lContractProcessor.Initialise pContractSpec, _
+                            GenerateGUIDString, _
+                            lContractResolver, _
+                            mAccountDataProvider, _
+                            mCurrencyConverter, _
+                            pStageOrders
+
+If mFixedAccountBalance <> 0 Then lContractProcessor.FixedAccountBalance = mFixedAccountBalance
 
 mContractProcessors.Add lContractProcessor, lContractProcessor.ID
 Set mCurrentContractProcessor = lContractProcessor
@@ -218,7 +238,7 @@ On Error GoTo Err
 
 If Not mContractResolutionsAwaited Then Exit Sub
 
-gWriteLineToConsole "Cancelling contract resolution", True
+gWriteLineToConsole "Cancelling contract resolution"
 mFutureWaiter.Cancel
 
 Exit Sub
@@ -238,7 +258,9 @@ Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
-                ByVal pMoneyManager As MoneyManager)
+                ByVal pMoneyManager As MoneyManager, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter)
 mGroupName = pGroupName
 Set mContractStore = pContractStore
 Set mMarketDataManager = pMarketDataManager
@@ -246,6 +268,8 @@ Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
 Set mMoneyManager = pMoneyManager
+Set mAccountDataProvider = pAccountDataProvider
+Set mCurrencyConverter = pCurrencyConverter
 End Sub
 
 Friend Sub NotifyError( _

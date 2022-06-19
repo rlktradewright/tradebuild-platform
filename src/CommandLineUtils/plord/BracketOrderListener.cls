@@ -82,13 +82,10 @@ Const ProcName As String = "mBracketOrderListener_BracketOrderAdded"
 On Error GoTo Err
 
 Dim lBO As IBracketOrder: Set lBO = ev.Source
-Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
-gWriteLineToConsole lTime & _
-                    lBO.Key & _
+gWriteLineToConsole lBO.Key & _
                     ": bracket order state is: " & _
                     BracketOrderStateToString(lBO.State) & _
-                    generateRolloverClause(lBO), _
-                    True
+                    generateRolloverClause(lBO)
 
 Exit Sub
 
@@ -101,7 +98,7 @@ Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderError"
 On Error GoTo Err
 
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage), True
+gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage)
 
 Exit Sub
 
@@ -114,7 +111,7 @@ Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderMessage"
 On Error GoTo Err
 
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.Message), True
+gWriteLineToConsole generateMessage(lOrder, lOrder.Message)
 
 Exit Sub
 
@@ -126,14 +123,12 @@ Private Sub mBracketOrderListener_Change(ev As ChangeEventData)
 Const ProcName As String = "mBracketOrderListener_Change"
 On Error GoTo Err
 
-Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
-
 Dim lChangeType As BracketOrderChangeTypes: lChangeType = ev.ChangeType
 Dim lBO As BracketOrder: Set lBO = ev.Source
 
 Dim lRolloverClause As String: lRolloverClause = generateRolloverClause(lBO)
 
-Dim s As String: s = lTime & lBO.Key & ": "
+Dim s As String: s = lBO.Key & ": "
 Dim s1 As String
 
 Select Case lChangeType
@@ -197,7 +192,7 @@ Case BracketOrderRolloverCompleted
     mBracketOrderListener.Remove lBO
 End Select
 
-If s1 <> "" Then gWriteLineToConsole s & s1, True
+If s1 <> "" Then gWriteLineToConsole s & s1
 
 Exit Sub
 
@@ -254,9 +249,8 @@ Private Function generateMessage( _
 Const ProcName As String = "generateMessage"
 On Error GoTo Err
 
-Dim lTime As String: lTime = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
 Dim s As String
-s = lTime & pOrder.GroupName & ": " & _
+s = pOrder.GroupName & ": " & _
     "(" & pOrder.ContractSpecifier.LocalSymbol & "@" & pOrder.ContractSpecifier.Exchange & ")" & _
     " " & OrderActionToString(pOrder.Action) & _
     " " & pOrder.Quantity & _

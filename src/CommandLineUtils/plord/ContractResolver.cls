@@ -145,7 +145,7 @@ Case OptionStrikeSelectionModeNone
     Set mContractFuture = FetchContract(pContractSpec, mContractStore)
 Case OptionStrikeSelectionModeExpenditure, _
         OptionStrikeSelectionModeDelta
-    gWriteLineToConsole "Resolving contract", True
+    gWriteLineToConsole "Resolving contract"
     Set mContractFuture = GetOptionContract( _
                             pContractSpec, _
                             OrderActionBuy, _

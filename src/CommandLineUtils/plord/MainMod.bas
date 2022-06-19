@@ -95,6 +95,7 @@ Public Const TickOffsetDesignator                   As String = "T"
 Public Const PercentOffsetDesignator                As String = "%"
 
 Public Const MaxOrderCostSuffix                     As String = "$"
+Public Const AccountPercentSuffix                   As String = "%"
 
 ' Legacy pseudo-order types from early versions
 Public Const AskPseudoOrderType                     As String = "ASK"
@@ -116,6 +117,12 @@ Private Const StrikeSelectionModeNone               As String = ""
 Private Const StrikeSelectionModeIncrement          As String = "I"
 Private Const StrikeSelectionModeExpenditure        As String = "$"
 Private Const StrikeSelectionModeDelta              As String = "D"
+
+Private Const AccountValueAvailableFunds            As String = "AvailableFunds"
+Private Const AccountValueCashBalance               As String = "CashBalance"
+Private Const AccountValueEquityWithLoan            As String = "EquityWithLoan"
+Private Const AccountValueExcessLiquidity           As String = "ExcessLiquidity"
+Private Const AccountValueNetLiquidation            As String = "NetLiquidation"
 
 '@================================================================================
 ' Member variables
@@ -140,6 +147,9 @@ Public gCommandListOrderSpecification               As New CommandList
 Public gCommandListOrderCompletion                  As New CommandList
 Public gCommandListGeneral                          As New CommandList
 
+Public gDefaultBalanceAccountValueName              As String
+
+
 
 Private mErrorCount                                 As Long
 
@@ -151,6 +161,9 @@ Private mMarketDataManager                          As RealTimeDataManager
 Private mScopeName                                  As String
 Private mOrderManager                               As OrderManager
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
+
+Private mAccountDataProvider                        As IAccountDataProvider
+Private mCurrencyConverter                          As ICurrencyConverter
 
 Private mStageOrdersDefault                         As Boolean
 Private mStageOrders                                As Boolean
@@ -324,7 +337,7 @@ End Function
 
 Public Sub gTerminate( _
                 ByVal pMessage As String)
-gWriteLineToConsole pMessage, True
+gWriteLineToConsole pMessage
 mTerminateRequested = True
 End Sub
 
@@ -340,10 +353,17 @@ LogMessage "StdErr: " & s
 If Not pDontIncrementErrorCount Then mErrorCount = mErrorCount + 1
 End Sub
 
-Public Sub gWriteLineToConsole(ByVal pMessage As String, Optional ByVal pLogit As Boolean)
+Public Sub gWriteLineToConsole( _
+                ByVal pMessage As String, _
+                Optional ByVal pIncludeTimestamp As Boolean, _
+                Optional ByVal pDontLogit As Boolean)
 Const ProcName As String = "gWriteLineToConsole"
 
-If pLogit Then LogMessage "Con: " & pMessage
+If pDontLogit Then LogMessage "Con: " & pMessage
+Dim lTime As String
+If pIncludeTimestamp Then
+    gCon.WriteStringToConsole FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
+End If
 gCon.WriteLineToConsole pMessage
 End Sub
 
@@ -388,7 +408,7 @@ If Not validateApiMessageLogging( _
                 lLogApiMessages, _
                 lLogRawApiMessages, _
                 lLogApiMessageStats) Then
-    gWriteLineToConsole "API message logging setting is invalid", True
+    gWriteLineToConsole "API message logging setting is invalid"
     Exit Sub
 End If
 
@@ -403,18 +423,30 @@ End If
 
 mScopeName = mClp.SwitchValue(ScopeNameSwitch)
 
+gDefaultBalanceAccountValueName = AccountValueNetLiquidation
+
 Set mGroups = New Groups
 mGroups.Initialise mContractStore, _
                     mMarketDataManager, _
                     mOrderManager, _
                     mScopeName, _
                     mOrderSubmitterFactory, _
-                    mMoneyManager
+                    mMoneyManager, _
+                    mAccountDataProvider, _
+                    mCurrencyConverter
 Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 
 Set gPlaceOrdersTask = New PlaceOrdersTask
 gPlaceOrdersTask.Initialise mGroups, mMoneyManager
 StartTask gPlaceOrdersTask, PriorityNormal
+
+If mAccountDataProvider.State <> AccountProviderReady Then
+    gWriteLineToConsole "Waiting for account provider to be ready", True
+    Do While mAccountDataProvider.State <> AccountProviderReady
+        Wait 50
+    Loop
+    gWriteLineToConsole "Account provider is ready", True
+End If
 
 process
 
@@ -429,6 +461,56 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function getFundsAmount( _
+                ByVal pParams As String, _
+                ByRef pAmount As Double) As Boolean
+Const ProcName As String = "getFundsAmount"
+On Error GoTo Err
+
+getFundsAmount = False
+
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
+If lClp.NumberOfArgs > 2 Then
+    gWriteErrorLine "Too many parameters"
+    Exit Function
+End If
+
+Dim lFundsSpec As String: lFundsSpec = lClp.Arg(0)
+Dim lAccountValueName As String: lAccountValueName = lClp.Arg(1)
+If lAccountValueName = "" Then lAccountValueName = gDefaultBalanceAccountValueName
+
+If Not isValidAccountValueName(lAccountValueName) Then Exit Function
+
+Const FundsSpecFormat As String = "^([1-9]\d*)(?:([\$|\%]))$"
+gRegExp.Pattern = FundsSpecFormat
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(lFundsSpec)
+
+If lMatches.Count <> 1 Then
+    gWriteErrorLine "Invalid funds specification: must be a number greater than 0, " & _
+                    "followed by either $ (an amount of currency) or " & _
+                    "% (a percentage of the account balance). " & _
+                    "Note that the funds are in the account's base currency.", True
+    Exit Function
+End If
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+If lMatch.SubMatches(1) = MaxOrderCostSuffix Then
+    pAmount = CDbl(lMatch.SubMatches(0))
+ElseIf lMatch.SubMatches(1) = AccountPercentSuffix Then
+    pAmount = CDbl(lMatch.SubMatches(0)) * CDbl(mAccountDataProvider.GetAccountValue(lAccountValueName, mAccountDataProvider.BaseCurrency).Value) / 100#
+End If
+
+getFundsAmount = True
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function getInputLine() As String
 Const ProcName As String = "getInputLine"
@@ -516,6 +598,32 @@ If Err.Number = ErrorCodes.ErrIllegalArgumentException Then Resume Next
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function isValidAccountValueName( _
+                ByRef Value As String) As Boolean
+isValidAccountValueName = True
+Select Case UCase$(Value)
+Case UCase$(AccountValueAvailableFunds)
+    Value = AccountValueAvailableFunds
+Case UCase$(AccountValueCashBalance)
+    Value = AccountValueCashBalance
+Case UCase$(AccountValueEquityWithLoan)
+    Value = AccountValueEquityWithLoan
+Case UCase$(AccountValueExcessLiquidity)
+    Value = AccountValueExcessLiquidity
+Case UCase$(AccountValueNetLiquidation)
+    Value = AccountValueNetLiquidation
+Case Else
+    gWriteErrorLine "Invalid account value name - must be one of: " & vbCrLf & _
+                    "    AvailableFunds" & vbCrLf & _
+                    "    CashBalance" & vbCrLf & _
+                    "    EquityWithLoan" & vbCrLf & _
+                    "    ExcessLiquidity" & vbCrLf & _
+                    "    NetLiquidation", _
+                    True
+    isValidAccountValueName = False
+End Select
+End Function
+
 Private Sub listGroups()
 Const ProcName As String = "listGroups"
 On Error GoTo Err
@@ -523,7 +631,7 @@ On Error GoTo Err
 gWriteLineToConsole "Groups at " & _
                     FormatTimestamp(GetTimestamp, _
                                     TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & _
-                    ": ", True
+                    ": "
 Dim lRes As GroupResources
 For Each lRes In mGroups
     Dim lGroupName As String: lGroupName = lRes.GroupName
@@ -538,8 +646,7 @@ For Each lRes In mGroups
     End If
     gWriteLineToConsole IIf(lRes Is mCurrentGroup, "* ", "  ") & _
                         gPadStringRight(lGroupName, 20) & _
-                        gPadStringRight(lContractName, 25), _
-                        True
+                        gPadStringRight(lContractName, 25)
 Next
 
 Exit Sub
@@ -556,8 +663,7 @@ Dim lQual As String: lQual = IIf(mOrderManager.PositionManagersLive.Count = 0, "
 gWriteLineToConsole "Positions at " & _
                     FormatTimestamp(GetTimestamp, _
                                     TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & _
-                    ": " & lQual, _
-                    True
+                    ": " & lQual
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
@@ -568,8 +674,7 @@ For Each lPM In mOrderManager.PositionManagersLive
                                                 "(" & lPM.PendingBuyPositionSize & _
                                                 "/" & _
                                                 lPM.PendingSellPositionSize & ")", 10) & _
-                        " Profit=" & gPadStringleft(Format(lPM.Profit, "0.00"), 9), _
-                        True
+                        " Profit=" & gPadStringleft(Format(lPM.Profit, "0.00"), 9)
 Next
 
 Exit Sub
@@ -586,15 +691,13 @@ Dim lQual As String: lQual = IIf(mOrderManager.PositionManagersLive.Count = 0, "
 gWriteLineToConsole "Trades at " & _
                     FormatTimestamp(GetTimestamp, _
                                     TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & _
-                    ": " & lQual, _
-                    True
+                    ": " & lQual
 Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
     Dim lContract As IContract
     Set lContract = lPM.ContractFuture.Value
     gWriteLineToConsole gPadStringRight(lPM.GroupName, 15) & " " & _
-                        gPadStringRight(gGetContractName(lContract), 30), _
-                        True
+                        gPadStringRight(gGetContractName(lContract), 30)
     
     Dim lTrade As Execution
     For Each lTrade In lPM.Executions
@@ -603,8 +706,7 @@ For Each lPM In mOrderManager.PositionManagersLive
                         gPadStringleft(lTrade.Quantity, 5) & _
                         gPadStringleft(FormatPrice(lTrade.Price, lContract.Specifier.SecType, lContract.TickSize), 9) & _
                         gPadStringRight(" " & lTrade.FillingExchange, 10) & _
-                        " " & lTrade.TimezoneName, _
-                        True
+                        " " & lTrade.TimezoneName
     Next
 Next
 
@@ -628,7 +730,7 @@ s = App.ProductName & _
     IIf(App.FileDescription <> "", "." & App.FileDescription, "") & _
     vbCrLf & _
     App.LegalCopyright
-gWriteLineToConsole s, False
+gWriteLineToConsole s, , True
 s = s & vbCrLf & "Arguments: " & Command
 LogMessage s
 
@@ -967,7 +1069,7 @@ Do While inString <> gCon.EofString
     ElseIf Left$(inString, 1) = "#" Then
         ' ignore comments except log and write to console
         LogMessage "StdIn: " & inString
-        gWriteLineToConsole inString
+        gWriteLineToConsole inString, , False
     Else
         LogMessage "StdIn: " & inString
         If Not processCommand(inString) Then Exit Do
@@ -1031,26 +1133,34 @@ ElseIf lCommand Is gCommands.StageOrdersCommand Then
     processStageOrdersCommand Params
 ElseIf lCommand Is gCommands.GroupCommand Then
     processGroupCommand Params, lContractProcessor
+ElseIf lCommand Is gCommands.SetBalanceCommand Then
+    processSetBalanceCommand Params
+ElseIf lCommand Is gCommands.ShowBalanceCommand Then
+    processShowBalanceCommand
+ElseIf lCommand Is gCommands.SetFundsCommand Then
+    processSetFundsCommand Params
+ElseIf lCommand Is gCommands.SetGroupFundsCommand Then
+    processSetGroupFundsCommand Params
 ElseIf lCommand Is gCommands.BuyCommand Then
     lID = GenerateBracketOrderId
-    gWriteLineToConsole "Order id: " & lID, True
+    gWriteLineToConsole "Order id: " & lID
     ProcessBuyCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.BuyAgainCommand Then
     lID = GenerateBracketOrderId
-    gWriteLineToConsole "Order id: " & lID, True
+    gWriteLineToConsole "Order id: " & lID
     ProcessBuyAgainCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.SellCommand Then
     lID = GenerateBracketOrderId
-    gWriteLineToConsole "Order id: " & lID, True
+    gWriteLineToConsole "Order id: " & lID
     ProcessSellCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.SellAgainCommand Then
     lID = GenerateBracketOrderId
-    gWriteLineToConsole "Order id: " & lID, True
+    gWriteLineToConsole "Order id: " & lID
     ProcessSellAgainCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.BracketCommand Then
     mBracketOrderDefinitionInProgress = True
     lID = GenerateBracketOrderId
-    gWriteLineToConsole "Order id: " & lID, True
+    gWriteLineToConsole "Order id: " & lID
     lContractProcessor.ProcessBracketCommand Params, lID
 ElseIf lCommand Is gCommands.EntryCommand Then
     lContractProcessor.ProcessEntryCommand Params
@@ -1069,7 +1179,7 @@ ElseIf lCommand Is gCommands.EndBracketCommand Then
     If mErrorCount = 0 And Not mBatchOrders Then
         processOrders
     Else
-        gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed", True
+        gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed"
         mErrorCount = 0
     End If
 ElseIf lCommand Is gCommands.EndOrdersCommand Then
@@ -1085,7 +1195,7 @@ ElseIf lCommand Is gCommands.QuoteCommand Then
 ElseIf lCommand Is gCommands.PurgeCommand Then
     processPurgeCommand Params
 Else
-    gWriteErrorLine "Invalid command '" & Command & "'", True
+    gWriteErrorLine "Invalid command '" & Command & "'"
 End If
 
 processCommand = True
@@ -1209,6 +1319,74 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processSetBalanceCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processSetBalanceCommand"
+On Error GoTo Err
+
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
+If lClp.NumberOfArgs > 1 Then
+    gWriteErrorLine "Too many parameters"
+    Exit Sub
+End If
+
+Dim lAccountValueName As String: lAccountValueName = lClp.Arg(0)
+If lAccountValueName = "" Then lAccountValueName = AccountValueNetLiquidation
+
+If Not isValidAccountValueName(lAccountValueName) Then Exit Sub
+
+gDefaultBalanceAccountValueName = lAccountValueName
+Dim lBaseCurrency As String: lBaseCurrency = mAccountDataProvider.BaseCurrency
+gWriteLineToConsole "Balance is " & _
+                    mAccountDataProvider.GetAccountValue( _
+                                        gDefaultBalanceAccountValueName, _
+                                        lBaseCurrency).Value & _
+                     " " & lBaseCurrency & _
+                     " (" & gDefaultBalanceAccountValueName & ")"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processSetFundsCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processSetFundsCommand"
+On Error GoTo Err
+
+Dim lFunds As Double
+If Not getFundsAmount(pParams, lFunds) Then Exit Sub
+
+Dim lGroup As GroupResources
+For Each lGroup In mGroups
+    lGroup.FixedAccountBalance = lFunds
+Next
+gWriteLineToConsole "Funds for all groups set to " & CStr(lFunds)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processSetGroupFundsCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processSetGroupFundsCommand"
+On Error GoTo Err
+
+Dim lFunds As Double
+If Not getFundsAmount(pParams, lFunds) Then Exit Sub
+
+mCurrentGroup.FixedAccountBalance = lFunds
+gWriteLineToConsole "Funds for this group set to " & CStr(lFunds)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub ProcessSellAgainCommand( _
                 ByVal pParams As String, _
                 ByVal pContractProcessor As ContractProcessor, _
@@ -1223,6 +1401,24 @@ ElseIf pContractProcessor.LatestSellCommandParams = "" Then
 Else
     ProcessSellCommand pContractProcessor.LatestSellCommandParams, pContractProcessor, pID
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processShowBalanceCommand()
+Const ProcName As String = "processShowBalanceCommand"
+On Error GoTo Err
+
+Dim lBaseCurrency As String: lBaseCurrency = mAccountDataProvider.BaseCurrency
+gWriteLineToConsole "Balance is " & _
+                    mAccountDataProvider.GetAccountValue( _
+                                        gDefaultBalanceAccountValueName, _
+                                        lBaseCurrency).Value & _
+                     " " & lBaseCurrency & _
+                     " (" & gDefaultBalanceAccountValueName & ")"
 
 Exit Sub
 
@@ -1411,14 +1607,14 @@ Const ProcName As String = "processEndOrdersCommand"
 On Error GoTo Err
 
 If mErrorCount <> 0 Then
-    gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed", True
+    gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed"
     mErrorCount = 0
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     Exit Sub
 End If
 
 If getNumberOfUnprocessedOrders = 0 Then
-    gWriteLineToConsole "No orders have been defined", True
+    gWriteLineToConsole "No orders have been defined"
     Exit Sub
 End If
 
@@ -1512,28 +1708,28 @@ On Error GoTo Err
 Dim lRes As GroupResources
 
 If pParams = "" Then
-    gWriteLineToConsole "Purging " & mCurrentGroup.GroupName, True
+    gWriteLineToConsole "Purging " & mCurrentGroup.GroupName
     mCurrentGroup.Purge
     mGroups.Remove mCurrentGroup.GroupName
     Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 ElseIf UCase$(pParams) = AllGroups Then
     For Each lRes In mGroups
-        gWriteLineToConsole "Purging " & lRes.GroupName, True
+        gWriteLineToConsole "Purging " & lRes.GroupName
         lRes.Purge
     Next
     mGroups.Clear
     Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 ElseIf isGroupValid(pParams) Then
     If Not mGroups.TryItem(pParams, lRes) Then
-        gWriteErrorLine "No such group", True
+        gWriteErrorLine "No such group"
         Exit Sub
     End If
-    gWriteLineToConsole "Purging " & lRes.GroupName, True
+    gWriteLineToConsole "Purging " & lRes.GroupName
     lRes.Purge
     mGroups.Remove pParams
     Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 Else
-    gWriteErrorLine "Invalid group name", True
+    gWriteErrorLine "Invalid group name"
     Exit Sub
 End If
 
@@ -1723,7 +1919,11 @@ gCommandListGeneral.Initialise _
                 gCommands.CloseoutCommand, _
                 gCommands.ContractCommand, _
                 gCommands.EndOrdersCommand, _
-                gCommands.GroupCommand
+                gCommands.GroupCommand, _
+                gCommands.SetBalanceCommand, _
+                gCommands.SetFundsCommand, _
+                gCommands.SetGroupFundsCommand, _
+                gCommands.ShowBalanceCommand
 End Sub
 
 Private Sub setupResultsLogging(ByVal pClp As CommandLineParser)
@@ -1864,6 +2064,9 @@ End If
 
 Set mContractStore = mTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(mTwsClient.GetMarketDataFactory, mTwsClient.GetContractStore)
+Set mAccountDataProvider = mTwsClient.GetAccountDataProvider
+mAccountDataProvider.Load True
+Set mCurrencyConverter = mTwsClient.GetCurrencyConverter
 
 mMarketDataManager.LoadFromConfig gGetMarketDataSourcesConfig(mConfigStore)
 
