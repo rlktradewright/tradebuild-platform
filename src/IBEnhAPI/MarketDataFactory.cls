@@ -135,7 +135,7 @@ If tickerHasBeenStopped(pTickerId) Then Exit Sub
 
 Dim lIndex As Long
 lIndex = getIndexFromTickerId(pTickerId)
-releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex, False
+releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, lIndex, False
 
 Exit Sub
 
@@ -172,7 +172,7 @@ Case 10197  ' No markety data lumps during competing live session
 End Select
 
 mMarketDataTable(lIndex).ErrorListener.NotifyMarketDataError lIndex, pErrorCode, pErrorMsg
-releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lIndex, False
+releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, lIndex, False
 
 Exit Sub
 
@@ -482,7 +482,7 @@ Case 317
 End Select
 
 mMarketDepthTable(lIndex).ErrorListener.NotifyMarketDepthError lIndex, pErrorCode, pErrorMsg
-releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lIndex, True
+releaseTableEntry mMarketDepthTable, mMarketDataTableNextIndex, mMarketDepthTableFirstFreeIndex, lIndex, True
 
 Exit Sub
 
@@ -672,7 +672,7 @@ lStreamId = ev.ContinuationData
 If Not mMarketDataTable(lStreamId).IsInUse Then Exit Sub
 If ev.Future.IsFaulted Then
     mMarketDataTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
-    releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, lStreamId, False
+    releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, lStreamId, False
 Else
     handleCompletedFuture ev.Future, mMarketDataTable, lStreamId, mTicksFutureWaiter
     reqMarketData lStreamId
@@ -701,7 +701,7 @@ lStreamId = lStreamId - MarketDepthIdOffset
 If Not mMarketDepthTable(lStreamId).IsInUse Then Exit Sub
 If ev.Future.IsFaulted Then
     mMarketDepthTable(lStreamId).ErrorListener.NotifyMarketDataError lStreamId, ev.Future.ErrorNumber, ev.Future.ErrorMessage
-    releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, lStreamId, True
+    releaseTableEntry mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, lStreamId, True
 Else
     handleCompletedFuture ev.Future, mMarketDepthTable, lStreamId, mDepthFutureWaiter
     reqMarketDepth lStreamId
@@ -809,7 +809,7 @@ Const ProcName As String = "CancelMarketData"
 On Error GoTo Err
 
 cancelMarketDataEx pStreamId
-releaseTableEntry mMarketDataTable, mMarketDataTableFirstFreeIndex, pStreamId, False
+releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, pStreamId, False
 
 Exit Sub
 
@@ -823,7 +823,7 @@ Const ProcName As String = "CancelMarketDepth"
 On Error GoTo Err
 
 cancelMarketDepthEx pStreamId
-releaseTableEntry mMarketDepthTable, mMarketDepthTableFirstFreeIndex, pStreamId, True
+releaseTableEntry mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTableFirstFreeIndex, pStreamId, True
 
 Exit Sub
 
@@ -1134,7 +1134,7 @@ If lIndex = -1 Then
             If pNextIndex > UBound(pTable) Then ReDim Preserve pTable(2 * (UBound(pTable) + 1) - 1) As TickerTableEntry
             lIndex = pNextIndex
             pNextIndex = pNextIndex + 1
-        Loop Until Not pTable(lIndex).IsInUse And pTable(lIndex).Next <> 0
+        Loop Until Not pTable(lIndex).IsInUse
     End If
 Else
     If lIndex <= UBound(pTable) Then AssertArgument Not pTable(lIndex).IsInUse, "Index already in use"
@@ -1250,9 +1250,10 @@ With pTickerTable(pStreamId)
         isReadyForData = False
         s = s & " state not running (state=" & .TickStreamBuilder.TickStream.State & ");"
     End If
+    s = s & ")"
 End With
 
-gLogger.Log "Is ready for data: " & isReadyForData & "  " & s, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Is ready for data (" & pStreamId & ": " & isReadyForData & "  " & s, ProcName, ModuleName, LogLevelDetail
 
 Exit Function
 
@@ -1383,6 +1384,7 @@ End Sub
 
 Private Sub releaseTableEntry( _
                 ByRef pTable() As TickerTableEntry, _
+                ByVal pNextIndex As Long, _
                 ByRef pFirstFreeTableIndex As Long, _
                 ByVal pIndex As Long, _
                 ByVal pIsMarketDepth As Boolean)
@@ -1402,8 +1404,10 @@ With pTable(pIndex)
     ' don't do this as it causes a failure if this is during a FireTick call
     'Set .TickStreamBuilder = Nothing
     
-    .Next = pFirstFreeTableIndex
-    pFirstFreeTableIndex = pIndex
+    If pIndex < pNextIndex Then
+        .Next = pFirstFreeTableIndex
+        pFirstFreeTableIndex = pIndex
+    End If
 End With
 clearPrevPrices pIndex
 
