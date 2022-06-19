@@ -1,3 +1,4 @@
+..\bin\TradeWright.TradeBuild.Platform\CurrencyUtils27.dll
 ..\bin\TradeWright.TradeBuild.Platform\SessionUtils27.dll
 ..\bin\TradeWright.TradeBuild.Platform\ContractUtils27.dll
 ..\bin\TradeWright.TradeBuild.Platform\AccountUtils27.dll

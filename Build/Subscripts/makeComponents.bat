@@ -22,6 +22,8 @@ echo Making components for TradeWright.TradeBuild.Platform
 echo.
 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
+call makedll.bat CurrencyUtils CurrencyUtils /T:DLL /B:%BINARY_COMPAT%
+if errorlevel 1 pause
 call makedll.bat SessionUtils SessionUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat ContractUtils ContractUtils /T:DLL /B:%BINARY_COMPAT%
