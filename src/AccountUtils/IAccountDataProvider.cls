@@ -60,6 +60,12 @@ Private Const ModuleName                            As String = "IAccountDataPro
 ' Properties
 '@================================================================================
 
+Public Property Get BaseCurrency() As String
+End Property
+
+Public Property Get State() As AccountProviderStates
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -70,7 +76,10 @@ End Sub
 Public Sub AddPortfolioValueListener(ByVal pListener As IPortfolioValueListener)
 End Sub
 
-Public Function GetAccountValue(ByVal pKey As String) As IAccountValue
+Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
+End Sub
+
+Public Function GetAccountValue(ByVal pKey As String, Optional ByVal pCurrency As String) As IAccountValue
 End Function
 
 Public Function GetAccountValues() As Enumerator
@@ -89,6 +98,9 @@ Public Sub RemoveAccountValueListener(ByVal pListener As IAccountValueListener)
 End Sub
 
 Public Sub RemovePortfolioValueListener(ByVal pListener As IPortfolioValueListener)
+End Sub
+
+Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
 '@================================================================================
