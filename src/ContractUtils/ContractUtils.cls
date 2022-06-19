@@ -75,11 +75,6 @@ End Enum
 ' Types
 '@================================================================================
 
-Public Type CurrencyDescriptor
-    Code        As String
-    Description         As String
-End Type
-
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -483,31 +478,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetCurrencyDescriptor( _
-                ByVal CurrencyCode As String) As CurrencyDescriptor
-Const ProcName As String = "GetCurrencyDescriptor"
-On Error GoTo Err
-
-GetCurrencyDescriptor = gGetCurrencyDescriptor(CurrencyCode)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function GetCurrencyDescriptors() As CurrencyDescriptor()
-Const ProcName As String = "GetCurrencyDescriptors"
-On Error GoTo Err
-
-GetCurrencyDescriptors = gGetCurrencyDescriptors
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function GetExchangeCodes() As String()
 Const ProcName As String = "GetExchangeCodes"
 On Error GoTo Err
@@ -764,18 +734,6 @@ Public Function IsContractSpecOffsetExpiry( _
 Dim lErrorMessage As String
 IsContractSpecOffsetExpiry = gIsOffsetExpiry(pContractSpec.Expiry, lErrorMessage)
 If Not IsMissing(pErrorMessage) Then pErrorMessage = lErrorMessage
-End Function
-
-Public Function IsValidCurrencyCode(ByVal CurrencyCode As String) As Boolean
-Const ProcName As String = "IsValidCurrencyCode"
-On Error GoTo Err
-
-IsValidCurrencyCode = gIsValidCurrencyCode(CurrencyCode)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidExchangeCode(ByVal ExchangeCode As String) As Boolean
