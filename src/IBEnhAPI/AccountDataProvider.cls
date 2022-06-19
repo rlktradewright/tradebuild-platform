@@ -131,7 +131,9 @@ If pKey = "AccountReady" Then
 End If
 
 If pKey = "NetLiquidation" Then mBaseCurrency = pCurrency
-
+If pKey = "EquityWithLoanValue" Then
+    pKey = "EquityWithLoan"
+End If
 Dim lAccountValue As AccountValue
 Dim lID As String: lID = getValueID(pKey, pCurrency)
 If Not mAccountValues.TryItem(lID, lAccountValue) Then
