@@ -167,13 +167,13 @@ Public Enum TwsSocketInMsgTypes
     ' Messages from here on don't have a version number
     MaxIdWithVersion = ACCOUNTUPDATEMULTIEND
 
-    OPTIONPARAMETER = 75
-    OPTIONPARAMETEREND = 76
+    OptionParameter = 75
+    OptionParameterEnd = 76
     SOFTDOLLARTIERS = 77
     FAMILYCODES = 78
     SYMBOLSAMPLES = 79
     MARKETDEPTHEXCHANGES = 80
-    TICKREQUESTPARAMS = 81
+    TickRequestParams = 81
     SMARTCOMPONENTS = 82
     NEWSARTICLE = 83
     TICKNEWS = 84
@@ -185,7 +185,7 @@ Public Enum TwsSocketInMsgTypes
     HISTORICALDATAUPDATE = 90
     REROUTEMARKETDATA = 91
     REROUTEMARKETDEPTH = 92
-    MARKETRULE = 93
+    MarketRule = 93
     PNL = 94
     PNLSINGLE = 95
     HISTORICALTICKMIDPOINT = 96
@@ -769,7 +769,7 @@ End Function
 
 Public Function gTwsOptionRightFromString(ByVal Value As String) As TwsOptionRights
 Select Case UCase$(Value)
-Case "", "?"
+Case "", "?", "0"
     gTwsOptionRightFromString = TwsOptRightNone
 Case "CALL", "C"
     gTwsOptionRightFromString = TwsOptRightCall
@@ -1226,13 +1226,13 @@ addInputMessageIdMapEntry POSITIONMULTI, "POSITIONMULTI"
 addInputMessageIdMapEntry POSITIONMULTIEND, "POSITIONMULTIEND"
 addInputMessageIdMapEntry ACCOUNTUPDATEMULTI, "ACCOUNTUPDATEMULTI"
 addInputMessageIdMapEntry ACCOUNTUPDATEMULTIEND, "ACCOUNTUPDATEMULTIEND"
-addInputMessageIdMapEntry OPTIONPARAMETER, "OPTIONPARAMETER"
-addInputMessageIdMapEntry OPTIONPARAMETEREND, "OPTIONPARAMETEREND"
+addInputMessageIdMapEntry OptionParameter, "OPTIONPARAMETER"
+addInputMessageIdMapEntry OptionParameterEnd, "OPTIONPARAMETEREND"
 addInputMessageIdMapEntry SOFTDOLLARTIERS, "SOFTDOLLARTIERS"
 addInputMessageIdMapEntry FAMILYCODES, "FAMILYCODES"
 addInputMessageIdMapEntry SYMBOLSAMPLES, "SYMBOLSAMPLES"
 addInputMessageIdMapEntry MARKETDEPTHEXCHANGES, "MARKETDEPTHEXCHANGES"
-addInputMessageIdMapEntry TICKREQUESTPARAMS, "TICKREQUESTPARAMS"
+addInputMessageIdMapEntry TickRequestParams, "TICKREQUESTPARAMS"
 addInputMessageIdMapEntry SMARTCOMPONENTS, "SMARTCOMPONENTS"
 addInputMessageIdMapEntry NEWSARTICLE, "NEWSARTICLE"
 addInputMessageIdMapEntry TICKNEWS, "TICKNEWS"
@@ -1244,7 +1244,7 @@ addInputMessageIdMapEntry HISTOGRAMDATA, "HISTOGRAMDATA"
 addInputMessageIdMapEntry HISTORICALDATAUPDATE, "HISTORICALDATAUPDATE"
 addInputMessageIdMapEntry REROUTEMARKETDATA, "REROUTEMARKETDATA"
 addInputMessageIdMapEntry REROUTEMARKETDEPTH, "REROUTEMARKETDEPTH"
-addInputMessageIdMapEntry MARKETRULE, "MARKETRULE"
+addInputMessageIdMapEntry MarketRule, "MARKETRULE"
 addInputMessageIdMapEntry TwsSocketInMsgTypes.PNL, "PNL"
 addInputMessageIdMapEntry PNLSINGLE, "PNLSINGLE"
 addInputMessageIdMapEntry HISTORICALTICKMIDPOINT, "HISTORICALTICKMIDPOINT"
