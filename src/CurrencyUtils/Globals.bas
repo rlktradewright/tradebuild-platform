@@ -26,8 +26,10 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "CurrencyUtils"
-Private Const ModuleName                            As String = "Globals"
+Public Const ProjectName                                As String = "CurrencyUtils"
+Private Const ModuleName                                As String = "Globals"
+
+Public Const NullIndex                                  As Long = -1
 
 '@================================================================================
 ' Member variables

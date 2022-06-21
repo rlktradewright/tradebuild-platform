@@ -383,24 +383,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function GetCurrencyConverter() As ICurrencyConverter
-Const ProcName As String = "GetCurrencyConverter"
-On Error GoTo Err
-
-Static sCurrencyConverter As CurrencyConverter
-If sCurrencyConverter Is Nothing Then
-    Set sCurrencyConverter = New CurrencyConverter
-    sCurrencyConverter.Initialise GetContractStore, GetMarketDataFactory
-End If
-
-Set GetCurrencyConverter = sCurrencyConverter
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 Public Function GetHistoricalDataStore() As IHistoricalDataStore
 Const ProcName As String = "GetHistoricalDataStore"
 On Error GoTo Err

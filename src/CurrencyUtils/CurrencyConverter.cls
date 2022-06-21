@@ -18,8 +18,8 @@ Option Explicit
 '@================================================================================
 
 Implements ICurrencyConverter
+Implements IErrorListener
 Implements IGenericTickListener
-Implements IMarketDataErrorListener
 
 '@================================================================================
 ' Events
@@ -56,20 +56,19 @@ Private Const ModuleName                            As String = "CurrencyConvert
 '@================================================================================
 
 Private mContractStore                              As IContractStore
-Private mMarketDataFactory                          As MarketDataFactory
+Private mMarketDataManager                          As IMarketDataManager
 
 ' maps currency pair to conversion table index
 Private mIndexes                                    As New EnumerableCollection
 
 ' maps tickstream id to conversion table index
-Private mStreamIndexes                              As New EnumerableCollection
+Private mDataSourceIndexes                          As New EnumerableCollection
 
-' maps stream ids to conversion factors
+' maps datasource handles to conversion factors
 Private mConversionTable()                          As ConversionTableEntry
 Private mNextConversionTableIndex                   As Long
 
-Private WithEvents mResubscribeTimer                As IntervalTimer
-Attribute mResubscribeTimer.VB_VarHelpID = -1
+'Private WithEvents mResubscribeTimer                As IntervalTimer
 
 '@================================================================================
 ' Class Event Handlers
@@ -143,7 +142,7 @@ Dim lIndex As Long
 If mIndexes.TryItem(lKey, lIndex) Then
     AssertArgument Not mConversionTable(lIndex).InvalidConversion, "Invalid currency conversion"
     ICurrencyConverter_IsReadyCurrencies = mConversionTable(lIndex).State
-ElseIf startTickStreams(pFromCurrency, pToCurrency) Then
+ElseIf startData(pFromCurrency, pToCurrency) Then
     ICurrencyConverter_IsReadyCurrencies = False
 Else
     ' this is an 'identity' conversion
@@ -180,24 +179,51 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
+' IErrorListener Interface Members
+'@================================================================================
+
+Private Sub IErrorListener_Notify(ev As ErrorEventData)
+Const ProcName As String = "IErrorListener_Notify"
+On Error GoTo Err
+
+Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
+
+If ev.ErrorCode = 200 Then
+    Dim lIndex As Long: lIndex = mDataSourceIndexes(CStr(lDataSource.Handle))
+    mConversionTable(lIndex).ContractInvalid = True
+    If mConversionTable(mConversionTable(lIndex).ReverseEntryIndex).ContractInvalid Then
+        mConversionTable(mConversionTable(lIndex).ReverseEntryIndex).InvalidConversion = True
+        mConversionTable(lIndex).InvalidConversion = True
+    End If
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'@================================================================================
 ' IGenericTickListener Interface Members
 '@================================================================================
 
 Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
-mStreamIndexes.Remove CStr(ev.StreamId)
+Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
+mDataSourceIndexes.Remove CStr(lDataSource.Handle)
 End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-If mResubscribeTimer Is Nothing Then
-    Set mResubscribeTimer = CreateIntervalTimer(1, ExpiryTimeUnitMinutes, 60000)
-    mResubscribeTimer.StartTimer
-End If
-    
+'If mResubscribeTimer Is Nothing Then
+'    Set mResubscribeTimer = CreateIntervalTimer(1, ExpiryTimeUnitMinutes, 60000)
+'    mResubscribeTimer.StartTimer
+'End If
+
+Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
 Dim lIndex As Long
-lIndex = mStreamIndexes(CStr(ev.StreamId))
+lIndex = mDataSourceIndexes(CStr(lDataSource.Handle))
 
 With mConversionTable(lIndex)
 Dim lState As CurrencyConverterStates: lState = CurrencyConverterStateNotReady
@@ -231,61 +257,37 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-'@================================================================================
-' ICurrencyConverter Interface Members
-'@================================================================================
-
-Private Sub IMarketDataErrorListener_NotifyMarketDataError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-Const ProcName As String = "IMarketDataErrorListener_NotifyMarketDataError"
-On Error GoTo Err
-
-If pErrorCode = 200 Then
-    Dim lIndex As Long: lIndex = mStreamIndexes(CStr(pStreamId))
-    mConversionTable(lIndex).ContractInvalid = True
-    If mConversionTable(mConversionTable(lIndex).ReverseEntryIndex).ContractInvalid Then
-        mConversionTable(mConversionTable(lIndex).ReverseEntryIndex).InvalidConversion = True
-        mConversionTable(lIndex).InvalidConversion = True
-    End If
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub IMarketDataErrorListener_NotifyMarketDepthError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
-End Sub
-
-'@================================================================================
-' mResubscribeTimer Event Handlers
-'@================================================================================
-
-Private Sub mResubscribeTimer_TimerExpired(ev As TimerExpiredEventData)
-Const ProcName As String = "mResubscribeTimer_TimerExpired"
-On Error GoTo Err
-
-Dim i As Long
-For i = 0 To mNextConversionTableIndex - 1
-    If mConversionTable(i).InvalidConversion Then
-    ElseIf mConversionTable(i).ContractFuture Is Nothing Then
-        ' this is an 'identity' conversion
-    Else
-        Dim lStream As ITickStream
-        Set lStream = mMarketDataFactory.CreateSnapshotMarketDataStream( _
-                                        mConversionTable(i).ContractFuture, _
-                                        Me)
-        lStream.AddGenericTickListener Me
-        lStream.Start
-        mStreamIndexes.Add i, CStr(lStream.StreamId)
-    End If
-Next
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
+''@================================================================================
+'' mResubscribeTimer Event Handlers
+''@================================================================================
+'
+'Private Sub mResubscribeTimer_TimerExpired(ev As TimerExpiredEventData)
+'Const ProcName As String = "mResubscribeTimer_TimerExpired"
+'On Error GoTo Err
+'
+'Dim i As Long
+'For i = 0 To mNextConversionTableIndex - 1
+'    If mConversionTable(i).InvalidConversion Then
+'    ElseIf mConversionTable(i).ContractFuture Is Nothing Then
+'        ' this is an 'identity' conversion
+'    Else
+'        Dim lDataSource As IMarketDataSource
+'        Set lDataSource = mMarketDataManager.CreateSnapshotMarketDataSource( _
+'                                        mConversionTable(i).ContractFuture, _
+'                                        False, _
+'                                        pStateChangeListener:=Me, _
+'                                        pRefreshInterval:=60)
+'        lDataSource.AddGenericTickListener Me
+'        lDataSource.StartMarketData
+'        mDataSourceIndexes.Add i, CStr(ldatasource.s  lStream.StreamId)
+'    End If
+'Next
+'
+'Exit Sub
+'
+'Err:
+'gNotifyUnhandledError ProcName, ModuleName
+'End Sub
 
 '@================================================================================
 ' Properties
@@ -296,10 +298,10 @@ End Sub
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal pContractStore As IContractStore, _
-                ByVal pMarketDataFactory As MarketDataFactory)
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pContractStore As IContractStore)
 Set mContractStore = pContractStore
-Set mMarketDataFactory = pMarketDataFactory
+Set mMarketDataManager = pMarketDataManager
 End Sub
 
 '@================================================================================
@@ -372,10 +374,10 @@ With mConversionTable(pIndex)
 End With
 End Sub
 
-Private Function startTickStreams( _
+Private Function startData( _
                 ByVal pFromCurrency As String, _
                 ByVal pToCurrency As String) As Boolean
-Const ProcName As String = "startTickStreams"
+Const ProcName As String = "startData"
 On Error GoTo Err
 
 Dim lIndex As Long
@@ -386,28 +388,28 @@ If pFromCurrency = pToCurrency Then
     mConversionTable(lIndex).ConversionFactor = 1#
     mConversionTable(lIndex).ReverseEntryIndex = NullIndex
     mConversionTable(lIndex).State = CurrencyConverterStateReady
-    startTickStreams = False
+    startData = False
     Exit Function
 End If
 
-Dim lStream1 As ITickStream
-Set lStream1 = startTickStream(pFromCurrency, pToCurrency, lIndex)
-lStream1.AddGenericTickListener Me
-mStreamIndexes.Add lIndex, CStr(lStream1.StreamId)
+Dim lData1 As IMarketDataSource
+Set lData1 = startTickData(pFromCurrency, pToCurrency, lIndex)
+lData1.AddGenericTickListener Me
+mDataSourceIndexes.Add lIndex, CStr(lData1.Handle)
 
 Dim lReverseIndex As Long
 lReverseIndex = allocateIndex
 mIndexes.Add lReverseIndex, getCurrencyPairKey(pToCurrency, pFromCurrency)
 
-Dim lStream2 As ITickStream
-Set lStream2 = startTickStream(pToCurrency, pFromCurrency, lReverseIndex)
-lStream2.AddGenericTickListener Me
-mStreamIndexes.Add lReverseIndex, CStr(lStream2.StreamId)
+Dim lData2 As IMarketDataSource
+Set lData2 = startTickData(pToCurrency, pFromCurrency, lReverseIndex)
+lData2.AddGenericTickListener Me
+mDataSourceIndexes.Add lReverseIndex, CStr(lData2.Handle)
 
 mConversionTable(lIndex).ReverseEntryIndex = lReverseIndex
 mConversionTable(lReverseIndex).ReverseEntryIndex = lIndex
 
-startTickStreams = True
+startData = True
 
 Exit Function
 
@@ -415,11 +417,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function startTickStream( _
+Private Function startTickData( _
                 ByVal pFromCurrency As String, _
                 ByVal pToCurrency As String, _
-                ByVal pIndex As Long) As ITickStream
-Const ProcName As String = "startTickStream"
+                ByVal pIndex As Long) As IMarketDataSource
+Const ProcName As String = "startTickData"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
@@ -433,10 +435,15 @@ Dim lContractFuture As IFuture
 Set lContractFuture = FetchContract(lContractSpec, mContractStore)
 Set mConversionTable(pIndex).ContractFuture = lContractFuture
 
-Set startTickStream = mMarketDataFactory.CreateSnapshotMarketDataStream( _
-                                        lContractFuture, _
-                                        Me)
-startTickStream.Start
+Dim lDataSource As IMarketDataSource
+Set lDataSource = mMarketDataManager.CreateSnapshotMarketDataSource( _
+                                mConversionTable(pIndex).ContractFuture, _
+                                False, _
+                                pRefreshInterval:=60)
+lDataSource.AddErrorListener Me
+lDataSource.AddGenericTickListener Me
+lDataSource.StartMarketData
+Set startTickData = lDataSource
 
 Exit Function
 

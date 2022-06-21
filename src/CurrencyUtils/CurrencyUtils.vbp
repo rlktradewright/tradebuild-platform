@@ -1,9 +1,13 @@
 Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\System32\stdole2.tlb#OLE Automation
 Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#1b.9#0#..\..\..\tradewright-common\Bin\TradeWright.Common\TWUtilities40.dll#TradeWright Utility Services v4.0
+Reference=*\G{E02A555E-D592-4AA4-A2F1-21831599F39B}#1f8.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\ContractUtils27.dll#TradeWright Contract Utilities v2.7
+Reference=*\G{D081990A-7912-48FD-A0EB-EE13AFF6502C}#192.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\MarketDataUtils27.dll#TradeWright Market Data Utilities v2.7
+Reference=*\G{6FA5621C-ACAE-42B7-BA00-CFEA7C03952A}#201.0#0#..\..\Bin\TradeWright.TradeBuild.Platform\TickUtils27.dll#TradeWright Tick Data Utilities v2.7
 Class=CurrencyUtils; CurrencyUtils.cls
 Module=Globals; Globals.bas
 Class=ICurrencyConverter; ICurrencyConverter.cls
+Class=CurrencyConverter; CurrencyConverter.cls
 Startup="(None)"
 HelpFile=""
 Title="CurrencyUtils"

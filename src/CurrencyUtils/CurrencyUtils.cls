@@ -69,6 +69,22 @@ Private Const ModuleName                            As String = "CurrencyUtils"
 ' Methods
 '@================================================================================
 
+Public Function CreateCurrencyConverter( _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pContractStore As IContractStore) As ICurrencyConverter
+Const ProcName As String = "CreateCurrencyConverter"
+On Error GoTo Err
+
+Dim lCurrencyConverter As New CurrencyConverter
+lCurrencyConverter.Initialise pMarketDataManager, pContractStore
+Set CreateCurrencyConverter = lCurrencyConverter
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function GetCurrencyDescriptor( _
                 ByVal CurrencyCode As String) As CurrencyDescriptor
 Const ProcName As String = "GetCurrencyDescriptor"
