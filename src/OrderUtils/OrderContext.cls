@@ -1262,16 +1262,17 @@ Const ProcName As String = "IsReadyForAutoSize"
 On Error GoTo Err
 
 IsReadyForAutoSize = True
-Select Case pAutosizeType
-Case BracketAutosizeNone
-Case BracketAutosizeMonetaryAmount
+
+If pAutosizeType = BracketAutosizeMonetaryAmount Or pAutosizeType = BracketAutosizePercentOfAccount Then
     If mDataSource.HasCurrentTick(TickTypeAsk) Then
     ElseIf mDataSource.HasCurrentTick(TickTypeBid) Then
     ElseIf mDataSource.HasCurrentTick(TickTypeTrade) Then
     Else
         IsReadyForAutoSize = False
     End If
-Case BracketAutosizePercentOfAccount
+End If
+
+If pAutosizeType = BracketAutosizePercentOfAccount Then
     If Not IsAccountProviderReady Then IsReadyForAutoSize = False
     If Not mCurrencyConverter.IsReadyCurrencies(mAccountDataProvider.BaseCurrency, "USD") Then
         mCurrencyConverter.AddStateChangeListener mAccountDataProvider.BaseCurrency, "USD", Me
@@ -1281,7 +1282,7 @@ Case BracketAutosizePercentOfAccount
         mCurrencyConverter.AddStateChangeListener mContract.Specifier.CurrencyCode, "USD", Me
         IsReadyForAutoSize = False
     End If
-End Select
+End If
 
 Exit Function
 

@@ -2066,7 +2066,7 @@ Set mContractStore = mTwsClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(mTwsClient.GetMarketDataFactory, mTwsClient.GetContractStore)
 Set mAccountDataProvider = mTwsClient.GetAccountDataProvider
 mAccountDataProvider.Load True
-Set mCurrencyConverter = mTwsClient.GetCurrencyConverter
+Set mCurrencyConverter = CreateCurrencyConverter(mMarketDataManager, mContractStore)
 
 mMarketDataManager.LoadFromConfig gGetMarketDataSourcesConfig(mConfigStore)
 
