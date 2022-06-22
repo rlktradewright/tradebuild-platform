@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "AccountUtils"
-Attribute VB_GlobalNameSpace = True
-Attribute VB_Creatable = True
+Attribute VB_Name = "IAutoSizingBracket"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -30,30 +30,15 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum AccountProviderStates
-    AccountProviderNotReady
-    AccountProviderReady
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
-
-Public Type AccountValueEventData
-    Source              As Object
-    Data                As IAccountValue
-End Type
-
-Public Type PortfolioValueEventData
-    Source              As Object
-    Data                As IPortfolioValue
-End Type
 
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "AccountUtils"
+Private Const ModuleName                            As String = "IAutoSizingBracket"
 
 '@================================================================================
 ' Member variables
@@ -74,6 +59,15 @@ Private Const ModuleName                            As String = "AccountUtils"
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get AutosizeType() As BracketAutosizeTypes
+End Property
+
+Public Property Get AutosizeValue() As Double
+End Property
+
+Public Property Get LotSize() As Long
+End Property
 
 '@================================================================================
 ' Methods

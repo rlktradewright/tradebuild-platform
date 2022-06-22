@@ -51,6 +51,7 @@ Private Const ModuleName                            As String = "AccountDataProv
 Private mTwsAPI                                     As TwsAPI
 
 Private mIsTwsConnectedToIBServers                  As Boolean
+Private mState                                      As AccountProviderStates
 
 Private mLoadRequested                              As Boolean
 Private mKeepUpdated                                As Boolean
@@ -60,16 +61,22 @@ Private mPortfolioValues                            As SortedDictionary
 
 Private mAccountValueListeners                      As Listeners
 Private mPortfolioValueListeners                    As Listeners
+Private mStateChangeListeners                       As Listeners
+
+Private mAccountNotReady                            As Boolean
+Private mBaseCurrency                               As String
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+mState = AccountProviderNotReady
 Set mAccountValues = CreateSortedDictionary(KeyTypeString)
 Set mPortfolioValues = CreateSortedDictionary(KeyTypeString)
 Set mAccountValueListeners = New Listeners
-Set mAccountValueListeners = New Listeners
+Set mPortfolioValueListeners = New Listeners
+Set mStateChangeListeners = New Listeners
 End Sub
 
 '@================================================================================
@@ -81,6 +88,9 @@ Private Sub IAccountDataConsumer_EndAccountSummary(ByVal pRequestId As Long)
 End Sub
 
 Private Sub IAccountDataConsumer_EndAccountValue(ByVal pAccountName As String)
+If mAccountNotReady Then Exit Sub
+
+setState AccountProviderReady
 fireAccountValueEnd
 firePortfolioValueEnd
 End Sub
@@ -89,7 +99,12 @@ Private Sub IAccountDataConsumer_EndPosition()
 
 End Sub
 
-Private Sub IAccountDataConsumer_NotifyAccountSummary(ByVal pRequestId As Long, ByVal pAccount As String, ByVal pTag As String, ByVal pValue As String, ByVal pCurrency As String)
+Private Sub IAccountDataConsumer_NotifyAccountSummary( _
+                ByVal pRequestId As Long, _
+                ByVal pAccount As String, _
+                ByVal pTag As String, _
+                ByVal pValue As String, _
+                ByVal pCurrency As String)
 
 End Sub
 
@@ -102,13 +117,36 @@ Private Sub IAccountDataConsumer_NotifyAccountValue( _
                 ByVal pValue As String, _
                 ByVal pCurrency As String, _
                 ByVal pAccountName As String)
+Const ProcName As String = "IAccountDataConsumer_NotifyAccountValue"
+On Error GoTo Err
+
+If pKey = "AccountReady" Then
+    If pValue = "true" Then
+        mAccountNotReady = False
+    Else
+        mAccountNotReady = True
+        setState AccountProviderNotReady
+    End If
+    Exit Sub
+End If
+
+If pKey = "NetLiquidation" Then mBaseCurrency = pCurrency
+If pKey = "EquityWithLoanValue" Then
+    pKey = "EquityWithLoan"
+End If
 Dim lAccountValue As AccountValue
-If Not mAccountValues.TryItem(pKey, lAccountValue) Then
+Dim lID As String: lID = getValueID(pKey, pCurrency)
+If Not mAccountValues.TryItem(lID, lAccountValue) Then
     Set lAccountValue = New AccountValue
-    mAccountValues.Add lAccountValue, pKey
+    mAccountValues.Add lAccountValue, lID
 End If
 lAccountValue.Initialise pAccountName, pCurrency, pKey, pValue
-fireAccountValue lAccountValue
+If Not mAccountNotReady Then fireAccountValue lAccountValue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IAccountDataConsumer_NotifyPortfolioUpdate( _
@@ -120,6 +158,9 @@ Private Sub IAccountDataConsumer_NotifyPortfolioUpdate( _
                 ByVal pUnrealizedPNL As Double, _
                 ByVal pRealizedPNL As Double, _
                 ByVal pAccountName As String)
+Const ProcName As String = "IAccountDataConsumer_NotifyPortfolioUpdate"
+On Error GoTo Err
+
 Dim lContractSpec As IContractSpecifier
 Set lContractSpec = gTwsContractSpecToContractSpecifier(pTwsContractSpec, 1)
 
@@ -131,6 +172,11 @@ If Not mPortfolioValues.TryItem(lKey, lPortfolioValue) Then
 End If
 lPortfolioValue.Initialise pAccountName, pAverageCost, lContractSpec, pMarketPrice, pMarketValue, pPosition, pRealizedPNL, pUnrealizedPNL
 firePortfolioValue lPortfolioValue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IAccountDataConsumer_NotifyPosition(ByVal pAccount As String, ByVal pContractSpec As TwsContractSpecifier, ByVal pPosition As Double, ByVal pAverageCost As Double)
@@ -149,8 +195,34 @@ Private Sub IAccountDataProvider_AddPortfolioValueListener(ByVal pListener As IP
 mPortfolioValueListeners.Add pListener
 End Sub
 
-Private Function IAccountDataProvider_GetAccountValue(ByVal pKey As String) As IAccountValue
-IAccountDataProvider_GetAccountValue = mAccountValues.Item(pKey)
+Private Sub IAccountDataProvider_AddStateChangeListener(ByVal pListener As IStateChangeListener)
+mStateChangeListeners.Add pListener
+End Sub
+
+Private Property Get IAccountDataProvider_BaseCurrency() As String
+Const ProcName As String = "IAccountDataProvider_BaseCurrency"
+On Error GoTo Err
+
+Assert mState = AccountProviderReady, "Account provider is not ready"
+IAccountDataProvider_BaseCurrency = mBaseCurrency
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Private Function IAccountDataProvider_GetAccountValue(ByVal pKey As String, Optional ByVal pCurrency As String) As IAccountValue
+Const ProcName As String = "IAccountDataProvider_GetAccountValue"
+On Error GoTo Err
+
+Assert mState = AccountProviderReady, "Account provider is not ready"
+Set IAccountDataProvider_GetAccountValue = mAccountValues.Item(getValueID(pKey, pCurrency))
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IAccountDataProvider_GetAccountValues() As Enumerator
@@ -158,7 +230,7 @@ Set IAccountDataProvider_GetAccountValues = mAccountValues.Enumerator
 End Function
 
 Private Function IAccountDataProvider_GetPortfolioValue(ByVal pContractName As String) As IPortfolioValue
-IAccountDataProvider_GetPortfolioValue = mPortfolioValues.Item(pContractName)
+Set IAccountDataProvider_GetPortfolioValue = mPortfolioValues.Item(pContractName)
 End Function
 
 Private Function IAccountDataProvider_GetPortfolioValues() As Enumerator
@@ -190,6 +262,14 @@ Private Sub IAccountDataProvider_RemovePortfolioValueListener(ByVal pListener As
 mPortfolioValueListeners.Remove pListener
 End Sub
 
+Private Sub IAccountDataProvider_RemoveStateChangeListener(ByVal pListener As TWUtilities40.IStateChangeListener)
+mStateChangeListeners.Remove pListener
+End Sub
+
+Private Property Get IAccountDataProvider_State() As AccountProviderStates
+IAccountDataProvider_State = mState
+End Property
+
 '@================================================================================
 ' ITwsConnectionStateListener Interface Members
 '@================================================================================
@@ -204,6 +284,8 @@ If pState = TwsConnConnected Then
     mIsTwsConnectedToIBServers = True
     
     If mLoadRequested Then mTwsAPI.RequestAccountUpdates mKeepUpdated, ""
+ElseIf pState <> TwsConnConnected Then
+    setState AccountProviderNotReady
 End If
 
 Exit Sub
@@ -214,6 +296,7 @@ End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
 mIsTwsConnectedToIBServers = False
+setState AccountProviderNotReady
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
@@ -347,6 +430,30 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub fireStateChange()
+Const ProcName As String = "fireStateChange"
+On Error GoTo Err
+
+Dim ev As StateChangeEventData
+Set ev.Source = Me
+ev.State = mState
+
+Dim lListeners() As Object
+If getStateChangeListeners(lListeners) Then
+    Dim lListener As IStateChangeListener
+    Dim i As Long
+    For i = 0 To UBound(lListeners)
+        Set lListener = lListeners(i)
+        lListener.Change ev
+    Next
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Function getAccountListeners(ByRef pListeners() As Object) As Boolean
 Static sInit As Boolean
 Static sCurrentListeners() As Object
@@ -381,4 +488,28 @@ pListeners = sCurrentListeners
 getPortfolioListeners = sSomeListeners
 End Function
 
+Private Function getStateChangeListeners(ByRef pListeners() As Object) As Boolean
+Static sInit As Boolean
+Static sCurrentListeners() As Object
+Static sSomeListeners As Boolean
 
+If Not sInit Or Not mStateChangeListeners.Valid Then
+    sInit = True
+    sSomeListeners = mStateChangeListeners.GetCurrentListeners(sCurrentListeners)
+End If
+
+pListeners = sCurrentListeners
+getStateChangeListeners = sSomeListeners
+End Function
+
+Private Function getValueID( _
+                ByVal pKey As String, _
+                ByVal pCurrency As String) As String
+getValueID = UCase$(pKey & "||" & pCurrency)
+End Function
+
+Private Sub setState(ByVal pState As AccountProviderStates)
+If pState = mState Then Exit Sub
+mState = pState
+fireStateChange
+End Sub

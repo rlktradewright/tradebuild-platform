@@ -23,6 +23,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IAutoSizingBracket
 Implements IBracketOrder
 Implements IChangeListener
 Implements IRecoverable
@@ -149,6 +150,10 @@ Private mNextContract                               As IContract
 Private mRolloverController                         As RolloverController
 Private mIsRolloverInProgress                       As Boolean
 
+Private mLotSize                                    As Long
+Private mAutosizeValue                              As Double
+Private mAutosizeType                               As BracketAutosizeTypes
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -157,6 +162,7 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
+mLotSize = 1
 mNewEntryQuantity = -1
 mNewStopLossQuantity = -1
 mNewTargetQuantity = -1
@@ -188,6 +194,22 @@ End Sub
 Private Sub Class_Terminate()
 Debug.Print "BracketOrder terminated"
 End Sub
+
+'@================================================================================
+' IAutoSizingBracket Interface Members
+'@================================================================================
+
+Private Property Get IAutoSizingBracket_AutosizeType() As BracketAutosizeTypes
+IAutoSizingBracket_AutosizeType = AutosizeType
+End Property
+
+Private Property Get IAutoSizingBracket_AutosizeValue() As Double
+IAutoSizingBracket_AutosizeValue = AutosizeValue
+End Property
+
+Private Property Get IAutoSizingBracket_LotSize() As Long
+IAutoSizingBracket_LotSize = LotSize
+End Property
 
 '@================================================================================
 ' IBracketOrder Interface Members
@@ -1577,6 +1599,49 @@ Public Property Get ApplicationIndex() As Long
 ApplicationIndex = mApplicationIndex
 End Property
 
+Public Property Let AutosizeType(ByVal Value As BracketAutosizeTypes)
+Const ProcName As String = "AutosizeType"
+On Error GoTo Err
+
+Select Case Value
+Case BracketAutosizeNone
+Case BracketAutosizePercentOfAccount
+Case BracketAutosizeMonetaryAmount
+Case Else
+    AssertArgument False, "Invalid AutosizeType"
+End Select
+
+mAutosizeType = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get AutosizeType() As BracketAutosizeTypes
+AutosizeType = mAutosizeType
+End Property
+
+Public Property Let AutosizeValue(ByVal Value As Double)
+Const ProcName As String = "AutosizeValue"
+On Error GoTo Err
+
+Assert mSummary.State = BracketOrderStateCreated, "AutosizeValue can only be set in Created state"
+AssertArgument Value > 0#, "AutosizeValue: must be greater than 0.0"
+
+mAutosizeValue = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get AutosizeValue() As Double
+AutosizeValue = mAutosizeValue
+End Property
+
 Public Property Let CancelAfter(ByVal Value As Long)
 Const ProcName As String = "CancelAfter"
 On Error GoTo Err
@@ -1821,6 +1886,25 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let LotSize(ByVal Value As Long)
+Const ProcName As String = "LotSize"
+On Error GoTo Err
+
+Assert mSummary.State = BracketOrderStateCreated, "LotSize can only be set in Created state"
+AssertArgument IsInteger(Value, 1, 1000), "Invalid lot size: must be an integer between 1 and 1000"
+
+mLotSize = Value
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get LotSize() As Long
+LotSize = mLotSize
+End Property
+
 Public Property Get NextBracketOrder() As IBracketOrder
 Set NextBracketOrder = mNextBracketOrder
 End Property
@@ -1991,11 +2075,11 @@ Public Property Get RolloverDate() As Date
 RolloverDate = mSummary.RolloverDate
 End Property
 
-Friend Property Get RolloverSpecification() As RolloverSpecification
+Public Property Get RolloverSpecification() As RolloverSpecification
 Set RolloverSpecification = mSummary.RolloverSpecification
 End Property
 
-Friend Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
+Public Property Let RolloverSpecification(ByVal Value As RolloverSpecification)
 Const ProcName As String = "RolloverSpecification"
 On Error GoTo Err
 
@@ -2340,7 +2424,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Public Sub AdjustTarget(ByVal targetPriceSpec As PriceSpecifier, _
@@ -2357,7 +2440,6 @@ Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-
 End Sub
 
 Public Function Cancel(Optional ByVal evenIfFilled As Boolean = False) As Boolean

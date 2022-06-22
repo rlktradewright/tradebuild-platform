@@ -81,7 +81,7 @@ Case OrderContextChangeTypes.OrderContextActiveStateChanged
     Exit Sub
 Case OrderContextChangeTypes.OrderContextReadyStateChanged
     If Not isReadyForOrder Then
-        gWriteLineToConsole mBracketOrderSpec.ID & ": Order is pending: " & mOrderContextEv.NotReadyMessage, True
+        gWriteLineToConsole mBracketOrderSpec.ID & ": Order is pending: " & mOrderContextEv.NotReadyMessage
         Exit Sub
     End If
     
@@ -112,7 +112,7 @@ Friend Sub Cancel( _
 mGroupResources.OrderPlacers.Remove Me
 Set mGroupResources = Nothing
 gPlaceOrdersTask.RemoveOrderPlacer Me
-gWriteLineToConsole mBracketOrderSpec.ID & ": Order cancelled: " & pReason, True
+gWriteLineToConsole mBracketOrderSpec.ID & ": Order cancelled: " & pReason
 End Sub
 
 Friend Sub Initialise( _
@@ -158,12 +158,12 @@ sAttempts = sAttempts + 1
 
 If Not isReadyForOrder Then
     Set mOrderContextEv = mOrderContext
-    gWriteLineToConsole lPrefix & "Order is pending: " & mOrderContext.NotReadyMessage, True
+    gWriteLineToConsole lPrefix & "Order is pending: " & mOrderContext.NotReadyMessage
     Exit Function
 End If
 
 If sAttempts > 1 Then
-    gWriteLineToConsole lPrefix & "Provider is now ready", True
+    gWriteLineToConsole lPrefix & "Provider is now ready"
     LogMessage _
                 lPrefix & "TIME " & _
                 FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), _
@@ -174,7 +174,7 @@ End If
 
 mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
 
-Dim lBO As IBracketOrder
+Dim lBO As BracketOrder
 
 With mBracketOrderSpec
     Dim lEntryOrder As IOrder
@@ -238,10 +238,13 @@ With mBracketOrderSpec
     If Not .RolloverSpec Is Nothing Then lBO.RolloverSpecification = .RolloverSpec
 End With
 
-gWriteLineToConsole lPrefix & "bracket order ready to be placed", True
+gWriteLineToConsole lPrefix & "bracket order ready to be placed"
 
-mMoneyManager.MaxOrderCost = mBracketOrderSpec.MaxOrderCost
-mMoneyManager.LotSize = mBracketOrderSpec.LotSize
+If mBracketOrderSpec.AutosizeType <> BracketAutosizeNone Then
+    lBO.AutosizeType = mBracketOrderSpec.AutosizeType
+    lBO.AutosizeValue = mBracketOrderSpec.AutosizeValue
+    lBO.LotSize = mBracketOrderSpec.LotSize
+End If
 mOrderContext.ExecuteBracketOrder lBO, True
 If lBO.State = BracketOrderStateSubmitted Then CreateBracketProfitCalculator lBO, mOrderContext.DataSource
 
@@ -268,9 +271,9 @@ Private Function isReadyForOrder() As Boolean
 isReadyForOrder = False
 With mOrderContext
     If Not .IsReady Then
-    
     ElseIf Not .IsReadyTickSize() Then
-    
+    ElseIf Not .IsReadyForAutoSize(mBracketOrderSpec.AutosizeType, _
+                                    mBracketOrderSpec.Contract.Specifier.CurrencyCode) Then
     ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.EntryType) Then
     ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then
     ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then

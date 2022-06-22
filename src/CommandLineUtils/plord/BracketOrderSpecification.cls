@@ -50,8 +50,9 @@ Public ID                                           As String
 Public Contract                                     As IContract
 Public Action                                       As OrderActions
 Public Quantity                                     As Long
-Public MaxOrderCost                                 As Double
-Public LotSize                                       As Long
+Public AutosizeType                                 As BracketAutosizeTypes
+Public AutosizeValue                                As Double
+Public LotSize                                      As Long
 Public EntryType                                    As OrderTypes
 Public EntryLimitPriceSpec                          As PriceSpecifier
 Public EntryTriggerPriceSpec                        As PriceSpecifier
@@ -154,10 +155,12 @@ s = s & " "
 
 s = s & OrderActionToString(Action)
 s = s & " "
-If MaxOrderCost = 0 Then
+If AutosizeType = BracketAutosizeNone Then
     s = s & CStr(Quantity)
+ElseIf AutosizeType = BracketAutosizeMonetaryAmount Then
+    s = s & CStr(AutosizeValue) & MaxOrderCostSuffix
 Else
-    s = s & CStr(MaxOrderCost) & MaxOrderCostSuffix
+    s = s & CStr(AutosizeValue) & AccountPercentSuffix
 End If
 If LotSize <> 0 Then s = s & "(" & LotSize & ")"
 s = s & " "

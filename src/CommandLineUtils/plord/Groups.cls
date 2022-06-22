@@ -53,6 +53,8 @@ Private mOrderManager                               As OrderManager
 Private mScopeName                                  As String
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 Private mMoneyManager                               As MoneyManager
+Private mAccountDataProvider                        As IAccountDataProvider
+Private mCurrencyConverter                          As ICurrencyConverter
 
 '@================================================================================
 ' Class Event Handlers
@@ -100,7 +102,9 @@ lResources.Initialise pGroupName, _
                         mOrderManager, _
                         mScopeName, _
                         mOrderSubmitterFactory, _
-                        mMoneyManager
+                        mMoneyManager, _
+                        mAccountDataProvider, _
+                        mCurrencyConverter
 
 mGroupsResources.Add lResources, UCase$(pGroupName)
 
@@ -161,13 +165,17 @@ Friend Sub Initialise( _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
-                ByVal pMoneyManager As MoneyManager)
+                ByVal pMoneyManager As MoneyManager, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter)
 Set mContractStore = pContractStore
 Set mMarketDataManager = pMarketDataManager
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
 Set mMoneyManager = pMoneyManager
+Set mAccountDataProvider = pAccountDataProvider
+Set mCurrencyConverter = pCurrencyConverter
 End Sub
 
 Friend Function Item(ByVal pGroupName As String) As GroupResources
@@ -235,11 +243,11 @@ Dim lCP As ContractProcessor
 For Each lCP In pResources.ContractProcessors
     Dim lEnum As Enumerator: Set lEnum = lCP.PendingCommandsEnumerator
     If lEnum.MoveNext Then
-        gWriteLineToConsole "Discarding commands for " & lCP.ContractName, True
+        gWriteLineToConsole "Discarding commands for " & lCP.ContractName
         Do
             Dim lEntry As DictionaryEntry: Set lEntry = lEnum.Current
             Dim p As PendingCommand: Set p = lEntry.Data
-            gWriteLineToConsole "    " & p.Command.Name & " " & p.Params, True
+            gWriteLineToConsole "    " & p.Command.Name & " " & p.Params
             lEnum.Remove
         Loop While lEnum.MoveNext
     End If

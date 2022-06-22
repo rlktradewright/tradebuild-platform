@@ -609,7 +609,7 @@ Do While en.MoveNext
         gLog "Finishing position manager for expired contract: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
         lPMsToFinish.Add pm
     ElseIf pm.PendingPositionSize = 0 And pm.PositionSize = 0 Then
-        gLog "Finishing inactive position manager contract: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
+        gLog "Finishing inactive position manager: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
         lPMsToFinish.Add pm
     End If
 Loop

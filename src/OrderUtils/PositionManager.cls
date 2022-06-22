@@ -139,6 +139,9 @@ Private mInitialRecoveryDataSaved               As Boolean
 
 Private mRecoveryContextName                    As String
 
+Private mAccountDataProvider                    As IAccountDataProvider
+Private mCurrencyConverter                      As ICurrencyConverter
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -748,6 +751,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let FixedAccountBalance(ByVal Value As Double)
+mOrderContexts.FixedAccountBalance = Value
+End Property
+
 Friend Property Get HasBracketOrdersWithNonZeroPendingSizes() As Boolean
 Const ProcName As String = "HasBracketOrdersWithNonZeroPendingSizes"
 On Error GoTo Err
@@ -1235,7 +1242,9 @@ Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, _
                                                         Me, _
                                                         mBracketOrders, _
                                                         mOrders, _
-                                                        IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+                                                        IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing), _
+                                                        mAccountDataProvider, _
+                                                        mCurrencyConverter)
 
 Exit Sub
 
@@ -1270,7 +1279,9 @@ Friend Sub Initialise( _
                 ByVal pRecoveryContextName As String, _
                 ByVal pGroupName As String, _
                 ByVal pIsSimulated As Boolean, _
-                ByVal pMoneyManager As IMoneyManager)
+                ByVal pMoneyManager As IMoneyManager, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -1296,6 +1307,9 @@ mOrderSubmitter.AddStateChangeListener Me
 mRecoveryContextName = pRecoveryContextName
 Set mBracketOrderRecoveryController = pRecoveryController
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
+
+Set mAccountDataProvider = pAccountDataProvider
+Set mCurrencyConverter = pCurrencyConverter
 
 Set mContractFuture = mDataSource.ContractFuture
 
@@ -1775,7 +1789,9 @@ If mOrderContexts Is Nothing And Not mOrderSubmitter Is Nothing Then
                                                                 Me, _
                                                                 mBracketOrders, _
                                                                 mOrders, _
-                                                                IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing))
+                                                                IIf(mDataSource.IsTickReplay, mDataSource.ClockFuture, Nothing), _
+                                                                mAccountDataProvider, _
+                                                                mCurrencyConverter)
 End If
 
 If mContractFuture.IsAvailable Then

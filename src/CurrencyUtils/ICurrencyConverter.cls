@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "AccountUtils"
-Attribute VB_GlobalNameSpace = True
-Attribute VB_Creatable = True
+Attribute VB_Name = "ICurrencyConverter"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -30,30 +30,20 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum AccountProviderStates
-    AccountProviderNotReady
-    AccountProviderReady
+Public Enum CurrencyConverterStates
+    CurrencyConverterStateNotReady
+    CurrencyConverterStateReady
 End Enum
 
 '@================================================================================
 ' Types
 '@================================================================================
 
-Public Type AccountValueEventData
-    Source              As Object
-    Data                As IAccountValue
-End Type
-
-Public Type PortfolioValueEventData
-    Source              As Object
-    Data                As IPortfolioValue
-End Type
-
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "AccountUtils"
+Private Const ModuleName                            As String = "ICurrencyConverter"
 
 '@================================================================================
 ' Member variables
@@ -78,6 +68,29 @@ Private Const ModuleName                            As String = "AccountUtils"
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub AddStateChangeListener( _
+                ByVal pFromCurrency As String, _
+                ByVal pToCurrency As String, _
+                ByVal pListener As IStateChangeListener)
+End Sub
+
+Public Function Convert( _
+                ByVal pAmount As Double, _
+                ByVal pFromCurrency As String, _
+                ByVal pToCurrency As String) As Double
+End Function
+
+Public Function IsReadyCurrencies( _
+                ByVal pFromCurrency As String, _
+                ByVal pToCurrency As String) As Boolean
+End Function
+
+Public Sub RemoveStateChangeListener( _
+                ByVal pFromCurrency As String, _
+                ByVal pToCurrency As String, _
+                ByVal pListener As IStateChangeListener)
+End Sub
 
 '@================================================================================
 ' Helper Functions

@@ -352,6 +352,7 @@ On Error GoTo Err
 Static sAccountDataProvider As AccountDataProvider
 If sAccountDataProvider Is Nothing Then
     Set sAccountDataProvider = New AccountDataProvider
+    mTwsAPI.AccountDataConsumer = sAccountDataProvider
     sAccountDataProvider.Initialise mTwsAPI
 End If
 

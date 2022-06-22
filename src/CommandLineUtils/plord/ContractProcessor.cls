@@ -60,6 +60,10 @@ Private mBracketOrders                              As New EnumerableCollection
 Private mBOSpec                                     As BracketOrderSpecification
 
 Private mPositionManager                            As PositionManager
+Private mAccountDataProvider                        As IAccountDataProvider
+Private mCurrencyConverter                          As ICurrencyConverter
+
+Private mFixedAccountBalance                        As Double
 
 Private WithEvents mOrderContext                    As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
@@ -155,6 +159,11 @@ Friend Property Get GroupName() As String
 GroupName = mGroupName
 End Property
 
+Friend Property Let FixedAccountBalance(ByVal Value As Double)
+mFixedAccountBalance = Value
+If Not mPositionManager Is Nothing Then mPositionManager.FixedAccountBalance = mFixedAccountBalance
+End Property
+
 Friend Property Get ID() As String
 ID = mId
 End Property
@@ -226,7 +235,9 @@ If pScopeName = "" Then
                                 mDataSource, _
                                 pOrderSubmitterFactory, _
                                 pGroupName, _
-                                pMoneyManager:=pMoneyManager)
+                                pMoneyManager:=pMoneyManager, _
+                                pAccountDataProvider:=mAccountDataProvider, _
+                                pCurrencyConverter:=mCurrencyConverter)
 Else
     Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
                                 pName, _
@@ -234,8 +245,11 @@ Else
                                 pOrderSubmitterFactory, _
                                 pScopeName, _
                                 mGroupName, _
-                                pMoneyManager:=pMoneyManager)
+                                pMoneyManager:=pMoneyManager, _
+                                pAccountDataProvider:=mAccountDataProvider, _
+                                pCurrencyConverter:=mCurrencyConverter)
 End If
+If mFixedAccountBalance <> 0 Then mPositionManager.FixedAccountBalance = mFixedAccountBalance
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
 
 Exit Sub
@@ -319,10 +333,14 @@ Friend Sub Initialise( _
                 ByVal pInitialContractSpec As IContractSpecifier, _
                 ByVal pID As String, _
                 ByVal pContractResolver As ContractResolver, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter, _
                 ByVal pStageOrders As Boolean)
 Set mInitialContractSpec = pInitialContractSpec
 mId = pID
 Set mContractResolver = pContractResolver
+Set mAccountDataProvider = pAccountDataProvider
+Set mCurrencyConverter = pCurrencyConverter
 mStageOrders = pStageOrders
 End Sub
 
@@ -835,7 +853,7 @@ Set lPendingCommand.Command = pCommand
 lPendingCommand.Params = pParams
 lPendingCommand.OrderID = pOrderId
 mPendingCommands.Add lPendingCommand, pTimestamp
-If pMessage <> "" Then gWriteLineToConsole pMessage, True
+If pMessage <> "" Then gWriteLineToConsole pMessage
 
 Exit Sub
 
@@ -1456,7 +1474,7 @@ Private Function setQuantity( _
 Const ProcName As String = "setQuantity"
 On Error GoTo Err
 
-Const QuantityFormat As String = "^([1-9]\d*)(?:(\$)(?:\(([1-9]\d*)\))?)?$"
+Const QuantityFormat As String = "^([1-9]\d*)(?:([\$|\%])(?:\(([1-9]\d*)\))?)?$"
 
 gRegExp.Pattern = QuantityFormat
 
@@ -1469,16 +1487,22 @@ Dim lMatch As Match: Set lMatch = lMatches(0)
 
 If lMatch.SubMatches(1) = MaxOrderCostSuffix Then
     mBOSpec.Quantity = 1
-    mBOSpec.MaxOrderCost = lMatch.SubMatches(0)
+    mBOSpec.AutosizeType = BracketAutosizeMonetaryAmount
+    mBOSpec.AutosizeValue = lMatch.SubMatches(0)
+ElseIf lMatch.SubMatches(1) = AccountPercentSuffix Then
+    mBOSpec.Quantity = 1
+    mBOSpec.AutosizeType = BracketAutosizePercentOfAccount
+    mBOSpec.AutosizeValue = lMatch.SubMatches(0)
 Else
     mBOSpec.Quantity = lMatch.SubMatches(0)
-    mBOSpec.MaxOrderCost = 0
+    mBOSpec.AutosizeType = BracketAutosizeNone
+    mBOSpec.AutosizeValue = 0
 End If
 
 If lMatch.SubMatches(2) <> "" Then
     mBOSpec.LotSize = CLng(lMatch.SubMatches(2))
 Else
-    mBOSpec.LotSize = 0
+    mBOSpec.LotSize = 1
 End If
 
 setQuantity = True

@@ -102,6 +102,11 @@ Private mBracketOrderRecoveryController         As BracketOrderRecoveryCtlr
 Private mTickSizeFuture                         As IFuture
 Private mTickSize                               As Double
 
+Private mAccountDataProvider                    As IAccountDataProvider
+Private mCurrencyConverter                      As ICurrencyConverter
+
+Private mFixedAccountBalance                    As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -199,21 +204,28 @@ Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
 Const ProcName As String = "IStateChangeListener_Change"
 On Error GoTo Err
 
-Select Case ev.State
-Case OrderSubmitterStateNotReady
-    gLog "OrderSubmitter is not ready", ProcName, ModuleName, , LogLevelDetail
-    mProviderIsReady = False
-Case OrderSubmitterStateReady
-    gLog "OrderSubmitter is ready", ProcName, ModuleName, , LogLevelDetail
-    mProviderIsReady = True
-End Select
-
-checkGotPermittedOrderProperties
-
 Dim lOrderContext As OrderContext
-For Each lOrderContext In mOrderContexts
-    lOrderContext.IsProviderReady = IsProviderReady
-Next
+
+If TypeOf ev.Source Is IOrderSubmitter Then
+    Select Case ev.State
+    Case OrderSubmitterStateNotReady
+        gLog "OrderSubmitter is not ready", ProcName, ModuleName, , LogLevelDetail
+        mProviderIsReady = False
+    Case OrderSubmitterStateReady
+        gLog "OrderSubmitter is ready", ProcName, ModuleName, , LogLevelDetail
+        mProviderIsReady = True
+    End Select
+    
+    checkGotPermittedOrderProperties
+    
+    For Each lOrderContext In mOrderContexts
+        lOrderContext.IsProviderReady = IsProviderReady
+    Next
+ElseIf TypeOf ev.Source Is IAccountDataProvider Then
+    For Each lOrderContext In mOrderContexts
+        lOrderContext.IsAccountProviderReady = (ev.State = AccountProviderStates.AccountProviderReady)
+    Next
+End If
 
 Exit Sub
 
@@ -357,6 +369,15 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let FixedAccountBalance(ByVal Value As Double)
+AssertArgument Value >= 0
+mFixedAccountBalance = Value
+Dim lOrderContext As OrderContext
+For Each lOrderContext In mOrderContexts
+    lOrderContext.FixedAccountBalance = mFixedAccountBalance
+Next
+End Property
+
 Friend Property Get HasActiveBracketOrders() As Boolean
 Const ProcName As String = "HasActiveBracketOrders"
 On Error GoTo Err
@@ -406,9 +427,25 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New OrderContext
-Add.Initialise Me, pName, mOrderManager, mRecoveryContextName, mGroupName, mIsSimulated, mContractFuture, mDataSource, mOrderSubmitter, mOrderAuthoriser, mAccumulatedBracketOrders, mAccumulatedOrders, mSimulatedClockFuture, mBracketOrderRecoveryController
+Add.Initialise Me, _
+                pName, _
+                mOrderManager, _
+                mRecoveryContextName, _
+                mGroupName, _
+                mIsSimulated, _
+                mContractFuture, _
+                mDataSource, _
+                mOrderSubmitter, _
+                mOrderAuthoriser, _
+                mAccumulatedBracketOrders, _
+                mAccumulatedOrders, _
+                mSimulatedClockFuture, _
+                mBracketOrderRecoveryController, _
+                mAccountDataProvider, _
+                mCurrencyConverter
  
 mOrderContexts.Add Add, pName
+Add.FixedAccountBalance = mFixedAccountBalance
 Add.PermittedOrderProperties = mPermittedOrderProperties
 Add.Enabled = mEnabled
 Add.SetTickSize mTickSize
@@ -482,7 +519,9 @@ Friend Sub Initialise( _
                 ByVal pAccumulatedBracketOrders As BracketOrders, _
                 ByVal pAccumulatedOrders As Orders, _
                 ByVal pSimulatedClockFuture As IFuture, _
-                ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr)
+                ByVal pBracketOrderRecoveryController As BracketOrderRecoveryCtlr, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -511,6 +550,11 @@ Set mAccumulatedOrders = pAccumulatedOrders
 Set mSimulatedClockFuture = pSimulatedClockFuture
 
 Set mBracketOrderRecoveryController = pBracketOrderRecoveryController
+
+Set mAccountDataProvider = pAccountDataProvider
+If Not mAccountDataProvider Is Nothing Then mAccountDataProvider.AddStateChangeListener Me
+
+Set mCurrencyConverter = pCurrencyConverter
 
 mOrderSubmitter.AddStateChangeListener Me
 mProviderIsReady = (mOrderSubmitter.State = OrderSubmitterStateReady)

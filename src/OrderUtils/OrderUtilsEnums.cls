@@ -30,6 +30,12 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum BracketAutosizeTypes
+    BracketAutosizeNone
+    BracketAutosizePercentOfAccount
+    BracketAutosizeMonetaryAmount
+End Enum
+
 Public Enum BracketOrderChangeTypes
     BracketOrderCreated = 1
     BracketOrderCompleted

@@ -40,20 +40,12 @@ if errorlevel 1 pause
 call makedll.bat HistDataUtils HistDataUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
-set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat TradingDO TradingDO /T:DLL /B:%BINARY_COMPAT%
-if errorlevel 1 pause
-
-set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat TimeframeUtils TimeframeUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 
-set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat TradingDbApi TradingDbApi /T:DLL /B:%BINARY_COMPAT%
-if errorlevel 1 pause
-
-set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat MarketDataUtils MarketDataUtils /T:DLL /B:%BINARY_COMPAT%
+if errorlevel 1 pause
+call makedll.bat CurrencyUtils CurrencyUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat OrderUtils OrderUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
@@ -110,6 +102,10 @@ if errorlevel 1 pause
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat IBTwsSP IBTwsSP /T:DLL /B:%BINARY_COMPAT%
+if errorlevel 1 pause
+call makedll.bat TradingDO TradingDO /T:DLL /B:%BINARY_COMPAT%
+if errorlevel 1 pause
+call makedll.bat TradingDbApi TradingDbApi /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 call makedll.bat TBInfoBase TBInfoBase /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
