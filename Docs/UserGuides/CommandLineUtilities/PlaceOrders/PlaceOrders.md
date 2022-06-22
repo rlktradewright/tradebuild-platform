@@ -978,7 +978,57 @@ Specifies the target order of a bracket order.
 ### Contract Expiry
 
 <br/><br/>
-## 10. Detailed Syntax Specification
+## 10. Results file specification
+
+The xxxx-BracketOrders.log file has a comma-separated record for each bracket order executed (whether it is specified as an actual bracket order or just a single order). Being comma-separated, it's easy to import these into Excel. Entries are written as soon as the relevant bracket order is completed, either by hitting its stop-loss or target orders or by closeout. The information contained in each record is as follows:
+
+GroupName
+Contract
+StartTime               Time of entry order fill
+EndTime                 Time of target/stop-loss/closeout fill
+Description             Description for bracket order (anything you like)
+Key                     Order key allocated at definition time 
+EntryOrderAction        BUY or SELL
+EntryOrderQuantity      Number of shares/futures/options
+EntryPrice              Fill price for entry order (might need some additional
+                        work here if the entry has multiple fills – need to check
+                        the code)
+ExitPrice               Fill price at end
+EntryReason             Reason for entry order
+TargetReason            Reason for target order
+StopLossReason          Reason for stop-loss order
+Profit                  Final profit
+MaxProfit               Max profit reached – only valid if bracket or is
+                        executed entirely within one run of plord (it would
+                        be possible to query historical data to get an 
+                        accurate value for bracket orders that span runs,
+                        but not currently on the list of priorities!)
+MaxLoss                 Max loss reached – same caveat as for max profit
+RiskAmount              Amount risked by trade – not currently populated
+                        as the risk calculation is very tricky and currently
+                        incomplete
+IsSimulated             Order was simulated in the TradeBuild simulated exchange.
+                        NB: this is not the same thing as the IB Paper Trading 
+                        System – as far as TradeBuild is concerned, that is just
+                        a live exchange
+
+
+Similarly, the xxxx-Executions.log file contains an entry for each order fill, in the order of occurrence. Some of the fields are self-explanatory:
+
+GroupName 
+Contract
+QuantityFilled
+Price
+Action
+FillTime
+FillTimezoneName
+FillId                  IB's id for this fill
+BrokerId                IB's id for the order that caused this fill 
+TradeBuildId            TradeBuild's order id
+IsSimulated
+
+<br/><br/>
+## 11. Detailed Syntax Specification
 
 
 
