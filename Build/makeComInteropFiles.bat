@@ -94,6 +94,7 @@ call :TlbImp TickfileUtils27
 call :TlbImp HistDataUtils27
 call :TlbImp TimeframeUtils27
 call :TlbImp MarketDataUtils27
+call :TlbImp CurrencyUtils27
 call :TlbImp OrderUtils27
 call :TlbImp TickerUtils27
 call :TlbImp WorkspaceUtils27

@@ -177,6 +177,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_BC5018A150274CCD8806626559B4F548"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_BFBF7A5F5BCA47FFA899014531D6C23F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -231,7 +237,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuildPlatform-2.7.257.msm"
+        "OutputFilename" = "8:..\\Bin\\TradeBuildPlatform-2.7.258.msm"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -854,6 +860,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BC5018A150274CCD8806626559B4F548"
+            {
+            "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.Platform\\CurrencyUtils27.dll"
+            "TargetName" = "8:CurrencyUtils27.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_EEBFEA9F80554EF297B69F22CE4E7623"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BFBF7A5F5BCA47FFA899014531D6C23F"
             {
             "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.Platform\\ChartUtils27.dll"
@@ -1077,7 +1103,7 @@
         "Module"
         {
         "ModuleSignature" = "8:MergeModule.4EB5B2E27A794B3384350D2FB58C0123"
-        "Version" = "8:2.7.0.257"
+        "Version" = "8:2.7.0.258"
         "Title" = "8:TradeBuildPlatformMerge"
         "Subject" = "8:"
         "Author" = "8:Richard L King"
