@@ -367,6 +367,8 @@ Public Function RecoverOrdersFromPreviousSession( _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 Optional ByVal pMoneyManager As IMoneyManager, _
+                Optional ByVal pAccountDataProvider As IAccountDataProvider, _
+                Optional ByVal pCurrencyConverter As ICurrencyConverter, _
                 Optional ByVal pCookie As Variant) As TaskController
 Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
@@ -381,6 +383,8 @@ Set RecoverOrdersFromPreviousSession = _
                         pMarketDataManager, _
                         pOrderSubmitterFactory, _
                         pMoneyManager, _
+                        pAccountDataProvider, _
+                        pCurrencyConverter, _
                         pCookie)
 
 Exit Function

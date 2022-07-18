@@ -80,8 +80,12 @@ Select Case lChangeType
 Case OrderContextChangeTypes.OrderContextActiveStateChanged
     Exit Sub
 Case OrderContextChangeTypes.OrderContextReadyStateChanged
+    Static sPendingMessageLogged As Boolean
     If Not isReadyForOrder Then
-        gWriteLineToConsole mBracketOrderSpec.ID & ": Order is pending: " & mOrderContextEv.NotReadyMessage
+        If Not sPendingMessageLogged Then
+            sPendingMessageLogged = True
+            gWriteLineToConsole mBracketOrderSpec.ID & ": Order is pending: " & mOrderContextEv.NotReadyMessage, True
+        End If
         Exit Sub
     End If
     

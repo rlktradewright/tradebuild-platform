@@ -1294,7 +1294,7 @@ mSummary.Name = pName
 mSummary.GroupName = pGroupName
 mSummary.IsSimulated = pIsSimulated
 
-PreInitialise pOrderManager, pMoneyManager
+PreInitialise pOrderManager, pMoneyManager, pAccountDataProvider, pCurrencyConverter
 
 Set mDataSource = pDataSource
 mDataSource.AddGenericTickListener Me
@@ -1307,9 +1307,6 @@ mOrderSubmitter.AddStateChangeListener Me
 mRecoveryContextName = pRecoveryContextName
 Set mBracketOrderRecoveryController = pRecoveryController
 If Not mBracketOrderRecoveryController Is Nothing Then mRecoverableObjectListeners.Add mBracketOrderRecoveryController
-
-Set mAccountDataProvider = pAccountDataProvider
-Set mCurrencyConverter = pCurrencyConverter
 
 Set mContractFuture = mDataSource.ContractFuture
 
@@ -1334,9 +1331,13 @@ End Sub
 
 Friend Sub PreInitialise( _
                 ByVal pOrderManager As OrderManager, _
-                ByVal pMoneyManager As IMoneyManager)
+                ByVal pMoneyManager As IMoneyManager, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter)
 Set mOrderManager = pOrderManager
 Set mMoneyManager = pMoneyManager
+Set mAccountDataProvider = pAccountDataProvider
+Set mCurrencyConverter = pCurrencyConverter
 End Sub
 
 Public Sub Purge()

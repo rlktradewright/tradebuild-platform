@@ -85,7 +85,8 @@ Dim lBO As IBracketOrder: Set lBO = ev.Source
 gWriteLineToConsole lBO.Key & _
                     ": bracket order state is: " & _
                     BracketOrderStateToString(lBO.State) & _
-                    generateRolloverClause(lBO)
+                    generateRolloverClause(lBO), _
+                    True
 
 Exit Sub
 
@@ -98,7 +99,7 @@ Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderError"
 On Error GoTo Err
 
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage)
+gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage), True
 
 Exit Sub
 
@@ -111,7 +112,7 @@ Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderMessage"
 On Error GoTo Err
 
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.Message)
+gWriteLineToConsole generateMessage(lOrder, lOrder.Message), True
 
 Exit Sub
 
@@ -192,7 +193,7 @@ Case BracketOrderRolloverCompleted
     mBracketOrderListener.Remove lBO
 End Select
 
-If s1 <> "" Then gWriteLineToConsole s & s1
+If s1 <> "" Then gWriteLineToConsole s & s1, True
 
 Exit Sub
 

@@ -97,6 +97,9 @@ Private mInMemoryStore                              As New InMemoryStore
 
 Private mMoneyManager                               As IMoneyManager
 
+Private mAccountDataProvider                    As IAccountDataProvider
+Private mCurrencyConverter                      As ICurrencyConverter
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -489,6 +492,8 @@ Friend Function RecoverOrders( _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 Optional ByVal pMoneyManager As IMoneyManager, _
+                Optional ByVal pAccountDataProvider As IAccountDataProvider, _
+                Optional ByVal pCurrencyConverter As ICurrencyConverter, _
                 Optional ByVal pCookie As Variant) As TaskController
 Const ProcName As String = "RecoverOrders"
 On Error GoTo Err
@@ -509,6 +514,8 @@ Set mDataStore = pDataStore
 Set mMarketDataManager = pMarketDataManager
 Set mOrderSubmitterFactory = pOrderSubmitterFactory
 Set mMoneyManager = pMoneyManager
+Set mAccountDataProvider = pAccountDataProvider
+Set mCurrencyConverter = pCurrencyConverter
 Set mRecoveryAgent = pRecoveryAgent
 
 Set RecoverOrders = StartTask(Me, PriorityNormal, , pCookie)
@@ -555,7 +562,10 @@ Dim lRecoverable As IRecoverable
 
 If Not mPositionManagers.Contains(lSummary.Name) Then
     Set lPm = New PositionManager
-    lPm.PreInitialise mOrderManager, mMoneyManager
+    lPm.PreInitialise mOrderManager, _
+                    mMoneyManager, _
+                    mAccountDataProvider, _
+                    mCurrencyConverter
     
     Set lRecoverable = lPm
     lRecoverable.LoadRecoveryData pOpItem.RCN, lSummary

@@ -1474,7 +1474,7 @@ Private Function setQuantity( _
 Const ProcName As String = "setQuantity"
 On Error GoTo Err
 
-Const QuantityFormat As String = "^([1-9]\d*)(?:([\$|\%])(?:\(([1-9]\d*)\))?)?$"
+Const QuantityFormat As String = "^(?:(?:(?:([1-9]\d*(?:\.\d+)?)(\%))|(?:(0?\.\d+(?:\.\d+)?)(\%))|(?:(?:([1-9]\d*)(\$?))))(?:\(([1-9]\d*)\))?)$"
 
 gRegExp.Pattern = QuantityFormat
 
@@ -1485,22 +1485,26 @@ If lMatches.Count <> 1 Then Exit Function
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-If lMatch.SubMatches(1) = MaxOrderCostSuffix Then
-    mBOSpec.Quantity = 1
-    mBOSpec.AutosizeType = BracketAutosizeMonetaryAmount
-    mBOSpec.AutosizeValue = lMatch.SubMatches(0)
-ElseIf lMatch.SubMatches(1) = AccountPercentSuffix Then
+If lMatch.SubMatches(1) = AccountPercentSuffix Then
     mBOSpec.Quantity = 1
     mBOSpec.AutosizeType = BracketAutosizePercentOfAccount
     mBOSpec.AutosizeValue = lMatch.SubMatches(0)
+ElseIf lMatch.SubMatches(3) = AccountPercentSuffix Then
+    mBOSpec.Quantity = 1
+    mBOSpec.AutosizeType = BracketAutosizePercentOfAccount
+    mBOSpec.AutosizeValue = lMatch.SubMatches(2)
+ElseIf lMatch.SubMatches(5) = MaxOrderCostSuffix Then
+    mBOSpec.Quantity = 1
+    mBOSpec.AutosizeType = BracketAutosizeMonetaryAmount
+    mBOSpec.AutosizeValue = lMatch.SubMatches(4)
 Else
     mBOSpec.Quantity = lMatch.SubMatches(0)
     mBOSpec.AutosizeType = BracketAutosizeNone
-    mBOSpec.AutosizeValue = 0
+    mBOSpec.AutosizeValue = lMatch.SubMatches(4)
 End If
 
-If lMatch.SubMatches(2) <> "" Then
-    mBOSpec.LotSize = CLng(lMatch.SubMatches(2))
+If lMatch.SubMatches(6) <> "" Then
+    mBOSpec.LotSize = CLng(lMatch.SubMatches(6))
 Else
     mBOSpec.LotSize = 1
 End If

@@ -482,26 +482,30 @@ If lAccountValueName = "" Then lAccountValueName = gDefaultBalanceAccountValueNa
 
 If Not isValidAccountValueName(lAccountValueName) Then Exit Function
 
-Const FundsSpecFormat As String = "^([1-9]\d*)(?:([\$|\%]))$"
+Const FundsSpecFormat As String = "^(?:(?:([1-9]\d*(?:\.\d+)?)(\%))|(?:(0?\.\d+(?:\.\d+)?)(\%))|(?:(?:([1-9]\d*)(\$))))$"
 gRegExp.Pattern = FundsSpecFormat
 
 Dim lMatches As MatchCollection
 Set lMatches = gRegExp.Execute(lFundsSpec)
 
 If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid funds specification: must be a number greater than 0, " & _
-                    "followed by either $ (an amount of currency) or " & _
-                    "% (a percentage of the account balance). " & _
-                    "Note that the funds are in the account's base currency.", True
+    gWriteErrorLine _
+        "Invalid funds specification: must be either an integer greater" & vbCrLf & _
+        "than 0 followed by $ (an amount of currency), or a number (decimal" & vbCrLf & _
+        "places allowed) greater than 0 followed by % (a percentage of the" & vbCrLf & _
+        "account balance). " & vbCrLf & _
+        "Note that the funds are in the account's base currency.", True
     Exit Function
 End If
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-If lMatch.SubMatches(1) = MaxOrderCostSuffix Then
-    pAmount = CDbl(lMatch.SubMatches(0))
-ElseIf lMatch.SubMatches(1) = AccountPercentSuffix Then
+If lMatch.SubMatches(1) = AccountPercentSuffix Then
     pAmount = CDbl(lMatch.SubMatches(0)) * CDbl(mAccountDataProvider.GetAccountValue(lAccountValueName, mAccountDataProvider.BaseCurrency).Value) / 100#
+ElseIf lMatch.SubMatches(3) = AccountPercentSuffix Then
+    pAmount = CDbl(lMatch.SubMatches(2)) * CDbl(mAccountDataProvider.GetAccountValue(lAccountValueName, mAccountDataProvider.BaseCurrency).Value) / 100#
+ElseIf lMatch.SubMatches(5) = MaxOrderCostSuffix Then
+    pAmount = CDbl(lMatch.SubMatches(4))
 End If
 
 getFundsAmount = True
@@ -1362,7 +1366,7 @@ Dim lGroup As GroupResources
 For Each lGroup In mGroups
     lGroup.FixedAccountBalance = lFunds
 Next
-gWriteLineToConsole "Funds for all groups set to " & CStr(lFunds)
+gWriteLineToConsole "Funds for all groups set to " & CStr(CLng(lFunds))
 
 Exit Sub
 
@@ -1379,7 +1383,7 @@ Dim lFunds As Double
 If Not getFundsAmount(pParams, lFunds) Then Exit Sub
 
 mCurrentGroup.FixedAccountBalance = lFunds
-gWriteLineToConsole "Funds for this group set to " & CStr(lFunds)
+gWriteLineToConsole "Funds for this group set to " & CStr(CLng(lFunds))
 
 Exit Sub
 
@@ -1858,7 +1862,16 @@ If mClp.SwitchValue(RecoveryFileDirSwitch) <> "" Then mRecoveryFileDir = mClp.Sw
 If mOrderPersistenceDataStore Is Nothing Then Set mOrderPersistenceDataStore = CreateOrderPersistenceDataStore(mRecoveryFileDir)
 
 Dim lOrderRecoverer As New OrderRecoverer
-lOrderRecoverer.RecoverOrders mOrderManager, mScopeName, mOrderPersistenceDataStore, mOrderRecoveryAgent, mMarketDataManager, mOrderSubmitterFactory, mGroups, mMoneyManager
+lOrderRecoverer.RecoverOrders mOrderManager, _
+                            mScopeName, _
+                            mOrderPersistenceDataStore, _
+                            mOrderRecoveryAgent, _
+                            mMarketDataManager, _
+                            mOrderSubmitterFactory, _
+                            mGroups, _
+                            mMoneyManager, _
+                            mAccountDataProvider, _
+                            mCurrencyConverter
 
 Exit Sub
 

@@ -157,18 +157,23 @@ Friend Sub RecoverOrders( _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 ByVal pOrderSubmitterFactory As IOrderSubmitterFactory, _
                 ByVal pGroups As Groups, _
-                ByVal pMoneyManager As MoneyManager)
+                ByVal pMoneyManager As MoneyManager, _
+                ByVal pAccountDataProvider As IAccountDataProvider, _
+                ByVal pCurrencyConverter As ICurrencyConverter)
 Const ProcName As String = "RecoverOrdersFromPreviousSession"
 On Error GoTo Err
 
 Set mOrderManager = pOrderManager
 Set mGroups = pGroups
-Set mTaskController = mOrderManager.RecoverOrdersFromPreviousSession(pScopeName, _
-                                                                    pDataStore, _
-                                                                    pRecoveryAgent, _
-                                                                    pMarketDataManager, _
-                                                                    pOrderSubmitterFactory, _
-                                                                    pMoneyManager)
+Set mTaskController = mOrderManager.RecoverOrdersFromPreviousSession( _
+                                        pScopeName, _
+                                        pDataStore, _
+                                        pRecoveryAgent, _
+                                        pMarketDataManager, _
+                                        pOrderSubmitterFactory, _
+                                        pMoneyManager, _
+                                        pAccountDataProvider, _
+                                        pCurrencyConverter)
 gInputPaused = True
 Set mSelfRef = Me
 

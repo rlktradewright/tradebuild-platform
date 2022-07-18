@@ -648,9 +648,9 @@ mTableBuilder.AddStateTableEntry _
 ' been a fill, so we need to wait for any other orders to be cancelled.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
+            OpStimuli.StimEntryOrderCancelled, _
             OpConditions.CondSizeNonZero, _
             SpecialConditions.NoConditions, _
-            OpConditions.CondSizeNonZero, _
             BracketOrderStates.BracketOrderStateCancelling
 
 ' We are notified that the stop-loss order has been cancelled. Now we just need
