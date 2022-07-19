@@ -1,2 +1,0 @@
-::start E:\projects\tradebuild-platform\Bin\DataCollector27.exe /config:"Collect to DB" /log:logDB.log /showmonitor /posn:0,1 /startAt:Sun22:00 /endAt:Sat22:00 /exitAt:Sat22:05 /loglevel:N /noDataRestartSecs:300 /quantum:50
-start E:\projects\tradebuild-platform\Bin\DataCollector27.exe /config:"Collect to files" /log:logFiles.log /logoverwrite /showmonitor /posn:0,0 /startAt:Sun22:00 /endAt:Sat22:00 /exitAt:Sat22:05 /loglevel:N /noDataRestartSecs:300 /quantum:50
