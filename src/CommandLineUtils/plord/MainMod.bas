@@ -422,6 +422,7 @@ If Not setupTwsApi(mClp.SwitchValue(TwsSwitch), _
 End If
 
 mScopeName = mClp.SwitchValue(ScopeNameSwitch)
+If mScopeName = "" Then mScopeName = CStr(mClientId)
 
 gDefaultBalanceAccountValueName = AccountValueNetLiquidation
 
@@ -2040,9 +2041,8 @@ If clientId = "" Then
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
     gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999", True
     setupTwsApi = False
-Else
-    mClientId = CLng(clientId)
 End If
+pClientId = CLng(clientId)
 
 Dim connectionRetryInterval As String
 connectionRetryInterval = lClp.Arg(3)
@@ -2059,7 +2059,7 @@ Dim lListener As New TwsConnectionListener
 If connectionRetryInterval = "" Then
     Set mTwsClient = GetClient(server, _
                             CLng(port), _
-                            mClientId, _
+                            pClientId, _
                             pLogApiMessages:=pLogApiMessages, _
                             pLogRawApiMessages:=pLogRawApiMessages, _
                             pLogApiMessageStats:=pLogApiMessageStats, _
@@ -2067,7 +2067,7 @@ If connectionRetryInterval = "" Then
 Else
     Set mTwsClient = GetClient(server, _
                             CLng(port), _
-                            mClientId, _
+                            pClientId, _
                             pConnectionRetryIntervalSecs:=CLng(connectionRetryInterval), _
                             pLogApiMessages:=pLogApiMessages, _
                             pLogRawApiMessages:=pLogRawApiMessages, _
