@@ -63,6 +63,8 @@ Private mContract                                   As IContract
 
 Private mIsSimulated                                As Boolean
 
+Private mFixedAccountBalance                        As Double
+
 Private mIsDirty                                    As Boolean
 
 Private mDiff                                       As New ROD
@@ -133,6 +135,13 @@ End Property
 
 Public Property Get DrawdownLastTrade() As Currency
 DrawdownLastTrade = mDrawdownLastTrade
+End Property
+
+Public Property Let FixedAccountBalance(ByVal Value As Double)
+If mFixedAccountBalance = Value Then Exit Property
+mIsDirty = True
+mFixedAccountBalance = Value
+mDiff.SetProperty "FixedAccountBalance", Value
 End Property
 
 Public Property Let GroupName(ByVal Value As String)

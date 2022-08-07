@@ -171,6 +171,10 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get AccountDataProvider() As IAccountDataProvider
+Set AccountDataProvider = mAccountDataProvider
+End Property
+
 Public Property Get ActiveBracketOrders() As BracketOrders
 Set ActiveBracketOrders = mActiveBracketOrders
 End Property
@@ -211,6 +215,10 @@ End Property
 
 Public Property Get CompletedSize() As Long
 CompletedSize = mCompletedSize
+End Property
+
+Public Property Get CurrencyConverter() As ICurrencyConverter
+Set CurrencyConverter = mCurrencyConverter
 End Property
 
 Public Property Get RecoveryContextName() As String
@@ -1017,10 +1025,17 @@ gLogBracketOrderMessage "Execute bracket order: " & vbCrLf & _
                         Me
 
 If pAddToActiveBracketOrders Then
-    mActiveBracketOrders.Add pBracketOrder
+    If Not mActiveBracketOrders.Contains(pBracketOrder) Then
+        mActiveBracketOrders.Add pBracketOrder
+    End If
 End If
 
-If Not mAccumulatedBracketOrders Is Nothing Then mAccumulatedBracketOrders.Add pBracketOrder
+If Not mAccumulatedBracketOrders Is Nothing Then
+    If Not mAccumulatedBracketOrders.Contains(pBracketOrder) Then
+        mAccumulatedBracketOrders.Add pBracketOrder
+    End If
+End If
+
 setOrderRecoveryForBracketOrder pBracketOrder
 
 fireChange OrderContextActiveStateChanged

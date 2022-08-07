@@ -285,6 +285,10 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get AccountDataProvider() As IAccountDataProvider
+Set AccountDataProvider = mAccountDataProvider
+End Property
+
 Friend Property Get BalancingOrderContext() As OrderContext
 Const ProcName As String = "BalancingOrderContext"
 On Error GoTo Err
@@ -320,6 +324,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get CurrencyConverter() As ICurrencyConverter
+Set CurrencyConverter = mCurrencyConverter
 End Property
 
 Public Property Get DataSource() As IMarketDataSource

@@ -213,6 +213,9 @@ mFutureWaiter.Add lContractResolver.ResolveContract(pContractSpec, _
                     lContractProcessor
 
 lContractProcessor.Initialise pContractSpec, _
+                            pSelectionMode, _
+                            pParameter, _
+                            pOperator, _
                             GenerateGUIDString, _
                             lContractResolver, _
                             mAccountDataProvider, _

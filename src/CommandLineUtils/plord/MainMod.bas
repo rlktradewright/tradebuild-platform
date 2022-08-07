@@ -50,6 +50,7 @@ Public Const EntrySwitch                            As String = "ENTRY"
 Public Const OffsetSwitch                           As String = "OFFSET"
 Public Const IgnoreRTHSwitch                        As String = "IGNORERTH"
 Public Const PriceSwitch                            As String = "PRICE"
+Public Const QuantitySwitch                         As String = "QUANTITY"
 Public Const ReasonSwitch                           As String = "REASON"
 Public Const TIFSwitch                              As String = "TIF"
 Public Const TimeSwitch                             As String = "TIME"
@@ -359,7 +360,7 @@ Public Sub gWriteLineToConsole( _
                 Optional ByVal pDontLogit As Boolean)
 Const ProcName As String = "gWriteLineToConsole"
 
-If pDontLogit Then LogMessage "Con: " & pMessage
+If Not pDontLogit Then LogMessage "Con: " & pMessage
 Dim lTime As String
 If pIncludeTimestamp Then
     gCon.WriteStringToConsole FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
@@ -416,7 +417,8 @@ If Not setupTwsApi(mClp.SwitchValue(TwsSwitch), _
                 mClp.Switch(SimulateOrdersSwitch), _
                 lLogApiMessages, _
                 lLogRawApiMessages, _
-                lLogApiMessageStats) Then
+                lLogApiMessageStats, _
+                mClientId) Then
     showUsage
     Exit Sub
 End If
@@ -483,7 +485,7 @@ If lAccountValueName = "" Then lAccountValueName = gDefaultBalanceAccountValueNa
 
 If Not isValidAccountValueName(lAccountValueName) Then Exit Function
 
-Const FundsSpecFormat As String = "^(?:(?:([1-9]\d*(?:\.\d+)?)(\%))|(?:(0?\.\d+(?:\.\d+)?)(\%))|(?:(?:([1-9]\d*)(\$))))$"
+Const FundsSpecFormat As String = "^(?:(?:([1-9]?\d*(?:\.\d+)?)(\%))|(?:(0?\.\d+(?:\.\d+)?)(\%))|(?:(?:([1-9]\d*)(\$))))$"
 gRegExp.Pattern = FundsSpecFormat
 
 Dim lMatches As MatchCollection
@@ -810,7 +812,7 @@ If lExpiry <> "" Then
             validParams = False
         End If
     ElseIf Len(lExpiry) = 8 Then
-        If Not IsDate(Left$(lExpiry, 4) & "/" & mId$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
+        If Not IsDate(Left$(lExpiry, 4) & "/" & Mid$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
             gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
             validParams = False
         End If
@@ -2013,7 +2015,8 @@ Private Function setupTwsApi( _
                 ByVal pSimulateOrders As Boolean, _
                 ByVal pLogApiMessages As ApiMessageLoggingOptions, _
                 ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
-                ByVal pLogApiMessageStats As Boolean) As Boolean
+                ByVal pLogApiMessageStats As Boolean, _
+                ByRef pClientId As Long) As Boolean
 Const ProcName As String = "setupTwsApi"
 On Error GoTo Err
 
@@ -2335,7 +2338,7 @@ Else
     Exit Function
 End If
 
-s = mId(pApiMessageLogging, 2, 1)
+s = Mid$(pApiMessageLogging, 2, 1)
 If s = None Then
     pLogRawApiMessages = ApiMessageLoggingOptionNone
 ElseIf s = Default Then
@@ -2346,7 +2349,7 @@ Else
     Exit Function
 End If
 
-s = mId(pApiMessageLogging, 3, 1)
+s = Mid$(pApiMessageLogging, 3, 1)
 If s = No Then
     pLogApiMessageStats = False
 ElseIf s = Yes Then

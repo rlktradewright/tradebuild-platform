@@ -48,12 +48,16 @@ Private Const OrderPendingMessage                   As String = "Order is pendin
 ' Member variables
 '@================================================================================
 
-Private mId                                         As String
+Private mIdent                                         As String
 Private mName                                       As String
 
 Private mInitialContractSpec                        As IContractSpecifier
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
+
+Private mInitialStrikeSelectionMode                 As OptionStrikeSelectionModes
+Private mInitialStrikeParameter                     As Long
+Private mInitialStrikeOperator                      As OptionStrikeSelectionOperators
 
 Private mBracketOrders                              As New EnumerableCollection
 
@@ -165,7 +169,7 @@ If Not mPositionManager Is Nothing Then mPositionManager.FixedAccountBalance = m
 End Property
 
 Friend Property Get ID() As String
-ID = mId
+ID = mIdent
 End Property
 
 Friend Property Get InitialContractSpec() As IContractSpecifier
@@ -239,6 +243,7 @@ If pScopeName = "" Then
                                 pAccountDataProvider:=mAccountDataProvider, _
                                 pCurrencyConverter:=mCurrencyConverter)
 Else
+failpoint = "100"
     Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
                                 pName, _
                                 mDataSource, _
@@ -331,13 +336,19 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pInitialContractSpec As IContractSpecifier, _
+                ByVal pInitialStrikeSelectionMode As OptionStrikeSelectionModes, _
+                ByVal pInitialStrikeParameter As Long, _
+                ByVal pInitialStrikeOperator As OptionStrikeSelectionOperators, _
                 ByVal pID As String, _
                 ByVal pContractResolver As ContractResolver, _
                 ByVal pAccountDataProvider As IAccountDataProvider, _
                 ByVal pCurrencyConverter As ICurrencyConverter, _
                 ByVal pStageOrders As Boolean)
 Set mInitialContractSpec = pInitialContractSpec
-mId = pID
+mInitialStrikeSelectionMode = pInitialStrikeSelectionMode
+mInitialStrikeParameter = pInitialStrikeParameter
+mInitialStrikeOperator = pInitialStrikeOperator
+mIdent = pID
 Set mContractResolver = pContractResolver
 Set mAccountDataProvider = pAccountDataProvider
 Set mCurrencyConverter = pCurrencyConverter
@@ -469,6 +480,15 @@ If mOrderContext Is Nothing Then
     Exit Sub
 End If
 
+If Not mBOSpec.RolloverSpec Is Nothing Then
+    mBOSpec.RolloverSpec.setStopLossOrderType(mBOSpec.StopLossType). _
+                    setStopLossLimitPriceSpec(mBOSpec.StopLossLimitPriceSpec). _
+                    setStopLossTriggerPriceSpec(mBOSpec.StopLossTriggerPriceSpec). _
+                    setTargetOrderType(mBOSpec.TargetType). _
+                    setTargetLimitPriceSpec(mBOSpec.TargetLimitPriceSpec). _
+                    setTargetTriggerPriceSpec mBOSpec.TargetTriggerPriceSpec
+End If
+
 If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
@@ -573,10 +593,19 @@ End If
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
-If lClp.NumberOfArgs <> 0 Then
+If lClp.NumberOfArgs > 0 Then
     gWriteErrorLine "Only attributes beginning with ""/"" are permitted"
     Exit Sub
 End If
+
+Dim lQuantityMode As RolloverQuantityModes: lQuantityMode = RolloverQuantityModeAsPrevious
+Dim lQuantityParameter As Double
+Dim lLotSize As Long
+If lClp.Switch(QuantitySwitch) Then processRolloverQuantity _
+                        lClp.SwitchValue(QuantitySwitch), _
+                        lQuantityMode, _
+                        lQuantityParameter, _
+                        lLotSize
 
 Dim lDays As Long
 If lClp.Switch(DaysSwitch) Then lDays = processRolloverDays(lClp.SwitchValue(DaysSwitch))
@@ -584,7 +613,7 @@ If lClp.Switch(DaysSwitch) Then lDays = processRolloverDays(lClp.SwitchValue(Day
 Dim lTime As Date
 If lClp.Switch(TimeSwitch) Then lTime = processRolloverTime(lClp.SwitchValue(TimeSwitch))
 
-Dim lCloseType As OrderTypes
+Dim lCloseType As OrderTypes: lCloseType = OrderTypeMarket
 Dim lCloseLimitPriceSpec As New PriceSpecifier
 Dim lCloseTriggerPriceSpec As New PriceSpecifier
 Dim lCloseTimeout As Long
@@ -606,13 +635,22 @@ If lClp.Switch(EntrySwitch) Then processRolloverEntry _
                                         lEntryTriggerPriceSpec, _
                                         lEntryTimeout
 
-Dim lStrikeMode As RolloverStrikeModes: lStrikeMode = RolloverStrikeModeCurrentValue
-Dim lStrikeValue As Long: lStrikeValue = 0
+Dim lStrikeMode As RolloverStrikeModes
+lStrikeMode = RolloverStrikeModeAsPrevious
+
+Dim lStrikeValue As Double: lStrikeValue = 0
+
+Dim lStrikeOperator As OptionStrikeSelectionOperators
+lStrikeOperator = OptionStrikeSelectionOperatorNone
+
+Dim lUnderlyingExchangeName As String
 
 If lClp.Switch(StrikeSwitch) Then processRolloverStrike _
                                         lClp.SwitchValue(StrikeSwitch), _
                                         lStrikeMode, _
-                                        lStrikeValue
+                                        lStrikeValue, _
+                                        lStrikeOperator, _
+                                        lUnderlyingExchangeName
 
 If mContract.Specifier.SecType = SecTypeOption Or _
     mContract.Specifier.SecType = SecTypeFuturesOption _
@@ -620,9 +658,16 @@ Then
     Set mBOSpec.RolloverSpec = CreateOptionRolloverSpecification( _
                                 lDays, _
                                 lTime, _
+                                mInitialStrikeSelectionMode, _
+                                mInitialStrikeParameter, _
+                                mInitialStrikeOperator, _
                                 lStrikeMode, _
                                 lStrikeValue, _
-                                mUnderlyingExchangeName, _
+                                lStrikeOperator, _
+                                lQuantityMode, _
+                                lQuantityParameter, _
+                                lLotSize, _
+                                lUnderlyingExchangeName, _
                                 lCloseType, _
                                 lCloseTimeout, _
                                 lCloseLimitPriceSpec, _
@@ -631,6 +676,7 @@ Then
                                 lEntryTimeout, _
                                 lEntryLimitPriceSpec, _
                                 lEntryTriggerPriceSpec)
+                                
 Else
     Set mBOSpec.RolloverSpec = CreateRolloverSpecification( _
                                 lDays, _
@@ -1409,14 +1455,135 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processRolloverQuantity( _
+                ByVal pValue As String, _
+                ByRef pQuantityMode As RolloverQuantityModes, _
+                ByRef pQuantityParameter As Double, _
+                ByRef pLotSize As Long)
+Const ProcName As String = "processRolloverQuantity"
+On Error GoTo Err
+
+Const QuantityFormatLotSize As String = "(?:\(([1-9]\d*)\))?"
+Const QuantityFormatNumber As String = "^([1-9]\d*)$"
+Const QuantityFormatPreviousNumber As String = "^(<)$"
+Const QuantityFormatMonetaryAmount As String = "^([1-9]\d*)\$" & QuantityFormatLotSize & "$"
+Const QuantityFormatPreviousMonetaryAmount As String = "^(<\$)$"
+Const QuantityFormatPercentOfAccount As String = "^([1-9]?\d*(?:\.\d+)?)%" & QuantityFormatLotSize & "$"
+Const QuantityFormatPreviousPercentOfAccount As String = "^(<%)$"
+Const QuantityFormatCurrentValue As String = "^(=\$)" & QuantityFormatLotSize & "$"
+Const QuantityFormatCurrentProfit As String = "^(?:=([1-9]?\d*(?:\.\d+)?))%P" & QuantityFormatLotSize & "$"
+
+Const QuantityFormat As String = QuantityFormatNumber & _
+                            "|" & QuantityFormatPreviousNumber & _
+                            "|" & QuantityFormatMonetaryAmount & _
+                            "|" & QuantityFormatPreviousMonetaryAmount & _
+                            "|" & QuantityFormatPercentOfAccount & _
+                            "|" & QuantityFormatPreviousPercentOfAccount & _
+                            "|" & QuantityFormatCurrentValue & _
+                            "|" & QuantityFormatCurrentProfit
+
+' QuantityFormat="^([1-9]\d*)$|^(<)$|^([1-9]\d*)\$(?:\(([1-9]\d*)\))?$|^(<\$)$|^([1-9]?\d*(?:\.\d+)?)%(?:\(([1-9]\d*)\))?$|^(<%)$|^(=\$)(?:\(([1-9]\d*)\))?$|^(?:=([1-9]?\d*(?:\.\d+)?))%P(?:\(([1-9]\d*)\))?$"
+
+gRegExp.Pattern = QuantityFormat
+
+Dim lMatches As MatchCollection
+Set lMatches = gRegExp.Execute(pValue)
+
+If lMatches.Count <> 1 Then
+    gWriteErrorLine "Invalid Quantity syntax"
+    Exit Sub
+End If
+
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+Dim lParameter As String
+
+lParameter = lMatch.SubMatches(0)
+If lParameter <> "" Then
+    pQuantityMode = RolloverQuantityModeNumber
+    pQuantityParameter = CDbl(lParameter)
+    Exit Sub
+End If
+
+If lMatch.SubMatches(1) <> "" Then
+    pQuantityMode = RolloverQuantityModePreviousNumber
+    Exit Sub
+End If
+
+lParameter = lMatch.SubMatches(2)
+If lParameter <> "" Then
+    pQuantityMode = RolloverQuantityModeMonetaryAmount
+    pQuantityParameter = CDbl(lParameter)
+    pLotSize = CLng("0" & lMatch.SubMatches(3))
+    Exit Sub
+End If
+
+If lMatch.SubMatches(4) <> "" Then
+    pQuantityMode = RolloverQuantityModePreviousMonetaryAmount
+    Exit Sub
+End If
+
+lParameter = lMatch.SubMatches(5)
+If lParameter <> "" Then
+    pQuantityMode = RolloverQuantityModePercentageOfAccount
+    pQuantityParameter = CDbl(lParameter)
+    pLotSize = CLng("0" & lMatch.SubMatches(6))
+    Exit Sub
+End If
+
+If lMatch.SubMatches(7) <> "" Then
+    pQuantityMode = RolloverQuantityModePreviousPercentageOfAccount
+    Exit Sub
+End If
+
+If lMatch.SubMatches(8) <> "" Then
+    pQuantityMode = RolloverQuantityModeCurrentValue
+    pQuantityParameter = CDbl(lMatch.SubMatches(9))
+    Exit Sub
+End If
+
+lParameter = lMatch.SubMatches(10)
+If lParameter <> "" Then
+    pQuantityMode = RolloverQuantityModeCurrentProfit
+    pQuantityParameter = CDbl(lParameter)
+    pLotSize = CLng("0" & lMatch.SubMatches(11))
+    Exit Sub
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub processRolloverStrike( _
                 ByVal pValue As String, _
                 ByRef pStrikeMode As RolloverStrikeModes, _
-                ByRef pStrikeValue As Long)
+                ByRef pStrikeValue As Double, _
+                ByRef pStrikeOperator As OptionStrikeSelectionOperators, _
+                ByRef pUnderlyingExchange As String)
 Const ProcName As String = "processRolloverStrike"
 On Error GoTo Err
 
-Const StrikeFormat As String = "^(?:((?:[1-9]\d{1,6})|(\d\d?\d?)(?:%)|<|)(\$))|(\+|-)([1-9]\d{0,1})$"
+Const StrikeFormatCurrentValue As String = "^(\$)$"
+Const StrikeFormatCurrentProfit As String = "^([0-9]\d*)(?:%P)$"
+Const StrikeFormatMonetaryAmount As String = "^([0-9]\d*)(?:\$)$"
+Const StrikeFormatPreviousMonetaryAmount As String = "^(<\$)$"
+Const StrikeFormatIncrement As String = "^([+-][1-9]\d?)$"
+Const StrikeFormatDelta As String = "^(?:(?:(<|<=|>|>=|)(\-?[1-9]\d?)(D)(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
+Const StrikeFormatPreviousDelta As String = "<D"
+Const StrikeFormatDeltaIncrement As String = "^(?:([+-][1-9]\d?)<D)$"
+
+
+Const StrikeFormat As String = StrikeFormatCurrentValue & _
+                            "|" & StrikeFormatCurrentProfit & _
+                            "|" & StrikeFormatMonetaryAmount & _
+                            "|" & StrikeFormatPreviousMonetaryAmount & _
+                            "|" & StrikeFormatIncrement & _
+                            "|" & StrikeFormatDelta & _
+                            "|" & StrikeFormatPreviousDelta & _
+                            "|" & StrikeFormatDeltaIncrement
+
 gRegExp.Pattern = StrikeFormat
 
 Dim lMatches As MatchCollection
@@ -1424,34 +1591,55 @@ Set lMatches = gRegExp.Execute(pValue)
 
 If lMatches.Count <> 1 Then
     gWriteErrorLine "Invalid " & StrikeSwitch & " syntax"
-Else
-    Dim lMatch As Match: Set lMatch = lMatches(0)
+    Exit Sub
+End If
 
-    Dim lAmount As String: lAmount = lMatch.SubMatches(0)
-    Dim lProfitPercentage As Long: lProfitPercentage = lMatch.SubMatches(1)
-    Dim lDollar As String: lDollar = lMatch.SubMatches(2)
-    Dim lSign As String: lSign = lMatch.SubMatches(3)
-    Dim lIncrement As String: lIncrement = lMatch.SubMatches(4)
-    
-    If lDollar = "$" Then
-        If lAmount = "" Then
-            pStrikeMode = RolloverStrikeModeCurrentValue
-            pStrikeValue = 0
-        ElseIf lAmount = "<" Then
-            pStrikeMode = RolloverStrikeModePreviousAmount
-            pStrikeValue = mParameter
-        ElseIf lProfitPercentage <> 0 Then
-            pStrikeMode = RolloverStrikeModeCurrentProfit
-            pStrikeValue = CLng(lProfitPercentage)
-        End If
-    ElseIf lProfitPercentage <> "" Then
-        pStrikeMode = RolloverStrikeModeCurrentProfit
-        pStrikeValue = CLng(lProfitPercentage)
-    Else
-        pStrikeMode = RolloverStrikeModeIncrement
-        pStrikeValue = lIncrement
-        If lSign = "-" Then pStrikeValue = -pStrikeValue
-    End If
+Dim lMatch As Match: Set lMatch = lMatches(0)
+
+If lMatch.SubMatches(0) <> "" Then
+    pStrikeMode = RolloverStrikeModeCurrentValue
+    Exit Sub
+End If
+
+If lMatch.SubMatches(1) <> "" Then
+    pStrikeMode = RolloverStrikeModeCurrentProfit
+    pStrikeValue = CDbl(lMatch.SubMatches(1))
+    Exit Sub
+End If
+
+If lMatch.SubMatches(2) <> "" Then
+    pStrikeMode = RolloverStrikeModeMonetaryAmount
+    pStrikeValue = CDbl(lMatch.SubMatches(2))
+    Exit Sub
+End If
+
+If lMatch.SubMatches(3) <> "" Then
+    pStrikeMode = RolloverStrikeModePreviousMonetaryAmount
+    Exit Sub
+End If
+
+If lMatch.SubMatches(4) <> "" Then
+    pStrikeMode = RolloverStrikeModeIncrement
+    Exit Sub
+End If
+
+If lMatch.SubMatches(7) <> "" Then
+    pStrikeMode = RolloverStrikeModeDelta
+    pStrikeValue = CDbl(lMatch.SubMatches(6))
+    pStrikeOperator = OptionStrikeSelectionOperatorFromString(lMatch.SubMatches(5))
+    pUnderlyingExchange = lMatch.SubMatches(8)
+    Exit Sub
+End If
+
+If lMatch.SubMatches(9) <> "" Then
+    pStrikeMode = RolloverStrikeModePreviousDelta
+    Exit Sub
+End If
+
+If lMatch.SubMatches(10) <> "" Then
+    pStrikeMode = RolloverStrikeModeDeltaIncrement
+    pStrikeValue = CDbl(lMatch.SubMatches(10))
+    Exit Sub
 End If
 
 Exit Sub
@@ -1498,9 +1686,9 @@ ElseIf lMatch.SubMatches(5) = MaxOrderCostSuffix Then
     mBOSpec.AutosizeType = BracketAutosizeMonetaryAmount
     mBOSpec.AutosizeValue = lMatch.SubMatches(4)
 Else
-    mBOSpec.Quantity = lMatch.SubMatches(0)
+    mBOSpec.Quantity = lMatch.SubMatches(4)
     mBOSpec.AutosizeType = BracketAutosizeNone
-    mBOSpec.AutosizeValue = lMatch.SubMatches(4)
+    mBOSpec.AutosizeValue = 0
 End If
 
 If lMatch.SubMatches(6) <> "" Then

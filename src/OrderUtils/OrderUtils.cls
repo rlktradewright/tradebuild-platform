@@ -187,6 +187,24 @@ Public Function NewPriceSpecifier( _
 Set NewPriceSpecifier = gNewPriceSpecifier(pPrice, pPriceType, pOffset, pOffsetType)
 End Function
 
+Public Function OptionStrikeSelectionModeFromString( _
+                ByVal Value As String) As OptionStrikeSelectionModes
+OptionStrikeSelectionModeFromString = gOptionStrikeSelectionModeFromString(Value)
+End Function
+
+Public Function OptionStrikeSelectionModeToString( _
+                ByVal Value As OptionStrikeSelectionModes) As String
+OptionStrikeSelectionModeToString = gOptionStrikeSelectionModeToString(Value)
+End Function
+
+Public Function OptionStrikeSelectionOperatorFromString(ByVal Value As String) As OptionStrikeSelectionOperators
+OptionStrikeSelectionOperatorFromString = gOptionStrikeSelectionOperatorFromString(Value)
+End Function
+
+Public Function OptionStrikeSelectionOperatorToString(ByVal Value As OptionStrikeSelectionOperators) As String
+OptionStrikeSelectionOperatorToString = gOptionStrikeSelectionOperatorToString(Value)
+End Function
+
 Public Function OrderActionFromString(ByVal Value As String) As OrderActions
 Const ProcName As String = "OrderActionFromString"
 On Error GoTo Err
@@ -238,8 +256,15 @@ End Function
 Public Function CreateOptionRolloverSpecification( _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
-                ByVal pStrikeMode As RolloverStrikeModes, _
-                ByVal pStrikeValue As Long, _
+                ByVal pInitialStrikeSelectionMode As OptionStrikeSelectionModes, _
+                ByVal pInitialStrikeParameter As Double, _
+                ByVal pInitialStrikeOperator As OptionStrikeSelectionOperators, _
+                ByVal pRolloverStrikeSelectionMode As RolloverStrikeModes, _
+                ByVal pRolloverStrikeValue As Double, _
+                ByVal pRolloverStrikeOperator As OptionStrikeSelectionOperators, _
+                ByVal pRolloverQuantityMode As RolloverQuantityModes, _
+                ByVal pRolloverQuantityParameter As Double, _
+                ByVal pRolloverQuantityLotSize As Long, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pCloseOrderType As OrderTypes, _
                 ByVal pCloseTimeoutSecs As Long, _
@@ -255,8 +280,15 @@ On Error GoTo Err
 Set CreateOptionRolloverSpecification = gCreateOptionRolloverSpecification( _
                                                 pDays, _
                                                 pTime, _
-                                                pStrikeMode, _
-                                                pStrikeValue, _
+                                                pInitialStrikeSelectionMode, _
+                                                pInitialStrikeParameter, _
+                                                pInitialStrikeOperator, _
+                                                pRolloverStrikeSelectionMode, _
+                                                pRolloverStrikeValue, _
+                                                pRolloverStrikeOperator, _
+                                                pRolloverQuantityMode, _
+                                                pRolloverQuantityParameter, _
+                                                pRolloverQuantityLotSize, _
                                                 pUnderlyingExchangeName, _
                                                 pCloseOrderType, _
                                                 pCloseTimeoutSecs, _

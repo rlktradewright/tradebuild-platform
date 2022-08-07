@@ -359,8 +359,15 @@ End Function
 Public Function gCreateOptionRolloverSpecification( _
                 ByVal pDays As Long, _
                 ByVal pTime As Date, _
-                ByVal pStrikeMode As RolloverStrikeModes, _
-                ByVal pStrikeValue As Long, _
+                ByVal pInitialStrikeSelectionMode As OptionStrikeSelectionModes, _
+                ByVal pInitialStrikeParameter As Double, _
+                ByVal pInitialStrikeOperator As OptionStrikeSelectionOperators, _
+                ByVal pRolloverStrikeSelectionMode As RolloverStrikeModes, _
+                ByVal pRolloverStrikeParameter As Double, _
+                ByVal pRolloverStrikeOperator As OptionStrikeSelectionOperators, _
+                ByVal pRolloverQuantityMode As RolloverQuantityModes, _
+                ByVal pRolloverQuantityParameter As Double, _
+                ByVal pRolloverQuantityLotSize As Long, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pCloseOrderType As OrderTypes, _
                 ByVal pCloseTimeoutSecs As Long, _
@@ -373,21 +380,28 @@ Public Function gCreateOptionRolloverSpecification( _
 Const ProcName As String = "gCreateOptionRolloverSpecification"
 On Error GoTo Err
 
-Set gCreateOptionRolloverSpecification = New RolloverSpecification
-gCreateOptionRolloverSpecification.InitialiseForOption _
-                                                pDays, _
-                                                pTime, _
-                                                pStrikeMode, _
-                                                pStrikeValue, _
-                                                pUnderlyingExchangeName, _
-                                                pCloseOrderType, _
-                                                pCloseTimeoutSecs, _
-                                                pCloseLimitPriceSpec, _
-                                                pCloseTriggerPriceSpec, _
-                                                pEntryOrderType, _
-                                                pEntryTimeoutSecs, _
-                                                pEntryLimitPriceSpec, _
-                                                pEntryTriggerPriceSpec
+Dim lRolloverSpecification As New RolloverSpecification
+Set gCreateOptionRolloverSpecification = lRolloverSpecification. _
+            setDays(pDays). _
+            setTime(pTime). _
+            setInitialStrikeSelectionMode(pInitialStrikeSelectionMode). _
+            setInitialStrikeParameter(pInitialStrikeParameter). _
+            setInitialStrikeOperator(pInitialStrikeOperator). _
+            setRolloverStrikeSelectionMode(pRolloverStrikeSelectionMode). _
+            setRolloverStrikeParameter(pRolloverStrikeParameter). _
+            setRolloverStrikeOperator(pRolloverStrikeOperator). _
+            setRolloverQuantityMode(pRolloverQuantityMode). _
+            setRolloverQuantityParameter(pRolloverQuantityParameter). _
+            setRolloverQuantityLotSize(pRolloverQuantityLotSize). _
+            setUnderlyingExchangeName(pUnderlyingExchangeName). _
+            setCloseOrderType(pCloseOrderType). _
+            setCloseTimeoutSecs(pCloseTimeoutSecs). _
+            setCloseLimitPriceSpec(pCloseLimitPriceSpec). _
+            setCloseTriggerPriceSpec(pCloseTriggerPriceSpec). _
+            setEntryOrderType(pEntryOrderType). _
+            setEntryTimeoutSecs(pEntryTimeoutSecs). _
+            setEntryLimitPriceSpec(pEntryLimitPriceSpec). _
+            setEntryTriggerPriceSpec(pEntryTriggerPriceSpec)
 
 Exit Function
 
@@ -409,18 +423,18 @@ Public Function gCreateRolloverSpecification( _
 Const ProcName As String = "gCreateRolloverSpecification"
 On Error GoTo Err
 
-Set gCreateRolloverSpecification = New RolloverSpecification
-gCreateRolloverSpecification.Initialise _
-            pDays, _
-            pTime, _
-            pCloseOrderType, _
-            pCloseTimeoutSecs, _
-            pCloseLimitPriceSpec, _
-            pCloseTriggerPriceSpec, _
-            pEntryOrderType, _
-            pEntryTimeoutSecs, _
-            pEntryLimitPriceSpec, _
-            pEntryTriggerPriceSpec
+Dim lRolloverSpecification As New RolloverSpecification
+Set gCreateRolloverSpecification = lRolloverSpecification. _
+            setDays(pDays). _
+            setTime(pTime). _
+            setCloseOrderType(pCloseOrderType). _
+            setCloseTimeoutSecs(pCloseTimeoutSecs). _
+            setCloseLimitPriceSpec(pCloseLimitPriceSpec). _
+            setCloseTriggerPriceSpec(pCloseTriggerPriceSpec). _
+            setEntryOrderType(pEntryOrderType). _
+            setEntryTimeoutSecs(pEntryTimeoutSecs). _
+            setEntryLimitPriceSpec(pEntryLimitPriceSpec). _
+            setEntryTriggerPriceSpec(pEntryTriggerPriceSpec)
 
 Exit Function
 
@@ -977,6 +991,22 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
+Public Function gOptionStrikeSelectionModeFromString( _
+                ByVal Value As String) As OptionStrikeSelectionModes
+Select Case UCase$(Value)
+Case ""
+    gOptionStrikeSelectionModeFromString = OptionStrikeSelectionModeNone
+Case "I"
+    gOptionStrikeSelectionModeFromString = OptionStrikeSelectionModeIncrement
+Case "$"
+    gOptionStrikeSelectionModeFromString = OptionStrikeSelectionModeExpenditure
+Case "D"
+    gOptionStrikeSelectionModeFromString = OptionStrikeSelectionModeDelta
+Case Else
+    AssertArgument False, "Value is not a valid option strike selection mode"
+End Select
+End Function
+
 Public Function gOptionStrikeSelectionModeToString( _
                 ByVal Value As OptionStrikeSelectionModes) As String
 Select Case Value
@@ -988,6 +1018,25 @@ Case OptionStrikeSelectionModeExpenditure
     gOptionStrikeSelectionModeToString = "$"
 Case OptionStrikeSelectionModeDelta
     gOptionStrikeSelectionModeToString = "D"
+Case Else
+    AssertArgument False, "Value is not a valid option strike selection mode"
+End Select
+End Function
+
+Public Function gOptionStrikeSelectionOperatorFromString(ByVal Value As String) As OptionStrikeSelectionOperators
+Select Case UCase$(Value)
+Case ""
+    gOptionStrikeSelectionOperatorFromString = OptionStrikeSelectionOperatorNone
+Case "<"
+    gOptionStrikeSelectionOperatorFromString = OptionStrikeSelectionOperatorLT
+Case "<="
+    gOptionStrikeSelectionOperatorFromString = OptionStrikeSelectionOperatorLE
+Case ">"
+    gOptionStrikeSelectionOperatorFromString = OptionStrikeSelectionOperatorGT
+Case ">="
+    gOptionStrikeSelectionOperatorFromString = OptionStrikeSelectionOperatorGE
+Case Else
+    AssertArgument False, "Value is not a valid option strike selection operator"
 End Select
 End Function
 
@@ -1003,8 +1052,9 @@ Case OptionStrikeSelectionOperatorGT
     gOptionStrikeSelectionOperatorToString = ">"
 Case OptionStrikeSelectionOperatorGE
     gOptionStrikeSelectionOperatorToString = ">="
+Case Else
+    AssertArgument False, "Value is not a valid option strike selection operator"
 End Select
-
 End Function
 
 Public Function gOrderActionFromString(ByVal Value As String) As OrderActions

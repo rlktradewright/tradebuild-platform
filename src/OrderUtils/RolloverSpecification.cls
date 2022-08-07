@@ -49,8 +49,17 @@ Private Const ModuleName                            As String = "RolloverSpecifi
 Private mDays                                       As Long
 Private mTime                                       As Date
 
-Private mStrikeMode                                 As RolloverStrikeModes
-Private mStrikeValue                                As Long
+Private mInitialStrikeSelectionMode                 As OptionStrikeSelectionModes
+Private mInitialStrikeParameter                     As Double
+Private mInitialStrikeOperator                      As OptionStrikeSelectionOperators
+
+Private mRolloverStrikeSelectionMode                As RolloverStrikeModes
+Private mRolloverStrikeParameter                    As Double
+Private mRolloverStrikeOperator                     As OptionStrikeSelectionOperators
+
+Private mRolloverQuantityMode                       As RolloverQuantityModes
+Private mRolloverQuantityParameter                  As Double
+Private mRolloverQuantityLotSize                    As Long
 
 Private mUnderlyingExchangeName                     As String
 
@@ -63,6 +72,14 @@ Private mEntryOrderType                             As OrderTypes
 Private mEntryLimitPriceSpec                        As PriceSpecifier
 Private mEntryTriggerPriceSpec                      As PriceSpecifier
 Private mEntryTimeoutSecs                           As Long
+
+Private mStopLossOrderType                          As OrderTypes
+Private mStopLossLimitPriceSpec                     As PriceSpecifier
+Private mStopLossTriggerPriceSpec                   As PriceSpecifier
+
+Private mTargetOrderType                            As OrderTypes
+Private mTargetLimitPriceSpec                       As PriceSpecifier
+Private mTargetTriggerPriceSpec                     As PriceSpecifier
 
 '@================================================================================
 ' Class Event Handlers
@@ -156,20 +173,124 @@ Public Property Let EntryTriggerPriceSpec(ByVal Value As PriceSpecifier)
 Set mEntryTriggerPriceSpec = Value
 End Property
 
-Public Property Get StrikeMode() As RolloverStrikeModes
-StrikeMode = mStrikeMode
+Public Property Get InitialStrikeSelectionMode() As OptionStrikeSelectionModes
+InitialStrikeSelectionMode = mInitialStrikeSelectionMode
 End Property
 
-Public Property Let StrikeMode(ByVal Value As RolloverStrikeModes)
-mStrikeMode = Value
+Public Property Let InitialStrikeSelectionMode(ByVal Value As OptionStrikeSelectionModes)
+mInitialStrikeSelectionMode = Value
 End Property
 
-Public Property Get StrikeValue() As Long
-StrikeValue = mStrikeValue
+Public Property Get InitialStrikeParameter() As Double
+InitialStrikeParameter = mInitialStrikeParameter
 End Property
 
-Public Property Let StrikeValue(ByVal Value As Long)
-mStrikeValue = Value
+Public Property Let InitialStrikeParameter(ByVal Value As Double)
+mInitialStrikeParameter = Value
+End Property
+
+Public Property Get InitialStrikeOperator() As OptionStrikeSelectionOperators
+InitialStrikeOperator = mInitialStrikeOperator
+End Property
+
+Public Property Let InitialStrikeOperator(ByVal Value As OptionStrikeSelectionOperators)
+mInitialStrikeOperator = Value
+End Property
+
+Public Property Get RolloverQuantityLotSize() As Long
+RolloverQuantityLotSize = mRolloverQuantityLotSize
+End Property
+
+Public Property Let RolloverQuantityLotSize(ByVal Value As Long)
+mRolloverQuantityLotSize = Value
+End Property
+
+Public Property Get RolloverQuantityMode() As RolloverQuantityModes
+RolloverQuantityMode = mRolloverQuantityMode
+End Property
+
+Public Property Let RolloverQuantityMode(ByVal Value As RolloverQuantityModes)
+mRolloverQuantityMode = Value
+End Property
+
+Public Property Get RolloverQuantityParameter() As Double
+RolloverQuantityParameter = mRolloverQuantityParameter
+End Property
+
+Public Property Let RolloverQuantityParameter(ByVal Value As Double)
+mRolloverQuantityParameter = Value
+End Property
+
+Public Property Get RolloverStrikeSelectionMode() As RolloverStrikeModes
+RolloverStrikeSelectionMode = mRolloverStrikeSelectionMode
+End Property
+
+Public Property Let RolloverStrikeSelectionMode(ByVal Value As RolloverStrikeModes)
+mRolloverStrikeSelectionMode = Value
+End Property
+
+Public Property Get RolloverStrikeOperator() As OptionStrikeSelectionOperators
+RolloverStrikeOperator = mRolloverStrikeOperator
+End Property
+
+Public Property Let RolloverStrikeOperator(ByVal Value As OptionStrikeSelectionOperators)
+mRolloverStrikeOperator = Value
+End Property
+
+Public Property Get RolloverStrikeParameter() As Double
+RolloverStrikeParameter = mRolloverStrikeParameter
+End Property
+
+Public Property Let RolloverStrikeParameter(ByVal Value As Double)
+mRolloverStrikeParameter = Value
+End Property
+
+Public Property Let StopLossOrderType(ByVal Value As OrderTypes)
+mStopLossOrderType = Value
+End Property
+
+Public Property Get StopLossOrderType() As OrderTypes
+StopLossOrderType = mStopLossOrderType
+End Property
+
+Public Property Get StopLossLimitPriceSpec() As PriceSpecifier
+Set StopLossLimitPriceSpec = mStopLossLimitPriceSpec
+End Property
+
+Public Property Let StopLossLimitPriceSpec(ByVal Value As PriceSpecifier)
+Set mStopLossLimitPriceSpec = Value
+End Property
+
+Public Property Get StopLossTriggerPriceSpec() As PriceSpecifier
+Set StopLossTriggerPriceSpec = mStopLossTriggerPriceSpec
+End Property
+
+Public Property Let StopLossTriggerPriceSpec(ByVal Value As PriceSpecifier)
+Set mStopLossTriggerPriceSpec = Value
+End Property
+
+Public Property Let TargetOrderType(ByVal Value As OrderTypes)
+mTargetOrderType = Value
+End Property
+
+Public Property Get TargetOrderType() As OrderTypes
+TargetOrderType = mTargetOrderType
+End Property
+
+Public Property Get TargetLimitPriceSpec() As PriceSpecifier
+Set TargetLimitPriceSpec = mTargetLimitPriceSpec
+End Property
+
+Public Property Let TargetLimitPriceSpec(ByVal Value As PriceSpecifier)
+Set mTargetLimitPriceSpec = Value
+End Property
+
+Public Property Get TargetTriggerPriceSpec() As PriceSpecifier
+Set TargetTriggerPriceSpec = mTargetTriggerPriceSpec
+End Property
+
+Public Property Let TargetTriggerPriceSpec(ByVal Value As PriceSpecifier)
+Set mTargetTriggerPriceSpec = Value
 End Property
 
 Public Property Let Time(ByVal Value As Date)
@@ -192,61 +313,135 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Initialise( _
-                ByVal pDays As Long, _
-                ByVal pTime As Date, _
-                ByVal pCloseOrderType As OrderTypes, _
-                ByVal pCloseTimeoutSecs As Long, _
-                ByVal pCloseLimitPriceSpec As PriceSpecifier, _
-                ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
-                ByVal pEntryOrderType As OrderTypes, _
-                ByVal pEntryTimeoutSecs As Long, _
-                ByVal pEntryLimitPriceSpec As PriceSpecifier, _
-                ByVal pEntryTriggerPriceSpec As PriceSpecifier)
-mDays = pDays
-mTime = pTime
-mCloseOrderType = pCloseOrderType
-mCloseTimeoutSecs = pCloseTimeoutSecs
-Set mCloseLimitPriceSpec = pCloseLimitPriceSpec
-Set mCloseTriggerPriceSpec = pCloseTriggerPriceSpec
-mEntryOrderType = pEntryOrderType
-mEntryTimeoutSecs = pEntryTimeoutSecs
-Set mEntryLimitPriceSpec = pEntryLimitPriceSpec
-Set mEntryTriggerPriceSpec = pEntryTriggerPriceSpec
-End Sub
+Public Function setCloseOrderType(ByVal Value As OrderTypes) As RolloverSpecification
+mCloseOrderType = Value
+Set setCloseOrderType = Me
+End Function
 
-Friend Sub InitialiseForOption( _
-                ByVal pDays As Long, _
-                ByVal pTime As Date, _
-                ByVal pStrikeMode As RolloverStrikeModes, _
-                ByVal pStrikeValue As Long, _
-                ByVal pUnderlyingExchangeName As String, _
-                ByVal pCloseOrderType As OrderTypes, _
-                ByVal pCloseTimeoutSecs As Long, _
-                ByVal pCloseLimitPriceSpec As PriceSpecifier, _
-                ByVal pCloseTriggerPriceSpec As PriceSpecifier, _
-                ByVal pEntryOrderType As OrderTypes, _
-                ByVal pEntryTimeoutSecs As Long, _
-                ByVal pEntryLimitPriceSpec As PriceSpecifier, _
-                ByVal pEntryTriggerPriceSpec As PriceSpecifier)
-mDays = pDays
-mTime = pTime
-mStrikeMode = pStrikeMode
-mStrikeValue = pStrikeValue
-mUnderlyingExchangeName = pUnderlyingExchangeName
-mCloseOrderType = pCloseOrderType
-mCloseTimeoutSecs = pCloseTimeoutSecs
-Set mCloseLimitPriceSpec = pCloseLimitPriceSpec
-Set mCloseTriggerPriceSpec = pCloseTriggerPriceSpec
-mEntryOrderType = pEntryOrderType
-mEntryTimeoutSecs = pEntryTimeoutSecs
-Set mEntryLimitPriceSpec = pEntryLimitPriceSpec
-Set mEntryTriggerPriceSpec = pEntryTriggerPriceSpec
-End Sub
+Public Function setCloseLimitPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mCloseLimitPriceSpec = Value
+Set setCloseLimitPriceSpec = Me
+End Function
 
-'@================================================================================
-' Helper Functions
-'@================================================================================
+Public Function setCloseTimeoutSecs(ByVal Value As Long) As RolloverSpecification
+mCloseTimeoutSecs = Value
+Set setCloseTimeoutSecs = Me
+End Function
+
+Public Function setCloseTriggerPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mCloseTriggerPriceSpec = Value
+Set setCloseTriggerPriceSpec = Me
+End Function
+
+Public Function setDays(ByVal Value As Long) As RolloverSpecification
+mDays = Value
+Set setDays = Me
+End Function
+
+Public Function setEntryOrderType(ByVal Value As OrderTypes) As RolloverSpecification
+mEntryOrderType = Value
+Set setEntryOrderType = Me
+End Function
+
+Public Function setEntryLimitPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mEntryLimitPriceSpec = Value
+Set setEntryLimitPriceSpec = Me
+End Function
+
+Public Function setEntryTimeoutSecs(ByVal Value As Long) As RolloverSpecification
+mEntryTimeoutSecs = Value
+Set setEntryTimeoutSecs = Me
+End Function
+
+Public Function setEntryTriggerPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mEntryTriggerPriceSpec = Value
+Set setEntryTriggerPriceSpec = Me
+End Function
+
+Public Function setInitialStrikeSelectionMode(ByVal Value As OptionStrikeSelectionModes) As RolloverSpecification
+mInitialStrikeSelectionMode = Value
+Set setInitialStrikeSelectionMode = Me
+End Function
+
+Public Function setInitialStrikeParameter(ByVal Value As Double) As RolloverSpecification
+mInitialStrikeParameter = Value
+Set setInitialStrikeParameter = Me
+End Function
+
+Public Function setInitialStrikeOperator(ByVal Value As OptionStrikeSelectionOperators) As RolloverSpecification
+mInitialStrikeOperator = Value
+Set setInitialStrikeOperator = Me
+End Function
+
+Public Function setRolloverQuantityMode(ByVal Value As RolloverQuantityModes) As RolloverSpecification
+mRolloverQuantityMode = Value
+Set setRolloverQuantityMode = Me
+End Function
+
+Public Function setRolloverQuantityParameter(ByVal Value As Double) As RolloverSpecification
+mRolloverQuantityParameter = Value
+Set setRolloverQuantityParameter = Me
+End Function
+
+Public Function setRolloverQuantityLotSize(ByVal Value As Long) As RolloverSpecification
+mRolloverQuantityLotSize = Value
+Set setRolloverQuantityLotSize = Me
+End Function
+
+Public Function setRolloverStrikeSelectionMode(ByVal Value As RolloverStrikeModes) As RolloverSpecification
+mRolloverStrikeSelectionMode = Value
+Set setRolloverStrikeSelectionMode = Me
+End Function
+
+Public Function setRolloverStrikeOperator(ByVal Value As OptionStrikeSelectionOperators) As RolloverSpecification
+mRolloverStrikeOperator = Value
+Set setRolloverStrikeOperator = Me
+End Function
+
+Public Function setRolloverStrikeParameter(ByVal Value As Double) As RolloverSpecification
+mRolloverStrikeParameter = Value
+Set setRolloverStrikeParameter = Me
+End Function
+
+Public Function setStopLossOrderType(ByVal Value As OrderTypes) As RolloverSpecification
+mStopLossOrderType = Value
+Set setStopLossOrderType = Me
+End Function
+
+Public Function setStopLossLimitPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mStopLossLimitPriceSpec = Value
+Set setStopLossLimitPriceSpec = Me
+End Function
+
+Public Function setStopLossTriggerPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mStopLossTriggerPriceSpec = Value
+Set setStopLossTriggerPriceSpec = Me
+End Function
+
+Public Function setTargetOrderType(ByVal Value As OrderTypes) As RolloverSpecification
+mTargetOrderType = Value
+Set setTargetOrderType = Me
+End Function
+
+Public Function setTargetLimitPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mTargetLimitPriceSpec = Value
+Set setTargetLimitPriceSpec = Me
+End Function
+
+Public Function setTargetTriggerPriceSpec(ByVal Value As PriceSpecifier) As RolloverSpecification
+Set mTargetTriggerPriceSpec = Value
+Set setTargetTriggerPriceSpec = Me
+End Function
+
+Public Function setTime(ByVal Value As Date) As RolloverSpecification
+mTime = Value
+Set setTime = Me
+End Function
+
+Public Function setUnderlyingExchangeName(ByVal Value As String) As RolloverSpecification
+mUnderlyingExchangeName = Value
+Set setUnderlyingExchangeName = Me
+End Function
 
 Friend Function ToJSON() As String
 Dim jb As JSONBuilder
@@ -261,8 +456,17 @@ jb.EncodeNameAndValue "Days", mDays, 0
 
 jb.EncodeNameAndValue "Time", CDbl(mTime), 0
 
-jb.EncodeNameAndValue "StrikeMode", mStrikeMode, RolloverStrikeModeNone
-jb.EncodeNameAndValue "StrikeValue", mStrikeValue, 0
+jb.EncodeNameAndValue "InitialStrikeSelectionMode", mInitialStrikeSelectionMode, OptionStrikeSelectionModes.OptionStrikeSelectionModeNone
+jb.EncodeNameAndValue "InitialStrikeParameter", mInitialStrikeParameter, 0
+jb.EncodeNameAndValue "InitialStrikeOperator", mInitialStrikeOperator, OptionStrikeSelectionOperatorNone
+
+jb.EncodeNameAndValue "RolloverStrikeSelectionMode", mRolloverStrikeSelectionMode, RolloverStrikeModeNone
+jb.EncodeNameAndValue "RolloverStrikeParameter", mRolloverStrikeParameter, 0
+jb.EncodeNameAndValue "RolloverStrikeOperator", mRolloverStrikeOperator, OptionStrikeSelectionOperatorNone
+
+jb.EncodeNameAndValue "RolloverQuantityMode", mRolloverQuantityMode, RolloverQuantityModes.RolloverQuantityModeNone
+jb.EncodeNameAndValue "RolloverQuantityParameter", mRolloverQuantityParameter, 0
+jb.EncodeNameAndValue "RolloverQuantityLotSize", mRolloverQuantityLotSize, 0
 
 jb.EncodeNameAndValue "UnderlyingExchangeName", mUnderlyingExchangeName, ""
 
@@ -282,10 +486,26 @@ If Not gIsNullPriceSpecifier(mEntryLimitPriceSpec) Then _
 If Not gIsNullPriceSpecifier(mEntryTriggerPriceSpec) Then _
     jb.EncodeNameAndValue "EntryTriggerPriceSpec", mEntryTriggerPriceSpec, Nothing
 
+jb.EncodeNameAndValue "StopLossOrderType", mStopLossOrderType, OrderTypeNone
+If Not gIsNullPriceSpecifier(mStopLossLimitPriceSpec) Then _
+    jb.EncodeNameAndValue "StopLossLimitPriceSpec", mStopLossLimitPriceSpec, Nothing
+If Not gIsNullPriceSpecifier(mStopLossTriggerPriceSpec) Then _
+    jb.EncodeNameAndValue "StopLossTriggerPriceSpec", mStopLossTriggerPriceSpec, Nothing
+
+jb.EncodeNameAndValue "TargetOrderType", mTargetOrderType, OrderTypeNone
+If Not gIsNullPriceSpecifier(mTargetLimitPriceSpec) Then _
+    jb.EncodeNameAndValue "TargetLimitPriceSpec", mTargetLimitPriceSpec, Nothing
+If Not gIsNullPriceSpecifier(mTargetTriggerPriceSpec) Then _
+    jb.EncodeNameAndValue "TargetTriggerPriceSpec", mTargetTriggerPriceSpec, Nothing
+
 jb.EndObject
 
 ToJSON = jb.JSONString
 End Function
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
 
 
 

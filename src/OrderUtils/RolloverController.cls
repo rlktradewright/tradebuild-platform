@@ -70,7 +70,10 @@ Private mNextContract                               As Contract
 Private WithEvents mNextBracketOrder                As BracketOrder
 Attribute mNextBracketOrder.VB_VarHelpID = -1
 
-Private mMaxExpenditure                             As Long
+Private mStrikeSelectionMode                        As OptionStrikeSelectionModes
+Private mStrikeParameter                            As Double
+Private mStrikeOperator                             As OptionStrikeSelectionOperators
+
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -174,7 +177,7 @@ Case RolloverControllerStateWaitingForOrderContext
         setState RolloverControllerStateCreatingNextBracketOrder
     End If
 Case RolloverControllerStateCreatingNextBracketOrder
-    Set mNextBracketOrder = createNextBracketOrder(mUseMarketEntry)
+    Set mNextBracketOrder = createNextBracketOrder(mUseMarketEntry, mNextContract.Specifier)
     If Not mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
         gLog mBracketOrder.Key & _
                 ": Waiting for next order context: " & _
@@ -464,66 +467,31 @@ End Sub
 '@================================================================================
 
 Private Function createNextBracketOrder( _
-                ByVal pUseMarketOrder As Boolean) As BracketOrder
+                ByVal pUseMarketOrder As Boolean, _
+                ByVal pCurrentContractSpec As IContractSpecifier) As BracketOrder
 Const ProcName As String = "createNextBracketOrder"
 On Error GoTo Err
 
-With mBracketOrder.RolloverSpecification
-    Dim lEntryOrder As IOrder
-    If Not pUseMarketOrder Then
-        Set lEntryOrder = mNextOrderContext.CreateEntryOrder( _
-                                            .EntryOrderType, _
-                                            .EntryLimitPriceSpec, _
-                                            .EntryTriggerPriceSpec, _
-                                            mBracketOrder.EntryOrder.IgnoreRegularTradingHours)
-    Else
-        Set lEntryOrder = mNextOrderContext.CreateEntryOrder( _
-                                            OrderTypeMarket, _
-                                            gNewPriceSpecifier(), _
-                                            gNewPriceSpecifier(), _
-                                            mBracketOrder.EntryOrder.IgnoreRegularTradingHours)
-    End If
-End With
+Dim lEntryOrder As IOrder
+Set lEntryOrder = createNextEntryOrder(pUseMarketOrder)
 
 Dim lStopLossOrder As IOrder
-Dim lTargetOrder As IOrder
-With mBracketOrder
-    If Not .StopLossOrder Is Nothing Then
-        Set lStopLossOrder = mNextOrderContext.CreateStopLossOrder( _
-                                        .StopLossOrder.OrderType, _
-                                        gNewPriceSpecifier(.StopLossOrder.LimitPriceSpec.Price, _
-                                                            "", _
-                                                            .StopLossOrder.LimitPriceSpec.PriceType, _
-                                                            .StopLossOrder.LimitPriceSpec.Offset, _
-                                                            .StopLossOrder.LimitPriceSpec.OffsetType), _
-                                        gNewPriceSpecifier(.StopLossOrder.TriggerPriceSpec.Price, _
-                                                            "", _
-                                                            .StopLossOrder.TriggerPriceSpec.PriceType, _
-                                                            .StopLossOrder.TriggerPriceSpec.Offset, _
-                                                            .StopLossOrder.TriggerPriceSpec.OffsetType), _
-                                        .StopLossOrder.IgnoreRegularTradingHours)
-    End If
-    If Not .TargetOrder Is Nothing Then
-        Set lTargetOrder = mNextOrderContext.CreateTargetOrder( _
-                                        .TargetOrder.OrderType, _
-                                        gNewPriceSpecifier(.TargetOrder.LimitPriceSpec.Price, _
-                                                            "", _
-                                                            .TargetOrder.LimitPriceSpec.PriceType, _
-                                                            .TargetOrder.LimitPriceSpec.Offset, _
-                                                            .TargetOrder.LimitPriceSpec.OffsetType), _
-                                        gNewPriceSpecifier(.TargetOrder.TriggerPriceSpec.Price, _
-                                                            "", _
-                                                            .TargetOrder.TriggerPriceSpec.PriceType, _
-                                                            .TargetOrder.TriggerPriceSpec.Offset, _
-                                                            .TargetOrder.TriggerPriceSpec.OffsetType), _
-                                        .TargetOrder.IgnoreRegularTradingHours)
-    End If
-End With
+Set lStopLossOrder = createNextStoplossOrder
 
-Dim lBo As IBracketOrder
+Dim lTargetOrder As IOrder
+Set lTargetOrder = createNextTargetOrder
+
+Dim lAutosizeType As BracketAutosizeTypes
+Dim lAutosizeValue As Double
+Dim lQuantity As Long
+Dim lLotSize As Long
+
+getQuantityParameters pCurrentContractSpec, lAutosizeType, lAutosizeValue, lQuantity, lLotSize
+
+Dim lBo As BracketOrder
 Set lBo = mNextOrderContext.CreateBracketOrder( _
                 mBracketOrder.EntryOrder.Action, _
-                mBracketOrder.EntryOrder.QuantityFilled, _
+                lQuantity, _
                 lEntryOrder, _
                 lStopLossOrder, _
                 lTargetOrder)
@@ -540,39 +508,52 @@ If Not lBo.TargetOrder Is Nothing Then
     lBo.TargetReason = mBracketOrder.TargetReason
 End If
 
-If mNextContract.Specifier.SecType = SecTypeFuture Then
-    lBo.RolloverSpecification = mBracketOrder.RolloverSpecification
-Else
-    With mBracketOrder.RolloverSpecification
-        Dim lStrikeValue As Long
-        If .StrikeMode = RolloverStrikeModeCurrentProfit Or _
-            .StrikeMode = RolloverStrikeModeCurrentValue Or _
-            .StrikeMode = RolloverStrikeModePreviousAmount _
-        Then
-            lStrikeValue = mMaxExpenditure
-        ElseIf .StrikeMode = RolloverStrikeModeAmount Or _
-            .StrikeMode = RolloverStrikeModeIncrement _
-        Then
-            lStrikeValue = .StrikeValue
-        End If
-        lBo.RolloverSpecification = gCreateOptionRolloverSpecification( _
-                                            .Days, _
-                                            .Time, _
-                                            .StrikeMode, _
-                                            lStrikeValue, _
-                                            .UnderlyingExchangeName, _
-                                            .CloseOrderType, _
-                                            .CloseTimeoutSecs, _
-                                            .CloseLimitPriceSpec, _
-                                            .CloseTriggerPriceSpec, _
-                                            .EntryOrderType, _
-                                            .EntryTimeoutSecs, _
-                                            .EntryLimitPriceSpec, _
-                                            .EntryTriggerPriceSpec)
-    End With
+If lAutosizeType <> BracketAutosizeNone Then
+    lBo.AutosizeType = lAutosizeType
+    lBo.AutosizeValue = lAutosizeValue
+    lBo.LotSize = lLotSize
 End If
+
+lBo.RolloverSpecification = createNextRolloverSpec
+
 gLog lBo.Key & ": Created next bracket order: " & lBo.Contract.Specifier.ToString, ProcName, ModuleName
 Set createNextBracketOrder = lBo
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createNextEntryOrder( _
+                ByVal pUseMarketOrder As Boolean) As IOrder
+Const ProcName As String = "createNextEntryOrder"
+On Error GoTo Err
+
+Dim lPrevEntryOrder As IOrder
+Set lPrevEntryOrder = mBracketOrder.EntryOrder
+
+With mBracketOrder.RolloverSpecification
+    If .EntryOrderType = OrderTypeNone Then
+        Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                            lPrevEntryOrder.OrderType, _
+                                            .EntryLimitPriceSpec, _
+                                            .EntryTriggerPriceSpec, _
+                                            lPrevEntryOrder.IgnoreRegularTradingHours)
+    ElseIf Not pUseMarketOrder Then
+        Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                            .EntryOrderType, _
+                                            .EntryLimitPriceSpec, _
+                                            .EntryTriggerPriceSpec, _
+                                            lPrevEntryOrder.IgnoreRegularTradingHours)
+    Else
+        Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                            OrderTypeMarket, _
+                                            gNewPriceSpecifier(), _
+                                            gNewPriceSpecifier(), _
+                                            lPrevEntryOrder.IgnoreRegularTradingHours)
+    End If
+End With
 
 Exit Function
 
@@ -614,12 +595,118 @@ Else
                                     mOrderManager.OrderSubmitterFactory, _
                                     mScopeName, _
                                     mBracketOrder.GroupName, _
-                                    mBracketOrder.IsSimulated)
+                                    mBracketOrder.IsSimulated, _
+                                    , _
+                                    mOrderContext.AccountDataProvider, _
+                                    mOrderContext.CurrencyConverter)
     
     gLog "Created next position manager: name=" & lNextPm.Name, ProcName, ModuleName
 End If
 
 Set createNextPositionManager = lNextPm
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createNextRolloverSpec() As RolloverSpecification
+Const ProcName As String = "createNextRolloverSpec"
+On Error GoTo Err
+
+If mNextContract.Specifier.SecType = SecTypeFuture Then
+    Set createNextRolloverSpec = mBracketOrder.RolloverSpecification
+Else
+    With mBracketOrder.RolloverSpecification
+        Dim lInitialStrikeParameter As Double
+        
+        Select Case .RolloverStrikeSelectionMode
+        Case RolloverStrikeModeNone, _
+                RolloverStrikeModeAsPrevious
+            lInitialStrikeParameter = .InitialStrikeParameter
+        Case RolloverStrikeModeCurrentValue, _
+                RolloverStrikeModeCurrentProfit, _
+                RolloverStrikeModePreviousMonetaryAmount
+            lInitialStrikeParameter = mStrikeParameter
+        Case RolloverStrikeModeMonetaryAmount, _
+                RolloverStrikeModeIncrement
+            lInitialStrikeParameter = .RolloverStrikeParameter
+        Case RolloverStrikeModeDelta
+            lInitialStrikeParameter = .RolloverStrikeParameter
+        Case RolloverStrikeModePreviousDelta
+            lInitialStrikeParameter = mStrikeParameter
+        Case RolloverStrikeModeDeltaIncrement
+            lInitialStrikeParameter = mStrikeParameter
+        End Select
+                
+        Set createNextRolloverSpec = gCreateOptionRolloverSpecification( _
+                                            .Days, _
+                                            .Time, _
+                                            .InitialStrikeSelectionMode, _
+                                            lInitialStrikeParameter, _
+                                            .InitialStrikeOperator, _
+                                            .RolloverStrikeSelectionMode, _
+                                            .RolloverStrikeParameter, _
+                                            .RolloverStrikeSelectionMode, _
+                                            .RolloverQuantityMode, _
+                                            .RolloverQuantityParameter, _
+                                            .RolloverQuantityLotSize, _
+                                            .UnderlyingExchangeName, _
+                                            .CloseOrderType, _
+                                            .CloseTimeoutSecs, _
+                                            .CloseLimitPriceSpec, _
+                                            .CloseTriggerPriceSpec, _
+                                            .EntryOrderType, _
+                                            .EntryTimeoutSecs, _
+                                            .EntryLimitPriceSpec, _
+                                            .EntryTriggerPriceSpec)
+        createNextRolloverSpec.setStopLossLimitPriceSpec .StopLossLimitPriceSpec
+        createNextRolloverSpec.setStopLossTriggerPriceSpec .StopLossTriggerPriceSpec
+        createNextRolloverSpec.setTargetLimitPriceSpec .TargetLimitPriceSpec
+        createNextRolloverSpec.setTargetTriggerPriceSpec .TargetTriggerPriceSpec
+    End With
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createNextStoplossOrder() As IOrder
+Const ProcName As String = "createNextStoplossOrder"
+On Error GoTo Err
+
+If mBracketOrder.StopLossOrder Is Nothing Then Exit Function
+
+With mBracketOrder.RolloverSpecification
+    Set createNextStoplossOrder = mNextOrderContext.CreateStopLossOrder( _
+                                    .StopLossOrderType, _
+                                    .StopLossLimitPriceSpec, _
+                                    .StopLossTriggerPriceSpec, _
+                                    mBracketOrder.StopLossOrder.IgnoreRegularTradingHours)
+End With
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function createNextTargetOrder() As IOrder
+Const ProcName As String = "createNextTargetOrder"
+On Error GoTo Err
+
+If mBracketOrder.TargetOrder Is Nothing Then Exit Function
+
+With mBracketOrder.RolloverSpecification
+    Set createNextTargetOrder = mNextOrderContext.CreateTargetOrder( _
+                                    .TargetOrderType, _
+                                    .TargetLimitPriceSpec, _
+                                    .TargetTriggerPriceSpec, _
+                                    mBracketOrder.TargetOrder.IgnoreRegularTradingHours)
+End With
 
 Exit Function
 
@@ -693,69 +780,90 @@ Private Function findNextContractForOption( _
 Const ProcName As String = "findNextContractForOption"
 On Error GoTo Err
 
-Dim lStrikeIncrement As Double
-Dim lMultiplier As Double: lMultiplier = pCurrentContractSpec.Multiplier
+Dim lRolloverSpec As RolloverSpecification
+Set lRolloverSpec = mBracketOrder.RolloverSpecification
 
-Dim lBidPrice As Double
-Dim lAskPrice As Double
-Dim lCurrentValue As Long
-If mBracketOrder.RolloverSpecification.StrikeMode = RolloverStrikeModeCurrentValue Or _
-    mBracketOrder.RolloverSpecification.StrikeMode = RolloverStrikeModeCurrentProfit _
-Then
-    lBidPrice = mOrderContext.DataSource.CurrentTick(TickTypeBid).Price
-    lAskPrice = mOrderContext.DataSource.CurrentTick(TickTypeAsk).Price
+Dim lStrikeSelectionMode As RolloverStrikeModes
+lStrikeSelectionMode = lRolloverSpec.RolloverStrikeSelectionMode
 
-    If mBracketOrder.LongPosition Then
-        lCurrentValue = CLng(lBidPrice * lMultiplier)
-    Else
-        lCurrentValue = CLng(lAskPrice * lMultiplier)
-    End If
-End If
-
-Dim lCumBuyPrice As Double: lCumBuyPrice = mBracketOrder.CumBuyPrice
-Dim lCumSellPrice As Double: lCumSellPrice = mBracketOrder.CumSellPrice
-Dim lContractsTraded As Long: lContractsTraded = mBracketOrder.EntryOrder.QuantityFilled
-
-Dim lStrikeValue As Long: lStrikeValue = mBracketOrder.RolloverSpecification.StrikeValue
-Select Case mBracketOrder.RolloverSpecification.StrikeMode
-Case RolloverStrikeModeNone
-    mMaxExpenditure = 0
+Select Case lStrikeSelectionMode
+Case RolloverStrikeModeNone, _
+        RolloverStrikeModeAsPrevious
+    mStrikeSelectionMode = lRolloverSpec.InitialStrikeSelectionMode
+    mStrikeParameter = lRolloverSpec.InitialStrikeParameter
+    mStrikeOperator = lRolloverSpec.InitialStrikeOperator
+    gLog "Rollover strike mode as previous: " & _
+        gOptionStrikeSelectionModeToString(mStrikeSelectionMode) & _
+        "; parameter: " & mStrikeParameter & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        ProcName, ModuleName
 Case RolloverStrikeModeCurrentValue
-    mMaxExpenditure = lCurrentValue
+    mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
+    mStrikeParameter = getCurrentValue(pCurrentContractSpec.Multiplier)
+    mStrikeOperator = lRolloverSpec.InitialStrikeOperator
     gLog "Rollover strike mode current value" & _
-        "; max expenditure: " & mMaxExpenditure, _
+        "; max expenditure: " & mStrikeParameter & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeCurrentProfit
-    Dim lPrice As Double
-    lPrice = IIf(mBracketOrder.LongPosition, lBidPrice, lAskPrice)
+    mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
+    mStrikeOperator = lRolloverSpec.InitialStrikeOperator
     
-    Dim lProfit As Long
-    lProfit = CLng((lCumSellPrice + mBracketOrder.Size * lPrice - lCumBuyPrice) * lMultiplier / lContractsTraded)
-    
+    Dim lValue As Long: lValue = getCurrentValue(pCurrentContractSpec.Multiplier)
+    Dim lProfit As Long: lProfit = getCurrentProfit(pCurrentContractSpec.Multiplier)
     If lProfit <= 0 Then
-        mMaxExpenditure = lCurrentValue
+        mStrikeParameter = lValue
     Else
-        mMaxExpenditure = CLng(lCurrentValue - (lStrikeValue * lProfit) / 100)
+        mStrikeParameter = CLng(lValue - (lValue * lProfit) / 100)
     End If
     gLog "Rollover strike mode current profit" & _
-        "; max expenditure: " & mMaxExpenditure & _
-        "; value: " & lCurrentValue & _
-        "; profit: " & lProfit, _
+        "; max expenditure: " & mStrikeParameter & _
+        "; value: " & lValue & _
+        "; profit: " & lProfit & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
-Case RolloverStrikeModeAmount
-    mMaxExpenditure = lStrikeValue
+Case RolloverStrikeModeMonetaryAmount
+    mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
+    mStrikeParameter = lRolloverSpec.RolloverStrikeParameter
+    mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
     gLog "Rollover strike mode amount" & _
-        "; max expenditure: " & mMaxExpenditure, _
+        "; max expenditure: " & mStrikeParameter & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
-Case RolloverStrikeModePreviousAmount
-    mMaxExpenditure = lStrikeValue
+Case RolloverStrikeModePreviousMonetaryAmount
+    mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
+    mStrikeParameter = lRolloverSpec.InitialStrikeParameter
+    mStrikeOperator = lRolloverSpec.InitialStrikeOperator
     gLog "Rollover strike mode previous amount" & _
-        "; max expenditure: " & mMaxExpenditure, _
+        "; max expenditure: " & mStrikeParameter & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeIncrement
-    lStrikeIncrement = lStrikeValue
-    gLog "Rollover strike mode increment" & _
-        "; max increment by : " & lStrikeIncrement, _
+    Assert False, "Rollover via strike increment not supported", ErrorCodes.ErrUnsupportedOperationException
+Case RolloverStrikeModeDelta
+    mStrikeSelectionMode = OptionStrikeSelectionModeDelta
+    mStrikeParameter = lRolloverSpec.RolloverStrikeParameter
+    mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
+    gLog "Rollover strike mode delta" & _
+        "; delta: " & mStrikeParameter & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        ProcName, ModuleName
+Case RolloverStrikeModePreviousDelta
+    mStrikeSelectionMode = OptionStrikeSelectionModeDelta
+    mStrikeParameter = lRolloverSpec.InitialStrikeParameter
+    mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
+    gLog "Rollover strike mode previous delta" & _
+        "; delta: " & mStrikeParameter & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        ProcName, ModuleName
+Case RolloverStrikeModeDeltaIncrement
+    mStrikeSelectionMode = OptionStrikeSelectionModeDelta
+    mStrikeParameter = lRolloverSpec.InitialStrikeParameter + _
+                        lRolloverSpec.RolloverStrikeParameter
+    mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
+    gLog "Rollover strike mode previous delta" & _
+        "; delta: " & mStrikeParameter & _
+        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 End Select
 
@@ -767,7 +875,7 @@ Set lNextContractSpec = CreateContractSpecifier("", _
                             pCurrentContractSpec.CurrencyCode, _
                             pExpiryOffset, _
                             pCurrentContractSpec.Multiplier, _
-                            IIf(mBracketOrder.RolloverSpecification.StrikeMode = RolloverStrikeModeIncrement, _
+                            IIf(mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode = RolloverStrikeModeIncrement, _
                                 pCurrentContractSpec.Strike, _
                                 0), _
                             pCurrentContractSpec.Right)
@@ -776,9 +884,9 @@ Set findNextContractForOption = gGetOptionContract( _
                                     lNextContractSpec, _
                                     mBracketOrder.EntryOrder.Action, _
                                     mOrderManager.ContractStorePrimary, _
-                                    OptionStrikeSelectionModeExpenditure, _
-                                    mMaxExpenditure, _
-                                    OptionStrikeSelectionOperatorLT, _
+                                    mStrikeSelectionMode, _
+                                    mStrikeParameter, _
+                                    mStrikeOperator, _
                                     mBracketOrder.RolloverSpecification.UnderlyingExchangeName, _
                                     mOrderManager.MarketDataManager, _
                                     Nothing, _
@@ -822,6 +930,104 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub getQuantityParameters( _
+                ByVal pCurrentContractSpec As IContractSpecifier, _
+                ByRef pAutosizeType As BracketAutosizeTypes, _
+                ByRef pAutosizeValue As Double, _
+                ByRef pQuantity As Long, _
+                ByRef pLotSize As Long)
+Const ProcName As String = "getQuantityParameters"
+On Error GoTo Err
+
+Dim lRolloverSpec As RolloverSpecification
+Set lRolloverSpec = mBracketOrder.RolloverSpecification
+
+Select Case lRolloverSpec.RolloverQuantityMode
+Case RolloverQuantityModeNone, _
+        RolloverQuantityModeAsPrevious
+    If mBracketOrder.AutosizeType = BracketAutosizeNone Then
+        pAutosizeType = BracketAutosizeNone
+        pQuantity = mBracketOrder.EntryOrder.QuantityFilled
+    Else
+        pAutosizeType = mBracketOrder.AutosizeType
+        pAutosizeValue = mBracketOrder.AutosizeValue
+        pLotSize = mBracketOrder.LotSize
+        pQuantity = 1
+    End If
+Case RolloverQuantityModeNumber
+    pQuantity = lRolloverSpec.RolloverQuantityParameter
+Case RolloverQuantityModePreviousNumber
+    pQuantity = mBracketOrder.EntryOrder.QuantityFilled
+Case RolloverQuantityModeMonetaryAmount
+    pAutosizeType = BracketAutosizeMonetaryAmount
+    pAutosizeValue = lRolloverSpec.RolloverQuantityParameter
+    pLotSize = lRolloverSpec.RolloverQuantityLotSize
+Case RolloverQuantityModePreviousMonetaryAmount
+    pAutosizeType = BracketAutosizeMonetaryAmount
+    pAutosizeValue = mBracketOrder.AutosizeValue
+    pLotSize = mBracketOrder.LotSize
+Case RolloverQuantityModePercentageOfAccount
+    pAutosizeType = BracketAutosizePercentOfAccount
+    pAutosizeValue = lRolloverSpec.RolloverQuantityParameter
+    pLotSize = lRolloverSpec.RolloverQuantityLotSize
+Case RolloverQuantityModePreviousPercentageOfAccount
+    pAutosizeType = BracketAutosizePercentOfAccount
+    pAutosizeValue = mBracketOrder.AutosizeValue
+    pLotSize = mBracketOrder.LotSize
+Case RolloverQuantityModeCurrentValue
+    pAutosizeType = BracketAutosizeMonetaryAmount
+    pAutosizeValue = getCurrentValue(pCurrentContractSpec.Multiplier)
+    pLotSize = lRolloverSpec.RolloverQuantityLotSize
+Case RolloverQuantityModeCurrentProfit
+    pAutosizeType = BracketAutosizeMonetaryAmount
+    pAutosizeValue = getCurrentValue(pCurrentContractSpec.Multiplier) - _
+                    CLng(lRolloverSpec.RolloverQuantityParameter * _
+                        getCurrentProfit(pCurrentContractSpec.Multiplier) / 100#)
+    pLotSize = lRolloverSpec.RolloverQuantityLotSize
+End Select
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Function getCurrentValue(ByVal pMultiplier As Double) As Long
+Const ProcName As String = "getCurrentValue"
+On Error GoTo Err
+
+getCurrentValue = CLng(getCurrentPrice * pMultiplier)
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getCurrentProfit(ByVal pMultiplier As Double) As Long
+Dim lCumBuyPrice As Double: lCumBuyPrice = mBracketOrder.CumBuyPrice
+Dim lCumSellPrice As Double: lCumSellPrice = mBracketOrder.CumSellPrice
+Dim lContractsTraded As Long: lContractsTraded = mBracketOrder.EntryOrder.QuantityFilled
+getCurrentProfit = CLng((lCumSellPrice + mBracketOrder.Size * getCurrentPrice - lCumBuyPrice) * pMultiplier / lContractsTraded)
+End Function
+
+Private Function getCurrentPrice() As Double
+Const ProcName As String = "getCurrentPrice"
+On Error GoTo Err
+
+If mBracketOrder.LongPosition Then
+    getCurrentPrice = mOrderContext.DataSource.CurrentTick(TickTypeBid).Price
+Else
+    getCurrentPrice = mOrderContext.DataSource.CurrentTick(TickTypeAsk).Price
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub initiateCloseout()
 Const ProcName As String = "initiateCloseout"
 On Error GoTo Err
@@ -831,6 +1037,7 @@ With mBracketOrder.RolloverSpecification
     lCloseoutSpec.ForceCloseAfterSecs = .CloseTimeoutSecs
     lCloseoutSpec.LimitPriceSpec = .CloseLimitPriceSpec
     lCloseoutSpec.OrderType = .CloseOrderType
+    If lCloseoutSpec.OrderType = OrderTypeNone Then lCloseoutSpec.OrderType = OrderTypeMarket
     lCloseoutSpec.OutsideRTH = False
     lCloseoutSpec.TriggerPriceSpec = .CloseTriggerPriceSpec
 End With
@@ -846,8 +1053,8 @@ Private Function orderContextHasBidAndAsk() As Boolean
 Const ProcName As String = "orderContextHasBidAndAsk"
 On Error GoTo Err
 
-If mBracketOrder.RolloverSpecification.StrikeMode <> RolloverStrikeModeCurrentValue And _
-    mBracketOrder.RolloverSpecification.StrikeMode <> RolloverStrikeModeCurrentProfit _
+If mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode <> RolloverStrikeModeCurrentValue And _
+    mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode <> RolloverStrikeModeCurrentProfit _
 Then
     orderContextHasBidAndAsk = True
 ElseIf Not mOrderContext.DataSource.HasCurrentTick(TickTypeBid) Then

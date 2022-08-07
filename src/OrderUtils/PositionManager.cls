@@ -648,6 +648,10 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get AccountDataProvider() As IAccountDataProvider
+Set AccountDataProvider = mAccountDataProvider
+End Property
+
 Public Property Get ApplicationIndex() As Long
 ApplicationIndex = mApplicationIndex
 End Property
@@ -680,6 +684,10 @@ End Property
 
 Public Property Get ContractName() As String
 ContractName = mContractName
+End Property
+
+Public Property Get CurrencyConverter() As ICurrencyConverter
+Set CurrencyConverter = mCurrencyConverter
 End Property
 
 Public Property Get DataSource() As IMarketDataSource
@@ -752,6 +760,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let FixedAccountBalance(ByVal Value As Double)
+mSummary.FixedAccountBalance = Value
 mOrderContexts.FixedAccountBalance = Value
 End Property
 

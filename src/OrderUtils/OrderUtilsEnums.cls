@@ -341,13 +341,39 @@ Public Enum RolloverControllerStates
     RolloverControllerStateCancellingNextBracketOrder
 End Enum
 
+Public Enum RolloverQuantityModes
+'    - number                                       45
+'    - previous number                              <
+'    - currency amount                              1000$
+'    - previous currency amount                     <$
+'    - percentage of funds                          5.5%
+'    - previous percentage of funds                 <%
+'    - current value                                =$
+'    - current value less percentage of profits     =45%P$
+    RolloverQuantityModeNone
+    RolloverQuantityModeAsPrevious
+    RolloverQuantityModeNumber
+    RolloverQuantityModePreviousNumber
+    RolloverQuantityModeMonetaryAmount
+    RolloverQuantityModePreviousMonetaryAmount
+    RolloverQuantityModePercentageOfAccount
+    RolloverQuantityModePreviousPercentageOfAccount
+    RolloverQuantityModeCurrentValue
+    RolloverQuantityModeCurrentProfit
+
+End Enum
+
 Public Enum RolloverStrikeModes
     RolloverStrikeModeNone
+    RolloverStrikeModeAsPrevious
     RolloverStrikeModeCurrentValue
     RolloverStrikeModeCurrentProfit
-    RolloverStrikeModeAmount
-    RolloverStrikeModePreviousAmount
+    RolloverStrikeModeMonetaryAmount
+    RolloverStrikeModePreviousMonetaryAmount
     RolloverStrikeModeIncrement
+    RolloverStrikeModeDelta
+    RolloverStrikeModePreviousDelta
+    RolloverStrikeModeDeltaIncrement
 End Enum
     
 Public Enum TickRoundingModes

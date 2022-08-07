@@ -60,6 +60,10 @@ Private mStopReason                                 As String
 
 Private mSize                                       As Long
 
+Private mLotSize                                    As Long
+Private mAutosizeValue                              As Double
+Private mAutosizeType                               As BracketAutosizeTypes
+
 Private mCancelPrice                                As Double
 Private mCancelTime                                 As Date
 
@@ -96,6 +100,10 @@ Private mCloseoutSpecifier                          As CloseoutSpecifier
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+mLotSize = 1
+End Sub
+
 '@================================================================================
 ' IJSONAble Interface Members
 '@================================================================================
@@ -111,6 +119,28 @@ End Function
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Let AutosizeType(ByVal Value As BracketAutosizeTypes)
+If mAutosizeType = Value Then Exit Property
+setDirty
+mAutosizeType = Value
+mDiff.SetProperty "AutosizeType", Value
+End Property
+
+Public Property Get AutosizeType() As BracketAutosizeTypes
+AutosizeType = mAutosizeType
+End Property
+
+Public Property Let AutosizeValue(ByVal Value As Double)
+If mAutosizeValue = Value Then Exit Property
+setDirty
+mAutosizeValue = Value
+mDiff.SetProperty "AutosizeValue", Value
+End Property
+
+Public Property Get AutosizeValue() As Double
+AutosizeValue = mAutosizeValue
+End Property
 
 Public Property Let CancelPrice(ByVal Value As Double)
 If mCancelPrice = Value Then Exit Property
@@ -263,6 +293,17 @@ End Property
 
 Public Property Get Key() As String
 Key = mKey
+End Property
+
+Public Property Let LotSize(ByVal Value As Long)
+If mLotSize = Value Then Exit Property
+setDirty
+mLotSize = Value
+mDiff.SetProperty "LotSize", Value
+End Property
+
+Public Property Get LotSize() As Long
+LotSize = mLotSize
 End Property
 
 Public Property Let PeggedOrdersProcessed(ByVal Value As Boolean)

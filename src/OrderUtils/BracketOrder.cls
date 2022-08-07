@@ -150,10 +150,6 @@ Private mNextContract                               As IContract
 Private mRolloverController                         As RolloverController
 Private mIsRolloverInProgress                       As Boolean
 
-Private mLotSize                                    As Long
-Private mAutosizeValue                              As Double
-Private mAutosizeType                               As BracketAutosizeTypes
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -162,7 +158,6 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-mLotSize = 1
 mNewEntryQuantity = -1
 mNewStopLossQuantity = -1
 mNewTargetQuantity = -1
@@ -887,6 +882,7 @@ End If
 lSummary.Diff.UpdateHost mSummary
 
 setState mSummary.State
+SetSize mSummary.Size
 
 If Not mOrderContext Is Nothing Then
     If mSummary.CloseoutOrderId = "" Then
@@ -1611,7 +1607,7 @@ Case Else
     AssertArgument False, "Invalid AutosizeType"
 End Select
 
-mAutosizeType = Value
+mSummary.AutosizeType = Value
 
 Exit Property
 
@@ -1620,7 +1616,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get AutosizeType() As BracketAutosizeTypes
-AutosizeType = mAutosizeType
+AutosizeType = mSummary.AutosizeType
 End Property
 
 Public Property Let AutosizeValue(ByVal Value As Double)
@@ -1630,7 +1626,7 @@ On Error GoTo Err
 Assert mSummary.State = BracketOrderStateCreated, "AutosizeValue can only be set in Created state"
 AssertArgument Value > 0#, "AutosizeValue: must be greater than 0.0"
 
-mAutosizeValue = Value
+mSummary.AutosizeValue = Value
 
 Exit Property
 
@@ -1639,7 +1635,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get AutosizeValue() As Double
-AutosizeValue = mAutosizeValue
+AutosizeValue = mSummary.AutosizeValue
 End Property
 
 Public Property Let CancelAfter(ByVal Value As Long)
@@ -1893,7 +1889,7 @@ On Error GoTo Err
 Assert mSummary.State = BracketOrderStateCreated, "LotSize can only be set in Created state"
 AssertArgument IsInteger(Value, 1, 1000), "Invalid lot size: must be an integer between 1 and 1000"
 
-mLotSize = Value
+mSummary.LotSize = Value
 
 Exit Property
 
@@ -1902,7 +1898,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LotSize() As Long
-LotSize = mLotSize
+LotSize = mSummary.LotSize
 End Property
 
 Public Property Get NextBracketOrder() As IBracketOrder
@@ -3034,7 +3030,7 @@ On Error GoTo Err
 
 mSummary.Size = Value
 
-If mSummary.Size <> 0 Then
+If Value <> 0 Then
     mStateEngine.SetConditions OpConditions.CondSizeNonZero
 Else
     mStateEngine.ClearConditions OpConditions.CondSizeNonZero
@@ -3442,6 +3438,8 @@ Then
 End If
 Set mNewStopLossTriggerPriceSpec = gNewPriceSpecifier
 
+If orderRequiresDelayedPriceResolution(mStopLossOrder) Then checkForPendingStoplossUpdates = False
+
 Exit Function
 
 Err:
@@ -3489,6 +3487,8 @@ Then
     checkForPendingTargetUpdates = True
 End If
 Set mNewTargetTriggerPriceSpec = gNewPriceSpecifier
+
+If orderRequiresDelayedPriceResolution(mTargetOrder) Then checkForPendingTargetUpdates = False
 
 Exit Function
 
@@ -3835,6 +3835,12 @@ lPrevState = mStateEngine.State
 Dim lConditions As OpConditions
 lConditions = mStateEngine.Conditions
 
+Dim s As String
+s = "Handling bracket order stimulus (" & mSummary.Key & "): " & vbCrLf & _
+    "    prior state=" & gBracketOrderStatesToString(lPrevState) & _
+    "; stimulus=" & gOpStimuliToString(pStimulus) & _
+    "; conditions=" & gOpConditionsToString(lConditions)
+
 Dim lActions() As OpActions
 lActions = mStateEngine.NotifyStimulus(pStimulus)
 mSummary.State = State
@@ -3846,13 +3852,9 @@ For i = 0 To UBound(lActions)
     lActionsString = lActionsString & gOpActionsToString(lActions(i)) & IIf(i = UBound(lActions), "", ",")
 Next
 
-gLog "Handling bracket order stimulus (" & mSummary.Key & "): " & vbCrLf & _
-                "    prior state=" & gBracketOrderStatesToString(lPrevState) & _
-                "; stimulus=" & gOpStimuliToString(pStimulus) & _
-                "; conditions=" & gOpConditionsToString(lConditions) & _
-                "; new state=" & gBracketOrderStatesToString(mStateEngine.State) & _
-                "; actions=" & lActionsString, _
-            ProcName, ModuleName
+gLog s & "; new state=" & gBracketOrderStatesToString(mStateEngine.State) & _
+        "; actions=" & lActionsString, _
+        ProcName, ModuleName
 
 handleStimulus = doActions(lActions, lPrevState, pStimulus)
 If State <> lPrevState Then
@@ -3863,7 +3865,10 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+Dim lErr As Long: lErr = Err.Number
+Dim lDesc As String: lDesc = Err.Description
+gLog s, ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, pErrorNumber:=lErr, pErrorDesc:=lDesc
 End Function
 
 Private Sub initiateRollover()
@@ -3958,6 +3963,10 @@ End If
 ' the stop-loss limit and/or trigger price are to be pegged to the entry price
 
 If pRole = BracketOrderRoleStopLoss Then
+    gLog "Updating pegged StopLoss order for " & mSummary.Key, ProcName, ModuleName
+    
+    If mSummary.Size <> pOrder.Quantity Then SetNewStopLossQuantity mSummary.Size
+    
     If pOrder.LimitPriceSpec Is Nothing Then
     ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewStopLossLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
@@ -3975,6 +3984,10 @@ If pRole = BracketOrderRoleStopLoss Then
                                                     pOrder.TriggerPriceSpec.OffsetType)
     End If
 Else
+    gLog "Updating pegged Target order for " & mSummary.Key, ProcName, ModuleName
+    
+    If mSummary.Size <> pOrder.Quantity Then SetNewTargetQuantity mSummary.Size
+    
     If pOrder.LimitPriceSpec Is Nothing Then
     ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
         SetNewTargetLimitPrice gNewPriceSpecifier(EntryOrder.LastFillPrice, _
@@ -4026,6 +4039,7 @@ lUpdated = placePeggedOrder(mStopLossOrder, BracketOrderRoleStopLoss)
 lUpdated = lUpdated Or placePeggedOrder(mTargetOrder, BracketOrderRoleTarget)
 
 If lUpdated Then
+    gLog "Pegged orders placed for " & mSummary.Key, ProcName, ModuleName
     mSummary.PeggedOrdersProcessed = True
     Update
     SaveRecoveryInfo

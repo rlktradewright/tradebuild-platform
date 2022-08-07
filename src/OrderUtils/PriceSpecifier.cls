@@ -23,6 +23,7 @@ Option Explicit
 '@================================================================================
 
 Implements IJSONable
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -153,6 +154,11 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function Clone() As PriceSpecifier
+Set Clone = New PriceSpecifier
+Clone.Initialise mPrice, mPriceString, mPriceType, mOffset, mOffsetType, mTickSize, mUseCloseoutSemantics
+End Function
 
 Friend Function Equals(ByVal pObj As Object) As Boolean
 If pObj Is Nothing Then Exit Function
