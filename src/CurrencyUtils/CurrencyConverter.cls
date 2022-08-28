@@ -141,7 +141,7 @@ Dim lKey As String: lKey = getCurrencyPairKey( _
 Dim lIndex As Long
 If mIndexes.TryItem(lKey, lIndex) Then
     AssertArgument Not mConversionTable(lIndex).InvalidConversion, "Invalid currency conversion"
-    ICurrencyConverter_IsReadyCurrencies = mConversionTable(lIndex).State
+    ICurrencyConverter_IsReadyCurrencies = (mConversionTable(lIndex).State = CurrencyConverterStateReady)
 ElseIf startData(pFromCurrency, pToCurrency) Then
     ICurrencyConverter_IsReadyCurrencies = False
 Else
