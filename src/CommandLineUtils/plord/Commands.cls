@@ -64,6 +64,8 @@ Private Const SellAgainCommandName                  As String = "S"
 Private Const SetBalanceCommandName                 As String = "SETBALANCE"
 Private Const SetFundsCommandName                   As String = "SETFUNDS"
 Private Const SetGroupFundsCommandName              As String = "SETGROUPFUNDS"
+Private Const SetGroupRolloverCommandName           As String = "SETGROUPROLLOVER"
+Private Const SetRolloverCommandName                As String = "SETROLLOVER"
 Private Const ShowBalanceCommandName                As String = "SHOWBALANCE"
 Private Const StageOrdersCommandName                As String = "STAGEORDERS"
 Private Const StopLossCommandName                   As String = "STOPLOSS"
@@ -97,6 +99,8 @@ Private mSellAgainCommand                           As New Command
 Private mSetBalanceComand                           As New Command
 Private mSetFundsCommand                            As New Command
 Private mSetGroupFundsCommand                       As New Command
+Private mSetGroupRolloverCommand                    As New Command
+Private mSetRolloverCommand                         As New Command
 Private mShowBalanceComand                          As New Command
 Private mStageOrdersCommand                         As New Command
 Private mStopLossCommand                            As New Command
@@ -136,6 +140,8 @@ addCommand mSellAgainCommand, SellAgainCommandName
 addCommand mSetBalanceComand, SetBalanceCommandName
 addCommand mSetFundsCommand, SetFundsCommandName
 addCommand mSetGroupFundsCommand, SetGroupFundsCommandName
+addCommand mSetGroupRolloverCommand, SetGroupRolloverCommandName
+addCommand mSetRolloverCommand, SetRolloverCommandName
 addCommand mShowBalanceComand, ShowBalanceCommandName
 addCommand mStageOrdersCommand, StageOrdersCommandName
 addCommand mStopLossCommand, StopLossCommandName
@@ -250,6 +256,14 @@ End Property
 
 Friend Property Get SetGroupFundsCommand() As Command
 Set SetGroupFundsCommand = mSetGroupFundsCommand
+End Property
+
+Friend Property Get SetGroupRolloverCommand() As Command
+Set SetGroupRolloverCommand = mSetGroupRolloverCommand
+End Property
+
+Friend Property Get SetRolloverCommand() As Command
+Set SetRolloverCommand = mSetRolloverCommand
 End Property
 
 Friend Property Get ShowBalanceCommand() As Command

@@ -88,6 +88,8 @@ Private mUnderlyingExchangeName                     As String
 Private mPendingCommands                            As SortedDictionary
 Private mStageOrders                                As Boolean
 
+Private mDefaultRolloverSpec                        As RolloverSpecification
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -217,23 +219,34 @@ Friend Sub Activate( _
 Const ProcName As String = "Activate"
 On Error GoTo Err
 
+Dim failpoint As String
+
+failpoint = "010"
 mName = pName
 Set mGroupResources = pGroupResources
 
+failpoint = "020"
 Set mContract = pcontract
 mGroupName = pGroupName
 
+failpoint = "030"
 mSelectionMode = mContractResolver.StrikeSelectionMode
+failpoint = "040"
 mOperator = mContractResolver.StrikeSelectionOperator
+failpoint = "050"
 mParameter = mContractResolver.StrikeSelectionParameter
 
+failpoint = "060"
 mUnderlyingExchangeName = mContractResolver.UnderlyingExchangeName
 
+failpoint = "070"
 Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pcontract), False)
+failpoint = "080"
 mDataSource.AddErrorListener Me
 mDataSource.StartMarketData
 
 If pScopeName = "" Then
+failpoint = "090"
     Set mPositionManager = pOrderManager.CreatePositionManager( _
                                 pName, _
                                 mDataSource, _
@@ -254,13 +267,15 @@ failpoint = "100"
                                 pAccountDataProvider:=mAccountDataProvider, _
                                 pCurrencyConverter:=mCurrencyConverter)
 End If
+failpoint = "110"
 If mFixedAccountBalance <> 0 Then mPositionManager.FixedAccountBalance = mFixedAccountBalance
+failpoint = "120"
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, failpoint
 End Sub
 
 Friend Sub AddBracketOrderSpecs( _
@@ -528,11 +543,16 @@ If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
         
         Dim lLimitPriceSpec As PriceSpecifier
         Dim lTriggerPriceSpec As PriceSpecifier
-        parseOrderPrices IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
+        Dim lMessage As String
+        If Not gParseOrderPrices(IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
                         IIf(lPriceStr <> "", lTriggerPriceStr, ""), _
                         mBOSpec.EntryType, _
                         lLimitPriceSpec, _
-                        lTriggerPriceSpec
+                        lTriggerPriceSpec, _
+                        lMessage) _
+        Then
+            gWriteErrorLine lMessage
+        End If
         Set mBOSpec.EntryLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.EntryTriggerPriceSpec = lTriggerPriceSpec
         
@@ -583,112 +603,14 @@ If mOrderContext Is Nothing Then
     Exit Sub
 End If
 
-If Not (mContract.Specifier.SecType = SecTypeFuture Or _
-        mContract.Specifier.SecType = SecTypeFuturesOption Or _
-        mContract.Specifier.SecType = SecTypeOption) Then
-    gWriteErrorLine "Rollover only applies to options, futures and futures options"
-    Exit Sub
-End If
-
-Dim lClp As CommandLineParser
-Set lClp = CreateCommandLineParser(pParams, " ")
-
-If lClp.NumberOfArgs > 0 Then
-    gWriteErrorLine "Only attributes beginning with ""/"" are permitted"
-    Exit Sub
-End If
-
-Dim lQuantityMode As RolloverQuantityModes: lQuantityMode = RolloverQuantityModeAsPrevious
-Dim lQuantityParameter As Double
-Dim lLotSize As Long
-If lClp.Switch(QuantitySwitch) Then processRolloverQuantity _
-                        lClp.SwitchValue(QuantitySwitch), _
-                        lQuantityMode, _
-                        lQuantityParameter, _
-                        lLotSize
-
-Dim lDays As Long
-If lClp.Switch(DaysSwitch) Then lDays = processRolloverDays(lClp.SwitchValue(DaysSwitch))
-
-Dim lTime As Date
-If lClp.Switch(TimeSwitch) Then lTime = processRolloverTime(lClp.SwitchValue(TimeSwitch))
-
-Dim lCloseType As OrderTypes: lCloseType = OrderTypeMarket
-Dim lCloseLimitPriceSpec As New PriceSpecifier
-Dim lCloseTriggerPriceSpec As New PriceSpecifier
-Dim lCloseTimeout As Long
-If lClp.Switch(CloseSwitch) Then processRolloverClose _
-                                        lClp.SwitchValue(CloseSwitch), _
-                                        lCloseType, _
-                                        lCloseLimitPriceSpec, _
-                                        lCloseTriggerPriceSpec, _
-                                        lCloseTimeout
-
-Dim lEntryType As OrderTypes
-Dim lEntryLimitPriceSpec As New PriceSpecifier
-Dim lEntryTriggerPriceSpec As New PriceSpecifier
-Dim lEntryTimeout As Long
-If lClp.Switch(EntrySwitch) Then processRolloverEntry _
-                                        lClp.SwitchValue(EntrySwitch), _
-                                        lEntryType, _
-                                        lEntryLimitPriceSpec, _
-                                        lEntryTriggerPriceSpec, _
-                                        lEntryTimeout
-
-Dim lStrikeMode As RolloverStrikeModes
-lStrikeMode = RolloverStrikeModeAsPrevious
-
-Dim lStrikeValue As Double: lStrikeValue = 0
-
-Dim lStrikeOperator As OptionStrikeSelectionOperators
-lStrikeOperator = OptionStrikeSelectionOperatorNone
-
-Dim lUnderlyingExchangeName As String
-
-If lClp.Switch(StrikeSwitch) Then processRolloverStrike _
-                                        lClp.SwitchValue(StrikeSwitch), _
-                                        lStrikeMode, _
-                                        lStrikeValue, _
-                                        lStrikeOperator, _
-                                        lUnderlyingExchangeName
-
-If mContract.Specifier.SecType = SecTypeOption Or _
-    mContract.Specifier.SecType = SecTypeFuturesOption _
-Then
-    Set mBOSpec.RolloverSpec = CreateOptionRolloverSpecification( _
-                                lDays, _
-                                lTime, _
-                                mInitialStrikeSelectionMode, _
-                                mInitialStrikeParameter, _
-                                mInitialStrikeOperator, _
-                                lStrikeMode, _
-                                lStrikeValue, _
-                                lStrikeOperator, _
-                                lQuantityMode, _
-                                lQuantityParameter, _
-                                lLotSize, _
-                                lUnderlyingExchangeName, _
-                                lCloseType, _
-                                lCloseTimeout, _
-                                lCloseLimitPriceSpec, _
-                                lCloseTriggerPriceSpec, _
-                                lEntryType, _
-                                lEntryTimeout, _
-                                lEntryLimitPriceSpec, _
-                                lEntryTriggerPriceSpec)
-                                
+If pParams <> "" Then
+    Set mBOSpec.RolloverSpec = gProcessRolloverCommand( _
+                                    pParams, _
+                                    mContract.Specifier.SecType)
+ElseIf Not mDefaultRolloverSpec Is Nothing Then
+    Set mBOSpec.RolloverSpec = mDefaultRolloverSpec
 Else
-    Set mBOSpec.RolloverSpec = CreateRolloverSpecification( _
-                                lDays, _
-                                lTime, _
-                                lCloseType, _
-                                lCloseTimeout, _
-                                lCloseLimitPriceSpec, _
-                                lCloseTriggerPriceSpec, _
-                                lEntryType, _
-                                lEntryTimeout, _
-                                lEntryLimitPriceSpec, _
-                                lEntryTriggerPriceSpec)
+    gWriteErrorLine "No default rollover specification has been defined"
 End If
 
 If mBOSpec.EntryType = OrderTypeNone And gErrorCount = 0 Then
@@ -700,7 +622,11 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Sub
 
 Friend Sub ProcessQuitCommand()
@@ -749,18 +675,23 @@ If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
 
     If Not IsStopLossOrderType(mBOSpec.StopLossType) Then
         mBOSpec.StopLossType = OrderTypeNone
-        gWriteErrorLine "Invalid stop-loss order type", True
+        gWriteErrorLine "Invalid stop-loss order type"
     Else
         Dim lPriceStr As String: lPriceStr = getPriceString(lClp)
         Dim lTriggerPriceStr As String: lTriggerPriceStr = getTriggerPriceString(lClp)
         
         Dim lLimitPriceSpec As PriceSpecifier
         Dim lTriggerPriceSpec As PriceSpecifier
-        parseOrderPrices IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
+        Dim lMessage As String
+        If Not gParseOrderPrices(IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
                         IIf(lPriceStr <> "", lTriggerPriceStr, ""), _
                         mBOSpec.StopLossType, _
                         lLimitPriceSpec, _
-                        lTriggerPriceSpec
+                        lTriggerPriceSpec, _
+                        lMessage) _
+        Then
+            gWriteErrorLine lMessage
+        End If
         Set mBOSpec.StopLossLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.StopLossTriggerPriceSpec = lTriggerPriceSpec
     End If
@@ -817,18 +748,23 @@ If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
     
     If Not IsTargetOrderType(mBOSpec.TargetType) Then
         mBOSpec.TargetType = OrderTypeNone
-        gWriteErrorLine "Invalid target order type", True
+        gWriteErrorLine "Invalid target order type"
     Else
         Dim lPriceStr As String: lPriceStr = getPriceString(lClp)
         Dim lTriggerPriceStr As String: lTriggerPriceStr = getTriggerPriceString(lClp)
         
         Dim lLimitPriceSpec As PriceSpecifier
         Dim lTriggerPriceSpec As PriceSpecifier
-        parseOrderPrices IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
+        Dim lMessage As String
+        If Not gParseOrderPrices(IIf(lPriceStr <> "", lPriceStr, lTriggerPriceStr), _
                         IIf(lPriceStr <> "", lTriggerPriceStr, ""), _
                         mBOSpec.TargetType, _
                         lLimitPriceSpec, _
-                        lTriggerPriceSpec
+                        lTriggerPriceSpec, _
+                        lMessage) _
+        Then
+            gWriteErrorLine lMessage
+        End If
         Set mBOSpec.TargetLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.TargetTriggerPriceSpec = lTriggerPriceSpec
     End If
@@ -874,6 +810,23 @@ mGroupName = mPositionManager.GroupName
 
 Set mDataSource = mPositionManager.DataSource
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetDefaultRolloverSpec(ByVal pSpec As RolloverSpecification)
+Const ProcName As String = "SetDefaultRolloverSpec"
+On Error GoTo Err
+
+Set mDefaultRolloverSpec = pSpec
+If mDefaultRolloverSpec Is Nothing Then Exit Sub
+
+pSpec.setInitialStrikeSelectionMode(mInitialStrikeSelectionMode). _
+        setInitialStrikeParameter(mInitialStrikeParameter). _
+        setInitialStrikeOperator mInitialStrikeOperator
 
 Exit Sub
 
@@ -1022,17 +975,6 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function notifyUnexpectedPrice( _
-                ByVal pPriceString As String, _
-                ByVal pPriceName As String) As Boolean
-If pPriceString <> "" Then
-    gWriteErrorLine pPriceName & " price must not be specified for this order type"
-    notifyUnexpectedPrice = True
-Else
-    notifyUnexpectedPrice = False
-End If
-End Function
-
 Private Sub parseOffset( _
                 ByVal pValue As String, _
                 ByVal pPriceSpec As PriceSpecifier)
@@ -1059,186 +1001,6 @@ Else
     pPriceSpec.OffsetType = PriceOffsetTypeIncrement
 End If
 End Sub
-
-Private Function parseOrderPrice( _
-                ByVal pPriceStr As String, _
-                ByVal pPriceName As String, _
-                ByRef pPriceSpec As PriceSpecifier) As Boolean
-Const ProcName As String = "parseOrderPrice"
-On Error GoTo Err
-
-Dim lMessage As String
-
-If pPriceStr = "" Then
-    parseOrderPrice = False
-    gWriteErrorLine pPriceName & " price must be specified for this order type"
-ElseIf mOrderContext.ParsePriceAndOffset(pPriceSpec, pPriceStr, lMessage) And _
-    pPriceSpec.IsValid _
-Then
-    parseOrderPrice = True
-Else
-    parseOrderPrice = False
-    gWriteErrorLine pPriceName & " " & lMessage & ": " & pPriceStr
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function parseOrderPrices( _
-                ByVal pPrice1 As String, _
-                ByVal pPrice2 As String, _
-                ByVal pOrderType As OrderTypes, _
-                ByRef pLimitPriceSpec As PriceSpecifier, _
-                ByRef pTriggerPriceSpec As PriceSpecifier) As Boolean
-Const ProcName As String = "parseOrderPrices"
-On Error GoTo Err
-
-parseOrderPrices = True
-
-Set pLimitPriceSpec = NewPriceSpecifier
-Set pTriggerPriceSpec = NewPriceSpecifier
-
-Select Case pOrderType
-Case OrderTypeMarket, _
-        OrderTypeMarketOnClose, _
-        OrderTypeMarketOnOpen, _
-        OrderTypeMarketToLimit
-    If notifyUnexpectedPrice(pPrice1, "limit") Then parseOrderPrices = False
-    If notifyUnexpectedPrice(pPrice2, "trigger") Then parseOrderPrices = False
-Case OrderTypeMarketIfTouched, _
-        OrderTypeStop, _
-        OrderTypeTrail
-    If Not parseOrderPrice(pPrice1, "trigger", pTriggerPriceSpec) Then parseOrderPrices = False
-    If notifyUnexpectedPrice(pPrice2, "second") Then parseOrderPrices = False
-Case OrderTypeLimit, _
-        OrderTypeLimitOnOpen, _
-        OrderTypeLimitOnClose
-    If Not parseOrderPrice(pPrice1, "limit", pLimitPriceSpec) Then parseOrderPrices = False
-    If notifyUnexpectedPrice(pPrice2, "trigger") Then parseOrderPrices = False
-Case OrderTypeLimitIfTouched, _
-        OrderTypeStopLimit, _
-        OrderTypeTrailLimit
-    If Not parseOrderPrice(pPrice1, "Trigger", pTriggerPriceSpec) Then parseOrderPrices = False
-    If Not parseOrderPrice(pPrice2, "Limit", pLimitPriceSpec) Then parseOrderPrices = False
-End Select
-    
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Sub parseOrderSpec( _
-                ByVal pValue As String, _
-                ByRef pOrderType As OrderTypes, _
-                ByRef pLimitPriceSpec As PriceSpecifier, _
-                ByRef pTriggerPriceSpec As PriceSpecifier, _
-                ByRef pTimeoutSecs As Long)
-Const ProcName As String = "parseOrderSpec"
-On Error GoTo Err
-
-Dim lClp As CommandLineParser
-Set lClp = CreateCommandLineParser(pValue, ";")
-
-Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(0)
-
-If lOrderTypeStr = "" Then
-    pOrderType = OrderTypeNone
-Else
-    pOrderType = OrderTypeFromString(lOrderTypeStr)
-End If
-If Not mOrderContext Is Nothing Then AssertArgument (mOrderContext.PermittedOrderTypes And pOrderType) <> 0
-
-Dim lMaxNumberOfArgsRequired As Long
-Dim lPrice1Spec As String
-Dim lPrice2Spec As String
-Dim lTimeoutSpec As String
-
-Select Case pOrderType
-Case OrderTypeMarket, _
-        OrderTypeMarketOnClose, _
-        OrderTypeMarketOnOpen, _
-        OrderTypeMarketToLimit
-    lMaxNumberOfArgsRequired = 1
-Case OrderTypeMarketIfTouched, _
-        OrderTypeStop, _
-        OrderTypeTrail, _
-        OrderTypeLimit, _
-        OrderTypeLimitOnOpen, _
-        OrderTypeLimitOnClose, _
-        OrderTypeLimitIfTouched, _
-        OrderTypeStopLimit, _
-        OrderTypeTrailLimit
-    lMaxNumberOfArgsRequired = 3
-    lPrice1Spec = lClp.Arg(1)
-    lTimeoutSpec = lClp.Arg(2)
-Case Else
-    lMaxNumberOfArgsRequired = 4
-    lPrice1Spec = lClp.Arg(1)
-    lPrice2Spec = lClp.Arg(2)
-    lTimeoutSpec = lClp.Arg(3)
-End Select
-
-If lClp.NumberOfArgs > lMaxNumberOfArgsRequired Then
-    gWriteErrorLine "Too many elements in order spec"
-End If
-
-parseOrderPrices lPrice1Spec, _
-                    lPrice2Spec, _
-                    pOrderType, _
-                    pLimitPriceSpec, _
-                    pTriggerPriceSpec
-
-pTimeoutSecs = parseOrderTimeoutSecs(lTimeoutSpec)
-
-Exit Sub
-
-Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine "Invalid order type: " & lOrderTypeStr
-    pOrderType = OrderTypeNone
-Else
-    gHandleUnexpectedError ProcName, ModuleName
-End If
-End Sub
-
-Private Function parseOrderTimeoutSecs( _
-                ByVal pTimeoutSpec As String) As Double
-Const SecondsDesignator As String = "S"
-Const MinutesDesignator As String = "M"
-
-If pTimeoutSpec = "" Then
-    parseOrderTimeoutSecs = 0
-    Exit Function
-End If
-
-Dim lUnits As String
-Dim lTimeout As String
-If UCase$(Right$(pTimeoutSpec, 1)) = SecondsDesignator Then
-    lUnits = SecondsDesignator
-    lTimeout = Left$(pTimeoutSpec, Len(pTimeoutSpec) - 1)
-ElseIf UCase$(Right$(pTimeoutSpec, 1)) = MinutesDesignator Then
-    lUnits = MinutesDesignator
-    lTimeout = Left$(pTimeoutSpec, Len(pTimeoutSpec) - 1)
-Else
-    gWriteErrorLine "Timeout spec invalid - must be a positive integer " & _
-                        "followed by ""M"" for minutes or ""S"" for seconds " & _
-                        "(not case-sensitive)"
-    parseOrderTimeoutSecs = 0
-    Exit Function
-End If
-
-If IsInteger(lTimeout, 0) Then
-    parseOrderTimeoutSecs = CLng(lTimeout)
-    If lUnits = MinutesDesignator Then parseOrderTimeoutSecs = parseOrderTimeoutSecs * 60
-Else
-    gWriteErrorLine "Invalid timeout: " & pTimeoutSpec
-    parseOrderTimeoutSecs = 0
-End If
-End Function
 
 Private Function parsePseudoOrder( _
                 ByVal pOrderTypeStr, _
@@ -1291,6 +1053,12 @@ mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
 
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 
+If UCase$(lClp.Arg(lClp.NumberOfArgs - 1)) = "ROLLOVER" Then
+    Set mBOSpec.RolloverSpec = mDefaultRolloverSpec
+    pParams = Left$(pParams, Len(pParams) - Len("ROLLOVER"))
+    Set lClp = CreateCommandLineParser(pParams)
+End If
+
 If Not setQuantity(lClp.Arg(0)) Then
     gWriteErrorLine "Invalid quantity", True
 End If
@@ -1309,13 +1077,17 @@ If Not parsePseudoOrder(lOrderTypeStr, lPriceOrOffset) Then
     Else
         Dim lLimitPriceSpec As PriceSpecifier
         Dim lTriggerPriceSpec As PriceSpecifier
-        
-        processBuyOrSellCommand = parseOrderPrices( _
+        Dim lMessage As String
+        processBuyOrSellCommand = gParseOrderPrices( _
                                         lPriceOrOffset, _
                                         lTriggerPrice, _
                                         mBOSpec.EntryType, _
                                         lLimitPriceSpec, _
-                                        lTriggerPriceSpec)
+                                        lTriggerPriceSpec, _
+                                        lMessage)
+        If Not processBuyOrSellCommand Then
+            gWriteErrorLine lMessage
+        End If
         Set mBOSpec.EntryLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.EntryTriggerPriceSpec = lTriggerPriceSpec
         
@@ -1343,6 +1115,8 @@ If processBuyOrSellCommand Then
         mLatestSellCommandParams = pParams
     End If
 End If
+
+
 
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
@@ -1396,266 +1170,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Sub processRolloverClose( _
-                ByVal pValue As String, _
-                ByRef pCloseType As OrderTypes, _
-                ByRef pCloseLimitPriceSpec As PriceSpecifier, _
-                ByRef pCloseTriggerPriceSpec As PriceSpecifier, _
-                ByRef pCloseTimeoutSecs As Long)
-Const ProcName As String = "processRolloverClose"
-On Error GoTo Err
-
-parseOrderSpec pValue, pCloseType, pCloseLimitPriceSpec, pCloseTriggerPriceSpec, pCloseTimeoutSecs
-
-If Not IsEntryOrderType(pCloseType) Then
-    pCloseType = OrderTypeNone
-    Set pCloseLimitPriceSpec = New PriceSpecifier
-    Set pCloseTriggerPriceSpec = New PriceSpecifier
-    pCloseTimeoutSecs = 0
-    gWriteErrorLine "Invalid close order type", True
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Function processRolloverDays(ByVal pValue As String) As Long
-If Not IsInteger(pValue, 0, 30) Then
-    gWriteErrorLine "Days must be an integer from 0 to 30"
-Else
-    processRolloverDays = CLng(pValue)
-End If
-End Function
-
-Private Sub processRolloverEntry( _
-                ByVal pValue As String, _
-                ByRef pEntryType As OrderTypes, _
-                ByRef pEntryLimitPriceSpec As PriceSpecifier, _
-                ByRef pEntryTriggerPriceSpec As PriceSpecifier, _
-                ByRef pEntryTimeoutSecs As Long)
-Const ProcName As String = "processRolloverEntry"
-On Error GoTo Err
-
-parseOrderSpec pValue, pEntryType, pEntryLimitPriceSpec, pEntryTriggerPriceSpec, pEntryTimeoutSecs
-
-If Not IsEntryOrderType(pEntryType) Then
-    pEntryType = OrderTypeNone
-    Set pEntryLimitPriceSpec = New PriceSpecifier
-    Set pEntryTriggerPriceSpec = New PriceSpecifier
-    pEntryTimeoutSecs = 0
-    gWriteErrorLine "Invalid entry order type", True
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processRolloverQuantity( _
-                ByVal pValue As String, _
-                ByRef pQuantityMode As RolloverQuantityModes, _
-                ByRef pQuantityParameter As Double, _
-                ByRef pLotSize As Long)
-Const ProcName As String = "processRolloverQuantity"
-On Error GoTo Err
-
-Const QuantityFormatLotSize As String = "(?:\(([1-9]\d*)\))?"
-Const QuantityFormatNumber As String = "^([1-9]\d*)$"
-Const QuantityFormatPreviousNumber As String = "^(<)$"
-Const QuantityFormatMonetaryAmount As String = "^([1-9]\d*)\$" & QuantityFormatLotSize & "$"
-Const QuantityFormatPreviousMonetaryAmount As String = "^(<\$)$"
-Const QuantityFormatPercentOfAccount As String = "^([1-9]?\d*(?:\.\d+)?)%" & QuantityFormatLotSize & "$"
-Const QuantityFormatPreviousPercentOfAccount As String = "^(<%)$"
-Const QuantityFormatCurrentValue As String = "^(=\$)" & QuantityFormatLotSize & "$"
-Const QuantityFormatCurrentProfit As String = "^(?:=([1-9]?\d*(?:\.\d+)?))%P" & QuantityFormatLotSize & "$"
-
-Const QuantityFormat As String = QuantityFormatNumber & _
-                            "|" & QuantityFormatPreviousNumber & _
-                            "|" & QuantityFormatMonetaryAmount & _
-                            "|" & QuantityFormatPreviousMonetaryAmount & _
-                            "|" & QuantityFormatPercentOfAccount & _
-                            "|" & QuantityFormatPreviousPercentOfAccount & _
-                            "|" & QuantityFormatCurrentValue & _
-                            "|" & QuantityFormatCurrentProfit
-
-' QuantityFormat="^([1-9]\d*)$|^(<)$|^([1-9]\d*)\$(?:\(([1-9]\d*)\))?$|^(<\$)$|^([1-9]?\d*(?:\.\d+)?)%(?:\(([1-9]\d*)\))?$|^(<%)$|^(=\$)(?:\(([1-9]\d*)\))?$|^(?:=([1-9]?\d*(?:\.\d+)?))%P(?:\(([1-9]\d*)\))?$"
-
-gRegExp.Pattern = QuantityFormat
-
-Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(pValue)
-
-If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid Quantity syntax"
-    Exit Sub
-End If
-
-Dim lMatch As Match: Set lMatch = lMatches(0)
-
-Dim lParameter As String
-
-lParameter = lMatch.SubMatches(0)
-If lParameter <> "" Then
-    pQuantityMode = RolloverQuantityModeNumber
-    pQuantityParameter = CDbl(lParameter)
-    Exit Sub
-End If
-
-If lMatch.SubMatches(1) <> "" Then
-    pQuantityMode = RolloverQuantityModePreviousNumber
-    Exit Sub
-End If
-
-lParameter = lMatch.SubMatches(2)
-If lParameter <> "" Then
-    pQuantityMode = RolloverQuantityModeMonetaryAmount
-    pQuantityParameter = CDbl(lParameter)
-    pLotSize = CLng("0" & lMatch.SubMatches(3))
-    Exit Sub
-End If
-
-If lMatch.SubMatches(4) <> "" Then
-    pQuantityMode = RolloverQuantityModePreviousMonetaryAmount
-    Exit Sub
-End If
-
-lParameter = lMatch.SubMatches(5)
-If lParameter <> "" Then
-    pQuantityMode = RolloverQuantityModePercentageOfAccount
-    pQuantityParameter = CDbl(lParameter)
-    pLotSize = CLng("0" & lMatch.SubMatches(6))
-    Exit Sub
-End If
-
-If lMatch.SubMatches(7) <> "" Then
-    pQuantityMode = RolloverQuantityModePreviousPercentageOfAccount
-    Exit Sub
-End If
-
-If lMatch.SubMatches(8) <> "" Then
-    pQuantityMode = RolloverQuantityModeCurrentValue
-    pQuantityParameter = CDbl(lMatch.SubMatches(9))
-    Exit Sub
-End If
-
-lParameter = lMatch.SubMatches(10)
-If lParameter <> "" Then
-    pQuantityMode = RolloverQuantityModeCurrentProfit
-    pQuantityParameter = CDbl(lParameter)
-    pLotSize = CLng("0" & lMatch.SubMatches(11))
-    Exit Sub
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Sub processRolloverStrike( _
-                ByVal pValue As String, _
-                ByRef pStrikeMode As RolloverStrikeModes, _
-                ByRef pStrikeValue As Double, _
-                ByRef pStrikeOperator As OptionStrikeSelectionOperators, _
-                ByRef pUnderlyingExchange As String)
-Const ProcName As String = "processRolloverStrike"
-On Error GoTo Err
-
-Const StrikeFormatCurrentValue As String = "^(\$)$"
-Const StrikeFormatCurrentProfit As String = "^([0-9]\d*)(?:%P)$"
-Const StrikeFormatMonetaryAmount As String = "^([0-9]\d*)(?:\$)$"
-Const StrikeFormatPreviousMonetaryAmount As String = "^(<\$)$"
-Const StrikeFormatIncrement As String = "^([+-][1-9]\d?)$"
-Const StrikeFormatDelta As String = "^(?:(?:(<|<=|>|>=|)(\-?[1-9]\d?)(D)(?:(?:;|,)([a-zA-Z0-9]+))?)?)?$"
-Const StrikeFormatPreviousDelta As String = "<D"
-Const StrikeFormatDeltaIncrement As String = "^(?:([+-][1-9]\d?)<D)$"
-
-
-Const StrikeFormat As String = StrikeFormatCurrentValue & _
-                            "|" & StrikeFormatCurrentProfit & _
-                            "|" & StrikeFormatMonetaryAmount & _
-                            "|" & StrikeFormatPreviousMonetaryAmount & _
-                            "|" & StrikeFormatIncrement & _
-                            "|" & StrikeFormatDelta & _
-                            "|" & StrikeFormatPreviousDelta & _
-                            "|" & StrikeFormatDeltaIncrement
-
-gRegExp.Pattern = StrikeFormat
-
-Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(pValue)
-
-If lMatches.Count <> 1 Then
-    gWriteErrorLine "Invalid " & StrikeSwitch & " syntax"
-    Exit Sub
-End If
-
-Dim lMatch As Match: Set lMatch = lMatches(0)
-
-If lMatch.SubMatches(0) <> "" Then
-    pStrikeMode = RolloverStrikeModeCurrentValue
-    Exit Sub
-End If
-
-If lMatch.SubMatches(1) <> "" Then
-    pStrikeMode = RolloverStrikeModeCurrentProfit
-    pStrikeValue = CDbl(lMatch.SubMatches(1))
-    Exit Sub
-End If
-
-If lMatch.SubMatches(2) <> "" Then
-    pStrikeMode = RolloverStrikeModeMonetaryAmount
-    pStrikeValue = CDbl(lMatch.SubMatches(2))
-    Exit Sub
-End If
-
-If lMatch.SubMatches(3) <> "" Then
-    pStrikeMode = RolloverStrikeModePreviousMonetaryAmount
-    Exit Sub
-End If
-
-If lMatch.SubMatches(4) <> "" Then
-    pStrikeMode = RolloverStrikeModeIncrement
-    Exit Sub
-End If
-
-If lMatch.SubMatches(7) <> "" Then
-    pStrikeMode = RolloverStrikeModeDelta
-    pStrikeValue = CDbl(lMatch.SubMatches(6))
-    pStrikeOperator = OptionStrikeSelectionOperatorFromString(lMatch.SubMatches(5))
-    pUnderlyingExchange = lMatch.SubMatches(8)
-    Exit Sub
-End If
-
-If lMatch.SubMatches(9) <> "" Then
-    pStrikeMode = RolloverStrikeModePreviousDelta
-    Exit Sub
-End If
-
-If lMatch.SubMatches(10) <> "" Then
-    pStrikeMode = RolloverStrikeModeDeltaIncrement
-    pStrikeValue = CDbl(lMatch.SubMatches(10))
-    Exit Sub
-End If
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Function processRolloverTime(ByVal pValue As String) As Date
-If Not IsDate(pValue) Then
-    gWriteErrorLine "Time must be hh:mm[:ss]"
-Else
-    processRolloverTime = CDate(pValue)
-    If CDbl(processRolloverTime) >= 1 Then gWriteErrorLine "Time must be hh:mm[:ss]"
-End If
-End Function
 
 Private Function setQuantity( _
                 ByVal pValue As String) As Boolean

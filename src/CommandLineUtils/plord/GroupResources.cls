@@ -67,6 +67,9 @@ Private mContractResolutionsAwaited                 As Boolean
 
 Private mFixedAccountBalance                        As Double
 
+Private mDefaultOptionRolloverSpec                  As RolloverSpecification
+Private mDefaultFutureRolloverSpec                  As RolloverSpecification
+
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
@@ -145,7 +148,12 @@ Else
                                         mOrderSubmitterFactory, _
                                         mMoneyManager, _
                                         Me
-    
+        
+        If lContract.Specifier.SecType = SecTypeOption Then
+            lNewContractProcessor.SetDefaultRolloverSpec mDefaultOptionRolloverSpec
+        ElseIf lContract.Specifier.SecType = SecTypeFuture Then
+            lNewContractProcessor.SetDefaultRolloverSpec mDefaultFutureRolloverSpec
+        End If
     End If
 End If
 
@@ -311,6 +319,33 @@ For Each lContractProcessor In mContractProcessors
     lContractProcessor.Finish
 Next
 mContractProcessors.Clear
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub SetDefaultRollover(ByVal pSecType As SecurityTypes, ByVal pParams As String)
+Const ProcName As String = "SetDefaultRollover"
+On Error GoTo Err
+
+
+Dim lRolloverSpec As RolloverSpecification
+Set lRolloverSpec = gProcessRolloverCommand(pParams, pSecType)
+If pSecType = SecTypeOption Then
+    Set mDefaultOptionRolloverSpec = lRolloverSpec
+Else
+    Set mDefaultFutureRolloverSpec = lRolloverSpec
+End If
+
+Dim lCP As ContractProcessor
+For Each lCP In mContractProcessors
+    If lCP.Contract Is Nothing Then
+    ElseIf lCP.Contract.Specifier.SecType = pSecType Then
+        lCP.SetDefaultRolloverSpec lRolloverSpec
+    End If
+Next
 
 Exit Sub
 

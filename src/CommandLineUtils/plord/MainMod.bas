@@ -1148,6 +1148,10 @@ ElseIf lCommand Is gCommands.SetFundsCommand Then
     processSetFundsCommand Params
 ElseIf lCommand Is gCommands.SetGroupFundsCommand Then
     processSetGroupFundsCommand Params
+ElseIf lCommand Is gCommands.SetRolloverCommand Then
+    processSetRolloverCommand Params
+ElseIf lCommand Is gCommands.SetGroupRolloverCommand Then
+    processSetGroupRolloverCommand Params
 ElseIf lCommand Is gCommands.BuyCommand Then
     lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
@@ -1386,12 +1390,72 @@ Dim lFunds As Double
 If Not getFundsAmount(pParams, lFunds) Then Exit Sub
 
 mCurrentGroup.FixedAccountBalance = lFunds
-gWriteLineToConsole "Funds for this group set to " & CStr(CLng(lFunds))
+gWriteLineToConsole "Funds for group " & mCurrentGroup.GroupName & " set to " & CStr(CLng(lFunds))
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processSetGroupRolloverCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processSetGroupRolloverCommand"
+On Error GoTo Err
+
+pParams = UCase$(pParams)
+
+Dim ar() As String: ar = Split(pParams, " ")
+
+pParams = Right$(pParams, Len(pParams) - Len(ar(0)))
+If ar(0) = "OPTION" Then
+    mCurrentGroup.SetDefaultRollover SecTypeOption, pParams
+ElseIf ar(0) = "FUTURE" Then
+    mCurrentGroup.SetDefaultRollover SecTypeFuture, pParams
+Else
+    gWriteErrorLine "First parameter must be 'OPTION' or 'FUTURE'", True
+End If
+
+Exit Sub
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description, True
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
+End Sub
+
+Private Sub processSetRolloverCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processSetRolloverCommand"
+On Error GoTo Err
+
+pParams = UCase$(pParams)
+
+Dim ar() As String: ar = Split(pParams, " ")
+
+pParams = Right$(pParams, Len(pParams) - Len(ar(0)))
+
+Dim lGroup As GroupResources
+For Each lGroup In mGroups
+    If ar(0) = "OPTION" Then
+        lGroup.SetDefaultRollover SecTypeOption, pParams
+    ElseIf ar(0) = "FUTURE" Then
+        lGroup.SetDefaultRollover SecTypeFuture, pParams
+    Else
+        gWriteErrorLine "First parameter must be 'OPTION' or 'FUTURE'", True
+    End If
+Next
+
+Exit Sub
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description, True
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Sub
 
 Private Sub ProcessSellAgainCommand( _
@@ -1800,7 +1864,7 @@ Private Sub processResetCommand()
 mStageOrders = mStageOrdersDefault
 mBatchOrders = mBatchOrdersDefault
 mErrorCount = 0
-gSetValidNextCommands gCommandListAlways, gCommandListGeneral
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 End Sub
 
 Private Sub processStageOrdersCommand( _
@@ -1939,6 +2003,8 @@ gCommandListGeneral.Initialise _
                 gCommands.SetBalanceCommand, _
                 gCommands.SetFundsCommand, _
                 gCommands.SetGroupFundsCommand, _
+                gCommands.SetGroupRolloverCommand, _
+                gCommands.SetRolloverCommand, _
                 gCommands.ShowBalanceCommand
 End Sub
 
