@@ -187,7 +187,7 @@ Case BracketOrderRolloverGotContract
     s1 = "bracket order rolling over to next contract: " & _
         gGetContractName(lBO.NextContract)
 Case BracketOrderRolloverCompleted
-    s1 = "new bracket order is: " & _
+    s1 = "rollover completed: new bracket order is: " & _
         lBO.NextBracketOrder.Key
     Add lBO.NextBracketOrder
     mBracketOrderListener.Remove lBO

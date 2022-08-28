@@ -972,13 +972,15 @@ fixupTargetOrder pBracketOrder.TargetOrder
 Dim msg As String
 If TypeOf pBracketOrder Is IAutoSizingBracket Then
     Dim lBracketOrder As IAutoSizingBracket: Set lBracketOrder = pBracketOrder
+    Dim lMessage As String
     
     If lBracketOrder.AutosizeType = BracketAutosizeNone Then
     ElseIf mAccountDataProvider Is Nothing Then
         Assert False, "No account data provider has been configured"
     ElseIf lBracketOrder.AutosizeValue = 0 Then
         Assert False, "Invalid autosize value"
-    ElseIf Not autoSize(lBracketOrder) Then
+    ElseIf Not autoSize(lBracketOrder, lMessage) Then
+        pBracketOrder.EntryOrder.NotifyError ErrorCodes.ErrIllegalArgumentException, lMessage
         Exit Sub
     End If
 End If
@@ -1649,28 +1651,28 @@ End Sub
 '@================================================================================
 
 Private Function autoSize( _
-                ByVal pBracketOrder As IAutoSizingBracket) As Boolean
+                ByVal pBracketOrder As IAutoSizingBracket, _
+                ByRef pMessage As String) As Boolean
 Const ProcName As String = "autoSize"
 On Error GoTo Err
 
 Dim lBracketOrder As IBracketOrder: Set lBracketOrder = pBracketOrder
 
-Dim lMessage As String
 Dim lQuantity As Long
 
 If pBracketOrder.AutosizeType = BracketAutosizeMonetaryAmount Then
     lQuantity = autoSizeAmount(pBracketOrder.AutosizeValue, _
                                 pBracketOrder.LotSize, _
                                 lBracketOrder.LongPosition, _
-                                lMessage)
+                                pMessage)
 Else
     lQuantity = autoSizePercent(pBracketOrder.AutosizeValue, _
                                 pBracketOrder.LotSize, _
                                 lBracketOrder.LongPosition, _
-                                lMessage)
+                                pMessage)
 End If
 
-gLogBracketOrderMessage lMessage, _
+gLogBracketOrderMessage pMessage, _
                         mDataSource, _
                         mContract, _
                         lBracketOrder.Key, _
