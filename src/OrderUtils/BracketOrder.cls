@@ -972,10 +972,14 @@ Case RolloverControllerStateCompleted
     Set mRolloverController = Nothing
     
     mSummary.RolloverDate = 0
-    RolloverSpecification = Nothing
+    mSummary.RolloverSpecification = Nothing
+    
+    SaveRecoveryInfo
     
     fireChange BracketOrderChangeTypes.BracketOrderRolloverCompleted
     mOrderContext.NotifyBracketOrderClosed Me
+Case RolloverControllerStateFailed
+    
 End Select
 
 SaveRecoveryInfo
