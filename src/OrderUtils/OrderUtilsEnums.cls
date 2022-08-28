@@ -339,6 +339,7 @@ Public Enum RolloverControllerStates
     RolloverControllerStateExecutingNextBracketOrder
     RolloverControllerStateCompleted
     RolloverControllerStateCancellingNextBracketOrder
+    RolloverControllerStateFailed
 End Enum
 
 Public Enum RolloverQuantityModes

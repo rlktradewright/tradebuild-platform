@@ -751,7 +751,7 @@ On Error GoTo Err
 
 If pDataSource Is Nothing Then
     IsDataSourceReady = True
-ElseIf Not pDataSource.State = MarketDataSourceStateRunning Then
+ElseIf pDataSource.State <> MarketDataSourceStateRunning Then
     IsDataSourceReady = False
 ElseIf mContract Is Nothing Then
     IsDataSourceReady = False

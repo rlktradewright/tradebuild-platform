@@ -51,7 +51,7 @@ Private mTaskContext                                As TaskContext
 
 Private mBracketOrder                               As BracketOrder
 Attribute mBracketOrder.VB_VarHelpID = -1
-Private WithEvents mOrderContext                    As OrderContext
+Private mOrderContext                               As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
 
 Private mState                                      As RolloverControllerStates
@@ -102,16 +102,23 @@ Private Sub IChangeListener_Change(ev As ChangeEventData)
 Const ProcName As String = "IChangeListener_Change"
 On Error GoTo Err
 
-Dim lChangeType As BracketOrderChangeTypes
-lChangeType = ev.changeType
-Select Case lChangeType
-Case BracketOrderChangeTypes.BracketOrderCloseoutOrderFilled
-    If mBracketOrder.Size = 0 Then
-        mBracketOrder.RemoveChangeListener Me
-        setState RolloverControllerStateFindingNextContract
+If ev.Source Is mBracketOrder Then
+    Dim lChangeType As BracketOrderChangeTypes
+    lChangeType = ev.changeType
+    Select Case lChangeType
+    Case BracketOrderChangeTypes.BracketOrderCloseoutOrderFilled
+        If mBracketOrder.Size = 0 Then
+            mBracketOrder.RemoveChangeListener Me
+            setState RolloverControllerStateFindingNextContract
+            mTaskContext.Continue
+        End If
+    End Select
+ElseIf ev.Source Is mOrderContext Then
+    If isCurrentPriceAvailable Then
+        mOrderContext.RemoveChangeListener Me
         mTaskContext.Continue
     End If
-End Select
+End If
 
 Exit Sub
 
@@ -131,9 +138,13 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
+Dim failpoint As String
+
 Select Case mState
 
 Case RolloverControllerStateInitial
+    failpoint = "RolloverControllerStateInitial"
+    
     gLog mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
     gLogBracketOrderMessage "Initiating rollover", _
                             mBracketOrder.DataSource, _
@@ -143,6 +154,8 @@ Case RolloverControllerStateInitial
                             Me
     setState RolloverControllerStateClosingCurrentPosition
 Case RolloverControllerStateClosingCurrentPosition
+    failpoint = "RolloverControllerStateClosingCurrentPosition"
+    
     If mBracketOrder.Size <> 0 Then
         gLog mBracketOrder.Key & ": Closing out current position: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
         gLogBracketOrderMessage "Closing out current position", _
@@ -151,33 +164,38 @@ Case RolloverControllerStateClosingCurrentPosition
                                 mBracketOrder.Key, _
                                 mBracketOrder.IsSimulated, _
                                 Me
+        mBracketOrder.AddChangeListener Me
         initiateCloseout
-        setState RolloverControllerStateFindingNextContract
         mTaskContext.Suspend -1
     Else
         gLog mBracketOrder.Key & ": Current position already closed out: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
         setState RolloverControllerStateFindingNextContract
     End If
 Case RolloverControllerStateFindingNextContract
+    failpoint = "RolloverControllerStateFindingNextContract"
+    
     gLog mBracketOrder.Key & ": Finding next contract: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-    If Not orderContextHasBidAndAsk Then
-        mTaskContext.Suspend -1
-    Else
-        findNextContract 1
-        mTaskContext.Suspend -1
-    End If
+    findNextContract 1
+    mTaskContext.Suspend -1
 Case RolloverControllerStateCreatingNextPositionManager
+    failpoint = "RolloverControllerStateCreatingNextPositionManager"
+    
     Set mNextPositionManager = createNextPositionManager(mNextContract)
     Set mNextOrderContext = mNextPositionManager.OrderContexts.DefaultOrderContext
     setState RolloverControllerStateWaitingForOrderContext
 Case RolloverControllerStateWaitingForOrderContext
+    failpoint = "RolloverControllerStateWaitingForOrderContext"
+    
     If Not mNextOrderContext.IsProviderReady Then
         mTaskContext.Suspend -1
     Else
         setState RolloverControllerStateCreatingNextBracketOrder
     End If
 Case RolloverControllerStateCreatingNextBracketOrder
+    failpoint = "RolloverControllerStateCreatingNextBracketOrder"
+    
     Set mNextBracketOrder = createNextBracketOrder(mUseMarketEntry, mNextContract.Specifier)
+    gLog mBracketOrder.Key & ": Creating next bracket order: " & mNextBracketOrder.Key & "; " & mNextBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
     If Not mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
         gLog mBracketOrder.Key & _
                 ": Waiting for next order context: " & _
@@ -190,6 +208,8 @@ Case RolloverControllerStateCreatingNextBracketOrder
         setState RolloverControllerStateExecutingNextBracketOrder
     End If
 Case RolloverControllerStateExecutingNextBracketOrder
+    failpoint = "RolloverControllerStateExecutingNextBracketOrder"
+    
     mNextOrderContext.ExecuteBracketOrder mNextBracketOrder
     Set mOrderContext = Nothing
     
@@ -205,21 +225,28 @@ Case RolloverControllerStateExecutingNextBracketOrder
         mTaskContext.Suspend -1
     End If
 Case RolloverControllerStateCancellingNextBracketOrder
+    failpoint = "RolloverControllerStateCancellingNextBracketOrder"
+    
     mNextBracketOrder.Cancel
     mTaskContext.Suspend -1
 Case RolloverControllerStateCompleted
+    failpoint = "RolloverControllerStateCompleted"
+    
+    gLog mBracketOrder.Key & " -> " & mNextBracketOrder.Key & ": Rollover completed: " & mNextBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
     mBracketOrder.RemoveChangeListener Me
     Set mOrderContext = Nothing
     Set mBracketOrder = Nothing
     Set mNextOrderContext = Nothing
     Set mNextBracketOrder = Nothing
     mTaskContext.Finish Empty, False
+Case RolloverControllerStateFailed
+
 End Select
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, failpoint
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -238,22 +265,28 @@ Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
 Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-If ev.Future.IsAvailable Then
-    Dim lContract As IContract: Set lContract = ev.Future.Value
-    If lContract.ExpiryDate > mBracketOrder.Contract.ExpiryDate Then
-        ' we've found the next contract
-        Set mNextContract = lContract
-        gLog mBracketOrder.Key & ": Got rollover contract: " & mNextContract.Specifier.ToString, ProcName, ModuleName
-        gLogBracketOrderMessage "Found next contract", _
-                                Nothing, _
-                                mNextContract, _
-                                "", _
-                                mBracketOrder.IsSimulated, _
-                                Me
-        setState RolloverControllerStateCreatingNextPositionManager
+If Not ev.Future.IsAvailable Then Exit Sub
+
+Dim lContract As IContract: Set lContract = ev.Future.Value
+If lContract.ExpiryDate > mBracketOrder.Contract.ExpiryDate Then
+    ' we've found the next contract
+    Set mNextContract = lContract
+    gLog mBracketOrder.Key & ": Got rollover contract: " & mNextContract.Specifier.ToString, ProcName, ModuleName
+    gLogBracketOrderMessage "Found next contract", _
+                            Nothing, _
+                            mNextContract, _
+                            "", _
+                            mBracketOrder.IsSimulated, _
+                            Me
+    setState RolloverControllerStateCreatingNextPositionManager
+    mTaskContext.Continue
+Else
+    Dim lExpiryOffset As Long: lExpiryOffset = ev.ContinuationData
+    If lExpiryOffset = 10 Then
+        ' we can't find a suitable contract
+        setState RolloverControllerStateFailed
         mTaskContext.Continue
     Else
-        Dim lExpiryOffset As Long: lExpiryOffset = ev.ContinuationData
         findNextContract lExpiryOffset + 1
     End If
 End If
@@ -310,25 +343,6 @@ Const ProcName As String = "mNextBracketOrder_EntryOrderFilled"
 On Error GoTo Err
 
 If Not mNextBracketFillTLI Is Nothing Then mNextBracketFillTLI.Cancel
-
-Exit Sub
-
-Err:
-gNotifyUnhandledError ProcName, ModuleName
-End Sub
-
-'@================================================================================
-' mOrderContext Event Handlers
-'@================================================================================
-
-Private Sub mOrderContext_Change(ev As ChangeEventData)
-Const ProcName As String = "mOrderContext_Change"
-On Error GoTo Err
-
-If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
-
-If mState = RolloverControllerStateFindingNextContract And _
-    orderContextHasBidAndAsk Then mTaskContext.Continue
 
 Exit Sub
 
@@ -438,7 +452,6 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mBracketOrder = pBracketOrder
-mBracketOrder.AddChangeListener Me
 Set mOrderContext = mBracketOrder.OrderContext
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
@@ -798,6 +811,12 @@ Case RolloverStrikeModeNone, _
         "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeCurrentValue
+    If Not isCurrentPriceAvailable Then
+        mOrderContext.AddChangeListener Me
+        mTaskContext.Suspend -1
+        Exit Function
+    End If
+
     mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
     mStrikeParameter = getCurrentValue(pCurrentContractSpec.Multiplier)
     mStrikeOperator = lRolloverSpec.InitialStrikeOperator
@@ -806,6 +825,12 @@ Case RolloverStrikeModeCurrentValue
         "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeCurrentProfit
+    If Not isCurrentPriceAvailable Then
+        mOrderContext.AddChangeListener Me
+        mTaskContext.Suspend -1
+        Exit Function
+    End If
+
     mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
     mStrikeOperator = lRolloverSpec.InitialStrikeOperator
     
@@ -993,9 +1018,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function getCurrentValue(ByVal pMultiplier As Double) As Long
+Private Function getCurrentValue( _
+                ByVal pMultiplier As Double) As Long
 Const ProcName As String = "getCurrentValue"
 On Error GoTo Err
+
+Assert isCurrentPriceAvailable, "Price is not currently available"
 
 getCurrentValue = CLng(getCurrentPrice * pMultiplier)
 
@@ -1049,20 +1077,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function orderContextHasBidAndAsk() As Boolean
-Const ProcName As String = "orderContextHasBidAndAsk"
+Private Function isCurrentPriceAvailable() As Boolean
+Const ProcName As String = "isCurrentPriceAvailable"
 On Error GoTo Err
 
-If mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode <> RolloverStrikeModeCurrentValue And _
-    mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode <> RolloverStrikeModeCurrentProfit _
-Then
-    orderContextHasBidAndAsk = True
-ElseIf Not mOrderContext.DataSource.HasCurrentTick(TickTypeBid) Then
-    orderContextHasBidAndAsk = False
+Assert mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode = RolloverStrikeModeCurrentValue Or _
+            mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode = RolloverStrikeModeCurrentProfit, _
+        "Current price not needed for this strike selection mode"
+
+If Not mOrderContext.DataSource.HasCurrentTick(TickTypeBid) Then
+    isCurrentPriceAvailable = False
 ElseIf Not mOrderContext.DataSource.HasCurrentTick(TickTypeAsk) Then
-    orderContextHasBidAndAsk = False
+    isCurrentPriceAvailable = False
 Else
-    orderContextHasBidAndAsk = True
+    isCurrentPriceAvailable = True
 End If
 
 Exit Function
