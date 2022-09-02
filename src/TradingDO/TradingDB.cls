@@ -193,7 +193,8 @@ Set FetchBars = lInstrument.FetchBars(pBarTimePeriod, _
                                         pCustomSessionEndTime, _
                                         pIncludeBarsOutsideSession, _
                                         pBarType, _
-                                        pListener)
+                                        pListener, _
+                                        pDontReturnBars)
 
 Exit Function
 
@@ -238,6 +239,7 @@ fbt.Initialise Me, _
                 pIncludeBarsOutsideSession, _
                 pBarType, _
                 pListener, _
+                pDontReturnBars, _
                 pCookie
                 
 If pTaskName = "" Then pTaskName = "FetchBarsAsync/" & pSpecifier.LocalSymbol & "(" & pBarTimePeriod.ToString & ")" & FormatTimestamp(pFromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(pToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"

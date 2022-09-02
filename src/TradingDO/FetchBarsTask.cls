@@ -67,6 +67,7 @@ Attribute mInstrumentTaskController.VB_VarHelpID = -1
 Private mInstrument                         As instrument
 
 Private mListener                           As IBarFetchListener
+Private mDontReturnBars                     As Boolean
 Private mCookie                             As Variant
 
 Private WithEvents mFutureWaiter            As FutureWaiter
@@ -130,6 +131,7 @@ Else
                                                         mIncludeBarsOutsideSession, _
                                                         mBarType, _
                                                         mListener, _
+                                                        mDontReturnBars, _
                                                         mCookie)
     mTaskContext.Suspend -1
 End If
@@ -255,6 +257,7 @@ Friend Sub Initialise( _
                 ByVal IncludeBarsOutsideSession As Boolean, _
                 ByVal BarType As BarTypes, _
                 ByVal pListener As IBarFetchListener, _
+                ByVal pDontReturnBars As Boolean, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -270,6 +273,7 @@ mCustomSessionEndTime = customSessionEndTime
 mIncludeBarsOutsideSession = IncludeBarsOutsideSession
 mBarType = BarType
 Set mListener = pListener
+mDontReturnBars = pDontReturnBars
 gSetVariant mCookie, pCookie
 
 Exit Sub

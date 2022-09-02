@@ -66,6 +66,8 @@ Private mHistDataStore                              As HistDataStore
 
 Private mUseSynchronousReads                        As Boolean
 
+Private mDontReturnBars                             As Boolean
+
 Private mSelfRef                                    As Object
 
 '@================================================================================
@@ -168,7 +170,7 @@ Friend Sub Initialise( _
                 ByVal pHistDataStore As HistDataStore, _
                 ByVal pTradingDBFuture As IFuture, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pBarDataSpecifier As IFuture, _
+                ByVal pBarDataSpecifier As BarDataSpecifier, _
                 ByVal pSpecialFromTime As String, _
                 ByVal pSpecialToTime As String, _
                 ByVal pClockFuture As IFuture, _
@@ -180,6 +182,7 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 mUseSynchronousReads = pUseSynchronousReads
+mDontReturnBars = pDontReturnBars
 
 Set mHistDataStore = pHistDataStore
 If pTradingDBFuture.IsAvailable Then
