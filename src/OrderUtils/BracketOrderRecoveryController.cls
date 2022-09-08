@@ -677,10 +677,10 @@ Private Function GetPositionManager( _
 Const ProcName As String = "GetPositionManager"
 On Error GoTo Err
 
-Assert mPositionManagersByRecoveryContextName.Contains(lOpItem.RCN), "PositionManager " & lOpItem.RCN & " not recovered"
-
 Dim lPm As PositionManager
-Set lPm = mPositionManagersByRecoveryContextName.Item(lOpItem.RCN)
+If Not mPositionManagersByRecoveryContextName.TryItem(lOpItem.RCN, lPm) Then
+    gLog "PositionManager " & lOpItem.RCN & " not recovered", ProcName, ModuleName, , LogLevelDetail
+End If
 
 Set GetPositionManager = lPm
 
@@ -839,6 +839,11 @@ On Error GoTo Err
 
 Dim lPm As PositionManager
 Set lPm = GetPositionManager(pOpItem)
+If lPm Is Nothing Then
+    processOrderPersistenceItem = False
+    Exit Function
+End If
+
 Debug.Print "PositionManager object key: " & GetObjectKey(lPm)
 
 If IsContractExpired(lPm.ContractFuture.Value) Then
