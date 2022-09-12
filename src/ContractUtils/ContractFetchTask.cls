@@ -220,6 +220,8 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
+gLogger.Log "Running FetchContractTask for " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+
 Set mCurrentContractStore = mPrimaryContractStore
 If mCurrentContractStore Is Nothing Then
     Set mCurrentContractStore = mSecondaryContractStore
@@ -481,6 +483,8 @@ Friend Sub Initialise( _
                 ByVal pSingleContractOnly As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
+
+gLogger.Log "Fetching contract for " & pContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
 
 Set mSelfRef = Me
 
