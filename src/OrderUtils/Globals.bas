@@ -816,9 +816,9 @@ Static sLogger As Logger
 Static sLoggerSimulated As Logger
 
 If pSimulated Then
-    logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, sLoggerSimulated
+    logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, sLoggerSimulated, True
 Else
-    logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, sLogger
+    logInfotypeData "order", pMessage, pSimulated, pSource, pLogLevel, sLogger, True
 End If
 
 Exit Sub
@@ -1490,13 +1490,14 @@ Private Sub logInfotypeData( _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 ByVal pLogLevel As LogLevels, _
-                ByRef pLogger As Logger)
+                ByRef pLogger As Logger, _
+                Optional ByVal pLogToParent As Boolean = False)
 Const ProcName As String = "logInfotypeData"
 On Error GoTo Err
 
 If pLogger Is Nothing Then
     Set pLogger = GetLogger("position." & pInfoType & IIf(pSimulated, "Simulated", ""))
-    pLogger.LogToParent = False
+    pLogger.LogToParent = pLogToParent
 End If
 pLogger.Log pLogLevel, pData, pSource
 

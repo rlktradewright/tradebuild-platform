@@ -3608,14 +3608,17 @@ Private Function doCompletionActions()
 Const ProcName As String = "doCompletionActions"
 On Error GoTo Err
 
-If Not mOrderContext Is Nothing Then
-    If mOrderContext.Name <> BalancingOrderContextName Then
-        mOrderContext.NotifyBracketOrderClosed Me
-    End If
+If mSummary.RolloverDate <> 0 Then
+    fireChange BracketOrderRolloverPending
+ElseIf mOrderContext Is Nothing Then
+    fireChange BracketOrderCompleted
+    RaiseEvent Completed
+ElseIf mOrderContext.Name = BalancingOrderContextName Then
+    mOrderContext.NotifyBracketOrderClosed Me
+    fireChange BracketOrderCompleted
+    RaiseEvent Completed
 End If
 
-fireChange BracketOrderCompleted
-RaiseEvent Completed
 
 Exit Function
 

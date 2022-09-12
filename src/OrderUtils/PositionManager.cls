@@ -800,6 +800,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get IsActive() As Boolean
+Const ProcName As String = "IsActive"
+On Error GoTo Err
+
+If mOrderContexts Is Nothing Then Exit Property
+
+If mQuantityOutstanding <> 0 Or haveActiveBracketOrders Then
+    IsActive = True
+ElseIf stillInInitialSession And haveClosedBracketOrders Then
+    IsActive = True
+Else
+    IsActive = False
+End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+
 Public Property Get IsFinished() As Boolean
 IsFinished = mIsFinished
 End Property
@@ -1268,8 +1289,9 @@ On Error GoTo Err
 If IsFinished Then Exit Sub
 
 Assert Not mRecovering, "Invalid call to Finish during recovery"
+Assert Not IsActive, "PositionManager is still active"
 
-If Not needExistingBracketOrders Then DeleteRecoveryInfo
+DeleteRecoveryInfo
 
 doFinish
 
@@ -1549,7 +1571,7 @@ If Int(mSession.SessionCurrentTime) = 0# Then Exit Sub
 
 If mSummary.TradingSessionStartTime = 0# Then mSummary.TradingSessionStartTime = mSession.CurrentSessionStartTime
     
-If Not needExistingBracketOrders Then setupNewSession
+If Not IsActive Then setupNewSession
 
 Exit Sub
 
@@ -1633,7 +1655,7 @@ End If
 mFinishRecoveryPending = False
 mRecovering = False
 
-If needExistingBracketOrders Then
+If IsActive Then
     setupSessionBracketOrders
     SaveRecoveryInfo
 Else
@@ -1815,26 +1837,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function needExistingBracketOrders() As Boolean
-Const ProcName As String = "needExistingBracketOrders"
-On Error GoTo Err
-
-If mOrderContexts Is Nothing Then Exit Function
-
-If mQuantityOutstanding <> 0 Or haveActiveBracketOrders Then
-    needExistingBracketOrders = True
-ElseIf stillInInitialSession And haveClosedBracketOrders Then
-    needExistingBracketOrders = True
-Else
-    needExistingBracketOrders = False
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Sub notifyPositionChange(ByVal pExec As IExecutionReport)
 Const ProcName As String = "notifyPositionChange"

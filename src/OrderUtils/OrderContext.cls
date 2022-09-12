@@ -485,7 +485,7 @@ Friend Sub ActivateBracketOrder( _
 Const ProcName As String = "ActivateBracketOrder"
 On Error GoTo Err
 
-If pBracketOrder.IsComplete Then
+If pBracketOrder.IsComplete And pBracketOrder.RolloverDate = 0 Then
     NotifyBracketOrderClosed pBracketOrder
 Else
     mActiveBracketOrders.Add pBracketOrder

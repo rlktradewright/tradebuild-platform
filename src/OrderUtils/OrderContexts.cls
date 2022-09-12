@@ -495,6 +495,7 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
+mDataSource.RemoveGenericTickListener Me
 Set mDataSource = Nothing
 
 mOrderSubmitter.Finish
