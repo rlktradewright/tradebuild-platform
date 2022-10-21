@@ -696,6 +696,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub gLogBracketOrderRollover( _
+                ByVal pData As String, _
+                ByVal pSimulated As Boolean, _
+                ByVal pSource As Object, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
+Const ProcName As String = "gLogBracketOrderRollover"
+On Error GoTo Err
+
+Static sLogger As Logger
+Static sLoggerSimulated As Logger
+
+If pSimulated Then
+    logInfotypeData "bracketorderrollover", pData, pSimulated, pSource, pLogLevel, sLoggerSimulated, True
+Else
+    logInfotypeData "bracketorderrollover", pData, pSimulated, pSource, pLogLevel, sLogger, True
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub gLogContractResolution(ByVal pMsg As String, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Const ProcName As String = "gLog"

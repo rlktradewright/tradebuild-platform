@@ -2065,9 +2065,22 @@ If mMonitor Then
                         "(" & mClientId & ")" & _
                         "-" & lFilenameSuffix & _
                         "-BracketOrders" & ".log", _
+                        "-BracketOrders" & _
+                        ".log", _
                     includeTimestamp:=False, _
                     includeLogLevel:=False)
     GetLogger("position.bracketorderprofilestring").AddLogListener lLogfile
+
+    Set lLogfile = CreateFileLogListener( _
+                    lResultsPath & "Orders\" & _
+                        ProjectName & _
+                        "(" & mClientId & ")" & _
+                        "-" & lFilenameSuffix & _
+                        "-Rollovers" & _
+                        ".log", _
+                    includeTimestamp:=False, _
+                    includeLogLevel:=False)
+    GetLogger("position.bracketorderrollover").AddLogListener lLogfile
 End If
 
 Exit Sub

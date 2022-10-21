@@ -233,6 +233,7 @@ Case RolloverControllerStateCompleted
     failpoint = "RolloverControllerStateCompleted"
     
     gLog mBracketOrder.Key & " -> " & mNextBracketOrder.Key & ": Rollover completed: " & mNextBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+    logRollover mBracketOrder, mNextBracketOrder
     mBracketOrder.RemoveChangeListener Me
     Set mOrderContext = Nothing
     Set mBracketOrder = Nothing
@@ -1098,6 +1099,30 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub logRollover( _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pNextBracketOrder As IBracketOrder)
+Const ProcName As String = "logRollover"
+On Error GoTo Err
+
+gLogBracketOrderRollover _
+                pBracketOrder.GroupName & "," & _
+                FormatTimestamp(mNextOrderContext.Clock.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+                mNextOrderContext.Clock.TimeZone.StandardName & "," & _
+                pBracketOrder.Key & "," & _
+                gGetContractName(pBracketOrder.Contract.Specifier) & "," & _
+                pNextBracketOrder.Key & "," & _
+                gGetContractName(pNextBracketOrder.Contract.Specifier), _
+                pNextBracketOrder.IsSimulated, _
+                Me
+
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub setState(ByVal pState As RolloverControllerStates)
 Const ProcName As String = "setState"
