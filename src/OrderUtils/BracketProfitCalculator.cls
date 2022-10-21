@@ -53,6 +53,7 @@ Private Const ModuleName                            As String = "BracketProfitCa
 
 Private mBracketOrder                               As IBracketOrder
 Attribute mBracketOrder.VB_VarHelpID = -1
+Private mBracketOrderKey                            As String
 Private mContractFuture                             As IFuture
 Private mDataSource                                 As IMarketDataSource
 
@@ -82,6 +83,20 @@ Private mCurrentTick                                As GenericTick
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Terminate()
+Const ProcName As String = "Class_Terminate"
+On Error GoTo Err
+
+gLog "Profit calculator: " & GetObjectKey(Me) & _
+        " terminated for bracket order: " & mBracketOrderKey, _
+    ProcName, ModuleName, , LogLevelDetail
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
 
 '@================================================================================
 ' IChangeListener Interface Members
@@ -127,8 +142,10 @@ Private Sub IExecutionListener_NotifyExecution(ev As ExecutionEventData)
 Const ProcName As String = "IExecutionListener_NotifyExecution"
 On Error GoTo Err
 
-If Not mAnExecutionHasOccurred Then listenToData
-mAnExecutionHasOccurred = True
+If Not mAnExecutionHasOccurred Then
+    mAnExecutionHasOccurred = True
+    listenToData
+End If
 
 If ev.ExecutionReport.Action = OrderActionBuy Then
     mCumBuyPrice = mCumBuyPrice + ev.ExecutionReport.Quantity * ev.ExecutionReport.Price
@@ -251,8 +268,13 @@ On Error GoTo Err
 mLastTrade = MaxDouble
 
 Set mBracketOrder = pBracketOrder
+mBracketOrderKey = mBracketOrder.Key
 mBracketOrder.AddExecutionListener Me
 mBracketOrder.AddChangeListener Me
+
+gLog "Profit calculator: " & GetObjectKey(Me) & _
+        " initialised for bracket order: " & mBracketOrderKey, _
+    ProcName, ModuleName, , LogLevelDetail
 
 Set mContractFuture = pDataSource.ContractFuture
 Set mDataSource = pDataSource
@@ -260,6 +282,7 @@ Set mDataSource = pDataSource
 'If mBracketOrder.Size <> 0 Then
     mCumBuyPrice = pBracketOrder.CumBuyPrice
     mCumSellPrice = pBracketOrder.CumSellPrice
+    If mCumBuyPrice <> 0 Or mCumSellPrice <> 0 Then mAnExecutionHasOccurred = True
 
     listenToData
     calcInitialProfit
@@ -540,11 +563,13 @@ Const ProcName As String = "logBracketProfile"
 On Error GoTo Err
 
 Static sContractSpec As IContractSpecifier
+Static sContractTimezoneName As String
 
 If sContractSpec Is Nothing Then
     Dim lContract As IContract
     Set lContract = mContractFuture.Value
     Set sContractSpec = lContract.Specifier
+    sContractTimezoneName = lContract.TimezoneName
 End If
 
 Dim profile As New BracketOrderProfile
@@ -565,6 +590,7 @@ With profile
     .StartTime = mBracketOrder.StartTime
     .StopReason = mBracketOrder.StopReason
     .TargetReason = mBracketOrder.TargetReason
+    .TimezoneName = sContractTimezoneName
 End With
 gLogBracketOrderProfileObject profile, mBracketOrder.IsSimulated, Me
 
@@ -573,6 +599,7 @@ gLogBracketOrderProfileString _
             gGetContractName(sContractSpec) & "," & _
             FormatTimestamp(mBracketOrder.StartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(mBracketOrder.EndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+            sContractTimezoneName & "," & _
             mBracketOrder.Description & "," & _
             mBracketOrder.Key & "," & _
             gOrderActionToString(mBracketOrder.EntryOrder.Action) & "," & _
