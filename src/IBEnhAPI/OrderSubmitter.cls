@@ -1147,13 +1147,15 @@ Private Sub doGetTickSize()
 Const ProcName As String = "doGetTickSize"
 On Error GoTo Err
 
+Dim s As String
+s = mContract.Specifier.LocalSymbol & "@" & mContract.Specifier.Exchange & ": "
+
 Dim lRulesetID As Long
 lRulesetID = CLng(mContract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
-gLog "lRulesetID=" & lRulesetID, ModuleName, ProcName
 
 Dim lPriceMagnifier As Long
 lPriceMagnifier = CLng(mContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
-gLog "lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName
+gLog s & "lRulesetID=" & lRulesetID & "; lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName, , LogLevelDetail
 
 Dim lRulesetFuture As IFuture
 Set lRulesetFuture = mContractRequester.RequestPriceIncrementRuleset(lRulesetID, lPriceMagnifier)

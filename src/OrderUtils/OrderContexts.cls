@@ -335,11 +335,19 @@ Set DataSource = mDataSource
 End Property
 
 Public Property Get DefaultOrderContext() As OrderContext
+Const ProcName As String = "DefaultOrderContext"
+On Error GoTo Err
+
 If Not Contains(DefaultOrderContextName) Then
     Set DefaultOrderContext = Add(DefaultOrderContextName)
 Else
     Set DefaultOrderContext = Item(DefaultOrderContextName)
 End If
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let Enabled(ByVal Value As Boolean)
@@ -802,8 +810,7 @@ gLog IIf(IsSimulated, "(simulated)", "") & _
     gGetContractName(mContract.Specifier) & _
     " is " & _
     pTickSize, _
-    ProcName, _
-    ModuleName
+    ProcName, ModuleName, , LogLevelDetail
 
 mTickSize = pTickSize
 Dim lOrderContext As OrderContext

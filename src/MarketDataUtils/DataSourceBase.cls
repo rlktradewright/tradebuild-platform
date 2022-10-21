@@ -200,7 +200,7 @@ ElseIf mIsSnapshot And _
     gLogger.Log "Snapshot completed for: " & _
                 mContract.Specifier.ToString & _
                 "; restarting in " & Format(lRestartInterval, "0.000") & " seconds", _
-                ProcName, ModuleName
+                ProcName, ModuleName, LogLevelDetail
     Set mSnapshotRefreshTLI = mTimerList.Add(Empty, lRestartInterval, ExpiryTimeUnitSeconds)
 Else
     fireNoMorePriorityTicks ev
@@ -308,7 +308,7 @@ mSnapshotRefreshCount = mSnapshotRefreshCount + 1
 gLogger.Log "Restarting snapshot for: " & _
             mContract.Specifier.ToString & _
             "; restart " & mSnapshotRefreshCount, _
-            ProcName, ModuleName
+            ProcName, ModuleName, LogLevelDetail
 RequestMarketData True
 
 Exit Sub

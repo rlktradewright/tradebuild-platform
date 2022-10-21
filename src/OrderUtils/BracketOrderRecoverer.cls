@@ -104,7 +104,7 @@ Dim lRecoverable As IRecoverable
 Set lRecoverable = mBracketOrder
 lRecoverable.FinishRecovery
 
-gLog "Finished recovering bracket order", pMsgQualifier:=mBracketOrder.Key, pModName:=ModuleName, pProcName:=ProcName
+gLog "Finished recovering bracket order", ProcName, ModuleName, mBracketOrder.Key, LogLevelDetail
 
 Exit Sub
 
@@ -120,7 +120,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLog "Recreating bracket order", pMsgQualifier:=pKey, pModName:=ModuleName, pProcName:=ProcName
+gLog "Recreating bracket order: " & pKey, ProcName, ModuleName, pKey, LogLevelDetail
 
 Set mBracketOrder = New BracketOrder
 

@@ -125,7 +125,7 @@ Set lOrderContext = ev.Source
 If ev.changeType = OrderContextChangeTypes.OrderContextReadyStateChanged And _
     lOrderContext.IsProviderReady _
 Then
-    gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name
+    gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name, LogLevelDetail
     mNumOrderContextsWaiting = mNumOrderContextsWaiting - 1
     lOrderContext.RemoveChangeListener Me
     If mNumOrderContextsWaiting = 0 And mState = RecoveryStateWaitingForOrderContexts Then

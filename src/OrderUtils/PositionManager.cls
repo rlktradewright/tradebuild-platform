@@ -1586,7 +1586,7 @@ On Error GoTo Err
 If mBracketOrderRecoveryController Is Nothing Then Exit Sub
 
 mInitialRecoveryDataSaved = False
-gLog "Deleting order recovery info for Position Manager", ProcName, ModuleName, mSummary.Name
+gLog "Deleting order recovery info for Position Manager", ProcName, ModuleName, mSummary.Name, LogLevelDetail
 mBracketOrderRecoveryController.DeleteRecoveryInfo mRecoveryContextName
 
 Exit Sub

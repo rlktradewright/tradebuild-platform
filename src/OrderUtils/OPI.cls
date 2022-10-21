@@ -157,7 +157,7 @@ If mItemType = OrderInfoData Then
     Dim lStartPos As Long
     lStartPos = InStr(1, pValue, mItemType) + Len(mItemType) + 2
     lData = Mid$(pValue, lStartPos, Len(pValue) - lStartPos)
-    gLog lData, ProcName, ModuleName
+    gLog lData, ProcName, ModuleName, , LogLevelDetail
     ParseJSON lData, mData
     If TypeOf mData Is PMS Then
         Dim lPMS As PMS: Set lPMS = mData
