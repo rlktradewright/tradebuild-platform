@@ -313,6 +313,33 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function Clone() As RolloverSpecification
+Dim lRolloverSpecification As New RolloverSpecification
+With Me
+    Set Clone = lRolloverSpecification. _
+                setDays(.Days). _
+                setTime(.Time). _
+                setInitialStrikeSelectionMode(.InitialStrikeSelectionMode). _
+                setInitialStrikeParameter(.InitialStrikeParameter). _
+                setInitialStrikeOperator(.InitialStrikeOperator). _
+                setRolloverStrikeSelectionMode(.RolloverStrikeSelectionMode). _
+                setRolloverStrikeParameter(.RolloverStrikeParameter). _
+                setRolloverStrikeOperator(.RolloverStrikeOperator). _
+                setRolloverQuantityMode(.RolloverQuantityMode). _
+                setRolloverQuantityParameter(.RolloverQuantityParameter). _
+                setRolloverQuantityLotSize(.RolloverQuantityLotSize). _
+                setUnderlyingExchangeName(.UnderlyingExchangeName). _
+                setCloseOrderType(.CloseOrderType). _
+                setCloseTimeoutSecs(.CloseTimeoutSecs). _
+                setCloseLimitPriceSpec(.CloseLimitPriceSpec). _
+                setCloseTriggerPriceSpec(.CloseTriggerPriceSpec). _
+                setEntryOrderType(.EntryOrderType). _
+                setEntryTimeoutSecs(.EntryTimeoutSecs). _
+                setEntryLimitPriceSpec(.EntryLimitPriceSpec). _
+                setEntryTriggerPriceSpec(.EntryTriggerPriceSpec)
+End With
+End Function
+
 Public Function setCloseOrderType(ByVal Value As OrderTypes) As RolloverSpecification
 mCloseOrderType = Value
 Set setCloseOrderType = Me

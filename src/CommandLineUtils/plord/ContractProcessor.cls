@@ -821,12 +821,12 @@ Friend Sub SetDefaultRolloverSpec(ByVal pSpec As RolloverSpecification)
 Const ProcName As String = "SetDefaultRolloverSpec"
 On Error GoTo Err
 
-Set mDefaultRolloverSpec = pSpec
-If mDefaultRolloverSpec Is Nothing Then Exit Sub
+If pSpec Is Nothing Then Exit Sub
+Set mDefaultRolloverSpec = pSpec.Clone
 
-pSpec.setInitialStrikeSelectionMode(mInitialStrikeSelectionMode). _
-        setInitialStrikeParameter(mInitialStrikeParameter). _
-        setInitialStrikeOperator mInitialStrikeOperator
+mDefaultRolloverSpec.setInitialStrikeSelectionMode(mInitialStrikeSelectionMode). _
+                    setInitialStrikeParameter(mInitialStrikeParameter). _
+                    setInitialStrikeOperator mInitialStrikeOperator
 
 Exit Sub
 
