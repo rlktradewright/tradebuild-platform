@@ -56,6 +56,10 @@ Private mForceCloseAfterSecs                        As Long
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+mOrderType = OrderTypeMarket
+End Sub
+
 '@================================================================================
 ' IJSONable Interface Members
 '@================================================================================
