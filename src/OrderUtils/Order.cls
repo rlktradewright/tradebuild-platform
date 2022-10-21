@@ -1669,18 +1669,23 @@ Else
     lExec.SaveRecoveryInfo
 End If
 
-If mContractSpecifier Is Nothing Then
-    ' happens when an order from a previous session is being recovered before
-    ' the relevant ticker is ready
-ElseIf pLog Then
+If pLog Then
+    Assert mOrderContext.ContractFuture.IsAvailable, "contract is not available"
+    Dim lContract As IContract
+    Set lContract = mOrderContext.ContractFuture.Value
+    
+    Dim lFillTime As Date
+    lFillTime = ConvertDateTzToTz(lExec.FillTime, _
+                                GetTimeZone(lExec.TimezoneName), _
+                                GetTimeZone(lContract.TimezoneName))
     gLogOrderDetail _
             mSummary.GroupName & "," & _
             gGetContractName(mContractSpecifier) & "," & _
             lExec.Quantity & "," & _
             lExec.Price & "," & _
             gOrderActionToString(lExec.Action) & "," & _
-            FormatTimestamp(lExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
-            lExec.TimezoneName & "," & _
+            FormatTimestamp(lFillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+            lContract.TimezoneName & "," & _
             lExec.Id & "," & _
             lExec.BrokerId & "," & _
             Id, _
