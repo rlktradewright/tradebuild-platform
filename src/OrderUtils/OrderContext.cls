@@ -1290,14 +1290,17 @@ If pAutosizeType = BracketAutosizeMonetaryAmount Or pAutosizeType = BracketAutos
 End If
 
 If pAutosizeType = BracketAutosizePercentOfAccount Then
-    If Not IsAccountProviderReady Then IsReadyForAutoSize = False
-    If Not mCurrencyConverter.IsReadyCurrencies(mAccountDataProvider.BaseCurrency, "USD") Then
-        mCurrencyConverter.AddStateChangeListener mAccountDataProvider.BaseCurrency, "USD", Me
+    If Not IsAccountProviderReady Then
         IsReadyForAutoSize = False
-    End If
-    If Not mCurrencyConverter.IsReadyCurrencies(mContract.Specifier.CurrencyCode, "USD") Then
-        mCurrencyConverter.AddStateChangeListener mContract.Specifier.CurrencyCode, "USD", Me
-        IsReadyForAutoSize = False
+    Else
+        If Not mCurrencyConverter.IsReadyCurrencies(mAccountDataProvider.BaseCurrency, "USD") Then
+            mCurrencyConverter.AddStateChangeListener mAccountDataProvider.BaseCurrency, "USD", Me
+            IsReadyForAutoSize = False
+        End If
+        If Not mCurrencyConverter.IsReadyCurrencies(mContract.Specifier.CurrencyCode, "USD") Then
+            mCurrencyConverter.AddStateChangeListener mContract.Specifier.CurrencyCode, "USD", Me
+            IsReadyForAutoSize = False
+        End If
     End If
 End If
 
