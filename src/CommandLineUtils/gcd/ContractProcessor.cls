@@ -55,8 +55,9 @@ Attribute mTB.VB_VarHelpID = -1
 Private mContracts As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 
-Private mDone As Boolean
 Private mLineNumber As Long
+
+Private mNametemplate As String
 
 Private WithEvents mFutureWaiter As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -88,16 +89,16 @@ End Sub
 '@================================================================================
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
-If ev.Future.IsPending Then Exit Sub
 If ev.Future.IsCancelled Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": contract fetch cancelled: " & mContractSpec.ToString
 ElseIf ev.Future.IsFaulted Then
     gCon.WriteErrorLine "Line " & mLineNumber & ": contract fetch error: " & mContractSpec.ToString
 Else
-    Set mContracts = ev.Future.value
+    Set mContracts = ev.Future.Value
     If mContracts.Count = 0 Then gCon.WriteErrorLine "Line " & mLineNumber & ": no contracts: " & mContractSpec.ToString
+    processContracts
 End If
-mDone = True
+gPauseInput = False
 End Sub
 
 '@================================================================================
@@ -130,43 +131,37 @@ Public Sub process( _
                 ByVal contractSpec As IContractSpecifier, _
                 ByVal lineNumber As Long, _
                 ByVal nametemplate As String)
-Dim lContract As IContract
-
-mDone = False
-
 Set mContracts = Nothing
 Set mContractSpec = contractSpec
 mLineNumber = lineNumber
+mNametemplate = nametemplate
 mFutureWaiter.Add mTB.ContractStorePrimary.FetchContracts(contractSpec)
+gPauseInput = True
+End Sub
 
-' now hang around until we've got the info, but don't exit this proc
-' because we don't want to process the next line of input till this one's done
+Private Sub processContracts()
+If mContracts.Count = 0 Then Exit Sub
 
-Do While Not mDone
-    Wait (100)
-Loop
-
-If mContracts.Count <> 0 Then
-    For Each lContract In mContracts
-        gCon.WriteLine formatName(lContract, nametemplate) & OutputSep & _
-                        lContract.Specifier.LocalSymbol & OutputSep & _
-                        lContract.Specifier.symbol & OutputSep & _
-                        lContract.Specifier.expiry & OutputSep & _
-                        lContract.Specifier.multiplier & OutputSep & _
-                        lContract.Specifier.strike & OutputSep & _
-                        OptionRightToString(lContract.Specifier.Right) & OutputSep & _
-                        SecTypeToString(lContract.Specifier.sectype) & OutputSep & _
-                        lContract.Specifier.exchange & OutputSep & _
-                        lContract.Specifier.currencyCode & OutputSep & _
-                        lContract.TickSize & OutputSep & _
-                        lContract.TickValue & OutputSep & _
-                        Format(lContract.SessionStartTime, "hh:mm") & OutputSep & _
-                        Format(lContract.SessionEndTime, "hh:mm") & OutputSep & _
-                        lContract.TimezoneName & OutputSep & _
-                        lContract.DaysBeforeExpiryToSwitch & OutputSep & _
-                        lContract.NumberOfDecimals & OutputSep
-    Next
-End If
+Dim lContract As IContract
+For Each lContract In mContracts
+    gCon.WriteLine formatName(lContract, mNametemplate) & OutputSep & _
+                    lContract.Specifier.LocalSymbol & OutputSep & _
+                    lContract.Specifier.symbol & OutputSep & _
+                    lContract.Specifier.expiry & OutputSep & _
+                    lContract.Specifier.multiplier & OutputSep & _
+                    lContract.Specifier.strike & OutputSep & _
+                    OptionRightToString(lContract.Specifier.Right) & OutputSep & _
+                    SecTypeToString(lContract.Specifier.sectype) & OutputSep & _
+                    lContract.Specifier.exchange & OutputSep & _
+                    lContract.Specifier.currencyCode & OutputSep & _
+                    lContract.TickSize & OutputSep & _
+                    lContract.TickValue & OutputSep & _
+                    Format(lContract.SessionStartTime, "hh:mm") & OutputSep & _
+                    Format(lContract.SessionEndTime, "hh:mm") & OutputSep & _
+                    lContract.TimezoneName & OutputSep & _
+                    lContract.DaysBeforeExpiryToSwitch & OutputSep & _
+                    lContract.NumberOfDecimals & OutputSep
+Next
 
 End Sub
                 

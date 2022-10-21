@@ -114,11 +114,33 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function getInputLineAndWait( _
+                ByVal pFromConsole As Boolean, _
+                Optional ByVal pPrompt As String = ":", _
+                Optional ByVal pEchoChar As String = "", _
+                Optional ByVal pDontReadInput As Boolean = False, _
+                Optional ByVal pWaitTimeMIllisecs As Long = 5) As String
+Dim lWaitUntilTime As Date
+lWaitUntilTime = GetTimestampUTC + pWaitTimeMIllisecs / (86400# * 1000#)
+
+If pDontReadInput Then
+ElseIf pFromConsole Then
+    getInputLineAndWait = Trim$(gCon.ReadLineFromConsole(pPrompt, pEchoChar))
+Else
+    getInputLineAndWait = Trim$(gCon.ReadLine(pPrompt))
+End If
+
+Do
+    ' allow queued system messages to be handled
+    Wait 5
+Loop Until GetTimestampUTC >= lWaitUntilTime
+End Function
+
 Private Sub Process()
 Dim inString As String
 Dim lineNumber As Long
 
-inString = Trim$(gCon.ReadLine(":"))
+inString = getInputLineAndWait(False)
 Do While inString <> gCon.EofString
     lineNumber = lineNumber + 1
     If inString = "" Then
@@ -146,7 +168,7 @@ Do While inString <> gCon.EofString
         End If
         processInput inString, lineNumber
     End If
-    inString = Trim$(gCon.ReadLine(":"))
+    inString = getInputLineAndWait(False)
 Loop
 End Sub
 
@@ -436,7 +458,7 @@ password = clp.Arg(4)
 On Error GoTo 0
 
 If username <> "" And password = "" Then
-    password = gCon.ReadLineFromConsole("Password:", "*")
+    password = getInputLineAndWait(True, "Password:", "*")
 End If
     
 dbtype = DatabaseTypeFromString(dbtypeStr)

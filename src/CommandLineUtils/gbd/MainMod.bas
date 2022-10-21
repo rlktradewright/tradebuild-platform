@@ -1730,6 +1730,7 @@ Do
     If mProviderReady And (mAsync Or mCurrentProcessor Is Nothing) Then
         Dim lInputString As String
         lInputString = Trim$(gCon.ReadLine(":"))
+        Wait 50
         If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
         
         If lInputString = "" Then
@@ -1750,11 +1751,8 @@ Do
             LogMessage "con: " & lInputString
             processCommand lInputString
         End If
-'        Do While mProcessors.Count >= 1
-'            Wait 10
-'        Loop
     Else
-        Wait 10
+        Wait 50
     End If
 Loop
 

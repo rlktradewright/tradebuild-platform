@@ -40,6 +40,7 @@ Private Const DefaultClientId               As Long = "952361208"
 '@================================================================================
 
 Public gCon                                         As Console
+Public gPauseInput                                  As Boolean
 Private mCp                                         As ContractProcessor
 
 Private mTB                                         As TradeBuildAPI
@@ -118,11 +119,25 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Function getInputLineAndWait( _
+                Optional ByVal pDontReadInput As Boolean = False, _
+                Optional ByVal pWaitTimeMIllisecs As Long = 5) As String
+Dim lWaitUntilTime As Date
+lWaitUntilTime = GetTimestampUTC + pWaitTimeMIllisecs / (86400# * 1000#)
+
+If Not pDontReadInput Then getInputLineAndWait = Trim$(gCon.ReadLine(":"))
+
+Do
+    ' allow queued system messages to be handled
+    Wait 5
+Loop Until GetTimestampUTC >= lWaitUntilTime
+End Function
+
 Private Sub process()
 Dim inString As String
 Dim lineNumber As Long
 
-inString = Trim$(gCon.ReadLine(":"))
+inString = getInputLineAndWait(gPauseInput)
 Do While inString <> gCon.EofString
     lineNumber = lineNumber + 1
     If inString = "" Then
@@ -141,7 +156,7 @@ Do While inString <> gCon.EofString
     Else
         processContractRequest inString, lineNumber
     End If
-    inString = Trim$(gCon.ReadLine(":"))
+    inString = getInputLineAndWait(gPauseInput)
 Loop
 End Sub
 

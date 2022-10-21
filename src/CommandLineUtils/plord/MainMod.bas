@@ -446,7 +446,7 @@ StartTask gPlaceOrdersTask, PriorityNormal
 If mAccountDataProvider.State <> AccountProviderReady Then
     gWriteLineToConsole "Waiting for account provider to be ready", True
     Do While mAccountDataProvider.State <> AccountProviderReady
-        Wait 50
+        getInputLineAndWait pDontReadInput:=True, pWaitTimeMIllisecs:=50
     Loop
     gWriteLineToConsole "Account provider is ready", True
 End If
@@ -519,19 +519,26 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getInputLine() As String
+Private Function getInputLineAndWait( _
+                Optional ByVal pDontReadInput As Boolean = False, _
+                Optional ByVal pWaitTimeMIllisecs As Long = 5) As String
 Const ProcName As String = "getInputLine"
 On Error GoTo Err
 
-Do While gInputPaused And Not mTerminateRequested
-    Wait 20
-Loop
 If mTerminateRequested Then
-    getInputLine = gCon.EofString
-Else
-    getInputLine = Trim$(gCon.ReadLine(getPrompt))
-    If getInputLine <> "" Then setupResultsLogging mClp
+    getInputLineAndWait = gCon.EofString
+    Exit Function
 End If
+
+Dim lWaitUntilTime As Double
+lWaitUntilTime = GetTimestampUTC + pWaitTimeMIllisecs / (86400# * 1000#)
+
+If Not pDontReadInput Then getInputLineAndWait = Trim$(gCon.ReadLine(getPrompt))
+
+Do
+    ' allow queued system messages to be handled
+    Wait 5
+Loop Until GetTimestampUTC >= lWaitUntilTime
 
 Exit Function
 
@@ -1061,13 +1068,15 @@ If Not setMonitor Then Exit Sub
 If Not setStageOrders Then Exit Sub
 If Not setBatchOrders Then Exit Sub
 
+setupResultsLogging mClp
+
 setOrderRecovery
 
 gSetValidNextCommands gCommandListAlways, _
                     gCommandListGeneral, _
                     gCommandListOrderCreation
 
-Dim inString As String: inString = getInputLine
+Dim inString As String: inString = getInputLineAndWait(gInputPaused)
 
 Do While inString <> gCon.EofString
     If inString = "" Then
@@ -1082,7 +1091,7 @@ Do While inString <> gCon.EofString
         If Not processCommand(inString) Then Exit Do
     End If
     
-    inString = getInputLine
+    inString = getInputLineAndWait(gInputPaused)
 Loop
 
 If mTerminateRequested Then Exit Sub
@@ -1094,7 +1103,7 @@ If Not mTwsClient Is Nothing Then
     gWriteLineToConsole "Releasing API connection", True
     mTwsClient.Finish
     ' allow time for the socket connection to be nicely released
-    Wait 10
+    getInputLineAndWait pDontReadInput:=True, pWaitTimeMIllisecs:=10
 End If
 
 gWriteLineToConsole "Exiting", True
@@ -2064,7 +2073,6 @@ If mMonitor Then
                         ProjectName & _
                         "(" & mClientId & ")" & _
                         "-" & lFilenameSuffix & _
-                        "-BracketOrders" & ".log", _
                         "-BracketOrders" & _
                         ".log", _
                     includeTimestamp:=False, _
