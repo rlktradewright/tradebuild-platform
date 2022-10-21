@@ -58,6 +58,7 @@ Public Enum BracketOrderChangeTypes
     BracketOrderRolloverInitiated
     BracketOrderRolloverGotContract
     BracketOrderRolloverCompleted
+    BracketOrderRolloverPending
 End Enum
 
 Public Enum BracketOrderRoles
