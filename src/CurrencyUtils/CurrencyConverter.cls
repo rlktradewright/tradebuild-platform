@@ -68,8 +68,6 @@ Private mDataSourceIndexes                          As New EnumerableCollection
 Private mConversionTable()                          As ConversionTableEntry
 Private mNextConversionTableIndex                   As Long
 
-'Private WithEvents mResubscribeTimer                As IntervalTimer
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -216,11 +214,6 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
-'If mResubscribeTimer Is Nothing Then
-'    Set mResubscribeTimer = CreateIntervalTimer(1, ExpiryTimeUnitMinutes, 60000)
-'    mResubscribeTimer.StartTimer
-'End If
-
 Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
 Dim lIndex As Long
 lIndex = mDataSourceIndexes(CStr(lDataSource.Handle))
@@ -256,38 +249,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-''@================================================================================
-'' mResubscribeTimer Event Handlers
-''@================================================================================
-'
-'Private Sub mResubscribeTimer_TimerExpired(ev As TimerExpiredEventData)
-'Const ProcName As String = "mResubscribeTimer_TimerExpired"
-'On Error GoTo Err
-'
-'Dim i As Long
-'For i = 0 To mNextConversionTableIndex - 1
-'    If mConversionTable(i).InvalidConversion Then
-'    ElseIf mConversionTable(i).ContractFuture Is Nothing Then
-'        ' this is an 'identity' conversion
-'    Else
-'        Dim lDataSource As IMarketDataSource
-'        Set lDataSource = mMarketDataManager.CreateSnapshotMarketDataSource( _
-'                                        mConversionTable(i).ContractFuture, _
-'                                        False, _
-'                                        pStateChangeListener:=Me, _
-'                                        pRefreshInterval:=60)
-'        lDataSource.AddGenericTickListener Me
-'        lDataSource.StartMarketData
-'        mDataSourceIndexes.Add i, CStr(ldatasource.s  lStream.StreamId)
-'    End If
-'Next
-'
-'Exit Sub
-'
-'Err:
-'gNotifyUnhandledError ProcName, ModuleName
-'End Sub
 
 '@================================================================================
 ' Properties
@@ -439,7 +400,7 @@ Dim lDataSource As IMarketDataSource
 Set lDataSource = mMarketDataManager.CreateSnapshotMarketDataSource( _
                                 mConversionTable(pIndex).ContractFuture, _
                                 False, _
-                                pRefreshInterval:=60)
+                                pRefreshInterval:=300)
 lDataSource.AddErrorListener Me
 lDataSource.AddGenericTickListener Me
 lDataSource.StartMarketData
