@@ -534,7 +534,7 @@ Public Function gGetDateFromUnixSystemTime(ByVal pSystemTime As Double) As Date
 Const ProcName As String = "gGetDateFromUnixSystemTime"
 On Error GoTo Err
 
-gGetDateFromUnixSystemTime = CDate((2209161600000@ + pSystemTime) / (86400000@))
+gGetDateFromUnixSystemTime = CDate(CDbl((2209161600@ + pSystemTime) / (86400@)))
 
 Exit Function
 
