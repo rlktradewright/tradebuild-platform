@@ -93,6 +93,7 @@ Private mPreventUnprotectedPositions            As Boolean
 Private mChangeListeners                        As New Listeners
 
 Private mTimerList                              As TimerList
+Private mClock                                  As Clock
 
 Private WithEvents mFutureWaiter                As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -154,10 +155,12 @@ If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is IContract Then
     setContract ev.Future.Value
+    setTimerList
     IsReadyTickSize
     fireChange OrderContextReadyStateChanged
 ElseIf TypeOf ev.Future.Value Is Clock Then
-    setTimerListFromSimulatedClock ev.Future.Value
+    Set mClock = ev.Future.Value
+    setTimerList
     fireChange OrderContextReadyStateChanged
 End If
 
@@ -202,6 +205,19 @@ Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
     If lBracketOrder.Cancel(pEvenIfFilled:=False) Then CancelPending = True
 Next
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get Clock() As Clock
+Const ProcName As String = "Clock"
+On Error GoTo Err
+
+Assert Not mClock Is Nothing, "clock is not yet available"
+Set Clock = mClock
 
 Exit Property
 
@@ -1210,18 +1226,18 @@ Set mCurrencyConverter = pCurrencyConverter
 Set mContractFuture = pContractFuture
 If mContractFuture.IsAvailable Then
     setContract mContractFuture.Value
+    setTimerList
 Else
     mFutureWaiter.Add mContractFuture
 End If
 
 If pSimulatedClockFuture Is Nothing Then
-    Set mTimerList = GetGlobalTimerList
 ElseIf pSimulatedClockFuture.IsAvailable Then
-    setTimerListFromSimulatedClock pSimulatedClockFuture.Value
+    Set mClock = pSimulatedClockFuture.Value
+    setTimerList
 Else
     mFutureWaiter.Add pSimulatedClockFuture
 End If
-
 
 Exit Sub
 
@@ -1971,6 +1987,7 @@ Const ProcName As String = "setContract"
 On Error GoTo Err
 
 Set mContract = pContract
+    
 Set mTemplateOrder = New Order
 mTemplateOrder.RecoveryContextName = mRecoveryContextName
 mTemplateOrder.Initialise mGroupName, mContract.Specifier, Me
@@ -2007,12 +2024,20 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setTimerListFromSimulatedClock(ByVal pClock As Clock)
-Const ProcName As String = "setTimerListFromSimulatedClock"
+Private Sub setTimerList()
+Const ProcName As String = "setTimerList"
 On Error GoTo Err
 
-Assert pClock.IsSimulated, "Not a simulated clock"
-Set mTimerList = GetSimulatedTimerList(pClock)
+If mContract Is Nothing Then Exit Sub
+
+If mClock Is Nothing Then
+    Set mClock = GetClock(mContract.TimezoneName)
+    Set mTimerList = GetGlobalTimerList
+ElseIf mClock.IsSimulated Then
+    Set mTimerList = GetSimulatedTimerList(mClock)
+Else
+    Set mTimerList = GetGlobalTimerList
+End If
 
 Exit Sub
 
