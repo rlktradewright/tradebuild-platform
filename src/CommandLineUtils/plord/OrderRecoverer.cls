@@ -95,8 +95,7 @@ Dim lPM As PositionManager
 For Each lPM In mOrderManager.PositionManagersLive
     Dim lBO As IBracketOrder
     For Each lBO In lPM.BracketOrders
-        If lBO.State = BracketOrderStateSubmitted Or _
-            (lBO.State = BracketOrderStateClosed And lBO.Size <> 0) Then
+        If lBO.State = BracketOrderStateSubmitted Or lBO.Size <> 0 Then
             CreateBracketProfitCalculator lBO, lPM.DataSource
         End If
         If Not lBO.RolloverSpecification Is Nothing And _
@@ -120,7 +119,7 @@ For Each lVar In mOrderManager.GetGroupNames
         lContractProcessorName = gGenerateContractProcessorName( _
                                             lGroupName, _
                                             lContract.Specifier)
-                                            
+        
         If Not lRes.ContractProcessors.Contains(lContractProcessorName) Then
             Dim lContractProcessor As ContractProcessor: Set lContractProcessor = New ContractProcessor
             lContractProcessor.Recover lPM
@@ -138,7 +137,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
