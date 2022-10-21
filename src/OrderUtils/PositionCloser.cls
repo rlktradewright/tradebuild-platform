@@ -63,7 +63,6 @@ Private mOrderContextsWasEnabled                    As Boolean
 
 Private mPositionManager                            As PositionManager
 Private mContract                                   As IContract
-Private mClock                                      As Clock
 
 Private mLastExecutionReport                        As IExecutionReport
 
@@ -132,7 +131,6 @@ End If
 
 Set mOrderContexts = mPositionManager.OrderContexts
 Set mContract = mPositionManager.ContractFuture.Value
-Set mClock = mPositionManager.DataSource.ClockFuture.Value
 
 mOrderContextsWasEnabled = mOrderContexts.Enabled
 mOrderContexts.Enabled = False  ' prevent any further orders being placed
@@ -173,31 +171,11 @@ Dim i As Long
 For Each oc In mOrderContexts
     If Not oc Is mBalancingOrderContext Then
         Dim lBracketOrder As IBracketOrder
+        For Each lBracketOrder In oc.ActiveBracketOrders
+            doSettlingCloseout oc, lBracketOrder
+        Next
         For Each lBracketOrder In oc.ClosedBracketOrders
-            If lBracketOrder.Size <> 0 Then
-                
-                ' NB: we don't save recovery data for this execution
-                ' because it will simply be recreated at recovery
-                
-                Dim lExec As Execution
-                Set lExec = oc.NewExecution(True)
-                lExec.GroupName = oc.GroupName
-                lExec.RecoveryContextName = oc.RecoveryContextName
-                lExec.SyncToExecutionReport mLastExecutionReport
-                
-                ' give this execution a unique id
-                i = i + 1
-                lExec.Id = lExec.Id & "{" & i & "}"
-    
-                lExec.Quantity = Abs(lBracketOrder.Size)
-                If lBracketOrder.Size > 0 Then
-                    lExec.Action = OrderActionSell
-                Else
-                    lExec.Action = OrderActionBuy
-                End If
-                
-                lBracketOrder.NotifyCloseout lExec
-            End If
+            doSettlingCloseout oc, lBracketOrder
         Next
     End If
 Next
@@ -265,7 +243,7 @@ End Sub
 Friend Function ClosePositions( _
                 ByVal pPositionManager As PositionManager, _
                 ByVal pCloseoutMode As CloseoutModes, _
-                ByVal pPriceSpec As PriceSpecifier)
+                ByVal pPriceSpec As PriceSpecifier) As IFuture
 Const ProcName As String = "ClosePositions"
 On Error GoTo Err
 
@@ -400,6 +378,76 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub doMarkToMaketCloseout( _
+                ByVal pOrderContext As OrderContext, _
+                ByVal pBracketOrder As IBracketOrder, _
+                ByVal pTradePrice As Double)
+Const ProcName As String = "doMarkToMaketCloseout"
+On Error GoTo Err
+
+Dim lExec As Execution: Set lExec = pOrderContext.NewExecution(True)
+lExec.GroupName = pOrderContext.GroupName
+lExec.RecoveryContextName = pOrderContext.RecoveryContextName
+lExec.Quantity = Abs(pBracketOrder.Size)
+If pBracketOrder.Size > 0 Then
+    lExec.Action = OrderActionSell
+Else
+    lExec.Action = OrderActionBuy
+End If
+lExec.FillingExchange = "*"
+lExec.FillTime = pOrderContext.Clock.Timestamp
+lExec.Id = "MarkToMarket:" & GenerateGUIDString
+lExec.Price = pTradePrice
+lExec.SecurityName = gGetContractName(mContract.Specifier)
+lExec.TimezoneName = mContract.TimezoneName
+
+pBracketOrder.NotifyCloseout lExec
+
+lExec.SaveRecoveryInfo
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub doSettlingCloseout( _
+                ByVal pOrderContext As OrderContext, _
+                ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "doSettlingCloseout"
+On Error GoTo Err
+
+If pBracketOrder.Size = 0 Then Exit Sub
+    
+' NB: we don't save recovery data for this execution
+' because it will simply be recreated at recovery
+
+Dim lExec As Execution
+Set lExec = pOrderContext.NewExecution(True)
+lExec.GroupName = pOrderContext.GroupName
+lExec.RecoveryContextName = pOrderContext.RecoveryContextName
+lExec.SyncToExecutionReport mLastExecutionReport
+
+' give this execution a unique id
+Static i As Long
+i = i + 1
+lExec.Id = lExec.Id & "{" & i & "}"
+
+lExec.Quantity = Abs(pBracketOrder.Size)
+If pBracketOrder.Size > 0 Then
+    lExec.Action = OrderActionSell
+Else
+    lExec.Action = OrderActionBuy
+End If
+
+pBracketOrder.NotifyCloseout lExec
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub ensureAllBracketOrdersClosedOut()
 Const ProcName As String = "ensureAllBracketOrdersClosedOut"
 On Error GoTo Err
@@ -439,34 +487,24 @@ Dim oc As OrderContext
 For Each oc In mOrderContexts
     If Not oc Is mBalancingOrderContext Then
         Dim lBracketOrder As IBracketOrder
-        For Each lBracketOrder In oc.ClosedBracketOrders
-            If lBracketOrder.Size = 0 Then
-                ' this is an order cancelled before any fills
-            Else
+        For Each lBracketOrder In oc.ActiveBracketOrders
+            If lBracketOrder.Size <> 0 Then
                 If lNoTickAvailable Then
                     RaiseEvent PositionNotClosed("No trade tick available")
                     Exit Sub
                 End If
                 
-                Dim lExec As Execution: Set lExec = oc.NewExecution(True)
-                lExec.GroupName = oc.GroupName
-                lExec.RecoveryContextName = oc.RecoveryContextName
-                lExec.Quantity = Abs(lBracketOrder.Size)
-                If lBracketOrder.Size > 0 Then
-                    lExec.Action = OrderActionSell
-                Else
-                    lExec.Action = OrderActionBuy
+                doMarkToMaketCloseout oc, lBracketOrder, lTradePrice
+            End If
+        Next
+        For Each lBracketOrder In oc.ClosedBracketOrders
+            If lBracketOrder.Size <> 0 Then
+                If lNoTickAvailable Then
+                    RaiseEvent PositionNotClosed("No trade tick available")
+                    Exit Sub
                 End If
-                lExec.FillingExchange = "*"
-                lExec.FillTime = mClock.Timestamp
-                lExec.Id = "MarkToMarket:" & GenerateGUIDString
-                lExec.Price = lTradePrice
-                lExec.SecurityName = gGetContractName(mContract.Specifier)
-                lExec.TimezoneName = mContract.TimezoneName
                 
-                lBracketOrder.NotifyCloseout lExec
-            
-                lExec.SaveRecoveryInfo
+                doMarkToMaketCloseout oc, lBracketOrder, lTradePrice
             End If
         Next
     End If
