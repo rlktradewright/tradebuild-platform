@@ -2093,7 +2093,10 @@ Assert Value Is Nothing Or _
 mSummary.RolloverSpecification = Value
 mSummary.RolloverDate = 0
 
-If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
+If Not mRolloverTLI Is Nothing Then
+    mRolloverTLI.Cancel
+    Set mRolloverTLI = Nothing
+End If
 
 If Not mSummary.RolloverSpecification Is Nothing Then
     Dim lRolloverTime As Date
@@ -2214,7 +2217,7 @@ End If
 
 If mSummary.RolloverDate <= GetTimestamp Then
     Dim lExpiryTime As Date
-    lExpiryTime = mContract.ExpiryDate + mContract.SessionEndTime '.ExpiryDate + 10# / 24#
+    lExpiryTime = mContract.ExpiryDate + mContract.SessionEndTime
     Dim lTz As TimeZone: Set lTz = GetTimeZone(mContract.TimezoneName)
     lExpiryTime = ConvertDateTzToLocal(lExpiryTime, lTz)
     If lExpiryTime > GetTimestamp Then
@@ -2452,6 +2455,12 @@ If Not mCancelTLI Is Nothing Then
     Set mCancelTLI = Nothing
 End If
 
+RolloverSpecification = Nothing
+If mIsRolloverInProgress Then
+    mRolloverController.Cancel
+    Set mRolloverController = Nothing
+End If
+
 WriteRecoveryDataComment ProcName & "(" & evenIfFilled & ")"
 If evenIfFilled Then
     mStateEngine.ClearConditions OpConditions.CondNoFillCancellation
@@ -2553,7 +2562,11 @@ Public Sub CloseOut( _
 Const ProcName As String = "CloseOut"
 On Error GoTo Err
 
-If mIsRolloverInProgress Then mRolloverController.Cancel
+RolloverSpecification = Nothing
+If mIsRolloverInProgress Then
+    mRolloverController.Cancel
+    Set mRolloverController = Nothing
+End If
 
 WriteRecoveryDataComment ProcName & "()"
 DoCloseOut pCloseoutSpec
@@ -3521,15 +3534,15 @@ Private Sub createCloseoutOrder()
 Const ProcName As String = "createCloseoutOrder"
 On Error GoTo Err
 
-If Not mRolloverTLI Is Nothing Then mRolloverTLI.Cancel
-
-Dim lOrder As IOrder
+Dim lOrder As Order
 
 If mSummary.CloseoutSpecifier Is Nothing Then
     Set lOrder = mOrderContext.NewOrder(OrderTypes.OrderTypeMarket, mRecoveryContextName)
+    lOrder.DontCheckAttributeModificationPermitted = True
 Else
     With mSummary.CloseoutSpecifier
         Set lOrder = mOrderContext.NewOrder(.OrderType, mRecoveryContextName)
+        lOrder.DontCheckAttributeModificationPermitted = True
         lOrder.LimitPriceSpec = .LimitPriceSpec
         lOrder.TriggerPriceSpec = .TriggerPriceSpec
         lOrder.IgnoreRegularTradingHours = .OutsideRTH
@@ -3540,12 +3553,11 @@ mOrderContext.FixupEntryOrder lOrder
 lOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
 lOrder.Quantity = Abs(Size)
 lOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
+lOrder.DontCheckAttributeModificationPermitted = False
 
 SetCloseoutOrder lOrder
 
 SaveRecoveryInfo
-
-fireChange BracketOrderCloseoutOrderCreated
 
 Exit Sub
 
@@ -3589,7 +3601,7 @@ For Each lAction In pActions
     Case OpActions.ActCancelTimeout
         doActions = cancelStateTimeout
     Case OpActions.ActLog
-        gLog "Stimulus " & gOpStimuliToString(pStimulus) & " occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mSummary.Key & ")", ProcName, ModuleName, , LogLevelSevere
+        gLog "Stimulus '" & gOpStimuliToString(pStimulus) & "' occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mSummary.Key & ")", ProcName, ModuleName, , LogLevelSevere
         doActions = Empty
     Case OpActions.ActCancelCloseoutOrder
         doActions = CancelCloseoutOrder
@@ -3608,12 +3620,15 @@ Private Function doCompletionActions()
 Const ProcName As String = "doCompletionActions"
 On Error GoTo Err
 
-If mSummary.RolloverDate <> 0 Then
+If mIsRolloverInProgress Then
+    fireChange BracketOrderCompleted
+    RaiseEvent Completed
+ElseIf mSummary.RolloverDate <> 0 Then
     fireChange BracketOrderRolloverPending
 ElseIf mOrderContext Is Nothing Then
     fireChange BracketOrderCompleted
     RaiseEvent Completed
-ElseIf mOrderContext.Name = BalancingOrderContextName Then
+Else    'If mOrderContext.Name <> BalancingOrderContextName Then
     mOrderContext.NotifyBracketOrderClosed Me
     fireChange BracketOrderCompleted
     RaiseEvent Completed
@@ -3920,6 +3935,7 @@ On Error GoTo Err
 
 createCloseoutOrder
 
+fireChange BracketOrderCloseoutOrderCreated
 RaiseEvent CloseoutOrderCreated
 
 mStateEngine.SetConditions OpConditions.CondCloseoutOrderExists
@@ -4085,20 +4101,11 @@ Else
 End If
     
 If Size = 0 Then
-    If Not IsRolloverInProgress Then
-        If Not mRolloverTLI Is Nothing Then
-            mRolloverTLI.Cancel
-            Set mRolloverTLI = Nothing
-        End If
-        mSummary.RolloverSpecification = Nothing
-        mSummary.RolloverDate = 0
-    End If
     mSummary.EndTime = ConvertDateTzToTz(pExec.FillTime, _
                                         GetTimeZone(pExec.TimezoneName), _
                                         GetTimeZone(mContract.TimezoneName))
-ElseIf (Not mSummary.RolloverSpecification Is Nothing) And _
-        mRolloverTLI Is Nothing _
-Then
+ElseIf mSummary.RolloverSpecification Is Nothing Then
+ElseIf mRolloverTLI Is Nothing Then
     setRolloverTLI
 End If
 
