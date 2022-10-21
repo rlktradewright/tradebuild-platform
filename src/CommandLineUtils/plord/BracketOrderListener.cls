@@ -58,7 +58,7 @@ Set mBracketOrderListener = New OrderUtils27.BracketOrderListener
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' IDeferredAction Interface Members
 '@================================================================================
 
 Private Sub IDeferredAction_Run(ByVal Data As Variant)
@@ -82,8 +82,9 @@ Const ProcName As String = "mBracketOrderListener_BracketOrderAdded"
 On Error GoTo Err
 
 Dim lBO As IBracketOrder: Set lBO = ev.Source
-gWriteLineToConsole lBO.Key & _
-                    ": bracket order state is: " & _
+gWriteLineToConsole lBO.Key & ": " & _
+                    gGetContractName(lBO.Contract) & _
+                    ": state=" & _
                     BracketOrderStateToString(lBO.State) & _
                     generateRolloverClause(lBO), _
                     True
@@ -98,8 +99,9 @@ Private Sub mBracketOrderListener_NotifyBracketOrderError(ev As BracketOrderErro
 Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderError"
 On Error GoTo Err
 
+Dim lBO As IBracketOrder: Set lBO = ev.Source
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.ErrorMessage), True
+gWriteLineToConsole generateMessage(lBO, lOrder, lOrder.ErrorMessage, True), True
 
 Exit Sub
 
@@ -111,8 +113,9 @@ Private Sub mBracketOrderListener_NotifyBracketOrderMessage(ev As BracketOrderMe
 Const ProcName As String = "mBracketOrderListener_NotifyBracketOrderMessage"
 On Error GoTo Err
 
+Dim lBO As IBracketOrder: Set lBO = ev.Source
 Dim lOrder As IOrder: Set lOrder = ev.AffectedOrder
-gWriteLineToConsole generateMessage(lOrder, lOrder.Message), True
+gWriteLineToConsole generateMessage(lBO, lOrder, lOrder.Message, False), True
 
 Exit Sub
 
@@ -129,7 +132,9 @@ Dim lBO As BracketOrder: Set lBO = ev.Source
 
 Dim lRolloverClause As String: lRolloverClause = generateRolloverClause(lBO)
 
-Dim s As String: s = lBO.Key & ": "
+Dim s As String: s = lBO.Key & ": " & _
+                    gGetContractName(lBO.Contract) & ": "
+
 Dim s1 As String
 
 Select Case lChangeType
@@ -181,15 +186,20 @@ Case BracketOrderChangesCancelled
 
 Case BracketOrderPositionCloseoutNotified
     s1 = "closed out"
+Case BracketOrderChangeTypes.BracketOrderRolloverPending
+    s1 = "bracket order rollover pending" & _
+        lRolloverClause
 Case BracketOrderRolloverInitiated
     s1 = "bracket order rollover initiated"
 Case BracketOrderRolloverGotContract
     s1 = "bracket order rolling over to next contract: " & _
         gGetContractName(lBO.NextContract)
 Case BracketOrderRolloverCompleted
+    Dim lNewBo As IBracketOrder: Set lNewBo = lBO.NextBracketOrder
     s1 = "rollover completed: new bracket order is: " & _
-        lBO.NextBracketOrder.Key
-    Add lBO.NextBracketOrder
+        lNewBo.Key
+    Add lNewBo
+    CreateBracketProfitCalculator lNewBo, lNewBo.OrderContext.DataSource
     mBracketOrderListener.Remove lBO
 End Select
 
@@ -217,11 +227,11 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub Add(ByVal pBO As IBracketOrder)
+Friend Sub Add(ByVal pBo As IBracketOrder)
 Const ProcName As String = "Add"
 On Error GoTo Err
 
-mBracketOrderListener.Add pBO
+mBracketOrderListener.Add pBo
 
 Exit Sub
 
@@ -245,17 +255,19 @@ filledString = pOrder.QuantityFilled & _
 End Function
 
 Private Function generateMessage( _
+                ByVal pBo As IBracketOrder, _
                 ByVal pOrder As IOrder, _
-                ByVal pMessage As String) As String
+                ByVal pMessage As String, _
+                ByVal pIseError As Boolean) As String
 Const ProcName As String = "generateMessage"
 On Error GoTo Err
 
 Dim s As String
-s = pOrder.GroupName & ": " & _
-    "(" & pOrder.ContractSpecifier.LocalSymbol & "@" & pOrder.ContractSpecifier.Exchange & ")" & _
-    " " & OrderActionToString(pOrder.Action) & _
+s = pBo.Key & _
+    ": " & OrderActionToString(pOrder.Action) & _
     " " & pOrder.Quantity & _
     " " & OrderTypeToShortString(pOrder.OrderType) & _
+    IIf(pIseError, ": error", "") & _
     ": " & pMessage
 
 generateMessage = s
@@ -266,16 +278,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function generateRolloverClause(ByVal pBO As BracketOrder) As String
+Private Function generateRolloverClause(ByVal pBo As BracketOrder) As String
 Dim s As String
-If pBO.HasRolloverSpecification Then
-    If pBO.IsRolloverInProgress Then
-        s = ": rollover in progress"
-    Else
-        s = ": rollover at " & _
-            FormatTimestamp(pBO.RolloverDate, _
-                TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
-    End If
+If Not pBo.HasRolloverSpecification Then
+ElseIf pBo.IsRolloverInProgress Then
+    s = ": rollover in progress"
+ElseIf pBo.State = BracketOrderStateClosed And pBo.Size = 0 Then
+Else
+    s = ": rollover at " & _
+        FormatTimestamp(pBo.RolloverDate, _
+            TimestampDateAndTimeISO8601 + TimestampNoMillisecs)
 End If
 generateRolloverClause = s
 End Function
