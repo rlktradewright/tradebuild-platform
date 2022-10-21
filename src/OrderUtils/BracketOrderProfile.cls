@@ -60,6 +60,7 @@ Private mDescription                                As String
 Private mEntryReason                                As String
 Private mStopReason                                 As String
 Private mTargetReason                               As String
+Private mTimezoneName                               As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -137,6 +138,9 @@ Public Property Get TargetReason() As String
 TargetReason = mTargetReason
 End Property
 
+Public Property Get TimezoneName() As String
+TimezoneName = mTimezoneName
+End Property
 Friend Property Let Key(ByVal Value As String)
 mKey = Value
 End Property
@@ -200,6 +204,11 @@ End Property
 Friend Property Let TargetReason(ByVal Value As String)
 mTargetReason = Value
 End Property
+
+Friend Property Let TimezoneName(ByVal Value As String)
+mTimezoneName = Value
+End Property
+
 
 '@================================================================================
 ' Methods
