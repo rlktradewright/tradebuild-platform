@@ -140,7 +140,7 @@ Private mFinished                                   As Boolean
 Public Property Get gAppTitle() As String
 gAppTitle = App.ProductName & _
                 " v" & _
-                App.Major & "." & App.Minor & App.Revision
+                App.Major & "." & App.Minor & "." & App.Revision
 End Property
 
 Public Property Get gCommandLineParser() As CommandLineParser
