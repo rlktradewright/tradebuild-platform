@@ -366,7 +366,7 @@ ElseIf ev.Future.IsFaulted Then
 End If
 
 If mCancelledByClient Or mCancelledBySystem Then
-    If allContractsChecked Then mSelfRef = Nothing
+    If allContractsChecked Then Set mSelfRef = Nothing
     Exit Sub
 End If
 
