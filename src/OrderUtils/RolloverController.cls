@@ -359,11 +359,9 @@ Private Sub mNextOrderContext_Change(ev As ChangeEventData)
 Const ProcName As String = "mNextOrderContext_Change"
 On Error GoTo Err
 
+If State <> RolloverControllerStateWaitingForOrderContext Then Exit Sub
 If ev.changeType <> OrderContextChangeTypes.OrderContextReadyStateChanged Then Exit Sub
-
-If Not mNextOrderContext.IsProviderReady Then
-    Exit Sub
-End If
+If Not mNextOrderContext.IsProviderReady Then Exit Sub
 
 Set mNextContract = mNextOrderContext.ContractFuture.Value
 

@@ -93,6 +93,7 @@ Private mPreventUnprotectedPositions            As Boolean
 Private mChangeListeners                        As New Listeners
 
 Private mTimerList                              As TimerList
+Private mSimulatedClockFuture                   As IFuture
 Private mClock                                  As Clock
 
 Private WithEvents mFutureWaiter                As FutureWaiter
@@ -332,21 +333,27 @@ End Property
 
 Public Property Get IsReady() As Boolean
 If Not mProviderIsReady Then
-    mNotReadyMessage = "Not ready to submit orders"
+    mNotReadyMessage = "Provider not ready to submit orders"
     Exit Function
-ElseIf Not mEnabled Then
+End If
+
+If Not mEnabled Then
     mNotReadyMessage = "Not ready - order submission disabled"
     Exit Function
-ElseIf mContract Is Nothing Then
+End If
+
+If mContract Is Nothing Then
     mNotReadyMessage = "Not ready - contract not yet resolved"
     Exit Function
-ElseIf mTimerList Is Nothing Then
-    mNotReadyMessage = "Not ready - awaiting clock info"
-    Exit Function
-Else
-    mNotReadyMessage = ""
-    IsReady = True
 End If
+
+If mSimulatedClockFuture Is Nothing Then
+ElseIf Not mSimulatedClockFuture.IsAvailable Then
+    mNotReadyMessage = "Not ready - awaiting clock"
+End If
+
+mNotReadyMessage = ""
+IsReady = True
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -1232,11 +1239,14 @@ Else
 End If
 
 If pSimulatedClockFuture Is Nothing Then
-ElseIf pSimulatedClockFuture.IsAvailable Then
-    Set mClock = pSimulatedClockFuture.Value
-    setTimerList
 Else
-    mFutureWaiter.Add pSimulatedClockFuture
+    Set mSimulatedClockFuture = pSimulatedClockFuture
+    If mSimulatedClockFuture.IsAvailable Then
+        Set mClock = pSimulatedClockFuture.Value
+        setTimerList
+    Else
+        mFutureWaiter.Add mSimulatedClockFuture
+    End If
 End If
 
 Exit Sub
