@@ -1352,7 +1352,14 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Err.Number = VBErrorCodes.VbErrTypeMismatch And Not lListener Is Nothing Then
+    gHandleUnexpectedError ProcName, _
+                            ModuleName, _
+                            pErrorNumber:=VBErrorCodes.VbErrTypeMismatch, _
+                            pErrorDesc:=Err.Description & ": " & TypeName(lListener)
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
 End Sub
 
 Friend Sub Initialise( _
