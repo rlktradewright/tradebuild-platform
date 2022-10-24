@@ -144,6 +144,10 @@ mFixedAccountBalance = Value
 mDiff.SetProperty "FixedAccountBalance", Value
 End Property
 
+Public Property Get FixedAccountBalance() As Double
+FixedAccountBalance = mFixedAccountBalance
+End Property
+
 Public Property Let GroupName(ByVal Value As String)
 If mGroupName = Value Then Exit Property
 mIsDirty = True

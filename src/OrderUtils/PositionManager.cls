@@ -417,6 +417,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
+mOrderContexts.FixedAccountBalance = mSummary.FixedAccountBalance
 mProcessingRecoveryData = False
 End Sub
 
