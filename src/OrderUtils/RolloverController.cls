@@ -175,7 +175,8 @@ Case RolloverControllerStateFindingNextContract
     failpoint = "RolloverControllerStateFindingNextContract"
     
     gLog mBracketOrder.Key & ": Finding next contract: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-    findNextContract 1
+    findNextContract mBracketOrder.RolloverSpecification.RolloverExpiryOffset, _
+                    mBracketOrder.RolloverSpecification.RolloverDaysBeforeExpiryToSwitch
     mTaskContext.Suspend -1
 Case RolloverControllerStateCreatingNextPositionManager
     failpoint = "RolloverControllerStateCreatingNextPositionManager"
@@ -288,7 +289,8 @@ Else
         setState RolloverControllerStateFailed
         mTaskContext.Continue
     Else
-        findNextContract lExpiryOffset + 1
+        findNextContract lExpiryOffset + 1, _
+                        mBracketOrder.RolloverSpecification.RolloverDaysBeforeExpiryToSwitch
     End If
 End If
 
@@ -611,6 +613,7 @@ Else
                                     , _
                                     mOrderContext.AccountDataProvider, _
                                     mOrderContext.CurrencyConverter)
+    lNextPm.FixedAccountBalance = mOrderContext.FixedAccountBalance
     
     gLog "Created next position manager: name=" & lNextPm.Name, ProcName, ModuleName
 End If
@@ -677,6 +680,8 @@ Else
         createNextRolloverSpec.setStopLossTriggerPriceSpec .StopLossTriggerPriceSpec
         createNextRolloverSpec.setTargetLimitPriceSpec .TargetLimitPriceSpec
         createNextRolloverSpec.setTargetTriggerPriceSpec .TargetTriggerPriceSpec
+        createNextRolloverSpec.setRolloverDaysBeforeExpiryToSwitch .RolloverDaysBeforeExpiryToSwitch
+        createNextRolloverSpec.setRolloverExpiryOffset .RolloverExpiryOffset
     End With
 End If
 
@@ -726,7 +731,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Sub findNextContract(ByVal pExpiryOffset As Long)
+Private Sub findNextContract( _
+                ByVal pExpiryOffset As Long, _
+                ByVal pDaysBeforeExpiryToSwitch As Long)
 Const ProcName As String = "findNextContract"
 On Error GoTo Err
 
@@ -739,14 +746,16 @@ Select Case lCurrentContractSpec.SecType
 Case SecTypeFuture
     mFutureWaiter.Add findNextContractForFuture( _
                             lCurrentContractSpec, _
-                            pExpiryOffset), _
+                            pExpiryOffset, _
+                            pDaysBeforeExpiryToSwitch), _
                         pExpiryOffset
     
 Case SecTypeOption, _
         SecTypeFuturesOption
     mFutureWaiter.Add findNextContractForOption( _
                             lCurrentContractSpec, _
-                            pExpiryOffset), _
+                            pExpiryOffset, _
+                            pDaysBeforeExpiryToSwitch), _
                         pExpiryOffset
 
 End Select
@@ -761,7 +770,8 @@ End Sub
 
 Private Function findNextContractForFuture( _
                 ByVal pCurrentContractSpec As IContractSpecifier, _
-                ByVal pExpiryOffset As Long) As IFuture
+                ByVal pExpiryOffset As Long, _
+                ByVal pDaysBeforeExpiryToSwitch As Long) As IFuture
 Const ProcName As String = "findNextContractForFuture"
 On Error GoTo Err
 
@@ -771,7 +781,7 @@ Set lNextContractSpec = CreateContractSpecifier("", _
                             pCurrentContractSpec.Exchange, _
                             SecTypeFuture, _
                             pCurrentContractSpec.CurrencyCode, _
-                            pExpiryOffset, _
+                            CStr(pExpiryOffset) & "[" & CStr(pDaysBeforeExpiryToSwitch) & "d]", _
                             pCurrentContractSpec.Multiplier)
 
 Set findNextContractForFuture = FetchContract( _
@@ -788,7 +798,8 @@ End Function
 
 Private Function findNextContractForOption( _
                 ByVal pCurrentContractSpec As IContractSpecifier, _
-                ByVal pExpiryOffset As Long) As IFuture
+                ByVal pExpiryOffset As Long, _
+                ByVal pDaysBeforeExpiryToSwitch As Long) As IFuture
 Const ProcName As String = "findNextContractForOption"
 On Error GoTo Err
 
@@ -897,7 +908,7 @@ Set lNextContractSpec = CreateContractSpecifier("", _
                             pCurrentContractSpec.Exchange, _
                             pCurrentContractSpec.SecType, _
                             pCurrentContractSpec.CurrencyCode, _
-                            pExpiryOffset, _
+                            CStr(pExpiryOffset) & "[" & CStr(pDaysBeforeExpiryToSwitch) & "d]", _
                             pCurrentContractSpec.Multiplier, _
                             IIf(mBracketOrder.RolloverSpecification.RolloverStrikeSelectionMode = RolloverStrikeModeIncrement, _
                                 pCurrentContractSpec.Strike, _

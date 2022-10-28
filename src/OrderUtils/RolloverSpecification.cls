@@ -53,6 +53,8 @@ Private mInitialStrikeSelectionMode                 As OptionStrikeSelectionMode
 Private mInitialStrikeParameter                     As Double
 Private mInitialStrikeOperator                      As OptionStrikeSelectionOperators
 
+Private mRolloverExpiryOffset                       As Long
+Private mRolloverDaysBeforeExpiryToSwitch           As Long
 Private mRolloverStrikeSelectionMode                As RolloverStrikeModes
 Private mRolloverStrikeParameter                    As Double
 Private mRolloverStrikeOperator                     As OptionStrikeSelectionOperators
@@ -195,6 +197,22 @@ End Property
 
 Public Property Let InitialStrikeOperator(ByVal Value As OptionStrikeSelectionOperators)
 mInitialStrikeOperator = Value
+End Property
+
+Public Property Get RolloverDaysBeforeExpiryToSwitch() As Long
+RolloverDaysBeforeExpiryToSwitch = mRolloverDaysBeforeExpiryToSwitch
+End Property
+
+Public Property Let RolloverDaysBeforeExpiryToSwitch(ByVal Value As Long)
+mRolloverDaysBeforeExpiryToSwitch = Value
+End Property
+
+Public Property Get RolloverExpiryOffset() As Long
+RolloverExpiryOffset = mRolloverExpiryOffset
+End Property
+
+Public Property Let RolloverExpiryOffset(ByVal Value As Long)
+mRolloverExpiryOffset = Value
 End Property
 
 Public Property Get RolloverQuantityLotSize() As Long
@@ -400,6 +418,16 @@ mInitialStrikeOperator = Value
 Set setInitialStrikeOperator = Me
 End Function
 
+Public Function setRolloverDaysBeforeExpiryToSwitch(ByVal Value As Long) As RolloverSpecification
+mRolloverDaysBeforeExpiryToSwitch = Value
+Set setRolloverDaysBeforeExpiryToSwitch = Me
+End Function
+
+Public Function setRolloverExpiryOffset(ByVal Value As Long) As RolloverSpecification
+mRolloverExpiryOffset = Value
+Set setRolloverExpiryOffset = Me
+End Function
+
 Public Function setRolloverQuantityMode(ByVal Value As RolloverQuantityModes) As RolloverSpecification
 mRolloverQuantityMode = Value
 Set setRolloverQuantityMode = Me
@@ -487,6 +515,8 @@ jb.EncodeNameAndValue "InitialStrikeSelectionMode", mInitialStrikeSelectionMode,
 jb.EncodeNameAndValue "InitialStrikeParameter", mInitialStrikeParameter, 0
 jb.EncodeNameAndValue "InitialStrikeOperator", mInitialStrikeOperator, OptionStrikeSelectionOperatorNone
 
+jb.EncodeNameAndValue "RolloverDaysBeforeExpiryToSwitch", mRolloverDaysBeforeExpiryToSwitch, 1
+jb.EncodeNameAndValue "RolloverExpiryOffset", mRolloverExpiryOffset, 1
 jb.EncodeNameAndValue "RolloverStrikeSelectionMode", mRolloverStrikeSelectionMode, RolloverStrikeModeNone
 jb.EncodeNameAndValue "RolloverStrikeParameter", mRolloverStrikeParameter, 0
 jb.EncodeNameAndValue "RolloverStrikeOperator", mRolloverStrikeOperator, OptionStrikeSelectionOperatorNone

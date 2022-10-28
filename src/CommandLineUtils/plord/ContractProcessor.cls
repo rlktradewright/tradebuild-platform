@@ -48,13 +48,15 @@ Private Const OrderPendingMessage                   As String = "Order is pendin
 ' Member variables
 '@================================================================================
 
-Private mIdent                                         As String
+Private mIdent                                      As String
 Private mName                                       As String
 
 Private mInitialContractSpec                        As IContractSpecifier
 Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 
+Private mRolloverDaysBeforeExpiryToSwitch           As Long
+Private mRolloverExpiryOffset                       As Long
 Private mInitialStrikeSelectionMode                 As OptionStrikeSelectionModes
 Private mInitialStrikeParameter                     As Long
 Private mInitialStrikeOperator                      As OptionStrikeSelectionOperators
@@ -219,34 +221,23 @@ Friend Sub Activate( _
 Const ProcName As String = "Activate"
 On Error GoTo Err
 
-Dim failpoint As String
-
-failpoint = "010"
 mName = pName
 Set mGroupResources = pGroupResources
 
-failpoint = "020"
 Set mContract = pcontract
 mGroupName = pGroupName
 
-failpoint = "030"
 mSelectionMode = mContractResolver.StrikeSelectionMode
-failpoint = "040"
 mOperator = mContractResolver.StrikeSelectionOperator
-failpoint = "050"
 mParameter = mContractResolver.StrikeSelectionParameter
 
-failpoint = "060"
 mUnderlyingExchangeName = mContractResolver.UnderlyingExchangeName
 
-failpoint = "070"
 Set mDataSource = pMarketDataManager.CreateMarketDataSource(CreateFuture(pcontract), False)
-failpoint = "080"
 mDataSource.AddErrorListener Me
 mDataSource.StartMarketData
 
 If pScopeName = "" Then
-failpoint = "090"
     Set mPositionManager = pOrderManager.CreatePositionManager( _
                                 pName, _
                                 mDataSource, _
@@ -256,7 +247,6 @@ failpoint = "090"
                                 pAccountDataProvider:=mAccountDataProvider, _
                                 pCurrencyConverter:=mCurrencyConverter)
 Else
-failpoint = "100"
     Set mPositionManager = pOrderManager.CreateRecoverablePositionManager( _
                                 pName, _
                                 mDataSource, _
@@ -267,15 +257,13 @@ failpoint = "100"
                                 pAccountDataProvider:=mAccountDataProvider, _
                                 pCurrencyConverter:=mCurrencyConverter)
 End If
-failpoint = "110"
 If mFixedAccountBalance <> 0 Then mPositionManager.FixedAccountBalance = mFixedAccountBalance
-failpoint = "120"
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName, failpoint
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AddBracketOrderSpecs( _
@@ -363,6 +351,13 @@ Set mInitialContractSpec = pInitialContractSpec
 mInitialStrikeSelectionMode = pInitialStrikeSelectionMode
 mInitialStrikeParameter = pInitialStrikeParameter
 mInitialStrikeOperator = pInitialStrikeOperator
+If IsContractSpecOffsetExpiry(mInitialContractSpec) Then
+    Dim lExpiryOffset As Long
+    ParseOffsetExpiry mInitialContractSpec.Expiry, lExpiryOffset, mRolloverDaysBeforeExpiryToSwitch
+    mRolloverExpiryOffset = lExpiryOffset + 1
+Else
+    mRolloverExpiryOffset = 1
+End If
 mIdent = pID
 Set mContractResolver = pContractResolver
 Set mAccountDataProvider = pAccountDataProvider
@@ -799,24 +794,6 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub Recover( _
-                ByVal pPositionManager As PositionManager)
-Const ProcName As String = "Recover"
-On Error GoTo Err
-
-Set mPositionManager = pPositionManager
-Set mContract = mPositionManager.ContractFuture.Value
-mGroupName = mPositionManager.GroupName
-
-Set mDataSource = mPositionManager.DataSource
-Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Friend Sub SetDefaultRolloverSpec(ByVal pSpec As RolloverSpecification)
 Const ProcName As String = "SetDefaultRolloverSpec"
 On Error GoTo Err
@@ -826,7 +803,9 @@ Set mDefaultRolloverSpec = pSpec.Clone
 
 mDefaultRolloverSpec.setInitialStrikeSelectionMode(mInitialStrikeSelectionMode). _
                     setInitialStrikeParameter(mInitialStrikeParameter). _
-                    setInitialStrikeOperator mInitialStrikeOperator
+                    setInitialStrikeOperator(mInitialStrikeOperator). _
+                    setRolloverExpiryOffset(mRolloverExpiryOffset). _
+                    setRolloverDaysBeforeExpiryToSwitch mRolloverDaysBeforeExpiryToSwitch
 
 Exit Sub
 

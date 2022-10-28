@@ -107,31 +107,6 @@ For Each lPM In mOrderManager.PositionManagersLive
     Next
 Next
 
-Dim lVar As Variant
-For Each lVar In mOrderManager.GetGroupNames
-    Dim lGroupName As String: lGroupName = UCase$(lVar)
-    Dim lRes As GroupResources: Set lRes = mGroups.Add(lGroupName)
-    
-    Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(lGroupName)
-    For Each lPM In lPMs
-        Dim lContract As IContract: Set lContract = lPM.ContractFuture.Value
-        Dim lContractProcessorName As String
-        lContractProcessorName = gGenerateContractProcessorName( _
-                                            lGroupName, _
-                                            lContract.Specifier)
-        
-        If Not lRes.ContractProcessors.Contains(lContractProcessorName) Then
-            Dim lContractProcessor As ContractProcessor: Set lContractProcessor = New ContractProcessor
-            lContractProcessor.Recover lPM
-            
-            lRes.ContractProcessors.Add lContractProcessor, _
-                                        gGenerateContractProcessorName( _
-                                                lGroupName, _
-                                                lContract.Specifier)
-        End If
-    Next
-Next
-
 Set mSelfRef = Nothing
 
 Exit Sub

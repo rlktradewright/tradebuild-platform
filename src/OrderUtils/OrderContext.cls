@@ -269,6 +269,10 @@ Friend Property Let FixedAccountBalance(ByVal Value As Double)
 mFixedAccountBalance = Value
 End Property
 
+Friend Property Get FixedAccountBalance() As Double
+FixedAccountBalance = mFixedAccountBalance
+End Property
+
 Friend Property Get GroupName() As String
 GroupName = mGroupName
 End Property
