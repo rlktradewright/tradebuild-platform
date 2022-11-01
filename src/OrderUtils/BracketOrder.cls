@@ -1124,7 +1124,11 @@ Private Sub mEntryOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As Strin
 Const ProcName As String = "mEntryOrder_Error"
 On Error GoTo Err
 
-handleStimulus OpStimuli.StimOrderError
+If mSummary.State = BracketOrderStateClosingOut Then
+    handleStimulus OpStimuli.StimEntryOrderCancelled
+Else
+    handleStimulus OpStimuli.StimOrderError
+End If
 
 fireBracketOrderError mEntryOrder, pErrorCode, pErrorMsg
 
