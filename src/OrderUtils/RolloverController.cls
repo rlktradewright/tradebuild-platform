@@ -195,8 +195,11 @@ Case RolloverControllerStateWaitingForOrderContext
 Case RolloverControllerStateCreatingNextBracketOrder
     failpoint = "RolloverControllerStateCreatingNextBracketOrder"
     
-    Set mNextBracketOrder = createNextBracketOrder(mUseMarketEntry, mNextContract.Specifier)
-    gLog mBracketOrder.Key & ": Creating next bracket order: " & mNextBracketOrder.Key & "; " & mNextBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+    If mNextBracketOrder Is Nothing Then
+        Dim lId As String: lId = GIdProvider.gNextId
+        gLog mBracketOrder.Key & ": Creating next bracket order: " & lId & "; " & mNextContract.Specifier.ToString, ProcName, ModuleName
+        Set mNextBracketOrder = createNextBracketOrder(lId, mUseMarketEntry, mNextContract.Specifier)
+    End If
     If Not mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
         gLog mBracketOrder.Key & _
                 ": Waiting for next order context: " & _
@@ -481,6 +484,7 @@ End Sub
 '@================================================================================
 
 Private Function createNextBracketOrder( _
+                ByVal pId As String, _
                 ByVal pUseMarketOrder As Boolean, _
                 ByVal pCurrentContractSpec As IContractSpecifier) As BracketOrder
 Const ProcName As String = "createNextBracketOrder"
@@ -503,10 +507,11 @@ Dim lLotSize As Long
 getQuantityParameters pCurrentContractSpec, lAutosizeType, lAutosizeValue, lQuantity, lLotSize
 
 Dim lBo As BracketOrder
-Set lBo = mNextOrderContext.CreateBracketOrder( _
+Set lBo = mNextOrderContext.CreateBracketOrderWithId( _
                 mBracketOrder.EntryOrder.Action, _
                 lQuantity, _
                 lEntryOrder, _
+                pId, _
                 lStopLossOrder, _
                 lTargetOrder)
 
