@@ -129,7 +129,7 @@ Friend Function ResolveContract( _
                 ByVal pParameter As Long, _
                 ByVal pOperator As OptionStrikeSelectionOperators, _
                 ByVal pUnderlyingExchangeName As String, _
-                ByVal pMarketDataManager As IMarketDataManager)
+                ByVal pMarketDataManager As IMarketDataManager) As IFuture
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
