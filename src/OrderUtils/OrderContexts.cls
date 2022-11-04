@@ -506,6 +506,8 @@ On Error GoTo Err
 mDataSource.RemoveGenericTickListener Me
 Set mDataSource = Nothing
 
+mFutureWaiter.Cancel
+
 mOrderSubmitter.Finish
 Set mOrderSubmitter = Nothing
 
