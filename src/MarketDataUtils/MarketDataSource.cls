@@ -1717,10 +1717,10 @@ Friend Sub SetError( _
 Const ProcName As String = "SetError"
 On Error GoTo Err
 
-FireError pErrorCode, pErrorMessage
-
 mErrorMessage = pErrorMessage
 setState MarketDataSourceStateError
+
+FireError pErrorCode, pErrorMessage
 
 Exit Sub
 
