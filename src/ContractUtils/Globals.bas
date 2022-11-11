@@ -1158,6 +1158,7 @@ addExchangeCode "CBSX"
 addExchangeCode "CDE"
 addExchangeCode "CFE"
 addExchangeCode "CHX"
+addExchangeCode "CME"
 addExchangeCode "CSFBALGO"
 
 addExchangeCode "DRCTEDGE"
