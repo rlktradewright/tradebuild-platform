@@ -802,8 +802,10 @@ If isAlphaNumeric(KeyAscii) Or _
     KeyAscii = Asc("[") Or _
     KeyAscii = Asc("]") Or _
     KeyAscii = Asc("*") Or _
-    KeyAscii = Asc("=") _
-    Then processAlphaNumericKey KeyAscii
+    KeyAscii = Asc("=") Or _
+    KeyAscii = Asc("#") Or _
+    KeyAscii = Asc("'") _
+Then processAlphaNumericKey KeyAscii
 
 Exit Sub
 
