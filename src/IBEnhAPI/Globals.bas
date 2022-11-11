@@ -21,6 +21,11 @@ Public Const NumDaysInYear                      As Long = 260
 Public Const NumWeeksInYear                     As Long = 52
 Public Const NumMonthsInYear                    As Long = 12
 
+Private Const ExchangeCBOT                      As String = "CBOT"
+Private Const ExchangeCME                       As String = "CME"
+Private Const ExchangeECBOT                     As String = "ECBOT"
+Private Const ExchangeGlobex                    As String = "GLOBEX"
+
 Private Const ExchangeSmart                     As String = "SMART"
 Private Const ExchangeSmartAUS                  As String = "SMARTAUS"
 Private Const ExchangeSmartCAN                  As String = "SMARTCAN"
@@ -148,6 +153,10 @@ With gContractSpecToTwsContractSpec
     ElseIf InStr(1, lExchange, ExchangeSmartQualified) = 1 Then
         .PrimaryExch = Right$(lExchange, Len(lExchange) - Len(ExchangeSmartQualified))
         .Exchange = ExchangeSmart
+    ElseIf lExchange = ExchangeGlobex Then
+        .Exchange = ExchangeCME
+    ElseIf lExchange = ExchangeECBOT Then
+        .Exchange = ExchangeCBOT
     Else
         .Exchange = lExchange
     End If
@@ -861,6 +870,24 @@ With pTwsContractSpec
     If lExchange = ExchangeSmart And .PrimaryExch <> "" Then
         lExchange = ExchangeSmartQualified & .PrimaryExch
     End If
+    If lExchange = ExchangeCME And _
+        (.Symbol = "ES" Or _
+            Left$(.LocalSymbol, 2) = "ES" Or _
+            .Symbol = "NQ" Or _
+            Left$(.LocalSymbol, 2) = "NQ" Or _
+            .Symbol = "GBP" Or _
+            Left$(.LocalSymbol, 2) = "6B" Or _
+            .Symbol = "EUR" Or _
+            Left$(.LocalSymbol, 2) = "6E") _
+    Then
+        lExchange = ExchangeCME
+    ElseIf lExchange = ExchangeCBOT And _
+        (.Symbol = "ZB" Or _
+            Left$(.LocalSymbol, 2) = "ZB") _
+    Then
+        lExchange = ExchangeCBOT
+    End If
+    
     Dim lMultiplier As Double
     If .SecType = TwsSecTypeStock Then
         lMultiplier = 1 / pPriceMagnifier
