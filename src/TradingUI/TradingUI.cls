@@ -143,6 +143,27 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function CreateContractSelectionHelperFromString( _
+                ByVal pContractString As String, _
+                ByVal pPreferredTickerGridRow As Long, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore) As ContractSelectionHelper
+Const ProcName As String = "CreateContractSelectionHelperFromString"
+On Error GoTo Err
+
+Set CreateContractSelectionHelperFromString = New ContractSelectionHelper
+CreateContractSelectionHelperFromString.InitialiseFromString _
+                        pContractString, _
+                        pPreferredTickerGridRow, _
+                        pPrimaryContractStore, _
+                        pSecondaryContractStore
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function SelectTickfiles( _
                 ByRef UserCancelled As Boolean, _
                 ByVal pTickfileStore As ITickfileStore, _

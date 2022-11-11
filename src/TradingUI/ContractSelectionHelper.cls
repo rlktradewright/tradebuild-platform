@@ -59,6 +59,8 @@ Private mContracts                                  As IContracts
 Private mContractSpec                               As IContractSpecifier
 Private mPreferredTickerGridRow                     As Long
 
+Private mContractString                             As String
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -106,8 +108,11 @@ Else
     If mContracts.Count > 1 Then
         gLogger.Log "Fetched " & mContracts.Count & " contracts: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
         DeferAction Me
-    Else
+    ElseIf mContracts.Count = 1 Then
         gLogger.Log "Fetched 1 contract: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+        RaiseEvent Ready
+    Else
+        gLogger.Log "No contracts fetched: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
         RaiseEvent Ready
     End If
 End If
@@ -137,6 +142,14 @@ End Property
 
 Public Property Get ContractSpecifier() As IContractSpecifier
 Set ContractSpecifier = mContractSpec
+End Property
+
+Public Property Get InitialString() As String
+If mContractString <> "" Then
+    InitialString = mContractString
+Else
+    InitialString = mContractSpec.ToString
+End If
 End Property
 
 Public Property Get PreferredTickerGridRow() As Long
@@ -169,6 +182,28 @@ On Error GoTo Err
 
 Set mFutureWaiter = New FutureWaiter
 Set mContractSpec = pContractSpec
+mPreferredTickerGridRow = pPreferredTickerGridRow
+
+gLogger.Log "Fetching contracts: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+mFutureWaiter.Add FetchContracts(mContractSpec, pPrimaryContractStore, pSecondaryContractStore)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub InitialiseFromString( _
+                ByVal pContractString As String, _
+                ByVal pPreferredTickerGridRow As Long, _
+                ByVal pPrimaryContractStore As IContractStore, _
+                ByVal pSecondaryContractStore As IContractStore)
+Const ProcName As String = "InitialiseFromString"
+On Error GoTo Err
+
+Set mFutureWaiter = New FutureWaiter
+mContractString = pContractString
+Set mContractSpec = CreateContractSpecifierFromString(pContractString)
 mPreferredTickerGridRow = pPreferredTickerGridRow
 
 gLogger.Log "Fetching contracts: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail

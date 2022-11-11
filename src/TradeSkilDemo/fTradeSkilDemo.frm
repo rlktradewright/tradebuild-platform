@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#389.1#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -602,8 +602,8 @@ Private Sub TickerGrid1_TickerSymbolEntered(ByVal pSymbol As String, ByVal pPref
 Const ProcName As String = "TickerGrid1_TickerSymbolEntered"
 On Error GoTo Err
 
-Set mContractSelectionHelper = CreateContractSelectionHelper( _
-                                        CreateContractSpecifierFromString(pSymbol), _
+Set mContractSelectionHelper = CreateContractSelectionHelperFromString( _
+                                        pSymbol, _
                                         pPreferredRow, _
                                         mTradeBuildAPI.ContractStorePrimary, _
                                         mTradeBuildAPI.ContractStoreSecondary)
@@ -672,7 +672,10 @@ Const ProcName As String = "mContractSelectionHelper_Ready"
 On Error GoTo Err
 
 If mContractSelectionHelper.Contracts.Count = 0 Then
-    LogMessage "Invalid symbol"
+    gModelessMsgBox mContractSelectionHelper.InitialString, _
+                    MsgBoxInformation Or MsgBoxDefaultButton1, _
+                    mTheme, _
+                    "No contracts found for this string"
 Else
     TickerGrid1.StartTickerFromContract _
                     mContractSelectionHelper.Contracts.ItemAtIndex(1), _
