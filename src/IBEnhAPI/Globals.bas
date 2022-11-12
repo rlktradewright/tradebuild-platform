@@ -747,21 +747,21 @@ On Error GoTo Err
 
 Select Case pTimezoneName
 Case ""
-    gStandardTimezoneNameToTwsTimeZoneName = ""
+    gStandardTimezoneNameToTwsTimeZoneName = gStandardTimezoneNameToTwsTimeZoneName(GetTimeZone("").StandardName)
 Case "AUS Eastern Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "AET"
-Case "Central Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "CST"
+    gStandardTimezoneNameToTwsTimeZoneName = "Australia/Sydney"
+Case "Central Standard Time", "CST"
+    gStandardTimezoneNameToTwsTimeZoneName = "US/Central"
 Case "China Standard Time"
     gStandardTimezoneNameToTwsTimeZoneName = "Asia/Hong_Kong"
-Case "GMT Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "GMT"
-Case "Eastern Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "EST"
-Case "Pacific Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "Pacific/Pitcairn"
-Case "Romance Standard Time"
-    gStandardTimezoneNameToTwsTimeZoneName = "MET"
+Case "GMT Standard Time", "GMT"
+    gStandardTimezoneNameToTwsTimeZoneName = "Europe/London"
+Case "Eastern Standard Time", "EST"
+    gStandardTimezoneNameToTwsTimeZoneName = "US/Eastern"
+Case "Pacific Standard Time", "PST"
+    gStandardTimezoneNameToTwsTimeZoneName = "US/Pacific"
+Case "Romance Standard Time", "CET"
+    gStandardTimezoneNameToTwsTimeZoneName = "Europe/Brussels"
 Case Else
     AssertArgument False, "Unrecognised timezone: " & pTimezoneName
 End Select
