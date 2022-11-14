@@ -141,12 +141,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_0E1131F3BE934412856B3D0FF8CC4E73"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_0EF851B267A74C04AC6DEDB514A97C53"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -424,12 +418,6 @@
         "Entry"
         {
         "MsmKey" = "8:_2476BEA20B0523000E4C6D1F5535DE01"
-        "OwnerKey" = "8:_588DF42FDE5F6266753AD1355D637AEF"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2476BEA20B0523000E4C6D1F5535DE01"
         "OwnerKey" = "8:_FED2A3C2ACE14220801F5BCE41C05877"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -479,6 +467,12 @@
         {
         "MsmKey" = "8:_2476BEA20B0523000E4C6D1F5535DE01"
         "OwnerKey" = "8:_80DF803EA8144D4F8E6F805D8C223030"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_2476BEA20B0523000E4C6D1F5535DE01"
+        "OwnerKey" = "8:_588DF42FDE5F6266753AD1355D637AEF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1678,6 +1672,12 @@
         "Entry"
         {
         "MsmKey" = "8:_71B4C9135EA9400CAF2A32CE17B430EC"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_71F7580383964C4B8B6FB80C6740DB2D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4413,7 +4413,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.258.beta-20.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.259-beta.1.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -8438,7 +8438,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.AxTradingUI27, Version=389.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.AxTradingUI27, Version=389.1.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_BB4AF24A2FB2473BAC4B9084A966D862"
@@ -9591,7 +9591,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=389.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=389.1.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_EA4C45C4DDED3E94EC6FEAF1FE7B8FCD"
@@ -10229,7 +10229,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=389.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Interop.TradingUI27, Version=389.1.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_FED2A3C2ACE14220801F5BCE41C05877"
@@ -10487,15 +10487,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{4B99C805-54E9-4F1E-8B01-99B922BBC12E}"
-        "PackageCode" = "8:{20891646-CCB1-4B1B-919C-DE882AA18ABB}"
+        "ProductCode" = "8:{579652A9-9324-4C20-9C9F-E488DDED93A7}"
+        "PackageCode" = "8:{B1F3531F-5EAF-495A-B466-D9DEA4C3E81C}"
         "UpgradeCode" = "8:{96BD3E71-2EE9-4FE8-8ACB-F99D99DAF1FA}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.258"
+        "ProductVersion" = "8:2.7.259"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -11154,11 +11154,11 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_0E1131F3BE934412856B3D0FF8CC4E73"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_71F7580383964C4B8B6FB80C6740DB2D"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.258.beta-20.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.259-beta.1.msm"
                 "Properties"
                 {
                     "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
