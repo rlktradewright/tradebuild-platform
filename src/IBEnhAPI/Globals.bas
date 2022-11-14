@@ -155,8 +155,8 @@ With gContractSpecToTwsContractSpec
         .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeGlobex Then
         .Exchange = ExchangeCME
-    ElseIf lExchange = ExchangeECBOT Then
-        .Exchange = ExchangeCBOT
+'    ElseIf lExchange = ExchangeECBOT Then
+'        .Exchange = ExchangeCBOT
     Else
         .Exchange = lExchange
     End If
@@ -880,12 +880,12 @@ With pTwsContractSpec
             .Symbol = "EUR" Or _
             Left$(.LocalSymbol, 2) = "6E") _
     Then
-        lExchange = ExchangeCME
-    ElseIf lExchange = ExchangeCBOT And _
-        (.Symbol = "ZB" Or _
-            Left$(.LocalSymbol, 2) = "ZB") _
-    Then
-        lExchange = ExchangeCBOT
+        lExchange = ExchangeGlobex
+'    ElseIf lExchange = ExchangeCBOT And _
+'        (.Symbol = "ZB" Or _
+'            Left$(.LocalSymbol, 2) = "ZB") _
+'    Then
+'        lExchange = ExchangeECBOT
     End If
     
     Dim lMultiplier As Double
