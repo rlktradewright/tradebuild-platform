@@ -10,6 +10,10 @@ call setTradeBuildVersion.bat
 
 set DEP=/DEP:%TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\ExternalDependencies.txt
 
+if /I "%~1"=="CHART" (
+	pushd %TB-PLATFORM-PROJECTS-PATH%\src\CommandLineUtils
+	goto :CHART
+)
 if not "%~1"=="" (
 	pushd %TB-PLATFORM-PROJECTS-PATH%\src\CommandLineUtils
 	echo =================================
@@ -58,6 +62,7 @@ call makeExe.bat uxd uxd /CONSOLE /NOV6CC /M:E %DEP%
 if errorlevel 1 pause
 
 :: temporary solution to building the Chart program
+:CHART
 pushd Chart
 echo =================================
 echo Building Chart\Chart.exe
