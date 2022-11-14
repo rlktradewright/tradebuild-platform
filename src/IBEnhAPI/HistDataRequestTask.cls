@@ -651,14 +651,11 @@ Const ProcName As String = "generateRequestEndTime"
 On Error GoTo Err
 
 Dim lEndTime As Date
-lEndTime = ConvertDateUTCToLocal( _
-                ConvertDateTzToUTC( _
-                    normaliseTime( _
+lEndTime = normaliseTime( _
                         pWorkingBarSpecifier.ToDate, _
                         pSessionStartTime, _
                         pSessionEndTime, _
-                        pWorkingBarSpecifier.IncludeBarsOutsideSession), _
-                    mTargetTimezone))
+                        pWorkingBarSpecifier.IncludeBarsOutsideSession)
 
 Select Case pWorkingBarSpecifier.BarTimePeriod.Units
 Case TimePeriodDay, _
@@ -668,7 +665,10 @@ Case TimePeriodDay, _
     'lEndTime = Int(lEndTime)
 End Select
 
-generateRequestEndTime = Format(lEndTime, "yyyymmdd hh\:nn\:ss")
+generateRequestEndTime = Format(lEndTime, _
+                                "yyyymmdd hh\:nn\:ss") & _
+                                " " & _
+                                gStandardTimezoneNameToTwsTimeZoneName(mTargetTimezone.StandardName)
 
 Exit Function
 
