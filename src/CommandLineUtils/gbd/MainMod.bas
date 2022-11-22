@@ -1025,6 +1025,29 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function getInputLineAndWait( _
+                Optional ByVal pDontReadInput As Boolean = False, _
+                Optional ByVal pWaitTimeMIllisecs As Long = 5, _
+                Optional ByVal pPrompt As String = ":") As String
+Const ProcName As String = "getInputLine"
+On Error GoTo Err
+
+Dim lWaitUntilTime As Double
+lWaitUntilTime = GetTimestampUTC + pWaitTimeMIllisecs / (86400# * 1000#)
+
+If Not pDontReadInput Then getInputLineAndWait = Trim$(gCon.ReadLine(pPrompt))
+
+Do
+    ' allow queued system messages to be handled
+    Wait 5
+Loop Until GetTimestampUTC >= lWaitUntilTime
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Sub logProgramId()
 Const ProcName As String = "logProgramId"
 On Error GoTo Err
@@ -1047,6 +1070,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub logTasks()
+Dim s As String
+
+s = "Runnable tasks------------------------------------------------------------" & vbCrLf
+s = s & TaskManager.GetRunnableTaskSummary
+s = s & "Processed tasks-----------------------------------------------------------" & vbCrLf
+s = s & TaskManager.GetProcessedTaskSummary
+s = s & "Restartable tasks---------------------------------------------------------" & vbCrLf
+s = s & TaskManager.GetRestartableTaskSummary
+s = s & "Pending tasks-------------------------------------------------------------" & vbCrLf
+s = s & TaskManager.GetPendingTaskSummary
+s = s & "Suspended tasks-----------------------------------------------------------" & vbCrLf
+s = s & TaskManager.GetSuspendedTaskSummary
+gWriteLineToConsole s
+End Sub
+
 Private Sub process()
 Const ProcName As String = "process"
 On Error GoTo Err
@@ -1059,7 +1098,7 @@ If lContinue Then
 End If
 
 Do While mProcessors.Count <> 0
-    Wait 50
+    getInputLineAndWait pDontReadInput:=True, pWaitTimeMIllisecs:=10
 Loop
 
 Exit Sub
@@ -1079,6 +1118,8 @@ Dim params As String
 params = Trim$(Right$(pCommandString, Len(pCommandString) - Len(lCommand)))
 
 Select Case lCommand
+Case "TASKS"
+    logTasks
 Case ContractCommand
     processContractCommand params
 Case FromCommand
@@ -1726,34 +1767,36 @@ On Error GoTo Err
 
 Static sPreviousLineBlank As Boolean
 
-Do
-    If mProviderReady And (mAsync Or mCurrentProcessor Is Nothing) Then
-        Dim lInputString As String
-        lInputString = Trim$(gCon.ReadLine(":"))
-        Wait 50
-        If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
-        
-        If lInputString = "" Then
-            If Not sPreviousLineBlank Then mLineNumber = mLineNumber + 1
-            sPreviousLineBlank = True
-                
-            ' ignore blank lines, but echo them to StdOut when
-            ' piping to another program
-            If gCon.StdOutType = FileTypePipe Then gWriteLineToStdOut ""
-        ElseIf Left$(lInputString, 1) = "#" Then
-            sPreviousLineBlank = False
-            mLineNumber = mLineNumber + 1
-            LogMessage "con: " & lInputString
-            ' ignore comments
-        Else
-            sPreviousLineBlank = False
-            mLineNumber = mLineNumber + 1
-            LogMessage "con: " & lInputString
-            processCommand lInputString
-        End If
+Dim lInputString As String
+lInputString = getInputLineAndWait(Not (mProviderReady And _
+                                        (mAsync Or _
+                                         mCurrentProcessor Is Nothing)))
+
+Do Until lInputString = gCon.EofString Or _
+        UCase$(lInputString) = ExitCommand
+    
+    If lInputString = "" Then
+        If Not sPreviousLineBlank Then mLineNumber = mLineNumber + 1
+        sPreviousLineBlank = True
+            
+        ' ignore blank lines, but echo them to StdOut when
+        ' piping to another program
+        If gCon.StdOutType = FileTypePipe Then gWriteLineToStdOut ""
+    ElseIf Left$(lInputString, 1) = "#" Then
+        sPreviousLineBlank = False
+        mLineNumber = mLineNumber + 1
+        LogMessage "con: " & lInputString
+        ' ignore comments
     Else
-        Wait 50
+        sPreviousLineBlank = False
+        mLineNumber = mLineNumber + 1
+        LogMessage "con: " & lInputString
+        processCommand lInputString
     End If
+
+    lInputString = getInputLineAndWait(Not (mProviderReady And _
+                                            (mAsync Or _
+                                             mCurrentProcessor Is Nothing)))
 Loop
 
 Exit Sub
