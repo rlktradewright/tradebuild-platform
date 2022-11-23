@@ -166,7 +166,7 @@ set PIPELINE=
 ::
 ::   This would generate historical bar data for all the contracts listed in
 ::   the scan output. 'ECHO' commands to GSD could be used to control the ouput
-;;   from the GBD27 program.
+::   from the GBD27 program.
 ::
 ::
 ::
