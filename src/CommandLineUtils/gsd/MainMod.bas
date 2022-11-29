@@ -662,6 +662,29 @@ Next
 escapeNonFilenameChars = ar
 End Function
 
+Private Function getInputLineAndWait( _
+                Optional ByVal pDontReadInput As Boolean = False, _
+                Optional ByVal pWaitTimeMIllisecs As Long = 5, _
+                Optional ByVal pPrompt As String = ":") As String
+Const ProcName As String = "getInputLine"
+On Error GoTo Err
+
+Dim lWaitUntilTime As Double
+lWaitUntilTime = GetTimestampUTC + pWaitTimeMIllisecs / (86400# * 1000#)
+
+If Not pDontReadInput Then getInputLineAndWait = Trim$(gCon.ReadLine(pPrompt))
+
+Do
+    ' allow queued system messages to be handled
+    Wait 5
+Loop Until GetTimestampUTC >= lWaitUntilTime
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function getScanParameterVariable( _
                 ByVal pVariableName As String, _
                 ByVal pProcessor As ScanProcessor) As String
@@ -773,7 +796,7 @@ If lContinue Then
 End If
 
 Do While mProcessors.Count <> 0
-    Wait 50
+    getInputLineAndWait pDontReadInput:=True, pWaitTimeMIllisecs:=10
 Loop
 
 If Not mTwsClient Is Nothing Then
@@ -1119,11 +1142,12 @@ Private Sub processStdInComands()
 Const ProcName As String = "processStdInComands"
 On Error GoTo Err
 
-Do
-    Dim lInputString As String
-    lInputString = Trim$(gCon.ReadLine(":"))
-    If lInputString = gCon.EofString Or UCase$(lInputString) = ExitCommand Then Exit Do
-        
+Dim lInputString As String
+lInputString = getInputLineAndWait(Not mProviderReady)
+
+Do Until lInputString = gCon.EofString Or _
+        UCase$(lInputString) = ExitCommand
+    
     If lInputString = "" Then
         ' ignore blank lines, but echo them to StdOut when
         ' piping to another program
@@ -1131,13 +1155,12 @@ Do
     ElseIf Left$(lInputString, 1) = "#" Then
         LogMessage "con: " & lInputString
         ' ignore comments
-    ElseIf mProviderReady Then
+    Else
         LogMessage "con: " & lInputString
         processCommand lInputString
-    Else
-        gWriteErrorLine "Not ready"
-        Wait 10
     End If
+    
+    lInputString = getInputLineAndWait(Not mProviderReady)
 Loop
 
 Exit Sub
