@@ -84,12 +84,12 @@ Public RolloverSpec                                 As RolloverSpecification
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set EntryLimitPriceSpec = NewPriceSpecifier
-Set EntryTriggerPriceSpec = NewPriceSpecifier
-Set StopLossLimitPriceSpec = NewPriceSpecifier
-Set StopLossTriggerPriceSpec = NewPriceSpecifier
-Set TargetLimitPriceSpec = NewPriceSpecifier
-Set TargetTriggerPriceSpec = NewPriceSpecifier
+Set EntryLimitPriceSpec = New PriceSpecifier
+Set EntryTriggerPriceSpec = New PriceSpecifier
+Set StopLossLimitPriceSpec = New PriceSpecifier
+Set StopLossTriggerPriceSpec = New PriceSpecifier
+Set TargetLimitPriceSpec = New PriceSpecifier
+Set TargetTriggerPriceSpec = New PriceSpecifier
 End Sub
 
 '@================================================================================
