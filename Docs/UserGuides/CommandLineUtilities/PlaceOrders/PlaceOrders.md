@@ -113,9 +113,9 @@ BUY /TIF:DAY 1 STPLMT 3114.25 /IGNORERTH 3114.00
 
 The following is a summary of all the commands currently defined:
 
-|  Command      |  Purpose                                                     |                  
+|  Command      |  Purpose                                                     |
 | ------------- | ------------------------------------------------------------ |
-|  #            | Starts a comment line                                        |           
+|  #            | Starts a comment line                                        |
 |  ?            | Outputs a list of commands that are currently valid          |
 |  BATCHORDERS  | Specifies whether bracket orders should be accumulated and only submitted when an ENDORDERS command is received |
 |  BRACKET      | Starts a bracket order specification                         |
@@ -295,7 +295,7 @@ subsequent runs.
 An order is an instruction to buy or sell a defined quantity of a particular
 contract. There are two types of order recognised by the program:
 
-* Single orders: these consist of a simple buy or sell order with no associated 
+* Single orders: these consist of a simple buy or sell order with no associated
   orders. When filled they increase or decrease the current position for the
   relevant contract in the group via which the order was placed.
 
@@ -335,40 +335,40 @@ currently defined groups.
 
 Entry orders (and single orders) may use the following order types:
 
-Limit 
-Limit If Touched 
-Limit On Close 
-Limit On Open 
-Market 
-Market If Touched 
-Market On Close 
-Market On Open 
-Market To Limit 
-Stop 
-Stop Limit 
-Trail 
-Trail Limit 
+Limit
+Limit If Touched
+Limit On Close
+Limit On Open
+Market
+Market If Touched
+Market On Close
+Market On Open
+Market To Limit
+Stop
+Stop Limit
+Trail
+Trail Limit
 
 ###  Order Types for Stop-Loss Orders
 
 Stop-loss orders may use the following order types:
 
-Stop 
-Stop Limit 
-Trail 
-Trail Limit 
+Stop
+Stop Limit
+Trail
+Trail Limit
 
 ###  Order Types for Target Orders
 
 Target orders may use the following order types:
 
-Limit 
-Limit If Touched 
-Limit On Close 
-Limit On Open 
-Market If Touched 
-Market On Close 
-Market On Open 
+Limit
+Limit If Touched
+Limit On Close
+Limit On Open
+Market If Touched
+Market On Close
+Market On Open
 
 ## 7. Order Pricing
 
@@ -542,10 +542,10 @@ Tagged arguments:
 | -------------- | ---------------- | -------------------------------------------- |
 | /cancelafter   | integer > 0     | The time in seconds after which this bracket order will be automatically cancelled. |
 | /cancelprice   | \<price\>       | The traded market price at which the order will be cancelled: |
-|                |                 | If entry order is LMT, MTL or MIT and BUY then cancel when market rises above \<price\> |                                 
-|                |                 | If entry order is LMT, MTL or MIT and SELL then cancel when market falls below \<price\> |                                 
-|                |                 | If entry order is STP or STPLMT and BUY then cancel when market falls below \<price\> |                                 
-|                |                 | If entry order is STP or STPLMT and SELL then cancel when market rises above \<price\> |                                 
+|                |                 | If entry order is LMT, MTL or MIT and BUY then cancel when market rises above \<price\> |
+|                |                 | If entry order is LMT, MTL or MIT and SELL then cancel when market falls below \<price\> |
+|                |                 | If entry order is STP or STPLMT and BUY then cancel when market falls below \<price\> |
+|                |                 | If entry order is STP or STPLMT and SELL then cancel when market rises above \<price\> |
 | /description   | \<string\>      | The specified string is included in log entries relating to this bracket order |
 | /goodaftertime | \<datetime\>    | The bracket order is not to be submitted until the specified date and time |
 | /goodtilldate  | \<datetime\>    | The bracket order will be cancelled if the entry order is still unfilled at the specified date and time |
@@ -593,7 +593,7 @@ Positional aruments (form 1):
 |          | TRAIL            |                                              |
 |          | TRAILLMT         |                                              |
 | 3        | \<pricespec\>    | Limit price, if one is required; otherwise trigger price, if one is required. This applies to the following order types |
-|          |                  | LMT                                          | 
+|          |                  | LMT                                          |
 |          |                  | LIT                                          |
 |          |                  | LOC                                          |
 |          |                  | LOO                                          |
@@ -626,7 +626,7 @@ Positional aruments (form 2):
 |          | TRAIL            |                                              |
 |          | TRAILLMT         |                                              |
 | 2        | \<pricespec\>    | Limit price specifier, if one is required; otherwise trigger price, if one is required. This applies to the following order types |
-|          |                  | LMT                                          | 
+|          |                  | LMT                                          |
 |          |                  | LIT                                          |
 |          |                  | LOC                                          |
 |          |                  | LOO                                          |
@@ -646,10 +646,10 @@ Tagged arguments:
 | ------------- | ---------------- | -------------------------------------------- |
 | /cancelafter  | hh:mm:ss         | The time after which this order will be automatically canceeled |
 | /cancelprice   | \<price\>       | The traded market price at which the order will be cancelled: |
-|                |                 | * if order is LMT, MTL or MIT and BUY then cancel when market rises above \<price\> |                                 
-|                |                 | * if order is LMT, MTL or MIT and SELL then cancel when market falls below \<price\> |                                 
-|                |                 | * if order is STP or STPLMT and BUY then cancel when market falls below \<price\> |                                 
-|                |                 | * if order is STP or STPLMT and SELL then cancel when market rises above \<price\> |                                 
+|                |                 | * if order is LMT, MTL or MIT and BUY then cancel when market rises above \<price\> |
+|                |                 | * if order is LMT, MTL or MIT and SELL then cancel when market falls below \<price\> |
+|                |                 | * if order is STP or STPLMT and BUY then cancel when market falls below \<price\> |
+|                |                 | * if order is STP or STPLMT and SELL then cancel when market rises above \<price\> |
 | /description   | \<string\>      | The specified string is included in log entries relating to this bracket order |
 | /goodaftertime | \<datetime\>    | The bracket order is not to be submitted until the specified date and time |
 | /goodtilldate  | \<datetime\>    | The order will be cancelled if the entry order is still unfilled at the specified date and time |
@@ -706,7 +706,7 @@ Positional aruments (form 1):
 |          | TRAIL            |                                              |
 |          | TRAILLMT         |                                              |
 | 1        | \<pricespec\>    | Limit price, if one is required; otherwise trigger price, if one is required. This applies to the following order types |
-|          |                  | LMT                                          | 
+|          |                  | LMT                                          |
 |          |                  | LIT                                          |
 |          |                  | LOC                                          |
 |          |                  | LOO                                          |
@@ -727,7 +727,7 @@ Positional aruments (form 2):
 | 0        | ALL              | Specifies that all groups are to be closed out |
 |          | \<groupname\>    | Specifies the name of a group to closeout    |
 | 1        | \<ordertype>     | The type of order to use.                    |
-|          |                  | LMT                                          | 
+|          |                  | LMT                                          |
 |          |                  | LIT                                          |
 |          |                  | LOC                                          |
 |          |                  | LOO                                          |
@@ -741,7 +741,7 @@ Positional aruments (form 2):
 |          |                  | TRAIL                                        |
 |          |                  | TRAILLMT                                     |
 | 2        | \<pricespec\>    | Limit price, if one is required; otherwise trigger price, if one is required. This applies to the following order types |
-|          |                  | LMT                                          | 
+|          |                  | LMT                                          |
 |          |                  | LIT                                          |
 |          |                  | LOC                                          |
 |          |                  | LOO                                          |
@@ -991,51 +991,44 @@ soon as the relevant bracket order is completed, either by hitting its stop-loss
 target orders or by closeout. The information contained in each record is as
 follows:
 
-
-|GroupName               |                                                          |
-|Contract                |                                                          |
-|StartTime               |Time of entry order fill                                  |
-|EndTime                 |Time of target/stop-loss/closeout fill                    |
-|Description             |Description for bracket order (anything you like)         |
-|Key                     |Order key allocated at definition time                    |
-|EntryOrderAction        |BUY or SELL                                               |
-|EntryOrderQuantity      |Number of shares/futures/options                          |
-|EntryPrice              |Fill price for entry order (might need some additional    |
-|                        |work here if the entry has multiple fills – need to check |
-|                        |the code)                                                 |
-|ExitPrice               |Fill price at end                                         |
-|EntryReason             |Reason for entry order                                    |
-|TargetReason            |Reason for target order                                   |
-|StopLossReason          |Reason for stop-loss order                                |
-|Profit                  |Final profit                                              |
-|MaxProfit               |Max profit reached – only valid if bracket or is          |
-|                        |executed entirely within one run of plord (it would       |
-|                        |be possible to query historical data to get an            |
-|                        |accurate value for bracket orders that span runs,         |
-|                        |but not currently on the list of priorities!)             |
-|MaxLoss                 |Max loss reached – same caveat as for max profit          |
-|RiskAmount              |Amount risked by trade – not currently populated          |
-|                        |as the risk calculation is very tricky and currently      |
-|                        |incomplete                                                |
-|IsSimulated             |Order was simulated in the TradeBuild simulated exchange. |
-|                        |NB: this is not the same thing as the IB Paper Trading    |
-|                        |System – as far as TradeBuild is concerned, that is just  |
-|                        |a live exchange                                           |
+| Field                   | Description                                               |
+| ----------------------- | --------------------------------------------------------- |
+| GroupName               |                                                           |
+| Contract                |                                                           |
+| StartTime               | Time of entry order fill                                  |
+| EndTime                 | Time of target/stop-loss/closeout fill                    |
+| Description             | Description for bracket order (anything you like)         |
+| Key                     | Order key allocated at definition time                    |
+| EntryOrderAction        | BUY or SELL                                               |
+| EntryOrderQuantity      | Number of shares/futures/options                          |
+| EntryPrice              | Fill price for entry order (might need some additional work here if the entry has multiple fills – need to check the code) |
+| ExitPrice               | Fill price at end                                         |
+| EntryReason             | Reason for entry order                                    |
+| TargetReason            | Reason for target order                                   |
+| StopLossReason          | Reason for stop-loss order                                |
+| Profit                  | Final profit                                              |
+| MaxProfit               | Max profit reached – only valid if bracket or is executed entirely within one run of plord (it would be possible to query historical data to get an accurate value for bracket orders that span runs, but not currently on the list of priorities!) |
+| MaxLoss                 | Max loss reached – same caveat as for max profit          |
+| RiskAmount              | Amount risked by trade – not currently populated as the risk calculation is very tricky and currently incomplete |
+| IsSimulated             | Order was simulated in the TradeBuild simulated exchange. this is not the same thing as the IB Paper Trading System – as far as TradeBuild is concerned, that is just a live exchange |
 
 
-Similarly, the xxxx-Executions.log file contains an entry for each order fill, in the order of occurrence. Some of the fields are self-explanatory:
+Similarly, the xxxx-Executions.log file contains an entry for each order fill, in the
+order of occurrence. Some of the fields are self-explanatory:
 
-|GroupName               |                                                          |
-|Contract                |                                                          |
-|QuantityFilled          |                                                          |
-|Price                   |                                                          |
-|Action                  |                                                          |
-|FillTime                |                                                          |
-|FillTimezoneName        |                                                          |
-|FillId                  |IB's id for this fill                                     |
-|BrokerId                |IB's id for the order that caused this fill               |
-|TradeBuildId            |TradeBuild's order id                                     |
-|IsSimulated             |                                                          |
+| Field                   | Description                                               |
+| ----------------------- | --------------------------------------------------------- |
+| GroupName               |                                                           |
+| Contract                |                                                           |
+| QuantityFilled          |                                                           |
+| Price                   |                                                           |
+| Action                  |                                                           |
+| FillTime                |                                                           |
+| FillTimezoneName        |                                                           |
+| FillId                  | IB's id for this fill                                     |
+| BrokerId                | IB's id for the order that caused this fill               |
+| TradeBuildId            | TradeBuild's order id                                     |
+| IsSimulated             |                                                           |
 
 <br/><br/>
 ## 11. Detailed Syntax Specification
