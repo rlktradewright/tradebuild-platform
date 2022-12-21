@@ -979,7 +979,7 @@ End Function
 
 Public Function gTwsSecTypeFromString(ByVal Value As String) As TwsSecTypes
 Select Case UCase$(Value)
-Case ""
+Case "", "UNK"
     gTwsSecTypeFromString = TwsSecTypeNone
 Case "STOCK", "STK"
     gTwsSecTypeFromString = TwsSecTypeStock
