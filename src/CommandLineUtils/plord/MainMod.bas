@@ -741,7 +741,7 @@ s = App.ProductName & _
     App.Major & _
     "." & App.Minor & _
     "." & App.Revision & _
-    IIf(App.FileDescription <> "", "." & App.FileDescription, "") & _
+    IIf(App.FileDescription <> "", "-" & App.FileDescription, "") & _
     vbCrLf & _
     App.LegalCopyright
 gWriteLineToConsole s, , True
