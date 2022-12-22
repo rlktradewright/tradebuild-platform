@@ -78,6 +78,9 @@ Public Enum OpActions
     ' cancelling.
     ActCancelCloseoutOrder
 
+    ' This Action resubmits the closeout order after a short delay.
+    ActResubmitCloseoutOrder
+    
 End Enum
 
 Public Enum OpConditions
@@ -168,6 +171,13 @@ Public Enum OpStimuli
     ' This stimulus indicates that a message (potentially an error) has
     ' been notified with regard to an order
     StimOrderError
+
+    ' This stimulus indicates that the closeout order has been rejected.
+    ' Ths could be for example because of a lack of account funds.
+    ' Note that this is a very unpleasant situation, since it only occurs
+    ' when attempting to closeout a position and it leaves us with an
+    ' unprotected position.
+    StimCloseoutOrderRejected
 
 End Enum
 
@@ -1017,6 +1027,17 @@ mTableBuilder.AddStateTableEntry _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateClosingOut, _
             OpActions.ActPlaceCloseoutOrder
+
+' The closeout order has been rejected. This may be because of account fund
+' shortage, so it may be possible to get the order through later. So we
+' resubmit the closeout order after a delay
+mTableBuilder.AddStateTableEntry _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpStimuli.StimCloseoutOrderRejected, _
+            OpConditions.CondSizeNonZero, _
+            SpecialConditions.NoConditions, _
+            BracketOrderStates.BracketOrderStateClosingOut, _
+            OpActions.ActResubmitCloseoutOrder
 
 mTableBuilder.StateTableComplete
 End Sub

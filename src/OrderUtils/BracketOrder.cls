@@ -92,6 +92,8 @@ Attribute mCancelTLI.VB_VarHelpID = -1
 
 Private WithEvents mForceCloseTLI                   As TimerListItem
 Attribute mForceCloseTLI.VB_VarHelpID = -1
+Private WithEvents mDelayedCloseoutTLI              As TimerListItem
+Attribute mDelayedCloseoutTLI.VB_VarHelpID = -1
 
 Private WithEvents mEntryOrder                      As Order
 Attribute mEntryOrder.VB_VarHelpID = -1
@@ -1092,6 +1094,12 @@ Select Case mCloseoutOrder.Status
 Case OrderStatuses.OrderStatusFilled
     Assert Size = 0, Key & " Closeout incomplete: Size remaining is " & Size
     checkAllOrdersComplete
+Case OrderStatuses.OrderStatusRejected
+    If Not mForceCloseTLI Is Nothing Then
+        mForceCloseTLI.Cancel
+        Set mForceCloseTLI = Nothing
+    End If
+    handleStimulus OpStimuli.StimCloseoutOrderRejected
 Case OrderStatuses.OrderStatusCancelled
     handleStimulus OpStimuli.StimCloseoutOrderCancelled
     checkAllOrdersComplete
@@ -1269,6 +1277,25 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+'@================================================================================
+' mDelayedCloseoutTLI Event Handlers
+'@================================================================================
+
+Private Sub mDelayedCloseoutTLI_StateChange(ev As TWUtilities40.StateChangeEventData)
+Const ProcName As String = "mDelayedCloseoutTLI_StateChange"
+On Error GoTo Err
+
+Dim lState As TimerListItemStates: lState = ev.State
+If lState <> TimerListItemStateExpired Then Exit Sub
+
+placeCloseoutOrder
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -3609,6 +3636,8 @@ For Each lAction In pActions
         doActions = Empty
     Case OpActions.ActCancelCloseoutOrder
         doActions = CancelCloseoutOrder
+    Case OpActions.ActResubmitCloseoutOrder
+        doActions = placeDelayedCloseoutOrder
     Case Else
         Assert False, Key & " Invalid Action " & lAction
     End Select
@@ -3953,6 +3982,20 @@ ElseIf mSummary.CloseoutSpecifier.ForceCloseAfterSecs <> 0 Then
                                     mSummary.CloseoutSpecifier.ForceCloseAfterSecs)
 End If
                             
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function placeDelayedCloseoutOrder()
+Const ProcName As String = "placeDelayedCloseoutOrder"
+On Error GoTo Err
+
+Set mDelayedCloseoutTLI = mTimerList.Add( _
+                                Nothing, _
+                                15)
+
 Exit Function
 
 Err:
