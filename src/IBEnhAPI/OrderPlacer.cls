@@ -115,6 +115,9 @@ Case 161
     ' notification hasn't arrived via the API, and the application also tries to cancel,
     ' we just ignore it.
     gLog "Ignored error 161 from TWS (" & pBrokerId & "): " & pErrorMsg, ModuleName, ProcName
+Case 201
+    ' the order has been rejected
+    GetOrderSubmitter(pBrokerId).NotifyMessage GetOrder(pBrokerId), pErrorMsg
 Case 202
     notifyStatus pBrokerId, OrderStatuses.OrderStatusCancelled
 Case 451
