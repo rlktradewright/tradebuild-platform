@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#392.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
-   Caption         =   "Form1"
+   Caption         =   "Secs"
    ClientHeight    =   9585
    ClientLeft      =   60
    ClientTop       =   450
@@ -10,11 +10,47 @@ Begin VB.Form Form1
    ScaleHeight     =   9585
    ScaleWidth      =   12225
    StartUpPosition =   3  'Windows Default
+   Begin VB.TextBox RepeatSecsText 
+      Height          =   285
+      Index           =   1
+      Left            =   5040
+      TabIndex        =   4
+      Text            =   "0"
+      Top             =   600
+      Width           =   495
+   End
+   Begin VB.TextBox RepeatSecsText 
+      Height          =   285
+      Index           =   0
+      Left            =   5040
+      TabIndex        =   3
+      Text            =   "0"
+      Top             =   120
+      Width           =   495
+   End
+   Begin VB.CheckBox SnapshotCheck 
+      Caption         =   "Snapshot"
+      Height          =   255
+      Index           =   1
+      Left            =   3960
+      TabIndex        =   2
+      Top             =   600
+      Width           =   975
+   End
+   Begin VB.CheckBox SnapshotCheck 
+      Caption         =   "Snapshot"
+      Height          =   255
+      Index           =   0
+      Left            =   3960
+      TabIndex        =   1
+      Top             =   120
+      Width           =   975
+   End
    Begin VB.TextBox ClosePriceText 
       Height          =   285
       Index           =   1
       Left            =   10920
-      TabIndex        =   29
+      TabIndex        =   33
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -23,7 +59,7 @@ Begin VB.Form Form1
       Height          =   285
       Index           =   1
       Left            =   9720
-      TabIndex        =   28
+      TabIndex        =   32
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -32,7 +68,7 @@ Begin VB.Form Form1
       Height          =   285
       Index           =   0
       Left            =   10920
-      TabIndex        =   27
+      TabIndex        =   31
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -41,7 +77,7 @@ Begin VB.Form Form1
       Height          =   285
       Index           =   0
       Left            =   9720
-      TabIndex        =   26
+      TabIndex        =   30
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -50,8 +86,8 @@ Begin VB.Form Form1
       Caption         =   "Add listener"
       Height          =   255
       Index           =   1
-      Left            =   7440
-      TabIndex        =   25
+      Left            =   9840
+      TabIndex        =   29
       Top             =   600
       Width           =   1815
    End
@@ -59,8 +95,8 @@ Begin VB.Form Form1
       Caption         =   "Add listener"
       Height          =   255
       Index           =   0
-      Left            =   7440
-      TabIndex        =   24
+      Left            =   9840
+      TabIndex        =   28
       Top             =   120
       Width           =   1815
    End
@@ -81,7 +117,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   120
       Locked          =   -1  'True
-      TabIndex        =   23
+      TabIndex        =   27
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -92,7 +128,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   1320
       Locked          =   -1  'True
-      TabIndex        =   22
+      TabIndex        =   26
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -103,7 +139,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   2520
       Locked          =   -1  'True
-      TabIndex        =   21
+      TabIndex        =   25
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -114,7 +150,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   3720
       Locked          =   -1  'True
-      TabIndex        =   20
+      TabIndex        =   24
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -125,7 +161,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   4920
       Locked          =   -1  'True
-      TabIndex        =   19
+      TabIndex        =   23
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -136,7 +172,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   2520
       Locked          =   -1  'True
-      TabIndex        =   18
+      TabIndex        =   22
       TabStop         =   0   'False
       Top             =   5040
       Width           =   1095
@@ -147,7 +183,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   6120
       Locked          =   -1  'True
-      TabIndex        =   17
+      TabIndex        =   21
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -158,7 +194,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   7320
       Locked          =   -1  'True
-      TabIndex        =   16
+      TabIndex        =   20
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -169,7 +205,7 @@ Begin VB.Form Form1
       Index           =   1
       Left            =   8520
       Locked          =   -1  'True
-      TabIndex        =   15
+      TabIndex        =   19
       TabStop         =   0   'False
       Top             =   4680
       Width           =   1095
@@ -180,7 +216,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   8520
       Locked          =   -1  'True
-      TabIndex        =   14
+      TabIndex        =   18
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -191,7 +227,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   7320
       Locked          =   -1  'True
-      TabIndex        =   13
+      TabIndex        =   17
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -202,7 +238,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   6120
       Locked          =   -1  'True
-      TabIndex        =   12
+      TabIndex        =   16
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -213,7 +249,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   2520
       Locked          =   -1  'True
-      TabIndex        =   11
+      TabIndex        =   15
       TabStop         =   0   'False
       Top             =   4320
       Width           =   1095
@@ -224,7 +260,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   4920
       Locked          =   -1  'True
-      TabIndex        =   10
+      TabIndex        =   14
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -235,7 +271,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   3720
       Locked          =   -1  'True
-      TabIndex        =   9
+      TabIndex        =   13
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -246,7 +282,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   2520
       Locked          =   -1  'True
-      TabIndex        =   8
+      TabIndex        =   12
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -257,7 +293,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   1320
       Locked          =   -1  'True
-      TabIndex        =   7
+      TabIndex        =   11
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -268,7 +304,7 @@ Begin VB.Form Form1
       Index           =   0
       Left            =   120
       Locked          =   -1  'True
-      TabIndex        =   6
+      TabIndex        =   10
       TabStop         =   0   'False
       Top             =   3960
       Width           =   1095
@@ -278,8 +314,8 @@ Begin VB.Form Form1
       Enabled         =   0   'False
       Height          =   375
       Index           =   1
-      Left            =   5760
-      TabIndex        =   4
+      Left            =   8160
+      TabIndex        =   8
       Top             =   600
       Width           =   1455
    End
@@ -288,8 +324,8 @@ Begin VB.Form Form1
       Enabled         =   0   'False
       Height          =   375
       Index           =   0
-      Left            =   5760
-      TabIndex        =   3
+      Left            =   8160
+      TabIndex        =   7
       Top             =   120
       Width           =   1455
    End
@@ -298,8 +334,8 @@ Begin VB.Form Form1
       Enabled         =   0   'False
       Height          =   375
       Index           =   1
-      Left            =   4200
-      TabIndex        =   2
+      Left            =   6600
+      TabIndex        =   6
       Top             =   600
       Width           =   1455
    End
@@ -308,8 +344,8 @@ Begin VB.Form Form1
       Enabled         =   0   'False
       Height          =   375
       Index           =   0
-      Left            =   4200
-      TabIndex        =   1
+      Left            =   6600
+      TabIndex        =   5
       Top             =   120
       Width           =   1455
    End
@@ -319,10 +355,26 @@ Begin VB.Form Form1
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   5
+      TabIndex        =   9
       TabStop         =   0   'False
       Top             =   5400
       Width           =   9495
+   End
+   Begin VB.Label Label2 
+      Caption         =   "Secs"
+      Height          =   255
+      Left            =   5640
+      TabIndex        =   35
+      Top             =   600
+      Width           =   735
+   End
+   Begin VB.Label Label1 
+      Caption         =   "Secs"
+      Height          =   255
+      Left            =   5640
+      TabIndex        =   34
+      Top             =   120
+      Width           =   735
    End
 End
 Attribute VB_Name = "Form1"
@@ -632,7 +684,18 @@ Set lContractFuture = FetchContract(ContractSpecBuilder1.ContractSpecifier, mCon
 mFutureWaiter.Add lContractFuture
 
 Dim lDataSource As IMarketDataSource
-Set lDataSource = mDataManager.CreateMarketDataSource(lContractFuture, False, IIf(pIndex = 0, DataSourceKey0, DataSourceKey1))
+If SnapshotCheck(pIndex).Value = vbChecked Then
+    Set lDataSource = mDataManager.CreateSnapshotMarketDataSource( _
+                                        lContractFuture, _
+                                        False, _
+                                        IIf(pIndex = 0, DataSourceKey0, DataSourceKey1), _
+                                        pRefreshInterval:=CLng(RepeatSecsText(pIndex).Text))
+Else
+    Set lDataSource = mDataManager.CreateMarketDataSource( _
+                                        lContractFuture, _
+                                        False, _
+                                        IIf(pIndex = 0, DataSourceKey0, DataSourceKey1))
+End If
 lDataSource.AddErrorListener Me
 lDataSource.AddGenericTickListener Me
 lDataSource.StartMarketData
