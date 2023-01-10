@@ -3930,9 +3930,9 @@ Private Sub initiateRollover()
 Const ProcName As String = "initiateRollover"
 On Error GoTo Err
 
-If mRolloverController Is Nothing Then
-    Set mRolloverController = New RolloverController
-End If
+If Not mRolloverController Is Nothing Then Exit Sub
+
+Set mRolloverController = New RolloverController
 mRolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName, mTimerList
 WriteRecoveryDataComment ProcName & "()"
 StartTask mRolloverController, PriorityNormal
