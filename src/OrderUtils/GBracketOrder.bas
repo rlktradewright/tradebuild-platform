@@ -280,6 +280,8 @@ Case ActLog
     gOpActionsToString = "Log"
 Case ActCancelCloseoutOrder
     gOpActionsToString = "Cancel closeout order"
+Case ActResubmitCloseoutOrder
+    gOpActionsToString = "Resubmit closeout order"
 Case Else
     AssertArgument False, "Invalid action " & CStr(pAction)
 End Select
@@ -334,6 +336,8 @@ Case StimTimeoutExpired
     gOpStimuliToString = "Timeout expired"
 Case StimOrderError
     gOpStimuliToString = "Order error"
+Case StimCloseoutOrderRejected
+    gOpStimuliToString = "Closeout order rejected"
 Case Else
     AssertArgument False, "Invalid stimulus"
 End Select
