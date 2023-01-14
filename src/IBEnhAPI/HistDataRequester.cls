@@ -160,6 +160,11 @@ On Error GoTo Err
 
 Const PacingRetryLimit As Long = 10
 
+If pErrorCode = 2176 Then
+    ' "Warning: Your API version does not support fractional share size rules. Please upgrade to a minimum version 163..."
+    Exit Sub
+End If
+
 If pErrorCode <> 162 And pErrorCode <> 420 Then
     ' drop through if not a Historical Market Data Service error message or a
     ' realtime bars error
