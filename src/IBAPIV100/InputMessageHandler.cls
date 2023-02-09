@@ -260,7 +260,7 @@ Static sVersion As Long
 checkmessages sMessageID, sVersion
 
 gLogger.Log "End of buffer reached (no more messages): mInputParseIndex=" & mReader.InputParseIndex, _
-            ProcName, ModuleName, LogLevelDetail
+            ProcName, ModuleName, LogLevelHighDetail
 
 sRetryCount = 0
 
@@ -279,7 +279,7 @@ errSource = Err.source
 
 If errNum = DataIncomplete Then
     gLogger.Log "End of buffer reached (while parsing message): mInputParseIndex=" & mReader.InputParseIndex, _
-                ProcName, ModuleName, LogLevelDetail
+                ProcName, ModuleName, LogLevelHighDetail
     sRetryCount = sRetryCount + 1
     Debug.Print "Data incomplete count: " & sRetryCount & "; CheckPointNumber: &H" & Hex$(mReader.CheckpointNumber)
     mReader.Rollback

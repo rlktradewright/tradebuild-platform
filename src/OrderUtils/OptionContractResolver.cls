@@ -282,10 +282,10 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     Set lDataSource = Nothing
     
     If lValue <> MaxDouble Then
-        logContractInfo lCandidateContract, "Contract", Format(lValue, "0")
+        logContractInfo lCandidateContract, "Contract", Format(lValue, "0"), LogLevelDetail
         checkIfTargetContractFound lCandidateContract, lValue
     Else
-        logContractInfo lCandidateContract, "Contract", "not available"
+        logContractInfo lCandidateContract, "Contract", "not available", LogLevelDetail
     End If
     
     mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
@@ -342,14 +342,14 @@ If ev.Future.IsCancelled Then
         mCancelledBySystem = True
         gLog "Contract fetch was cancelled for: " & _
                 lContractSpec.ToString, _
-            ProcName, ModuleName
+            ProcName, ModuleName, , LogLevelDetail
         Exit Sub
     End If
 ElseIf ev.Future.IsFaulted Then
     gLog "Contract fetch failed for: " & _
             lContractSpec.ToString & ": " & _
             ev.Future.ErrorMessage, _
-        ProcName, ModuleName
+        ProcName, ModuleName, , LogLevelDetail
     
     If mState = OptionContractResolverStateFetchingUnderlyingContract Then
         mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
@@ -418,7 +418,7 @@ Case OptionContractResolverStateFetchingCandidateContracts
         Else
             gLog "Unable to find contract with strike increment " & mSelectionParameter & _
                     ": actual increment was " & CStr(Sgn(mSelectionParameter) * (j - 1)), _
-                    ProcName, ModuleName
+                    ProcName, ModuleName, , LogLevelDetail
             Exit For
         End If
     Next
@@ -451,14 +451,14 @@ If ev.Future.IsCancelled Then
         mCancelledBySystem = True
         gLog "Option params fetch was cancelled for: " & _
                 lContractSpec.ToString, _
-            ProcName, ModuleName
+            ProcName, ModuleName, , LogLevelDetail
         Exit Sub
     End If
 ElseIf ev.Future.IsFaulted Then
     gLog "OPtion paramsfetch failed for: " & _
             lContractSpec.ToString & ": " & _
             ev.Future.ErrorMessage, _
-        ProcName, ModuleName
+        ProcName, ModuleName, , LogLevelDetail
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     Set mSelfRef = Nothing
     Exit Sub
@@ -476,7 +476,7 @@ Case OptionContractResolverStateFetchingStrikes
         mInitialStrike = findStrike(mStrikes, mHeuristicStrike, IIf(mContractSpec.Right = OptCall, False, True))
     End If
     gLogContractResolution gGetContractName(mUnderlyingContract.Specifier) & _
-                            ": initial strike price is: " & mInitialStrike
+                            ": initial strike price is: " & mInitialStrike, LogLevelDetail
     
     
     ' now we know the strike, we need to determine the expiry
@@ -1065,13 +1065,15 @@ End Function
 Private Sub logContractInfo( _
                 ByVal pContract As IContract, _
                 ByVal pText As String, _
-                ByVal pValue As String)
+                ByVal pValue As String, _
+                Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 gLogContractResolution pText & ": " & _
                         gGetContractName(pContract.Specifier) & _
                         "; strike: " & _
                         pContract.Specifier.Strike & _
                         "; " & mStrikeSelectionValueName & _
-                        ": " & pValue
+                        ": " & pValue, _
+                        pLogLevel
 End Sub
 
 Private Function needMoreContracts() As Boolean

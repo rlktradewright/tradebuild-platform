@@ -1029,7 +1029,7 @@ If mContractFuture.IsAvailable Then
 End If
 
 gReleaseHandle mHandle
-gLogger.Log "MarketDataSource finished (" & mKey & ")", ProcName, ModuleName, , s
+gLogger.Log "MarketDataSource finished (" & mKey & ")", ProcName, ModuleName, LogLevelDetail, s
 
 Exit Sub
 

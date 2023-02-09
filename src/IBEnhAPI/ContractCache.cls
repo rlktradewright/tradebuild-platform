@@ -314,7 +314,7 @@ Else
     Set pContract = lEntry.Contracts.ItemAtIndex(1)
     Set pTwsContract = lEntry.TwsContracts(1)
     gLogger.Log "Retrieved 1 contract from cache for key", _
-                ProcName, ModuleName, LogLevelDetail, _
+                ProcName, ModuleName, LogLevelMediumDetail, _
                 pContractSpec.Key
 End If
 
@@ -345,7 +345,7 @@ Else
                 lEntry.Contracts.Count & _
                 IIf(lEntry.Contracts.Count = 1, " contract", " contracts") & _
                 " from cache for key", _
-                ProcName, ModuleName, LogLevelDetail, _
+                ProcName, ModuleName, LogLevelMediumDetail, _
                 pContractSpec.Key
 End If
 
@@ -471,7 +471,7 @@ If Not lEntry.Ruleset Is Nothing Then
     gLogger.Log "Retrieved price increment ruleset " & _
                 pRuleID & _
                 " from cache", _
-                ProcName, ModuleName, LogLevelDetail
+                ProcName, ModuleName, LogLevelMediumDetail
 End If
 
 Exit Function

@@ -142,14 +142,14 @@ Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
-gLogger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mIsOffsetExpiry=" & mIsOffsetExpiry, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mIsOffsetExpiry=" & mIsOffsetExpiry, ProcName, ModuleName, LogLevelMediumDetail
 
 If Not mIsOffsetExpiry Then
     completeContractProcessing
 ElseIf mOffsetContractsOutstanding = 0 Then
     completeContractProcessing
 Else
-    gLogger.Log "Got all sample contracts for: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Got all sample contracts for: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
     mGotAllSampleContracts = True
 End If
 
@@ -190,7 +190,7 @@ On Error GoTo Err
 If mCancelled Then Exit Sub
 
 If mIsOffsetExpiry Then
-    gLogger.Log "Sample contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Sample contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
     Dim lResolver As New OffsetContractResolver
     mOffsetContractFutureWaiter.Add lResolver.Resolve(pContract, _
                                         mExpiryOffset, _
@@ -198,7 +198,7 @@ If mIsOffsetExpiry Then
                                         mCurrentContractStore)
     mOffsetContractsOutstanding = mOffsetContractsOutstanding + 1
 Else
-    gLogger.Log "Contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
     processContract pContract
 End If
 
@@ -220,7 +220,7 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-gLogger.Log "Running FetchContractTask for " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Running FetchContractTask for " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Set mCurrentContractStore = mPrimaryContractStore
 If mCurrentContractStore Is Nothing Then
@@ -351,7 +351,7 @@ ElseIf ev.Future.IsFaulted Then
 End If
 
 If mIsOffsetExpiry Then
-    gLogger.Log "Sample contract fetch completed: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Sample contract fetch completed: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
 Else
     gLogger.Log "Fetch completed: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
     If Not mListener Is Nothing Then mListener.FetchCompleted ev.ContinuationData
@@ -611,7 +611,7 @@ Else
     End If
 End If
 
-gLogger.Log "Contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Set mSelfRef = Nothing
 

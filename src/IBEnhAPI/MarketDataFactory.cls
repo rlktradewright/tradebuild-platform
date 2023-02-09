@@ -628,10 +628,10 @@ lIsMarketData = isStreamBuilderForMarketData(ev.Source, lStreamId)
 
 If lIsMarketData Then
     gLogger.Log "State changed for market data stream " & lStreamId & _
-                ": " & ev.State, ProcName, ModuleName, LogLevelDetail
+                ": " & ev.State, ProcName, ModuleName, LogLevelMediumDetail
 Else
     gLogger.Log "State changed for market depth stream " & lStreamId & _
-                ": " & ev.State, ProcName, ModuleName, LogLevelDetail
+                ": " & ev.State, ProcName, ModuleName, LogLevelMediumDetail
 End If
 
 If lStreamId = -1 Then
@@ -1253,7 +1253,7 @@ With pTickerTable(pStreamId)
     s = s & ")"
 End With
 
-gLogger.Log "Is ready for data (" & pStreamId & ": " & isReadyForData & "  " & s, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Is ready for data (" & pStreamId & ": " & isReadyForData & "  " & s, ProcName, ModuleName, LogLevelMediumDetail
 
 Exit Function
 
@@ -1303,7 +1303,7 @@ Const ProcName As String = "prepareTickStream"
 On Error GoTo Err
 
 If pContractFuture.IsAvailable Then
-    gLogger.Log "Got Contract", ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Got Contract", ProcName, ModuleName, LogLevelMediumDetail
     Dim lConsumerContract As IContract
     Set lConsumerContract = pContractFuture.Value
     Set pTickers(pStreamId).ConsumerTimeZone = GetTimeZone(lConsumerContract.TimezoneName)
@@ -1320,7 +1320,7 @@ Else
 End If
 
 If pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture.IsAvailable Then
-    gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelMediumDetail
 Else
     pFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId
 End If
@@ -1518,8 +1518,8 @@ Set lRuleset = lRulesetFuture.Value
 
 Dim lIncrement As Double: lIncrement = lRuleset.GetIncrement(pPrice)
 If lIncrement <> 0 Then
-    gLogger.Log "lRulesetID=" & lRulesetID, ProcName, ModuleName, LogLevelDetail
-    gLogger.Log "lPriceMagnifier=" & lPriceMagnifier, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "lRulesetID=" & lRulesetID, ProcName, ModuleName, LogLevelMediumDetail
+    gLogger.Log "lPriceMagnifier=" & lPriceMagnifier, ProcName, ModuleName, LogLevelMediumDetail
     gLogger.Log "Tick size set to " & lIncrement, ProcName, ModuleName, LogLevelDetail
     mMarketDataTable(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lIncrement
     mMarketDataTable(pStreamId).TickSizeHasBeenSet = True

@@ -203,7 +203,7 @@ Private Sub IContractDetailsConsumer_NotifyMarketRule( _
 Const ProcName As String = "IContractDetailsConsumer_NotifyMarketRule"
 On Error GoTo Err
 
-gLogger.Log "Market rule notified: " & pMarketRuleId, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Market rule notified: " & pMarketRuleId, ProcName, ModuleName, LogLevelMediumDetail
 
 Dim lRequestEntry As MarketRuleRequestEntry
 lRequestEntry = mRulesetRequests.Item(CStr(pMarketRuleId))
@@ -422,8 +422,8 @@ mRequests(lIndex).RequestType = ContractInfoRequestTypeContracts
 Set mRequests(lIndex).ContractSpec = pContractSpecifier
 Set mRequests(lIndex).Requester = pRequester
 
+gLog "Queueing request for", ModuleName, ProcName, pContractSpecifier.Key, LogLevelMediumDetail
 addEntryToRequestQueue lIndex
-gLog "Queued request for", ModuleName, ProcName, pContractSpecifier.Key, LogLevelDetail
 
 RequestContractDetails = lIndex
 
@@ -632,15 +632,15 @@ On Error GoTo Err
 
 If mFirstRequestEntry = NullIndex Then Exit Sub
 
-gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelDetail
+gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelMediumDetail
 
 If mTwsAPI.ConnectionState <> TwsConnConnected Then
-    gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelDetail
+    gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelMediumDetail
     Exit Sub
 End If
 
 If Not mIsTwsConnectedToIBServers Then
-    gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelDetail
+    gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelMediumDetail
     Exit Sub
 End If
 
@@ -651,11 +651,11 @@ Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
     lCurrIndex = lIndex
     lIndex = mRequests(lIndex).Next
     If mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeContracts Then
-        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
+        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelMediumDetail
         mTwsAPI.RequestContractDetails lCurrIndex, _
                                         gContractSpecToTwsContractSpec(mRequests(lCurrIndex).ContractSpec)
     ElseIf mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeOptionParameters Then
-        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting option parameters for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelDetail
+        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting option parameters for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelMediumDetail
         mTwsAPI.RequestOptionParameters lCurrIndex, _
                                         mRequests(lCurrIndex).ContractSpec.Symbol, _
                                         IIf(mRequests(lCurrIndex).ContractSpec.SecType = TwsSecTypeFuture, _

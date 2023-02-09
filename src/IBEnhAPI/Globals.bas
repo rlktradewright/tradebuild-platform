@@ -242,6 +242,7 @@ If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching " & _
                                                 IIf(pReturnTwsContracts, "TWS", "") & _
                                                 " contract details for", _
                                                 ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
+                                                ModuleName, ProcName, pContractSpecifier.ToString, LogLevelMediumDetail
 
 Dim lFetcher As New ContractsRequestManager
 Set gFetchContracts = lFetcher.Fetch( _

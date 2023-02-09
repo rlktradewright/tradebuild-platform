@@ -1290,7 +1290,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-gLog "Requesting account summary: requester id=" & pReqId, ModuleName, ProcName
+gLog "Requesting account summary: requester id=" & pReqId, ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_ACCOUNT_SUMMARY
 mWriter.AddLong VERSION, "Version"
@@ -1313,7 +1313,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 2
 
-gLog "Requesting account updates", ModuleName, ProcName
+gLog "Requesting account updates", ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_ACCT_DATA
 mWriter.AddLong VERSION, "Version"
@@ -1337,7 +1337,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-gLog "Requesting all open orders", ModuleName, ProcName
+gLog "Requesting all open orders", ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_ALL_OPEN_ORDERS
 mWriter.AddLong VERSION, "Version"
@@ -1357,7 +1357,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-gLog "Requesting auto open orders", ModuleName, ProcName
+gLog "Requesting auto open orders", ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_AUTO_OPEN_ORDERS
 mWriter.AddLong VERSION, "Version"
@@ -1386,7 +1386,7 @@ AssertArgument pContractSpec.SecType <> TwsSecTypeCombo, "Combo contracts are no
 Dim lApiId As Long
 lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
 
-gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
+gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_CONTRACT_DATA
 mWriter.AddLong VERSION, "Version"
@@ -1436,7 +1436,7 @@ Const VERSION = 3
 Dim lApiId As Long
 lApiId = gGetTwsExecutionsRequestIdFromCallersRequestId(pRequestId)
 
-gLog "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName
+gLog "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_EXECUTIONS
 mWriter.AddLong VERSION, "Version"
@@ -1500,7 +1500,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 3
 
-gLog "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
+gLog "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_FUNDAMENTAL_DATA
 mWriter.AddLong VERSION, "Version"
@@ -1531,7 +1531,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-gLog "Requesting global cancel", ModuleName, ProcName
+gLog "Requesting global cancel", ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_GLOBAL_CANCEL
 mWriter.AddLong VERSION, "Version"
@@ -1563,7 +1563,7 @@ gLog "Requesting historical data for: " & UCase$(pRequest.ContractSpec.LocalSymb
             "; duration=" & pRequest.Duration & _
             "; whattoshow=" & pRequest.WhatToShow & _
             "; use rth=" & IIf(pRequest.MainSessionOnly, 1, 0), _
-            ModuleName, ProcName
+            ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_HISTORICAL_DATA
 mWriter.AddLong lApiId, "Request id"
@@ -1647,7 +1647,7 @@ gLog "Requesting market data" & _
         ": requester id=" & pTickerId & _
         "; api id=" & lApiId & _
         "; contract=" & pContractSpec.ToString, _
-        ModuleName, ProcName
+        ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_MKT_DATA
 mWriter.AddLong VERSION, "Version"
@@ -1729,7 +1729,7 @@ Const VERSION = 5
 Dim lApiId As Long
 lApiId = gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
 
-gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
+gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_MKT_DEPTH
 mWriter.AddLong VERSION, "Version"
@@ -1754,7 +1754,7 @@ On Error GoTo Err
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Assert ServerVersion >= ApiServerVersions.MARKET_RULES, "Market rule requests not supported"
 
-gLog "Requesting market rule: id=" & pMarketRuleId, ModuleName, ProcName
+gLog "Requesting market rule: id=" & pMarketRuleId, ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.RequestMarketRule
 mWriter.AddLong pMarketRuleId, "Market Rule ID"
@@ -1794,7 +1794,7 @@ Const VERSION = 1
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-gLog "Requesting open orders", ModuleName, ProcName
+gLog "Requesting open orders", ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_OPEN_ORDERS
 mWriter.AddLong VERSION, "Version"
@@ -1831,7 +1831,7 @@ gLog "Requesting option parameters: " & _
         "; exchange=" & pExchange & _
         "; underlying sectype=" & gTwsSecTypeToShortString(pUnderlyingSecType) & _
         "; underlying conid=" & pUnderlyingConId, _
-        ModuleName, ProcName
+        ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddLong lApiId, "Request Id"
 mWriter.AddString pUnderlyingSymbol, "Underlying Symbol"
@@ -1854,7 +1854,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-gLog "Requesting positions", ModuleName, ProcName
+gLog "Requesting positions", ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_POSITIONS
 mWriter.AddLong VERSION, "Version"
@@ -1882,7 +1882,7 @@ Const VERSION = 3
 Dim lApiId As Long
 lApiId = gGetTwsHistRequestIdFromCallersRequestId(pTickerId)
 
-gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName
+gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_REAL_TIME_BARS
 mWriter.AddLong VERSION, "Version"
@@ -1909,7 +1909,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-gLog "Requesting scanner parameters", ModuleName, ProcName
+gLog "Requesting scanner parameters", ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_SCANNER_PARAMETERS
 mWriter.AddLong VERSION, "Version"
@@ -1938,7 +1938,7 @@ lApiId = gGetTwsScannerRequestIdFromCallersRequestId(pRequestId)
 
 gLog "Requesting scanner subscription: requester id=" & pRequestId & _
         "; api id=" & lApiId, _
-        ModuleName, ProcName
+        ModuleName, ProcName, , LogLevelDetail
 
 mWriter.AddMessageId REQ_SCANNER_SUBSCRIPTION
 If mServerVersion < SCANNER_GENERIC_OPTS Then mWriter.AddLong VERSION, "Version"

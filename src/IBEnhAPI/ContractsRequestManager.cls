@@ -83,7 +83,7 @@ End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-gLogger.Log "ContractsRequestManager terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "ContractsRequestManager terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 End Sub
 
 '@================================================================================
@@ -103,7 +103,7 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
 
 Else
-    gLogger.Log "Contracts future available for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Contracts future available for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
     If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
 End If
 
@@ -163,7 +163,7 @@ gSetVariant mCookie, pCookie
 
 mReturnTwsContracts = pReturnTwsContracts
 
-gLogger.Log "Fetch " & IIf(mReturnTwsContracts, "TWS ", "") & "contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Fetch " & IIf(mReturnTwsContracts, "TWS ", "") & "contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Dim lCachedContracts As IContracts
 Dim lCachedTwsContracts As EnumerableCollection
@@ -270,7 +270,7 @@ Const ProcName As String = "NotifyFetchCompleted"
 On Error GoTo Err
 
 mNumOutstandingRequests = mNumOutstandingRequests - 1
-gLogger.Log "Fetch completed: mNumOutstandingRequests=" & mNumOutstandingRequests, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Fetch completed: mNumOutstandingRequests=" & mNumOutstandingRequests, ProcName, ModuleName, LogLevelMediumDetail
 
 If mNumOutstandingRequests = 0 Then processEnd
 requestCompleted pFetcher
@@ -370,13 +370,13 @@ If mReturnTwsContracts Then
     gLogger.Log "Retrieved " & _
                 mTwsContracts.Count & _
                 " TWS contracts for: " & mContractSpecifier.ToString, _
-                ProcName, ModuleName, LogLevelDetail
+                ProcName, ModuleName, LogLevelMediumDetail
     If mResultsContractsFutureBuilder.Future.IsPending Then
         mResultsContractsFutureBuilder.Value = mTwsContracts
         mResultsContractsFutureBuilder.Complete
     End If
 Else
-    gLogger.Log "Retrieved " & mResultsContractsBuilder.Contracts.Count & " contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "Retrieved " & mResultsContractsBuilder.Contracts.Count & " contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
     If mResultsContractsFutureBuilder.Future.IsPending Then
         mResultsContractsFutureBuilder.Value = mResultsContractsBuilder.Contracts
@@ -414,7 +414,7 @@ Const ProcName As String = "requestCompleted"
 On Error GoTo Err
 
 mFetchers.Remove pFetcher
-gLogger.Log "Removed ContractsFetcher for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+gLogger.Log "Removed ContractsFetcher for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Exit Sub
 
