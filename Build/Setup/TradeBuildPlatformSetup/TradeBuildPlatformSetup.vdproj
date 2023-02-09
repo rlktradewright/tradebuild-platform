@@ -747,12 +747,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_3A353B39C4174E49AE2D5716A24F58C7"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_3B3039B319AB4D679D6725A5504C0E84"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -2735,6 +2729,12 @@
         {
         "MsmKey" = "8:_E108B744271130A98FC72423F4DADF36"
         "OwnerKey" = "8:_8C0146EE0B2F34B7342977B6FA7773B9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E1BB203107AE4B4984D6A966EB55945B"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -10500,8 +10500,8 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
         "ProductCode" = "8:{DDCEF70F-52B8-4D82-BB9D-5FB145EC7EA9}"
-        "PackageCode" = "8:{8F538B2D-63A1-4D99-B6BB-744D28C55AAB}"
-        "UpgradeCode" = "8:{96BD3E71-2EE9-4FE8-8ACB-F99D99DAF1FA}"
+        "PackageCode" = "8:{0DA1043C-D94A-4198-8FA3-7F5D151D3316}"
+        "UpgradeCode" = "8:{8867596C-A9FC-4200-AE7C-E24E252A6A65}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
@@ -11166,16 +11166,16 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_3A353B39C4174E49AE2D5716A24F58C7"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_BBCBD52D931A43F7A74E755BB9EE264D"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.260.msm"
+            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-127.msm"
                 "Properties"
                 {
-                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
                     {
-                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
                     "DisplayName" = "8:Module Retargetable Folder"
                     "Description" = "8:"
                     "Type" = "3:32769"
@@ -11191,16 +11191,16 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_BBCBD52D931A43F7A74E755BB9EE264D"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_E1BB203107AE4B4984D6A966EB55945B"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-127.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.260.msm"
                 "Properties"
                 {
-                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     {
-                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     "DisplayName" = "8:Module Retargetable Folder"
                     "Description" = "8:"
                     "Type" = "3:32769"
