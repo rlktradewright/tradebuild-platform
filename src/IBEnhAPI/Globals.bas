@@ -241,7 +241,6 @@ On Error GoTo Err
 If gLogger.IsLoggable(LogLevelDetail) Then gLog "Fetching " & _
                                                 IIf(pReturnTwsContracts, "TWS", "") & _
                                                 " contract details for", _
-                                                ModuleName, ProcName, pContractSpecifier.ToString, LogLevelDetail
                                                 ModuleName, ProcName, pContractSpecifier.ToString, LogLevelMediumDetail
 
 Dim lFetcher As New ContractsRequestManager
@@ -802,13 +801,17 @@ Dim lBuilder As ContractBuilder
 
 With pTwsContract
     Set lBuilder = CreateContractBuilder(gTwsContractSpecToContractSpecifier(.Specifier, .PriceMagnifier))
+    
+    Dim lExpiry As Date
     With .Specifier
         If .Expiry <> "" Then
-            lBuilder.ExpiryDate = CDate(Left$(.Expiry, 4) & "/" & _
-                                        Mid$(.Expiry, 5, 2) & "/" & _
-                                        Right$(.Expiry, 2))
+            lExpiry = CDate(Left$(.Expiry, 4) & "/" & _
+                                Mid$(.Expiry, 5, 2) & "/" & _
+                                Right$(.Expiry, 2))
         End If
     End With
+    If lExpiry <> 0 Then lBuilder.ExpiryDate = lExpiry + .LastTradeTime
+    
     lBuilder.Description = .LongName
     lBuilder.TickSize = .MinTick
     lBuilder.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(.TimeZoneId)

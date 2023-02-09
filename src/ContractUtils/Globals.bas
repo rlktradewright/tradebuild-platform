@@ -666,8 +666,23 @@ On Error GoTo Err
 
 Select Case pContract.Specifier.SecType
 Case SecTypeFuture, SecTypeOption, SecTypeFuturesOption, SecTypeWarrant
-    If Int(pContract.ExpiryDate) < Int(Now) Then gIsContractExpired = True
+Case Else
+    Exit Function
 End Select
+
+Dim lExpiry As Date
+
+If Int(pContract.ExpiryDate) <> pContract.ExpiryDate Then
+    lExpiry = pContract.ExpiryDate
+ElseIf pContract.SessionEndTime <> 0 Then
+    lExpiry = pContract.ExpiryDate + pContract.SessionEndTime
+Else
+    lExpiry = pContract.ExpiryDate + 1
+End If
+
+lExpiry = ConvertDateTzToLocal(lExpiry, GetTimeZone(pContract.TimezoneName))
+
+If lExpiry <= GetTimestamp Then gIsContractExpired = True
 
 Exit Function
 

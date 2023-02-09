@@ -981,7 +981,7 @@ Case RolloverControllerStateCompleted
     fireChange BracketOrderChangeTypes.BracketOrderRolloverCompleted
     mOrderContext.NotifyBracketOrderClosed Me
 Case RolloverControllerStateFailed
-    
+    WriteRecoveryDataComment "Rollover failed"
 End Select
 
 SaveRecoveryInfo
@@ -1101,7 +1101,9 @@ Case OrderStatuses.OrderStatusRejected
     End If
     handleStimulus OpStimuli.StimCloseoutOrderRejected
 Case OrderStatuses.OrderStatusCancelled
-    handleStimulus OpStimuli.StimCloseoutOrderCancelled
+    If Not IsContractExpired(mContract) Then
+        handleStimulus OpStimuli.StimCloseoutOrderCancelled
+    End If
     checkAllOrdersComplete
 End Select
 
@@ -1265,7 +1267,9 @@ Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
-    handleStimulus OpStimuli.StimEntryOrderCancelled
+    If Not IsContractExpired(mContract) Then
+        handleStimulus OpStimuli.StimCloseoutOrderCancelled
+    End If
     checkAllOrdersComplete
 Case OrderStatuses.OrderStatusRejected
     Cancel
@@ -1466,7 +1470,9 @@ Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
-    handleStimulus OpStimuli.StimStopOrderCancelled
+    If Not IsContractExpired(mContract) Then
+        handleStimulus OpStimuli.StimCloseoutOrderCancelled
+    End If
     checkAllOrdersComplete
 Case OrderStatuses.OrderStatusRejected
     handleStimulus OpStimuli.StimStopOrderCancelled
@@ -1590,7 +1596,9 @@ Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPendingSubmit
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
-    handleStimulus OpStimuli.StimTargetOrderCancelled
+    If Not IsContractExpired(mContract) Then
+        handleStimulus OpStimuli.StimCloseoutOrderCancelled
+    End If
     checkAllOrdersComplete
 Case OrderStatuses.OrderStatusRejected
     handleStimulus OpStimuli.StimTargetOrderCancelled

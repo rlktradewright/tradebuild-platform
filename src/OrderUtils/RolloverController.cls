@@ -112,6 +112,15 @@ If ev.Source Is mBracketOrder Then
             setState RolloverControllerStateFindingNextContract
             mTaskContext.Continue
         End If
+    Case BracketOrderChangeTypes.BracketOrderCompleted
+        ' the initial bracket order has completed without the closeout
+        ' order being filled. For example, the contract has reached expiry
+        ' and is worthless, so IB sends a cancel notification for the
+        ' closeout order, but this doesn't happen till the end of the
+        ' trading day. We don't proceeed with the rollover.
+        gLog mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        setState RolloverControllerStateFailed
+        mTaskContext.Finish Empty, False
     End Select
 ElseIf ev.Source Is mOrderContext Then
     If isCurrentPriceAvailable Then
@@ -145,14 +154,20 @@ Select Case mState
 Case RolloverControllerStateInitial
     failpoint = "RolloverControllerStateInitial"
     
-    gLog mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-    gLogBracketOrderMessage "Initiating rollover", _
-                            mBracketOrder.DataSource, _
-                            mBracketOrder.Contract, _
-                            mBracketOrder.Key, _
-                            mBracketOrder.IsSimulated, _
-                            Me
-    setState RolloverControllerStateClosingCurrentPosition
+    If IsContractExpired(mBracketOrder.Contract) Then
+        gLog mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        setState RolloverControllerStateFailed
+        mTaskContext.Finish Empty, False
+    Else
+        gLog mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        gLogBracketOrderMessage "Initiating rollover", _
+                                mBracketOrder.DataSource, _
+                                mBracketOrder.Contract, _
+                                mBracketOrder.Key, _
+                                mBracketOrder.IsSimulated, _
+                                Me
+        setState RolloverControllerStateClosingCurrentPosition
+    End If
 Case RolloverControllerStateClosingCurrentPosition
     failpoint = "RolloverControllerStateClosingCurrentPosition"
     
