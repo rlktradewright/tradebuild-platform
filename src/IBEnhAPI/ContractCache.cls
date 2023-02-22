@@ -328,7 +328,7 @@ Friend Function GetContracts( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByRef pContracts As IContracts, _
                 ByRef pTwsContracts As EnumerableCollection) As Boolean
-Const ProcName As String = "GetContract"
+Const ProcName As String = "GetContracts"
 On Error GoTo Err
 
 If pContractSpec.SecType = SecTypeCombo Then Exit Function
