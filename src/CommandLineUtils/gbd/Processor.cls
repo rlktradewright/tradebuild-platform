@@ -265,7 +265,7 @@ Dim lFrom As String: lFrom = FormatDateTime( _
 Dim lTo As String: lTo = IIf(mToDate = MaxDate, _
                                 "LATEST", _
                                 FormatDateTime( _
-                                    IIf(mEntireSession, Int(mFromDate), mFromDate), _
+                                    IIf(mEntireSession, Int(mToDate), mToDate), _
                                     vbGeneralDate))
 If mEntireSession Then s = s & "Sessions "
 
