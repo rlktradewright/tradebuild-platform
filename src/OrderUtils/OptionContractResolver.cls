@@ -617,6 +617,7 @@ Case OptionStrikeSelectionModeExpenditure, _
     With mContractSpec
         Set lUnderlyingContractSpec = CreateContractSpecifier("", _
                                                     .Symbol, _
+                                                    .TradingClass, _
                                                     mUnderlyingExchangeName, _
                                                     SecTypeStock, _
                                                     .CurrencyCode, _
@@ -819,6 +820,7 @@ For i = lFrom To lTo Step lStep
         With mContractSpec
             Set lContractSpec = CreateContractSpecifier("", _
                                                         .Symbol, _
+                                                        .TradingClass, _
                                                         .Exchange, _
                                                         .SecType, _
                                                         .CurrencyCode, _
@@ -850,6 +852,7 @@ End Sub
 'With mContractSpec
 '    Set lInitialContractSpec = CreateContractSpecifier("", _
 '                                                .Symbol, _
+'                                                .TradingClass, _
 '                                                .Exchange, _
 '                                                .SecType, _
 '                                                .CurrencyCode, _
@@ -917,6 +920,7 @@ End Sub
 'With pInitialContract.Specifier
 '    Set lCandidateChainContractSpec = CreateContractSpecifier("", _
 '                                                .Symbol, _
+'                                                .TradingClass, _
 '                                                .Exchange, _
 '                                                .SecType, _
 '                                                .CurrencyCode, _

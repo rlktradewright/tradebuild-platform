@@ -47,6 +47,7 @@ Public Enum BusinessRuleIds
     BusRuleInstrumentCurrencyCodeValid
     BusRuleInstrumentTickSizeValid
     BusRuleInstrumentTickValueValid
+    BusRuleInstrumentTradingClassValid
     
     BusRuleTimeZoneNameValid = 10200
     BusRuleTimeZoneCanonicalNameValid

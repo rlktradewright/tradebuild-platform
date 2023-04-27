@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#377.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#392.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Historical Data Tester"
    ClientHeight    =   10380
@@ -250,7 +250,7 @@ On Error GoTo Err
 Dim lBarSpec As BarDataSpecifier
 Dim lContractSpec As IContractSpecifier
 
-Set lContractSpec = CreateContractSpecifier("ESM2", "ES", "GLOBEX", SecTypeFuture, "USD", "202206")
+Set lContractSpec = CreateContractSpecifier("ESM2", "ES", , "GLOBEX", SecTypeFuture, "USD", "202206")
 
 Set lBarSpec = CreateBarDataSpecifier( _
                 GetTimePeriod(1, TimePeriodMinute), _
@@ -285,7 +285,7 @@ Const ProcName As String = "FetchConstRangeButton_Click"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = CreateContractSpecifier("ESM2", "ES", "GLOBEX", SecTypeFuture, "USD", "202206")
+Set lContractSpec = CreateContractSpecifier("ESM2", "ES", , "GLOBEX", SecTypeFuture, "USD", "202206")
 
 Dim lBarSpec As BarDataSpecifier
 Set lBarSpec = CreateBarDataSpecifier( _
@@ -508,7 +508,7 @@ On Error GoTo Err
 Dim lBarSpec As BarDataSpecifier
 Dim lContractSpec As IContractSpecifier
 
-Set lContractSpec = CreateContractSpecifier(pSymbol, , "LSE", SecTypeStock, "GBP")
+Set lContractSpec = CreateContractSpecifier(pSymbol, , , "LSE", SecTypeStock, "GBP")
 
 Set lBarSpec = CreateBarDataSpecifier( _
                 GetTimePeriod(20, TimePeriodSecond), _

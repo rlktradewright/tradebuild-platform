@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractsConfigurer 
    ClientHeight    =   4305
    ClientLeft      =   0
@@ -385,6 +385,7 @@ On Error GoTo Err
 With contractCS
     Dim localSymbol As String: localSymbol = .GetSetting(ConfigSettingContractSpecLocalSymbol, "")
     Dim symbol As String: symbol = .GetSetting(ConfigSettingContractSpecSymbol, "")
+    Dim tradingClass As String: tradingClass = .GetSetting(ConfigSettingContractSpecTradingClass, "")
     Dim exchange As String: exchange = .GetSetting(ConfigSettingContractSpecExchange, "")
     Dim sectype As SecurityTypes: sectype = SecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, ""))
     Dim currencyCode As String: currencyCode = .GetSetting(ConfigSettingContractSpecCurrency, "")
@@ -395,6 +396,7 @@ With contractCS
     
     Set ConfigurationSectionToContractSpec = CreateContractSpecifier(localSymbol, _
                                                             symbol, _
+                                                            tradingClass, _
                                                             exchange, _
                                                             sectype, _
                                                             currencyCode, _
@@ -461,6 +463,7 @@ contractCS.SetAttribute AttributeNameIncludeMktDepth, IIf(includeMktDepth, "True
 With contractCS
     .SetSetting ConfigSettingContractSpecLocalSymbol, contractSpec.localSymbol
     .SetSetting ConfigSettingContractSpecSymbol, contractSpec.symbol
+    .SetSetting ConfigSettingContractSpecTradingClass, contractSpec.tradingClass
     .SetSetting ConfigSettingContractSpecExchange, contractSpec.exchange
     .SetSetting ConfigSettingContractSpecSecType, SecTypeToString(contractSpec.sectype)
     .SetSetting ConfigSettingContractSpecCurrency, contractSpec.currencyCode

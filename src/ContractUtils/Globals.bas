@@ -43,6 +43,7 @@ Public Const ConfigSettingContractSpecRight             As String = "&Right"
 Public Const ConfigSettingContractSpecSecType           As String = "&SecType"
 Public Const ConfigSettingContractSpecStrikePrice       As String = "&StrikePrice"
 Public Const ConfigSettingContractSpecSymbol            As String = "&Symbol"
+Public Const ConfigSettingContractSpecTradingClass      As String = "&TradingClass"
 
 Public Const ConfigSettingDaysBeforeExpiryToSwitch      As String = "&DaysBeforeExpiryToSwitch"
 Public Const ConfigSettingDescription                   As String = "&Description"
@@ -188,6 +189,7 @@ Else
     If pContractSpec1.SecType <> pContractSpec2.SecType Then Exit Function
     If pContractSpec1.Strike <> pContractSpec2.Strike Then Exit Function
     If pContractSpec1.Symbol <> pContractSpec2.Symbol Then Exit Function
+    If pContractSpec1.TradingClass <> pContractSpec2.TradingClass Then Exit Function
     gContractSpecsEqual = True
 End If
 
@@ -237,6 +239,7 @@ lContractElement.setAttribute "timezonename", pContract.TimezoneName
 Dim Specifier As IXMLDOMElement: Set Specifier = XMLdoc.createElement("specifier")
 lContractElement.appendChild Specifier
 Specifier.setAttribute "symbol", pContract.Specifier.Symbol
+Specifier.setAttribute "tradingclass", pContract.Specifier.TradingClass
 Specifier.setAttribute "sectype", pContract.Specifier.SecType
 Specifier.setAttribute "expiry", pContract.Specifier.Expiry
 Specifier.setAttribute "exchange", pContract.Specifier.Exchange
@@ -258,14 +261,16 @@ If Not pContract.Specifier.ComboLegs Is Nothing Then
         ComboLeg.appendChild Specifier
         ComboLeg.setAttribute "isBuyLeg", comboLegObj.IsBuyLeg
         ComboLeg.setAttribute "Ratio", comboLegObj.Ratio
-        Specifier.setAttribute "symbol", pContract.Specifier.Symbol
-        Specifier.setAttribute "sectype", pContract.Specifier.SecType
-        Specifier.setAttribute "expiry", pContract.Specifier.Expiry
-        Specifier.setAttribute "exchange", pContract.Specifier.Exchange
-        Specifier.setAttribute "currencycode", pContract.Specifier.CurrencyCode
-        Specifier.setAttribute "localsymbol", pContract.Specifier.LocalSymbol
-        Specifier.setAttribute "right", pContract.Specifier.Right
-        Specifier.setAttribute "strike", pContract.Specifier.Strike
+        Specifier.setAttribute "symbol", comboLegObj.ContractSpec.Symbol
+        Specifier.setAttribute "tradingclass", comboLegObj.ContractSpec.TradingClass
+        Specifier.setAttribute "sectype", comboLegObj.ContractSpec.SecType
+        Specifier.setAttribute "expiry", comboLegObj.ContractSpec.Expiry
+        Specifier.setAttribute "exchange", comboLegObj.ContractSpec.Exchange
+        Specifier.setAttribute "currencycode", comboLegObj.ContractSpec.CurrencyCode
+        Specifier.setAttribute "localsymbol", comboLegObj.ContractSpec.LocalSymbol
+        Specifier.setAttribute "multiplier", comboLegObj.ContractSpec.Multiplier
+        Specifier.setAttribute "right", comboLegObj.ContractSpec.Right
+        Specifier.setAttribute "strike", comboLegObj.ContractSpec.Strike
     Next
 End If
 gContractToXML = XMLdoc.xml
@@ -279,6 +284,7 @@ End Function
 Public Function gCreateContractSpecifier( _
                 ByVal LocalSymbol As String, _
                 ByVal Symbol As String, _
+                ByVal TradingClass As String, _
                 ByVal Exchange As String, _
                 ByVal SecType As SecurityTypes, _
                 ByVal CurrencyCode As String, _
@@ -290,7 +296,7 @@ Const ProcName As String = "gCreateContractSpecifier"
 On Error GoTo Err
 
 Dim lSpec As New ContractSpecifier
-lSpec.Initialise LocalSymbol, Symbol, Exchange, SecType, CurrencyCode, Expiry, Multiplier, Strike, Right
+lSpec.Initialise LocalSymbol, Symbol, TradingClass, Exchange, SecType, CurrencyCode, Expiry, Multiplier, Strike, Right
 Set gCreateContractSpecifier = lSpec
 
 Exit Function
@@ -305,7 +311,7 @@ On Error GoTo Err
 
 Const LocalSymbolRegex As String = "(?:\[([a-zA-Z0-9]+(?:(?: *|-|\.)[a-zA-Z0-9]+)*(?:\.[a-zA-Z0-9]?)?)\])?"
 Const SecTypeRegEx As String = "(?:([a-zA-Z]+)[\:|#])?"
-Const SymbolRegEx As String = "([a-zA-Z0-9]+(?:(?: *|-|\.)[a-zA-Z0-9]+)*(?:\.[a-zA-Z0-9]?)?)"
+Const SymbolRegEx As String = "([a-zA-Z0-9]+(?:(?: *|-|\.)[a-zA-Z0-9]+)*(?:\.[a-zA-Z0-9]?)?)(?:/([a-zA-Z0-9]+))?"
 Const OptionSpecRegex As String = "(?:=((?:C(?:all)?)|(?:P(?:ut)?))?((?:\d+(?:\.\d{1,2})?))?)?"
 Const DateExpiryRegEx As String = "((?:20\d\d)(?:[0|1]\d)(?:[0|1|2|3]\d)?)?"
 Const RelativeExpiryRegEx As String = "(\d\d?(?:\[\d\d?d\])?)?"
@@ -367,7 +373,10 @@ End If
 Dim lSymbolOrLocalSymbol As String
 lSymbolOrLocalSymbol = lMatch.SubMatches(2)
 
-Dim lCallPutStr As String: lCallPutStr = lMatch.SubMatches(3)
+Dim lTradingClass As String
+lTradingClass = lMatch.SubMatches(3)
+
+Dim lCallPutStr As String: lCallPutStr = lMatch.SubMatches(4)
 Dim lCallPut As OptionRights
 If lCallPutStr <> "" Then
     If lSecType = SecTypeNone Then
@@ -380,14 +389,14 @@ If lCallPutStr <> "" Then
 End If
 
 Dim lStrike As String
-lStrike = lMatch.SubMatches(4)
+lStrike = lMatch.SubMatches(5)
 If lStrike = "" Then lStrike = "0"
 
 Dim lDateExpiry As String
-lDateExpiry = lMatch.SubMatches(5)
+lDateExpiry = lMatch.SubMatches(6)
 
 Dim lRelativeExpiry As String
-lRelativeExpiry = lMatch.SubMatches(6)
+lRelativeExpiry = lMatch.SubMatches(7)
 
 AssertArgument (lDateExpiry = "" And lRelativeExpiry = "") Or _
                 lSecType = SecTypeFuture Or _
@@ -398,14 +407,14 @@ AssertArgument (lDateExpiry = "" And lRelativeExpiry = "") Or _
 AssertArgument lDateExpiry = "" Or lRelativeExpiry = "", "Supplying both date-based and relative expiry is not permitted"
 
 Dim lExchange As String
-lExchange = lMatch.SubMatches(7)
+lExchange = lMatch.SubMatches(8)
 
 Dim lCurrency As String
-lCurrency = lMatch.SubMatches(8)
-If lCurrency = "" Then lCurrency = lMatch.SubMatches(9)
+lCurrency = lMatch.SubMatches(9)
+If lCurrency = "" Then lCurrency = lMatch.SubMatches(10)
 
 Dim lMultiplier As String
-lMultiplier = lMatch.SubMatches(10)
+lMultiplier = lMatch.SubMatches(11)
 If lMultiplier = "" Then lMultiplier = "0"
 
 If (lSecType = SecTypeFuture Or _
@@ -414,22 +423,38 @@ If (lSecType = SecTypeFuture Or _
     lSecType = SecTypeWarrant) _
 Then
     If lDateExpiry = "" And lRelativeExpiry = "" Then
-        Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
-                                                        IIf(lLocalSymbol <> "", _
+        If lTradingClass = "" Then
+            Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
+                                                            IIf(lLocalSymbol <> "", _
+                                                                lLocalSymbol, _
+                                                                lSymbolOrLocalSymbol), _
+                                                            "", _
+                                                            lTradingClass, _
+                                                            lExchange, _
+                                                            lSecType, _
+                                                            lCurrency, _
+                                                            "", _
+                                                            CDbl(lMultiplier), _
+                                                            CDbl(lStrike), _
+                                                            lCallPut)
+        Else
+            Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
                                                             lLocalSymbol, _
-                                                            lSymbolOrLocalSymbol), _
-                                                        "", _
-                                                        lExchange, _
-                                                        lSecType, _
-                                                        lCurrency, _
-                                                        "", _
-                                                        CDbl(lMultiplier), _
-                                                        CDbl(lStrike), _
-                                                        lCallPut)
+                                                            lSymbolOrLocalSymbol, _
+                                                            lTradingClass, _
+                                                            lExchange, _
+                                                            lSecType, _
+                                                            lCurrency, _
+                                                            "", _
+                                                            CDbl(lMultiplier), _
+                                                            CDbl(lStrike), _
+                                                            lCallPut)
+        End If
     Else
         Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
                                                         lLocalSymbol, _
                                                         lSymbolOrLocalSymbol, _
+                                                        lTradingClass, _
                                                         lExchange, _
                                                         lSecType, _
                                                         lCurrency, _
@@ -442,6 +467,7 @@ Else
     Set gCreateContractSpecifierFromString = gCreateContractSpecifier( _
                                                     lLocalSymbol, _
                                                     lSymbolOrLocalSymbol, _
+                                                    lTradingClass, _
                                                     lExchange, _
                                                     lSecType, _
                                                     lCurrency, _
@@ -529,6 +555,7 @@ On Error GoTo Err
 gGetContractSpecKey = pSpec.LocalSymbol & "|" & _
     CStr(pSpec.SecType) & "|" & _
     pSpec.Symbol & "|" & _
+    pSpec.TradingClass & "|" & _
     pSpec.Expiry & "|" & _
     pSpec.Strike & "|" & _
     CStr(pSpec.Right) & "|" & _
@@ -628,6 +655,7 @@ Dim lContractSpec As ContractSpecifier
 With pConfig
     Set lContractSpec = gCreateContractSpecifier(.GetSetting(ConfigSettingContractSpecLocalSymbol, ""), _
                                             .GetSetting(ConfigSettingContractSpecSymbol, ""), _
+                                            .GetSetting(ConfigSettingContractSpecTradingClass, ""), _
                                             .GetSetting(ConfigSettingContractSpecExchange, ""), _
                                             gSecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, "")), _
                                             .GetSetting(ConfigSettingContractSpecCurrency, ""), _
@@ -983,6 +1011,7 @@ On Error GoTo Err
 With pConfig
     .SetSetting ConfigSettingContractSpecLocalSymbol, pContractSpec.LocalSymbol
     .SetSetting ConfigSettingContractSpecSymbol, pContractSpec.Symbol
+    .SetSetting ConfigSettingContractSpecTradingClass, pContractSpec.TradingClass
     .SetSetting ConfigSettingContractSpecExchange, pContractSpec.Exchange
     .SetSetting ConfigSettingContractSpecSecType, gSecTypeToString(pContractSpec.SecType)
     .SetSetting ConfigSettingContractSpecCurrency, pContractSpec.CurrencyCode

@@ -282,6 +282,7 @@ For Each lCs In mConfig
             With lContractSpec
                 Set lOffsetContractSpec = CreateContractSpecifier(, _
                                                                 .Symbol, _
+                                                                .TradingClass, _
                                                                 .Exchange, _
                                                                 .SecType, _
                                                                 .CurrencyCode, _

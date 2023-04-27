@@ -178,6 +178,7 @@ If mContractSpecifier.SecType = SecTypeNone Then
     '       Cash
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
+                                                    , _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuture, _
                                                     mContractSpecifier.CurrencyCode, _
@@ -187,6 +188,7 @@ If mContractSpecifier.SecType = SecTypeNone Then
     If mContractSpecifier.LocalSymbol = "" Then
         requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
+                                                        , _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -196,6 +198,7 @@ If mContractSpecifier.SecType = SecTypeNone Then
     
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
+                                                    , _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeIndex, _
                                                     mContractSpecifier.CurrencyCode, _
@@ -204,13 +207,15 @@ If mContractSpecifier.SecType = SecTypeNone Then
 
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
+                                                    , _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier)
 
-    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
+    requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, , _
+ _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeCash, _

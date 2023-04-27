@@ -164,7 +164,7 @@ Private Sub processContractRequest( _
                 ByVal inString As String, _
                 ByVal lineNumber As Long)
 ' StdIn format:
-' sectype,exchange,shortname,symbol,currency,expiry,multiplier,strike,right,nametemplate
+' sectype,exchange,shortname,symbol,tradingclass,currency,expiry,multiplier,strike,right,nametemplate
 
 On Error GoTo Err
 
@@ -178,12 +178,13 @@ Dim sectypeStr As String: sectypeStr = parser.Arg(0)
 Dim exchange As String: exchange = parser.Arg(1)
 Dim shortname As String: shortname = parser.Arg(2)
 Dim symbol As String: symbol = parser.Arg(3)
-Dim currencyCode As String: currencyCode = parser.Arg(4)
-Dim expiry As String: expiry = parser.Arg(5)
-Dim multiplierStr As String: multiplierStr = parser.Arg(6)
-Dim strikeStr As String: strikeStr = parser.Arg(7)
-Dim optRightStr As String: optRightStr = parser.Arg(8)
-Dim nametemplate As String: nametemplate = parser.Arg(9)
+Dim tradingclass As String: tradingclass = parser.Arg(4)
+Dim currencyCode As String: currencyCode = parser.Arg(5)
+Dim expiry As String: expiry = parser.Arg(6)
+Dim multiplierStr As String: multiplierStr = parser.Arg(7)
+Dim strikeStr As String: strikeStr = parser.Arg(8)
+Dim optRightStr As String: optRightStr = parser.Arg(9)
+Dim nametemplate As String: nametemplate = parser.Arg(10)
 
 Dim sectype As SecurityTypes
 sectype = SecTypeFromString(sectypeStr)
@@ -242,6 +243,7 @@ End If
 If validInput Then
     mCp.process CreateContractSpecifier(shortname, _
                                         symbol, _
+                                        tradingclass, _
                                         exchange, _
                                         sectype, _
                                         currencyCode, _

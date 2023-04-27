@@ -389,6 +389,7 @@ Dim lContractSpec As IContractSpecifier
 Set lContractSpec = CreateContractSpecifier( _
                             getCurrencyPairKey(pFromCurrency, pToCurrency), _
                             "", _
+                            "", _
                             "IDEALPRO", _
                             SecurityTypes.SecTypeCash)
 

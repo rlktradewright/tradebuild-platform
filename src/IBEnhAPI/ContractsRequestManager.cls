@@ -451,6 +451,7 @@ On Error GoTo Err
 requestContracts CreateContractSpecifier( _
                                         mContractSpecifier.LocalSymbol, _
                                         mContractSpecifier.Symbol, _
+                                        mContractSpecifier.TradingClass, _
                                         mContractSpecifier.Exchange, _
                                         SecTypeCash, _
                                         mContractSpecifier.CurrencyCode, _
@@ -460,6 +461,7 @@ If mContractSpecifier.LocalSymbol = "" Then
     requestContracts CreateContractSpecifier( _
                                         mContractSpecifier.Symbol, _
                                         "", _
+                                        mContractSpecifier.TradingClass, _
                                         mContractSpecifier.Exchange, _
                                         SecTypeCash, _
                                         mContractSpecifier.CurrencyCode, _
@@ -471,6 +473,7 @@ If mContractSpecifier.Symbol = "" Then
     requestContracts CreateContractSpecifier( _
                                         "", _
                                         mContractSpecifier.LocalSymbol, _
+                                        mContractSpecifier.TradingClass, _
                                         mContractSpecifier.Exchange, _
                                         SecTypeCash, _
                                         mContractSpecifier.CurrencyCode, _
@@ -500,6 +503,7 @@ On Error GoTo Err
 If Not gIsSmartExchange(mContractSpecifier.Exchange) Then
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
+                                                    mContractSpecifier.TradingClass, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuture, _
                                                     mContractSpecifier.CurrencyCode, _
@@ -509,6 +513,7 @@ If Not gIsSmartExchange(mContractSpecifier.Exchange) Then
     If mContractSpecifier.LocalSymbol = "" Then _
         requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -518,6 +523,7 @@ If Not gIsSmartExchange(mContractSpecifier.Exchange) Then
     If mContractSpecifier.Symbol = "" Then _
         requestContracts CreateContractSpecifier("", _
                                                         mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -532,6 +538,7 @@ Then
     If Not gIsSmartExchange(mContractSpecifier.Exchange) Then
         requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Symbol, _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeIndex, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -541,6 +548,7 @@ Then
         If mContractSpecifier.LocalSymbol = "" Then _
             requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeIndex, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -550,6 +558,7 @@ Then
         If mContractSpecifier.Symbol = "" Then _
             requestContracts CreateContractSpecifier("", _
                                                         mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeIndex, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -558,6 +567,7 @@ Then
         
         requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Symbol, _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeCash, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -567,6 +577,7 @@ Then
         If mContractSpecifier.LocalSymbol = "" Then _
             requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                         "", _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeCash, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -576,6 +587,7 @@ Then
         If mContractSpecifier.Symbol = "" Then _
             requestContracts CreateContractSpecifier("", _
                                                         mContractSpecifier.LocalSymbol, _
+                                                        mContractSpecifier.TradingClass, _
                                                         mContractSpecifier.Exchange, _
                                                         SecTypeCash, _
                                                         mContractSpecifier.CurrencyCode, _
@@ -586,6 +598,7 @@ Then
     
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
+                                                    mContractSpecifier.TradingClass, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
@@ -595,6 +608,7 @@ Then
     If mContractSpecifier.LocalSymbol = "" Then _
         requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
                                                     "", _
+                                                    mContractSpecifier.TradingClass, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
@@ -604,6 +618,7 @@ Then
     If mContractSpecifier.Symbol = "" Then _
         requestContracts CreateContractSpecifier("", _
                                                     mContractSpecifier.LocalSymbol, _
+                                                    mContractSpecifier.TradingClass, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
@@ -626,6 +641,7 @@ Else
     Then
         requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
+                                                    mContractSpecifier.TradingClass, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeOption, _
                                                     mContractSpecifier.CurrencyCode, _
@@ -635,6 +651,7 @@ Else
                                                     mContractSpecifier.Right)
         requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
+                                                    mContractSpecifier.TradingClass, _
                                                     mContractSpecifier.Exchange, _
                                                     SecTypeFuturesOption, _
                                                     mContractSpecifier.CurrencyCode, _

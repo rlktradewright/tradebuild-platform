@@ -45,6 +45,7 @@ Public Const ConfigSettingContractSpecRight             As String = ConfigSectio
 Public Const ConfigSettingContractSpecSecType           As String = ConfigSectionContractspecifier & "&SecType"
 Public Const ConfigSettingContractSpecStrikePrice       As String = ConfigSectionContractspecifier & "&StrikePrice"
 Public Const ConfigSettingContractSpecSymbol            As String = ConfigSectionContractspecifier & "&Symbol"
+Public Const ConfigSettingContractSpecTradingClass      As String = ConfigSectionContractspecifier & "&TradingClass"
 
 Public Const ConfigFileVersion                          As String = "1.0"
 

@@ -181,8 +181,9 @@ lExecReport.BrokerId = pExecution.OrderId
 lExecReport.OrderId = lorderId
 lExecReport.Price = pExecution.Price
 lExecReport.Quantity = pExecution.Shares
-lExecReport.FillTime = TwsDateStringToDate(pExecution.Time)
-lExecReport.TimezoneName = GetTimeZone("").StandardName
+Dim lTimezoneName As String
+lExecReport.FillTime = TwsDateStringToDate(pExecution.Time, lTimezoneName)
+lExecReport.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(lTimezoneName)
 
 If Not lOrder Is Nothing Then
     Dim lOrderSubmitter As OrderSubmitter

@@ -147,6 +147,7 @@ For Each lContract In mContracts
     gCon.WriteLine formatName(lContract, mNametemplate) & OutputSep & _
                     lContract.Specifier.LocalSymbol & OutputSep & _
                     lContract.Specifier.symbol & OutputSep & _
+                    lContract.Specifier.tradingclass & OutputSep & _
                     lContract.Specifier.expiry & OutputSep & _
                     lContract.Specifier.multiplier & OutputSep & _
                     lContract.Specifier.strike & OutputSep & _

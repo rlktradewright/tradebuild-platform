@@ -1480,7 +1480,7 @@ Private Function processPositionalContractString( _
 Const ProcName As String = "processPositionalContractString"
 On Error GoTo Err
 
-'params: lShortname,lSectype,lExchange,lSymbol,currency,lExpiry,lMultiplier,lStrike,right
+'params: Shortname,Sectype,Exchange,Symbol,currency,Expiry,Multiplier,Strike,right,tradingclass
 
 Dim lValidParams As Boolean: lValidParams = True
 
@@ -1510,6 +1510,9 @@ lStrikeStr = Trim$(pClp.Arg(7))
 
 Dim lOptRightStr As String
 lOptRightStr = Trim$(pClp.Arg(8))
+
+Dim lTradingClass As String
+lTradingClass = Trim$(pClp.Arg(9))
 
 Dim lSectype As SecurityTypes
 lSectype = SecTypeFromString(lSectypeStr)
@@ -1569,6 +1572,7 @@ End If
 If lValidParams Then
     Set processPositionalContractString = CreateContractSpecifier(lShortname, _
                                                                 lSymbol, _
+                                                                lTradingClass, _
                                                                 lExchange, _
                                                                 lSectype, _
                                                                 lCurrencyCode, _
@@ -1859,6 +1863,7 @@ Const SymbolSwitch                           As String = "SYMBOL"
 Const SymbolSwitch1                          As String = "SYMB"
 Const StrikeSwitch                           As String = "STRIKE"
 Const StrikeSwitch1                          As String = "STR"
+Const TradingClassSwitch                     As String = "TRADINGCLASS"
 
 If pClp.Arg(0) = "?" Or _
     pClp.Switch("?") Or _
@@ -1898,6 +1903,8 @@ If lStrike = "" Then lStrike = pClp.switchValue(StrikeSwitch1)
 If lStrike = "" Then lStrike = "0.0"
 
 Dim lRight As String: lRight = pClp.switchValue(RightSwitch)
+
+Dim lTradingClass As String: lTradingClass = pClp.switchValue(TradingClassSwitch)
 
 Dim lSectype As SecurityTypes
 lSectype = SecTypeFromString(lSectypeStr)
@@ -1957,6 +1964,7 @@ End If
 If validParams Then
     Set processTaggedContractString = CreateContractSpecifier(lLocalSymbol, _
                                                             lSymbol, _
+                                                            lTradingClass, _
                                                             lExchange, _
                                                             lSectype, _
                                                             lCurrency, _

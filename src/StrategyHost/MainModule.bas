@@ -307,6 +307,7 @@ Const SymbolSwitch                           As String = "SYMBOL"
 Const SymbolSwitch1                          As String = "SYMB"
 Const StrikeSwitch                           As String = "STRIKE"
 Const StrikeSwitch1                          As String = "STR"
+Const TradingClassSwitch                     As String = "TRADINGCLASS"
 
 If Not Left$(pSymbol, 1) = "(" Or Not Right$(pSymbol, 1) = ")" Then Exit Function
 
@@ -329,6 +330,8 @@ If lLocalSymbol = "" Then lLocalSymbol = lClp.switchValue(LocalSymbolSwitch1)
 Dim lSymbol As String: lSymbol = lClp.switchValue(SymbolSwitch)
 If lSymbol = "" Then lSymbol = lClp.switchValue(SymbolSwitch1)
 
+Dim lTradingClass As String: lTradingClass = lClp.switchValue(TradingClassSwitch)
+
 Dim lCurrency As String: lCurrency = lClp.switchValue(CurrencySwitch)
 If lCurrency = "" Then lCurrency = lClp.switchValue(CurrencySwitch1)
 
@@ -347,6 +350,7 @@ Dim lRight As String: lRight = lClp.switchValue(RightSwitch)
 
 Set parseSymbol = CreateContractSpecifier(lLocalSymbol, _
                                         lSymbol, _
+                                        lTradingClass, _
                                         lExchange, _
                                         SecTypeFromString(lSectype), _
                                         lCurrency, _

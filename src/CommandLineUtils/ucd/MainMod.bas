@@ -176,7 +176,7 @@ Private Sub processInput( _
                 ByVal inString As String, _
                 ByVal lineNumber As Long)
 ' StdIn format:
-' name,shortname,symbol,expiry,multiplier,strike,right[,[sectype][,[exchange][,[currency][,[ticksize][,[tickvalue]]]]]]
+' name,shortname,symbol,tradingclass,expiry,multiplier,strike,right[,[sectype][,[exchange][,[currency][,[ticksize][,[tickvalue]]]]]]
 On Error GoTo Err
 
 Dim validInput As Boolean: validInput = True
@@ -186,15 +186,16 @@ Dim parser As CommandLineParser: Set parser = CreateCommandLineParser(inString, 
 Dim name As String: name = parser.Arg(0)
 Dim shortname As String: shortname = parser.Arg(1)
 Dim symbol As String: symbol = parser.Arg(2)
-Dim expiry As String: expiry = parser.Arg(3)
-Dim multiplier As Double: multiplier = CDbl(parser.Arg(4))
-Dim strikeStr As String: strikeStr = parser.Arg(5)
-Dim optRightStr As String: optRightStr = parser.Arg(6)
-Dim sectypeStr As String: sectypeStr = parser.Arg(7)
-Dim exchange As String: exchange = parser.Arg(8)
-Dim currencyCode As String: currencyCode = parser.Arg(9)
-Dim tickSizeStr As String: tickSizeStr = parser.Arg(10)
-Dim tickValueStr As String: tickValueStr = parser.Arg(11)
+Dim tradingclass As String: tradingclass = parser.Arg(3)
+Dim expiry As String: expiry = parser.Arg(4)
+Dim multiplier As Double: multiplier = CDbl(parser.Arg(5))
+Dim strikeStr As String: strikeStr = parser.Arg(6)
+Dim optRightStr As String: optRightStr = parser.Arg(7)
+Dim sectypeStr As String: sectypeStr = parser.Arg(8)
+Dim exchange As String: exchange = parser.Arg(9)
+Dim currencyCode As String: currencyCode = parser.Arg(10)
+Dim tickSizeStr As String: tickSizeStr = parser.Arg(11)
+Dim tickValueStr As String: tickValueStr = parser.Arg(12)
 
 If name = "" Then
     gCon.WriteErrorLine "Line " & lineNumber & ": name must be supplied"
@@ -307,6 +308,7 @@ Then
     gCon.WriteErrorLine CreateContractSpecifier( _
                                                 shortname, _
                                                 symbol, _
+                                                tradingclass, _
                                                 exchange, _
                                                 sectype, _
                                                 currencyCode, _

@@ -96,6 +96,10 @@ End Property
 Public Property Get Symbol() As String
 End Property
 
+Public Property Get TradingClass() As String
+End Property
+
+
 '@================================================================================
 ' Methods
 '@================================================================================

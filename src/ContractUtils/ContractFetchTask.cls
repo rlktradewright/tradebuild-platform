@@ -517,6 +517,7 @@ Else
     With mInitialContractSpec
         Set mContractSpec = gCreateContractSpecifier(.LocalSymbol, _
                                                     .Symbol, _
+                                                    .TradingClass, _
                                                     .Exchange, _
                                                     .SecType, _
                                                     .CurrencyCode, _

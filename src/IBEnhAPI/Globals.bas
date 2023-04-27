@@ -54,7 +54,6 @@ Private Const PrimaryExchangeVENTURE            As String = "VENTURE"
 
 Public Const ProviderPropertyContractID         As String = "Contract id"
 Public Const ProviderPropertyOCAGroup           As String = "OCA group"
-Public Const ProviderPropertyTradingClass       As String = "Trading class"
 
 '================================================================================
 ' Enums
@@ -168,6 +167,7 @@ With gContractSpecToTwsContractSpec
     .SecType = gSecTypeToTwsSecType(pContractSpecifier.SecType)
     .Strike = pContractSpecifier.Strike
     .Symbol = pContractSpecifier.Symbol
+    .TradingClass = pContractSpecifier.TradingClass
     If Not pContractSpecifier.ComboLegs Is Nothing Then
         For Each lComboLeg In pContractSpecifier.ComboLegs
             Set lTwsComboLeg = New TwsComboLeg
@@ -762,6 +762,8 @@ Case "Pacific Standard Time"
     gStandardTimezoneNameToTwsTimeZoneName = "US/Pacific"
 Case "Central Europe Standard Time", "Romance Standard Time"
     gStandardTimezoneNameToTwsTimeZoneName = "MET"
+Case "UTC"
+    gStandardTimezoneNameToTwsTimeZoneName = "UTC"
 Case Else
     AssertArgument False, "Unrecognised timezone: " & pTimezoneName
 End Select
@@ -881,8 +883,11 @@ With pTwsContractSpec
     Else
         lMultiplier = .Multiplier / pPriceMagnifier
     End If
+    Dim lTradingClass As String
+    If .SecType <> TwsSecTypeStock Then lTradingClass = .TradingClass
     Set lContractSpec = CreateContractSpecifier(.LocalSymbol, _
                                                 .Symbol, _
+                                                lTradingClass, _
                                                 lExchange, _
                                                 gTwsSecTypeToSecType(.SecType), _
                                                 .CurrencyCode, _
@@ -892,7 +897,6 @@ With pTwsContractSpec
                                                 gTwsOptionRightToOptionRight(.OptRight))
     Dim p As New Parameters
     p.SetParameterValue ProviderPropertyContractID, .ConId
-    p.SetParameterValue ProviderPropertyTradingClass, .TradingClass
     lContractSpec.ProviderProperties = p
 End With
 
@@ -1104,6 +1108,7 @@ Case "GB", _
         "GB-EIRE", _
         "GMT", _
         "GMT (GREENWICH MEAN TIME)", _
+        "BRITISH SUMMER TIME", _
         "BST (BRITISH SUMMER TIME)"
     gTwsTimezoneNameToStandardTimeZoneName = "GMT STANDARD TIME"
 Case "ASIA/CALCUTTA"
@@ -1120,6 +1125,8 @@ Case "AFRICA/JOHANNESBURG"
     gTwsTimezoneNameToStandardTimeZoneName = "SOUTH AFRICA STANDARD TIME"
 Case "JAPAN"
     gTwsTimezoneNameToStandardTimeZoneName = "TOKYO STANDARD TIME"
+Case "UTC"
+    gTwsTimezoneNameToStandardTimeZoneName = "UTC"
 Case Else
     gLog "Unrecognised timezone: " & pTimeZoneId, ModuleName, ProcName, , LogLevelSevere
     gTwsTimezoneNameToStandardTimeZoneName = ""

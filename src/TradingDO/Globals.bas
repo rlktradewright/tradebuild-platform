@@ -118,6 +118,7 @@ Public Const InstrumentColumnSessionStartTime   As String = "SESSIONSTARTTIME"
 Public Const InstrumentColumnShortName          As String = "SHORTNAME"
 Public Const InstrumentColumnStrikePrice        As String = "STRIKEPRICE"
 Public Const InstrumentColumnSymbol             As String = "SYMBOL"
+Public Const InstrumentColumnTradingClass       As String = "TRADINGCLASS"
 Public Const InstrumentColumnSwitchDay          As String = "DAYSBEFOREEXPIRYTOSWITCH"
 Public Const InstrumentColumnTickSize           As String = "TICKSIZE"
 Public Const InstrumentColumnTickSizeE          As String = "EFFECTIVETICKSIZE"
@@ -292,6 +293,7 @@ On Error GoTo Err
 Dim contractSpec As IContractSpecifier
 Set contractSpec = CreateContractSpecifier(instrument.ShortName, _
                                         instrument.Symbol, _
+                                        instrument.TradingClass, _
                                         instrument.ExchangeName, _
                                         instrument.SecType, _
                                         instrument.CurrencyCode, _

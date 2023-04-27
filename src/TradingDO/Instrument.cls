@@ -73,6 +73,7 @@ Private mMaxShortNameLength As Long
 Private mMaxSymbolLength As Long
 Private mMaxOptRightLength As Long
 Private mMaxCurrencyCodeLength As Long
+Private mMaxTradingClassLength As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -707,6 +708,33 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let TradingClass(ByVal Value As String)
+Const ProcName As String = "TradingClass"
+On Error GoTo Err
+
+Value = Trim$(Value)
+mDataObj.RuleBroken BusRuleInstrumentTradingClassValid, _
+                    Len(Value) = 0 Or Len(Value) > mMaxTradingClassLength
+mDataObj.ColumnValue(InstrumentColumnTradingClass) = Left$(Value, mMaxTradingClassLength)
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get TradingClass() As String
+Const ProcName As String = "TradingClass"
+On Error GoTo Err
+
+TradingClass = mDataObj.GetColumnValue(InstrumentColumnTradingClass, "")
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -865,6 +893,7 @@ mMaxShortNameLength = mDataObj.ColumnMaxLength(InstrumentColumnShortName)
 mMaxSymbolLength = mDataObj.ColumnMaxLength(InstrumentColumnSymbol)
 mMaxOptRightLength = mDataObj.ColumnMaxLength(InstrumentColumnOptionRight)
 mMaxCurrencyCodeLength = mDataObj.ColumnMaxLength(InstrumentColumnCurrency)
+mMaxTradingClassLength = mDataObj.ColumnMaxLength(InstrumentColumnTradingClass)
 
 Exit Sub
 

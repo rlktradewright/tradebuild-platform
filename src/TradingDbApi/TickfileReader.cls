@@ -215,7 +215,7 @@ Set mInputTickfileSpecifier = pTickfileSpec
 ' this database may use a different convention for short name (eg "FTSE 100 Future Sep 09"
 ' instead of "ZU9")
 With mInputTickfileSpecifier.Contract.Specifier
-    Set mTargetContractSpec = CreateContractSpecifier("", .Symbol, .Exchange, .SecType, .CurrencyCode, .Expiry, .Multiplier, .Strike, .Right)
+    Set mTargetContractSpec = CreateContractSpecifier("", .Symbol, , .Exchange, .SecType, .CurrencyCode, .Expiry, .Multiplier, .Strike, .Right)
 End With
 
 checkFetchContract
@@ -466,7 +466,7 @@ Const ProcName As String = "noMoreTicks"
 On Error GoTo Err
 
 If Not mGotFirstTick Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileIsEmpty, "No data for this specifier"
+    NotifyEvent TickfileEventCodes.TickfileEventNoTickData, "No data for this specifier"
 End If
 
 mReplayMonitor.NotifyReplayComplete Me, mTickCounter

@@ -66,6 +66,7 @@ Private mCurrency       As String
 Private mLocalSymbol    As String
 Private mMultiplier     As Double
 Private mComboLegs      As IComboLegs
+Private mTradingClass   As String
 
 Private mProviderProperties                         As Parameters
 
@@ -137,6 +138,10 @@ Private Function IContractSpecifier_ToString() As String
 IContractSpecifier_ToString = ToString
 End Function
 
+Private Property Get IContractSpecifier_TradingClass() As String
+IContractSpecifier_TradingClass = TradingClass
+End Property
+
 '@================================================================================
 ' IJSONable Interface Members
 '@================================================================================
@@ -158,7 +163,6 @@ End Function
 '@================================================================================
 
 Public Property Let ComboLegs(ByVal Value As IComboLegs)
-Attribute ComboLegs.VB_MemberFlags = "40"
 Set mComboLegs = Value
 End Property
 
@@ -229,10 +233,11 @@ LocalSymbol = mLocalSymbol
 End Property
 
 Public Property Let zMultiplier(ByVal Value As Double)
+Attribute zMultiplier.VB_MemberFlags = "40"
 mMultiplier = Value
 End Property
 
-Friend Property Let Multiplier(ByVal Value As Double)
+Public Property Let Multiplier(ByVal Value As Double)
 mMultiplier = Value
 End Property
 
@@ -285,6 +290,15 @@ Public Property Get Symbol() As String
 Symbol = mSymbol
 End Property
 
+Public Property Let zTradingClass(ByVal Value As String)
+Attribute zTradingClass.VB_MemberFlags = "40"
+mTradingClass = Value
+End Property
+
+Public Property Get TradingClass() As String
+TradingClass = mTradingClass
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -320,6 +334,7 @@ End Function
 Public Sub Initialise( _
                 Optional ByVal LocalSymbol As String, _
                 Optional ByVal Symbol As String, _
+                Optional ByVal TradingClass As String, _
                 Optional ByVal Exchange As String, _
                 Optional ByVal SecType As SecurityTypes = SecTypeNone, _
                 Optional ByVal CurrencyCode As String, _
@@ -359,6 +374,7 @@ End Select
 
 mLocalSymbol = LocalSymbol
 mSymbol = Symbol
+mTradingClass = TradingClass
 mExchange = Exchange
 mSecType = SecType
 mCurrency = CurrencyCode
@@ -411,6 +427,9 @@ jb.EncodeNameAndValue "zStrike", mStrike, 0#
 jb.EncodeName "zSymbol"
 jb.EncodeValue mSymbol
 
+jb.EncodeName "zTradingClass"
+jb.EncodeValue mTradingClass
+
 jb.EndObject
 
 ToJSON = jb.JSONString
@@ -430,7 +449,7 @@ Dim i As Long
 
 ToString = IIf(mLocalSymbol <> "", "[" & mLocalSymbol & "]", "")
 ToString = ToString & IIf(mSecType <> 0, gSecTypeToShortString(mSecType) & "#", "")
-ToString = ToString & mSymbol
+ToString = ToString & mSymbol & IIf(mTradingClass <> "", "/" & mTradingClass, "")
 Select Case mRight
 Case OptCall, OptPut
     ToString = ToString & "=" & gOptionRightToString(mRight)

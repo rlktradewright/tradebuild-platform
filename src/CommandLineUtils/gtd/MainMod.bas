@@ -174,7 +174,7 @@ End Sub
 
 Private Sub processContractCommand( _
                 ByVal params As String)
-'params: shortname,sectype,exchange,symbol,currency,expiry.multiplier,strike,right
+'params: shortname,sectype,exchange,symbol,tradingclass,currency,expiry.multiplier,strike,right
 
 If gProcessor Is Nothing Then
 ElseIf gProcessor.IsRunning Then
@@ -190,11 +190,12 @@ Dim sectypeStr As String: sectypeStr = Trim$(clp.Arg(1))
 Dim exchange As String: exchange = Trim$(clp.Arg(2))
 Dim shortname As String: shortname = Trim$(clp.Arg(0))
 Dim symbol As String: symbol = Trim$(clp.Arg(3))
-Dim currencyCode As String: currencyCode = Trim$(clp.Arg(4))
-Dim expiry As String: expiry = Trim$(clp.Arg(5))
-Dim multiplierStr: multiplierStr = Trim$(clp.Arg(6))
-Dim strikeStr As String: strikeStr = Trim$(clp.Arg(7))
-Dim optRightStr As String: optRightStr = Trim$(clp.Arg(8))
+Dim tradingclass As String: tradingclass = Trim$(clp.Arg(4))
+Dim currencyCode As String: currencyCode = Trim$(clp.Arg(5))
+Dim expiry As String: expiry = Trim$(clp.Arg(6))
+Dim multiplierStr: multiplierStr = Trim$(clp.Arg(7))
+Dim strikeStr As String: strikeStr = Trim$(clp.Arg(8))
+Dim optRightStr As String: optRightStr = Trim$(clp.Arg(9))
 
 Dim sectype As SecurityTypes: sectype = SecTypeFromString(sectypeStr)
 If sectypeStr <> "" And sectype = SecTypeNone Then
@@ -252,6 +253,7 @@ End If
 If validParams Then
     Set mContractSpec = CreateContractSpecifier(shortname, _
                                             symbol, _
+                                            tradingclass, _
                                             exchange, _
                                             sectype, _
                                             currencyCode, _

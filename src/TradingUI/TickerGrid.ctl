@@ -2842,8 +2842,8 @@ If KeyAscii = Asc("@") And _
     (Len(lSymbol) = 0 Or InStr(1, lSymbol, "@") <> 0) Then
     ' ignore @ key
 ElseIf KeyAscii = Asc("/") And _
-        (InStr(1, lSymbol, "@") = 0 Or _
-        InStr(1, lSymbol, "/") <> 0 Or _
+        (Len(lSymbol) = 0 Or _
+        Right$(lSymbol, 1) = "/" Or _
         Right$(lSymbol, 1) = "@") Then
     ' ignore / key
 Else

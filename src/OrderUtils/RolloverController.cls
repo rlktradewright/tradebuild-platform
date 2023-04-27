@@ -798,6 +798,7 @@ On Error GoTo Err
 Dim lNextContractSpec As IContractSpecifier
 Set lNextContractSpec = CreateContractSpecifier("", _
                             pCurrentContractSpec.Symbol, _
+                            pCurrentContractSpec.TradingClass, _
                             pCurrentContractSpec.Exchange, _
                             SecTypeFuture, _
                             pCurrentContractSpec.CurrencyCode, _
@@ -925,6 +926,7 @@ End Select
 Dim lNextContractSpec As IContractSpecifier
 Set lNextContractSpec = CreateContractSpecifier("", _
                             pCurrentContractSpec.Symbol, _
+                            pCurrentContractSpec.TradingClass, _
                             pCurrentContractSpec.Exchange, _
                             pCurrentContractSpec.SecType, _
                             pCurrentContractSpec.CurrencyCode, _

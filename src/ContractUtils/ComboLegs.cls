@@ -186,7 +186,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function Item(ByVal pIndex As Long) As ComboLeg
+Public Function Item(ByVal pIndex As Long) As IComboleg
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
 On Error GoTo Err

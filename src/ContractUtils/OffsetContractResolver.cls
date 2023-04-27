@@ -147,6 +147,7 @@ mDaysBeforeExpiryToSwitch = pDaysBeforeExpiryToSwitch
 With pSampleContract.Specifier
     Set mContractSpec = gCreateContractSpecifier("", _
                                                 .Symbol, _
+                                                .TradingClass, _
                                                 .Exchange, _
                                                 .SecType, _
                                                 .CurrencyCode, _

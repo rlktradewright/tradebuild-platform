@@ -216,7 +216,7 @@ Const ProcName As String = "BasicTestButton_Click"
 On Error GoTo Err
 
 Dim lSpec As IContractSpecifier
-Set lSpec = CreateContractSpecifier(, "BA.", "LSE", SecTypeStock, "GBP")
+Set lSpec = CreateContractSpecifier(, "BA.", , "LSE", SecTypeStock, "GBP")
 mFutureWaiter.Add mContractStore.FetchContracts(lSpec, , lSpec)
 
 Exit Sub
@@ -230,7 +230,7 @@ Const ProcName As String = "ManyFetchButton1_Click"
 On Error GoTo Err
 
 Dim lSpec As IContractSpecifier
-Set lSpec = CreateContractSpecifier(, "ES", , , "USD")
+Set lSpec = CreateContractSpecifier(, "ES", , , , "USD")
 mFutureWaiter.Add mContractStore.FetchContracts(lSpec, , lSpec)
 
 Exit Sub
@@ -244,13 +244,13 @@ Const ProcName As String = "ManyFetchButton2_Click"
 On Error GoTo Err
 
 Dim lSpec As IContractSpecifier
-Set lSpec = CreateContractSpecifier(, "ES", , , "USD")
+Set lSpec = CreateContractSpecifier(, "ES", , , , "USD")
 mFutureWaiter.Add mContractStore.FetchContracts(lSpec, , lSpec)
 
 Set lSpec = CreateContractSpecifier(, "Z")
 mFutureWaiter.Add mContractStore.FetchContracts(lSpec, , lSpec)
 
-Set lSpec = CreateContractSpecifier(, "MSFT", , , "USD")
+Set lSpec = CreateContractSpecifier(, "MSFT", , , , "USD")
 mFutureWaiter.Add mContractStore.FetchContracts(lSpec, , lSpec)
 
 Exit Sub

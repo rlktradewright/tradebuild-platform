@@ -400,6 +400,7 @@ With specifierObj
      
     .Initialise specifierEl.getAttribute("localsymbol"), _
                 specifierEl.getAttribute("symbol"), _
+                specifierEl.getAttribute("tradingclass"), _
                 specifierEl.getAttribute("exchange"), _
                 specifierEl.getAttribute("sectype"), _
                 specifierEl.getAttribute("currencycode"), _
@@ -419,10 +420,12 @@ With specifierObj
         Set comboSpecifierObj = New ContractSpecifier
         comboSpecifierObj.Initialise comboSpecifierEl.getAttribute("localsymbol"), _
                                     comboSpecifierEl.getAttribute("symbol"), _
+                                    comboSpecifierEl.getAttribute("tradingclass"), _
                                     comboSpecifierEl.getAttribute("exchange"), _
                                     comboSpecifierEl.getAttribute("sectype"), _
                                     comboSpecifierEl.getAttribute("currencycode"), _
                                     comboSpecifierEl.getAttribute("expiry"), _
+                                    comboSpecifierEl.getAttribute("multiplier"), _
                                     comboSpecifierEl.getAttribute("strike"), _
                                     comboSpecifierEl.getAttribute("right")
         comboLegObj.Initialise comboSpecifierObj, _

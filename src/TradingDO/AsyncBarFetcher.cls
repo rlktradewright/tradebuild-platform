@@ -178,11 +178,18 @@ ElseIf ev.Future.IsFaulted Then
     fireFetchFailed ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf TypeOf ev.Future.Value Is Recordset Then
-    gLogger.Log "BarFetcher received recordset for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
+    gLogger.Log "BarFetcher received " & _
+                mSpecifier.BarTimePeriod.ToShortString & _
+                " recordset for " & mInstrument.ShortName, _
+                ProcName, ModuleName, LogLevelDetail
     mTaskContext.Continue
     mAsyncState = Fetched
 ElseIf TypeOf ev.Future.Value Is Bars Then
-    gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
+    gLogger.Log "BarFetcher fetched " & _
+                mTargetBarsBuilder.Bars.Count & _
+                " " & mSpecifier.BarTimePeriod.ToShortString & _
+                " bars for " & mInstrument.ShortName, _
+                ProcName, ModuleName
     mTaskContext.Finish mTargetBarsBuilder.Bars, False
     fireFetchCompleted
 End If

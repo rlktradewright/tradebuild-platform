@@ -79,6 +79,7 @@ Public Const SymbolSwitch1                          As String = "SYMB"
 Public Const StrikeSwitch                           As String = "STRIKE"
 Public Const StrikeSwitch1                          As String = "STR"
 Public Const TimezoneSwitch                         As String = "TIMEZONE"
+Public Const TradingClassSwitch                     As String = "TRADINGCLASS"
 
 Public Const GroupsSubcommand                       As String = "GROUPS"
 Public Const PositionsSubcommand                    As String = "POSITIONS"
@@ -786,6 +787,8 @@ If lLocalSymbol = "" Then lLocalSymbol = pClp.SwitchValue(LocalSymbolSwitch1)
 Dim lSymbol As String: lSymbol = pClp.SwitchValue(SymbolSwitch)
 If lSymbol = "" Then lSymbol = pClp.SwitchValue(SymbolSwitch1)
 
+Dim lTradingClass As String: lTradingClass = pClp.SwitchValue(TradingClassSwitch)
+
 Dim lCurrency As String: lCurrency = pClp.SwitchValue(CurrencySwitch)
 If lCurrency = "" Then lCurrency = pClp.SwitchValue(CurrencySwitch1)
 
@@ -865,6 +868,7 @@ End If
 If validParams Then
     Set parseContractSpec = CreateContractSpecifier(lLocalSymbol, _
                                             lSymbol, _
+                                            lTradingClass, _
                                             lExchange, _
                                             lSectype, _
                                             lCurrency, _

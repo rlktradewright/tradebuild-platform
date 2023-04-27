@@ -394,6 +394,7 @@ End Function
 Public Function CreateContractSpecifier( _
                 Optional ByVal LocalSymbol As String, _
                 Optional ByVal Symbol As String, _
+                Optional ByVal TradingClass As String, _
                 Optional ByVal Exchange As String, _
                 Optional ByVal SecType As SecurityTypes = SecTypeNone, _
                 Optional ByVal CurrencyCode As String, _
@@ -407,6 +408,7 @@ On Error GoTo Err
 Set CreateContractSpecifier = gCreateContractSpecifier( _
                                     LocalSymbol, _
                                     Symbol, _
+                                    TradingClass, _
                                     Exchange, _
                                     SecType, _
                                     CurrencyCode, _
