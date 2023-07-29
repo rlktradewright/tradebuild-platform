@@ -253,7 +253,7 @@ call makedll.bat IBAPIV100 IBAPIV100 /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
 goto :EOF
 
-IBEnhAPI :
+:IBEnhAPI
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
