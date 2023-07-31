@@ -76,7 +76,7 @@ Public Sub NotifyError( _
                 ByVal pErrorMsg As String)
 End Sub
 
-Public Sub NotifyRealtimeBar(ByVal pRequestId As Long, ByRef pBar As TwsRealtimeBar)
+Public Sub NotifyRealtimeBar(ByVal pRequestId As Long, ByRef pBar As TwsBar)
 End Sub
 
 Public Sub StartHistData( _

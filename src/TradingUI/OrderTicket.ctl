@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#34.0#0"; "TWControls40.ocx"
 Begin VB.UserControl OrderTicket 
    ClientHeight    =   6195
    ClientLeft      =   0
@@ -13,7 +13,7 @@ Begin VB.UserControl OrderTicket
       Enabled         =   0   'False
       Height          =   195
       Left            =   1560
-      TabIndex        =   32
+      TabIndex        =   30
       Top             =   120
       Width           =   1335
    End
@@ -22,7 +22,7 @@ Begin VB.UserControl OrderTicket
       Enabled         =   0   'False
       Height          =   195
       Left            =   120
-      TabIndex        =   31
+      TabIndex        =   29
       Top             =   120
       Width           =   1335
    End
@@ -30,14 +30,14 @@ Begin VB.UserControl OrderTicket
       Caption         =   "S&imulate orders"
       Height          =   195
       Left            =   3480
-      TabIndex        =   33
+      TabIndex        =   31
       Top             =   120
       Width           =   1455
    End
    Begin TWControls40.TWButton UndoButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   30
+      TabIndex        =   28
       Top             =   5250
       Visible         =   0   'False
       Width           =   1095
@@ -57,7 +57,7 @@ Begin VB.UserControl OrderTicket
    Begin TWControls40.TWButton PlaceOrdersButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   25
+      TabIndex        =   23
       Top             =   1020
       Width           =   1095
       _ExtentX        =   0
@@ -76,7 +76,7 @@ Begin VB.UserControl OrderTicket
    Begin TWControls40.TWButton ResetButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   28
+      TabIndex        =   26
       Top             =   2820
       Width           =   1095
       _ExtentX        =   0
@@ -95,7 +95,7 @@ Begin VB.UserControl OrderTicket
    Begin TWControls40.TWButton CompleteOrdersButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   26
+      TabIndex        =   24
       Top             =   1620
       Visible         =   0   'False
       Width           =   1095
@@ -115,7 +115,7 @@ Begin VB.UserControl OrderTicket
    Begin TWControls40.TWButton ModifyButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   29
+      TabIndex        =   27
       Top             =   4200
       Visible         =   0   'False
       Width           =   1095
@@ -135,7 +135,7 @@ Begin VB.UserControl OrderTicket
    Begin TWControls40.TWButton CancelButton 
       Height          =   495
       Left            =   7560
-      TabIndex        =   27
+      TabIndex        =   25
       Top             =   2220
       Visible         =   0   'False
       Width           =   1095
@@ -158,14 +158,14 @@ Begin VB.UserControl OrderTicket
       Left            =   0
       ScaleHeight     =   5415
       ScaleWidth      =   8775
-      TabIndex        =   72
+      TabIndex        =   70
       Top             =   795
       Width           =   8775
       Begin VB.Frame Frame2 
          Caption         =   "Ticker"
          Height          =   1815
          Left            =   120
-         TabIndex        =   52
+         TabIndex        =   50
          Top             =   3180
          Width           =   3135
          Begin VB.PictureBox Picture3 
@@ -174,69 +174,69 @@ Begin VB.UserControl OrderTicket
             Left            =   105
             ScaleHeight     =   1455
             ScaleWidth      =   2655
-            TabIndex        =   53
+            TabIndex        =   51
             Top             =   240
             Width           =   2655
             Begin VB.Label VolumeLabel 
                Height          =   255
                Left            =   960
-               TabIndex        =   62
+               TabIndex        =   60
                Top             =   720
                Width           =   855
             End
             Begin VB.Label HighLabel 
                Height          =   255
                Left            =   960
-               TabIndex        =   61
+               TabIndex        =   59
                Top             =   960
                Width           =   855
             End
             Begin VB.Label LowLabel 
                Height          =   255
                Left            =   960
-               TabIndex        =   60
+               TabIndex        =   58
                Top             =   1200
                Width           =   855
             End
             Begin VB.Label LastSizeLabel 
                Height          =   255
                Left            =   1920
-               TabIndex        =   59
+               TabIndex        =   57
                Top             =   240
                Width           =   735
             End
             Begin VB.Label AskSizeLabel 
                Height          =   255
                Left            =   1920
-               TabIndex        =   58
+               TabIndex        =   56
                Top             =   0
                Width           =   735
             End
             Begin VB.Label BidSizeLabel 
                Height          =   255
                Left            =   1920
-               TabIndex        =   57
+               TabIndex        =   55
                Top             =   480
                Width           =   735
             End
             Begin VB.Label BidLabel 
                Height          =   255
                Left            =   960
-               TabIndex        =   56
+               TabIndex        =   54
                Top             =   480
                Width           =   855
             End
             Begin VB.Label LastLabel 
                Height          =   255
                Left            =   960
-               TabIndex        =   55
+               TabIndex        =   53
                Top             =   240
                Width           =   855
             End
             Begin VB.Label AskLabel 
                Height          =   255
                Left            =   960
-               TabIndex        =   54
+               TabIndex        =   52
                Top             =   0
                Width           =   855
             End
@@ -244,7 +244,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Bid"
                Height          =   255
                Left            =   120
-               TabIndex        =   68
+               TabIndex        =   66
                Top             =   480
                Width           =   855
             End
@@ -252,7 +252,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Ask"
                Height          =   255
                Left            =   120
-               TabIndex        =   67
+               TabIndex        =   65
                Top             =   0
                Width           =   855
             End
@@ -260,7 +260,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Last"
                Height          =   255
                Left            =   120
-               TabIndex        =   66
+               TabIndex        =   64
                Top             =   240
                Width           =   855
             End
@@ -268,7 +268,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Volume"
                Height          =   255
                Left            =   120
-               TabIndex        =   65
+               TabIndex        =   63
                Top             =   720
                Width           =   735
             End
@@ -276,7 +276,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "High"
                Height          =   255
                Left            =   120
-               TabIndex        =   64
+               TabIndex        =   62
                Top             =   960
                Width           =   855
             End
@@ -284,7 +284,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Low"
                Height          =   255
                Left            =   120
-               TabIndex        =   63
+               TabIndex        =   61
                Top             =   1200
                Width           =   855
             End
@@ -294,7 +294,7 @@ Begin VB.UserControl OrderTicket
          Caption         =   "Order"
          Height          =   3015
          Left            =   120
-         TabIndex        =   44
+         TabIndex        =   42
          Top             =   120
          Width           =   3135
          Begin VB.PictureBox Picture2 
@@ -303,7 +303,7 @@ Begin VB.UserControl OrderTicket
             Left            =   105
             ScaleHeight     =   2685
             ScaleWidth      =   2895
-            TabIndex        =   45
+            TabIndex        =   43
             Top             =   240
             Width           =   2895
             Begin VB.TextBox TriggerOffsetText 
@@ -315,7 +315,7 @@ Begin VB.UserControl OrderTicket
                Top             =   2070
                Width           =   600
             End
-            Begin TWControls40.TWImageCombo TypeCombo 
+            Begin TWControls40.TWImageCombo OrderTypeCombo 
                Height          =   330
                Index           =   0
                Left            =   960
@@ -397,7 +397,7 @@ Begin VB.UserControl OrderTicket
                Height          =   375
                Index           =   0
                Left            =   960
-               TabIndex        =   75
+               TabIndex        =   73
                Top             =   2385
                Width           =   855
             End
@@ -405,7 +405,7 @@ Begin VB.UserControl OrderTicket
                Height          =   375
                Index           =   0
                Left            =   960
-               TabIndex        =   74
+               TabIndex        =   72
                Top             =   1800
                Width           =   855
             End
@@ -413,7 +413,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   240
-               TabIndex        =   71
+               TabIndex        =   69
                Top             =   0
                Width           =   2535
             End
@@ -421,7 +421,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Id"
                Height          =   255
                Left            =   0
-               TabIndex        =   51
+               TabIndex        =   49
                Top             =   0
                Width           =   255
             End
@@ -429,7 +429,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Trigger price"
                Height          =   255
                Left            =   0
-               TabIndex        =   50
+               TabIndex        =   48
                Top             =   2070
                Width           =   900
             End
@@ -437,7 +437,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Limit Price"
                Height          =   255
                Left            =   0
-               TabIndex        =   49
+               TabIndex        =   47
                Top             =   1440
                Width           =   855
             End
@@ -445,7 +445,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Type"
                Height          =   255
                Left            =   0
-               TabIndex        =   48
+               TabIndex        =   46
                Top             =   1080
                Width           =   855
             End
@@ -453,7 +453,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Quantity"
                Height          =   255
                Left            =   0
-               TabIndex        =   47
+               TabIndex        =   45
                Top             =   720
                Width           =   855
             End
@@ -462,7 +462,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   0
-               TabIndex        =   46
+               TabIndex        =   44
                Top             =   360
                Width           =   855
             End
@@ -472,7 +472,7 @@ Begin VB.UserControl OrderTicket
          Caption         =   "Options"
          Height          =   4875
          Left            =   3360
-         TabIndex        =   34
+         TabIndex        =   32
          Top             =   120
          Width           =   3975
          Begin VB.PictureBox Picture1 
@@ -481,7 +481,7 @@ Begin VB.UserControl OrderTicket
             Left            =   120
             ScaleHeight     =   4455
             ScaleWidth      =   3735
-            TabIndex        =   35
+            TabIndex        =   33
             Top             =   240
             Width           =   3735
             Begin TWControls40.TWImageCombo TriggerMethodCombo 
@@ -548,7 +548,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   2400
-               TabIndex        =   23
+               TabIndex        =   21
                Top             =   3000
                Width           =   1335
             End
@@ -559,24 +559,6 @@ Begin VB.UserControl OrderTicket
                TabIndex        =   15
                Top             =   1440
                Width           =   975
-            End
-            Begin VB.CheckBox FirmQuoteOnlyCheck 
-               Caption         =   "Firm quote only"
-               Height          =   255
-               Index           =   0
-               Left            =   2400
-               TabIndex        =   21
-               Top             =   2760
-               Width           =   1410
-            End
-            Begin VB.CheckBox ETradeOnlyCheck 
-               Caption         =   "eTrade only"
-               Height          =   255
-               Index           =   0
-               Left            =   1200
-               TabIndex        =   20
-               Top             =   2760
-               Width           =   1215
             End
             Begin VB.CheckBox AllOrNoneCheck 
                Caption         =   "All or none"
@@ -632,7 +614,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   1200
-               TabIndex        =   22
+               TabIndex        =   20
                Top             =   3000
                Width           =   855
             End
@@ -649,7 +631,7 @@ Begin VB.UserControl OrderTicket
                Height          =   255
                Index           =   0
                Left            =   1200
-               TabIndex        =   24
+               TabIndex        =   22
                Top             =   3240
                Width           =   1215
             End
@@ -667,7 +649,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Min qty"
                Height          =   375
                Left            =   2040
-               TabIndex        =   43
+               TabIndex        =   41
                Top             =   1440
                Width           =   615
             End
@@ -675,7 +657,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Good till date"
                Height          =   255
                Left            =   0
-               TabIndex        =   42
+               TabIndex        =   40
                Top             =   1080
                Width           =   1095
             End
@@ -683,7 +665,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Good after time"
                Height          =   255
                Left            =   0
-               TabIndex        =   41
+               TabIndex        =   39
                Top             =   720
                Width           =   1095
             End
@@ -691,7 +673,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Discr amount"
                Height          =   255
                Left            =   0
-               TabIndex        =   40
+               TabIndex        =   38
                Top             =   1800
                Width           =   1095
             End
@@ -699,7 +681,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Trigger method"
                Height          =   255
                Left            =   0
-               TabIndex        =   39
+               TabIndex        =   37
                Top             =   2160
                Width           =   1095
             End
@@ -707,7 +689,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Display size"
                Height          =   255
                Left            =   0
-               TabIndex        =   38
+               TabIndex        =   36
                Top             =   1440
                Width           =   855
             End
@@ -715,7 +697,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "Order ref"
                Height          =   255
                Left            =   0
-               TabIndex        =   37
+               TabIndex        =   35
                Top             =   360
                Width           =   855
             End
@@ -723,7 +705,7 @@ Begin VB.UserControl OrderTicket
                Caption         =   "TIF"
                Height          =   255
                Left            =   0
-               TabIndex        =   36
+               TabIndex        =   34
                Top             =   0
                Width           =   855
             End
@@ -744,7 +726,7 @@ Begin VB.UserControl OrderTicket
          ForeColor       =   &H00000080&
          Height          =   375
          Left            =   120
-         TabIndex        =   73
+         TabIndex        =   71
          Top             =   5010
          Width           =   7215
       End
@@ -752,7 +734,7 @@ Begin VB.UserControl OrderTicket
    Begin MSComctlLib.TabStrip BracketTabStrip 
       Height          =   5760
       Left            =   0
-      TabIndex        =   69
+      TabIndex        =   67
       Top             =   480
       Visible         =   0   'False
       Width           =   8850
@@ -792,7 +774,7 @@ Begin VB.UserControl OrderTicket
       EndProperty
       Height          =   495
       Left            =   5040
-      TabIndex        =   70
+      TabIndex        =   68
       Top             =   120
       Width           =   3615
    End
@@ -1294,7 +1276,7 @@ On Error GoTo Err
 If Not isValidOrder(BracketEntryOrder) Then Exit Sub
 
 Dim lOrderType As OrderTypes
-lOrderType = comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder))
+lOrderType = comboItemData(OrderTypeCombo(BracketIndexes.BracketEntryOrder))
 
 Dim lEntryOrder As IOrder
 Set lEntryOrder = mActiveOrderContext.CreateEntryOrder( _
@@ -1317,7 +1299,7 @@ ElseIf BracketOrderOption.Value Then
     If Not isValidOrder(BracketStopLossOrder) Then Exit Sub
     If Not isValidOrder(BracketTargetOrder) Then Exit Sub
     
-    lOrderType = comboItemData(TypeCombo(BracketIndexes.BracketStopLossOrder))
+    lOrderType = comboItemData(OrderTypeCombo(BracketIndexes.BracketStopLossOrder))
     Dim lStopLossOrder As IOrder
     If lOrderType <> OrderTypeNone Then _
         Set lStopLossOrder = mActiveOrderContext.CreateStopLossOrder( _
@@ -1326,7 +1308,7 @@ ElseIf BracketOrderOption.Value Then
                                 mStopLossTriggerPriceSpec _
                         )
     
-    lOrderType = comboItemData(TypeCombo(BracketIndexes.BracketTargetOrder))
+    lOrderType = comboItemData(OrderTypeCombo(BracketIndexes.BracketTargetOrder))
     Dim lTargetOrder As IOrder
     If lOrderType <> OrderTypeNone Then _
         Set lTargetOrder = mActiveOrderContext.CreateTargetOrder( _
@@ -1410,8 +1392,8 @@ If Not IsInteger(QuantityText(Index), min, max) Then
     Exit Sub
 End If
 
-Dim Quantity As Long
-Quantity = CLng(QuantityText(Index))
+Dim Quantity As BoxedDecimal
+Set Quantity = CreateBoxedDecimal(QuantityText(Index))
 
 If mBracketOrder Is Nothing Then
     If Quantity = 0 Then
@@ -1423,14 +1405,14 @@ If mBracketOrder Is Nothing Then
     If BracketOrderOption.Value Then
         Select Case Index
         Case BracketIndexes.BracketEntryOrder
-            QuantityText(BracketIndexes.BracketStopLossOrder) = Quantity
-            QuantityText(BracketIndexes.BracketTargetOrder) = Quantity
+            QuantityText(BracketIndexes.BracketStopLossOrder) = Quantity.ToString
+            QuantityText(BracketIndexes.BracketTargetOrder) = Quantity.ToString
         Case BracketIndexes.BracketStopLossOrder
-            QuantityText(BracketIndexes.BracketEntryOrder) = Quantity
-            QuantityText(BracketIndexes.BracketTargetOrder) = Quantity
+            QuantityText(BracketIndexes.BracketEntryOrder) = Quantity.ToString
+            QuantityText(BracketIndexes.BracketTargetOrder) = Quantity.ToString
         Case BracketIndexes.BracketTargetOrder
-            QuantityText(BracketIndexes.BracketEntryOrder) = Quantity
-            QuantityText(BracketIndexes.BracketStopLossOrder) = Quantity
+            QuantityText(BracketIndexes.BracketEntryOrder) = Quantity.ToString
+            QuantityText(BracketIndexes.BracketStopLossOrder) = Quantity.ToString
         End Select
     End If
     
@@ -1550,8 +1532,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub TypeCombo_Click(Index As Integer)
-Const ProcName As String = "TypeCombo_Click"
+Private Sub OrderTypeCombo_Click(Index As Integer)
+Const ProcName As String = "OrderTypeCombo_Click"
 On Error GoTo Err
 
 configureOrderFields Index
@@ -1995,7 +1977,7 @@ setComboListIndex ActionCombo(pIndex), 1
 
 QuantityText(pIndex) = 0
 
-' don't set TypeCombo(pIndex) as it will affect other fields and there
+' don't set OrderTypeCombo(pIndex) as it will affect other fields and there
 ' is no sensible value to set it to
 LimitPriceText(pIndex) = ""
 LimitOffsetText(pIndex) = ""
@@ -2007,8 +1989,6 @@ IgnoreRthCheck(pIndex) = vbUnchecked
 OrderRefText(pIndex) = ""
 AllOrNoneCheck(pIndex) = vbUnchecked
 BlockOrderCheck(pIndex) = vbUnchecked
-ETradeOnlyCheck(pIndex) = vbUnchecked
-FirmQuoteOnlyCheck(pIndex) = vbUnchecked
 HiddenCheck(pIndex) = vbUnchecked
 OverrideCheck(pIndex) = vbUnchecked
 SweepToFillCheck(pIndex) = vbUnchecked
@@ -2115,7 +2095,7 @@ Private Sub configureOrderFields( _
 Const ProcName As String = "configureOrderFields"
 On Error GoTo Err
 
-Select Case comboItemData(TypeCombo(pIndex))
+Select Case comboItemData(OrderTypeCombo(pIndex))
 Case OrderTypeMarket
     configurePriceFields pIndex, False, False
 Case OrderTypeMarketOnOpen
@@ -2253,7 +2233,7 @@ On Error GoTo Err
 
 disableControl ActionCombo(pIndex)
 disableControl QuantityText(pIndex)
-disableControl TypeCombo(pIndex)
+disableControl OrderTypeCombo(pIndex)
 disableControl LimitPriceText(pIndex)
 disableControl LimitOffsetText(pIndex)
 disableControl TriggerPriceText(pIndex)
@@ -2263,8 +2243,6 @@ disableControl TIFCombo(pIndex)
 disableControl OrderRefText(pIndex)
 disableControl AllOrNoneCheck(pIndex)
 disableControl BlockOrderCheck(pIndex)
-disableControl ETradeOnlyCheck(pIndex)
-disableControl FirmQuoteOnlyCheck(pIndex)
 disableControl HiddenCheck(pIndex)
 disableControl OverrideCheck(pIndex)
 disableControl SweepToFillCheck(pIndex)
@@ -2351,7 +2329,7 @@ On Error GoTo Err
 
 If pIndex = BracketIndexes.BracketEntryOrder Then enableControl ActionCombo(pIndex)
 enableControl QuantityText(pIndex)
-enableControl TypeCombo(pIndex)
+enableControl OrderTypeCombo(pIndex)
 enableControl LimitPriceText(pIndex)
 enableControl LimitOffsetText(pIndex)
 enableControl TriggerPriceText(pIndex)
@@ -2361,8 +2339,6 @@ enableControl TIFCombo(pIndex)
 enableControl OrderRefText(pIndex)
 enableControl AllOrNoneCheck(pIndex)
 enableControl BlockOrderCheck(pIndex)
-enableControl ETradeOnlyCheck(pIndex)
-enableControl FirmQuoteOnlyCheck(pIndex)
 enableControl HiddenCheck(pIndex)
 enableControl OverrideCheck(pIndex)
 enableControl SweepToFillCheck(pIndex)
@@ -2464,7 +2440,7 @@ Case BracketEntryOrder
     If Not IsInteger(QuantityText(pIndex), 0) Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     If QuantityText(pIndex) = 0 And mBracketOrder Is Nothing Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     
-    Select Case comboItemData(TypeCombo(pIndex))
+    Select Case comboItemData(OrderTypeCombo(pIndex))
     Case OrderTypeMarket, _
             OrderTypeMarketOnOpen, _
             OrderTypeMarketOnClose, _
@@ -2501,14 +2477,14 @@ Case BracketEntryOrder
         End If
     End Select
 Case BracketStopLossOrder
-    If comboItemData(TypeCombo(pIndex)) = OrderTypeNone Then
+    If comboItemData(OrderTypeCombo(pIndex)) = OrderTypeNone Then
         isValidOrder = True
         Exit Function
     End If
     
     If Not IsInteger(QuantityText(pIndex), 1) Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     
-    Select Case comboItemData(TypeCombo(pIndex))
+    Select Case comboItemData(OrderTypeCombo(pIndex))
     Case OrderTypeStop, _
             OrderTypeTrail
         If Not mStopLossTriggerPriceSpec.IsValid Then
@@ -2530,14 +2506,14 @@ Case BracketStopLossOrder
         End If
     End Select
 Case BracketTargetOrder
-    If comboItemData(TypeCombo(pIndex)) = OrderTypeNone Then
+    If comboItemData(OrderTypeCombo(pIndex)) = OrderTypeNone Then
         isValidOrder = True
         Exit Function
     End If
     
     If Not IsInteger(QuantityText(pIndex), 1) Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     
-    Select Case comboItemData(TypeCombo(pIndex))
+    Select Case comboItemData(OrderTypeCombo(pIndex))
     Case OrderTypeLimit
         If Not mTargetLimitPriceSpec.IsValid Then
             setInvalidText LimitPriceText(pIndex), pIndex
@@ -2602,7 +2578,7 @@ On Error GoTo Err
 Load OrderIdLabel(pIndex)
 Load ActionCombo(pIndex)
 Load QuantityText(pIndex)
-Load TypeCombo(pIndex)
+Load OrderTypeCombo(pIndex)
 Load LimitPriceText(pIndex)
 Load LimitOffsetText(pIndex)
 Load CurrentLimitPriceLabel(pIndex)
@@ -2614,8 +2590,6 @@ Load TIFCombo(pIndex)
 Load OrderRefText(pIndex)
 Load AllOrNoneCheck(pIndex)
 Load BlockOrderCheck(pIndex)
-Load ETradeOnlyCheck(pIndex)
-Load FirmQuoteOnlyCheck(pIndex)
 Load HiddenCheck(pIndex)
 Load OverrideCheck(pIndex)
 Load SweepToFillCheck(pIndex)
@@ -2678,17 +2652,17 @@ selectComboEntry ActionCombo(BracketIndexes.BracketEntryOrder), _
                 OrderActions.OrderActionBuy
 setAction BracketIndexes.BracketEntryOrder
 
-selectComboEntry TypeCombo(BracketIndexes.BracketEntryOrder), _
+selectComboEntry OrderTypeCombo(BracketIndexes.BracketEntryOrder), _
                 OrderTypes.OrderTypeLimit
 setOrderFieldsEnabling BracketIndexes.BracketEntryOrder, Nothing
 configureOrderFields BracketIndexes.BracketEntryOrder
 
-selectComboEntry TypeCombo(BracketIndexes.BracketStopLossOrder), _
+selectComboEntry OrderTypeCombo(BracketIndexes.BracketStopLossOrder), _
                 OrderTypes.OrderTypeStop
 setOrderFieldsEnabling BracketIndexes.BracketStopLossOrder, Nothing
 configureOrderFields BracketIndexes.BracketStopLossOrder
 
-selectComboEntry TypeCombo(BracketIndexes.BracketTargetOrder), _
+selectComboEntry OrderTypeCombo(BracketIndexes.BracketTargetOrder), _
                 OrderTypes.OrderTypeNone
 setOrderFieldsEnabling BracketIndexes.BracketTargetOrder, Nothing
 configureOrderFields BracketIndexes.BracketTargetOrder
@@ -2803,7 +2777,7 @@ Private Sub setCurrentLimitPriceField( _
 Const ProcName As String = "setCurrentLimitPriceField"
 On Error GoTo Err
 
-Dim lOrderType As OrderTypes: lOrderType = comboItemData(TypeCombo(pIndex))
+Dim lOrderType As OrderTypes: lOrderType = comboItemData(OrderTypeCombo(pIndex))
 If lOrderType = OrderTypeNone Then
     CurrentLimitPriceLabel(pIndex) = ""
     Exit Sub
@@ -2852,7 +2826,7 @@ Private Sub setCurrentTriggerPriceField( _
 Const ProcName As String = "setCurrentTriggerPriceField"
 On Error GoTo Err
 
-Dim lOrderType As OrderTypes: lOrderType = comboItemData(TypeCombo(pIndex))
+Dim lOrderType As OrderTypes: lOrderType = comboItemData(OrderTypeCombo(pIndex))
 If lOrderType = OrderTypeNone Then
     CurrentTriggerPriceLabel(pIndex) = ""
     Exit Sub
@@ -2956,8 +2930,6 @@ With pOrder
     If pOrder.IsAttributeModifiable(OrderAttBlockOrder) Then .BlockOrder = (BlockOrderCheck(pIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttDiscretionaryAmount) Then .DiscretionaryAmount = IIf(DiscrAmountText(pIndex) = "", 0, DiscrAmountText(pIndex))
     If pOrder.IsAttributeModifiable(OrderAttDisplaySize) Then .displaySize = IIf(DisplaySizeText(pIndex) = "", 0, DisplaySizeText(pIndex))
-    If pOrder.IsAttributeModifiable(OrderAttETradeOnly) Then .ETradeOnly = (ETradeOnlyCheck(pIndex) = vbChecked)
-    If pOrder.IsAttributeModifiable(OrderAttFirmQuoteOnly) Then .FirmQuoteOnly = (FirmQuoteOnlyCheck(pIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttGoodAfterTime) Then If GoodAfterTimeText(pIndex) <> "" Then .GoodAfterTime = CDate(GoodAfterTimeText(pIndex))
     If pOrder.IsAttributeModifiable(OrderAttGoodAfterTimeTZ) Then .GoodAfterTimeTZ = GoodAfterTimeTZText(pIndex)
     If pOrder.IsAttributeModifiable(OrderAttGoodTillDate) Then If GoodTillDateText(pIndex) <> "" Then .GoodTillDate = CDate(GoodTillDateText(pIndex))
@@ -2997,7 +2969,7 @@ With pOrder
     
     selectComboEntry ActionCombo(pIndex), .Action
     QuantityText(pIndex) = .Quantity
-    selectComboEntry TypeCombo(pIndex), .OrderType
+    selectComboEntry OrderTypeCombo(pIndex), .OrderType
     LimitPriceText(pIndex) = IIf(.LimitPrice <> MaxDouble, .LimitPrice, "")
     TriggerPriceText(pIndex) = IIf(.TriggerPrice <> MaxDouble, .TriggerPrice, "")
     IgnoreRthCheck(pIndex) = IIf(.IgnoreRegularTradingHours, vbChecked, vbUnchecked)
@@ -3005,8 +2977,6 @@ With pOrder
     OrderRefText(pIndex) = .OriginatorRef
     AllOrNoneCheck(pIndex) = IIf(.AllOrNone, vbChecked, vbUnchecked)
     BlockOrderCheck(pIndex) = IIf(.BlockOrder, vbChecked, vbUnchecked)
-    ETradeOnlyCheck(pIndex) = IIf(.ETradeOnly, vbChecked, vbUnchecked)
-    FirmQuoteOnlyCheck(pIndex) = IIf(.FirmQuoteOnly, vbChecked, vbUnchecked)
     HiddenCheck(pIndex) = IIf(.Hidden, vbChecked, vbUnchecked)
     OverrideCheck(pIndex) = IIf(.OverrideConstraints, vbChecked, vbUnchecked)
     SweepToFillCheck(pIndex) = IIf(.SweepToFill, vbChecked, vbUnchecked)
@@ -3020,7 +2990,7 @@ With pOrder
     GoodTillDateTZText(pIndex) = .GoodTillDateTZ
     
     ' do this last because it sets the various fields attributes
-    selectComboEntry TypeCombo(pIndex), .OrderType
+    selectComboEntry OrderTypeCombo(pIndex), .OrderType
 End With
 
 If Not isOrderModifiable(pOrder) Then
@@ -3068,7 +3038,7 @@ On Error GoTo Err
 
 If pIndex = BracketIndexes.BracketEntryOrder Then setOrderFieldEnabling ActionCombo(pIndex), OrderAttAction, pOrder
 setOrderFieldEnabling QuantityText(pIndex), OrderAttQuantity, pOrder
-setOrderFieldEnabling TypeCombo(pIndex), OrderAttOrderType, pOrder
+setOrderFieldEnabling OrderTypeCombo(pIndex), OrderAttOrderType, pOrder
 setOrderFieldEnabling LimitPriceText(pIndex), OrderAttLimitPrice, pOrder
 setOrderFieldEnabling LimitOffsetText(pIndex), OrderAttLimitPrice, pOrder
 setOrderFieldEnabling TriggerPriceText(pIndex), OrderAttTriggerPrice, pOrder
@@ -3078,8 +3048,6 @@ setOrderFieldEnabling TIFCombo(pIndex), OrderAttTimeInForce, pOrder
 setOrderFieldEnabling OrderRefText(pIndex), OrderAttOriginatorRef, pOrder
 setOrderFieldEnabling AllOrNoneCheck(pIndex), OrderAttAllOrNone, pOrder
 setOrderFieldEnabling BlockOrderCheck(pIndex), OrderAttBlockOrder, pOrder
-setOrderFieldEnabling ETradeOnlyCheck(pIndex), OrderAttETradeOnly, pOrder
-setOrderFieldEnabling FirmQuoteOnlyCheck(pIndex), OrderAttFirmQuoteOnly, pOrder
 setOrderFieldEnabling HiddenCheck(pIndex), OrderAttHidden, pOrder
 setOrderFieldEnabling OverrideCheck(pIndex), OrderAttOverrideConstraints, pOrder
 setOrderFieldEnabling SweepToFillCheck(pIndex), OrderAttSweepToFill, pOrder
@@ -3334,120 +3302,120 @@ Private Sub setupTypeCombo(ByVal pIndex As Long)
 Const ProcName As String = "setupTypeCombo"
 On Error GoTo Err
 
-TypeCombo(pIndex).ComboItems.Clear
+OrderTypeCombo(pIndex).ComboItems.Clear
 
 If pIndex = BracketIndexes.BracketEntryOrder Then
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeLimit), _
                     OrderTypes.OrderTypeLimit
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarket) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeMarket), _
                     OrderTypes.OrderTypeMarket
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeStop), _
                     OrderTypes.OrderTypeStop
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStopLimit) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeStopLimit), _
                     OrderTypes.OrderTypeStopLimit
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeTrail), _
                     OrderTypes.OrderTypeTrail
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStopLimit) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeTrailLimit), _
                     OrderTypes.OrderTypeTrailLimit
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimitOnOpen) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeLimitOnOpen), _
                     OrderTypes.OrderTypeLimitOnOpen
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketOnOpen) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeMarketOnOpen), _
                     OrderTypes.OrderTypeMarketOnOpen
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimitOnClose) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeLimitOnClose), _
                     OrderTypes.OrderTypeLimitOnClose
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketOnClose) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeMarketOnClose), _
                     OrderTypes.OrderTypeMarketOnClose
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimitIfTouched) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeLimitIfTouched), _
                     OrderTypes.OrderTypeLimitIfTouched
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketIfTouched) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeMarketIfTouched), _
                     OrderTypes.OrderTypeMarketIfTouched
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketToLimit) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeMarketToLimit), _
                     OrderTypes.OrderTypeMarketToLimit
     End If
 ElseIf pIndex = BracketIndexes.BracketStopLossOrder Then
-    addItemToCombo TypeCombo(pIndex), _
+    addItemToCombo OrderTypeCombo(pIndex), _
                 OrderTypeToString(OrderTypes.OrderTypeNone), _
                 OrderTypes.OrderTypeNone
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeStop), _
                     OrderTypes.OrderTypeStop
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStopLimit) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeStopLimit), _
                     OrderTypes.OrderTypeStopLimit
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStop) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeTrail), _
                     OrderTypes.OrderTypeTrail
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeStopLimit) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeTrailLimit), _
                     OrderTypes.OrderTypeTrailLimit
     End If
 ElseIf pIndex = BracketIndexes.BracketTargetOrder Then
-    addItemToCombo TypeCombo(pIndex), _
+    addItemToCombo OrderTypeCombo(pIndex), _
                 OrderTypeToString(OrderTypes.OrderTypeNone), _
                 OrderTypes.OrderTypeNone
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeLimit) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeLimit), _
                     OrderTypes.OrderTypeLimit
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketIfTouched) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeMarketIfTouched), _
                     OrderTypes.OrderTypeMarketIfTouched
     End If
     If mActiveOrderContext.IsOrderTypeSupported(OrderTypes.OrderTypeMarketIfTouched) Then
-        addItemToCombo TypeCombo(pIndex), _
+        addItemToCombo OrderTypeCombo(pIndex), _
                     OrderTypeToString(OrderTypes.OrderTypeLimitIfTouched), _
                     OrderTypes.OrderTypeLimitIfTouched
     End If
 End If
 
-setComboListIndex TypeCombo(pIndex), 1
+setComboListIndex OrderTypeCombo(pIndex), 1
 
 Exit Sub
 
@@ -3466,7 +3434,7 @@ For i = 0 To ActionCombo.Count - 1
     OrderIdLabel(i).Visible = lVisible
     ActionCombo(i).Visible = lVisible
     QuantityText(i).Visible = lVisible
-    TypeCombo(i).Visible = lVisible
+    OrderTypeCombo(i).Visible = lVisible
     LimitPriceText(i).Visible = lVisible
     LimitOffsetText(i).Visible = lVisible
     CurrentLimitPriceLabel(i).Visible = lVisible
@@ -3478,8 +3446,6 @@ For i = 0 To ActionCombo.Count - 1
     OrderRefText(i).Visible = lVisible
     AllOrNoneCheck(i).Visible = lVisible
     BlockOrderCheck(i).Visible = lVisible
-    ETradeOnlyCheck(i).Visible = lVisible
-    FirmQuoteOnlyCheck(i).Visible = lVisible
     HiddenCheck(i).Visible = lVisible
     OverrideCheck(i).Visible = lVisible
     SweepToFillCheck(i).Visible = lVisible

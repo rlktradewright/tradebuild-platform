@@ -27,21 +27,24 @@ Public Const TwsLogLevelInformationString       As String = "Information"
 Public Const TwsLogLevelSystemString            As String = "System"
 Public Const TwsLogLevelWarningString           As String = "Warning"
 
-Public Const BaseMarketDataRequestId            As Long = 0
-Public Const BaseMarketDepthRequestId           As Long = &H400000
-Public Const BaseScannerRequestId               As Long = &H410000
-Public Const BaseHistoricalDataRequestId        As Long = &H420000
-Public Const BaseExecutionsRequestId            As Long = &H430000
-Public Const BaseContractRequestId              As Long = &H4400000
-Public Const BaseOrderId                        As Long = &H10000000
+'Public Const BaseMarketDataRequestId            As Long = 0
+'Public Const BaseMarketDepthRequestId           As Long = &H400000
+'Public Const BaseScannerRequestId               As Long = &H410000
+'Public Const BaseHistoricalDataRequestId        As Long = &H420000
+'Public Const BaseExecutionsRequestId            As Long = &H430000
+'Public Const BaseContractRequestId              As Long = &H4400000
+'Public Const BaseOrderId                        As Long = &H10000000
+'
+'Public Const MaxCallersMarketDataRequestId      As Long = BaseMarketDepthRequestId - 1
+'Public Const MaxCallersMarketDepthRequestId     As Long = BaseScannerRequestId - BaseMarketDepthRequestId - 1
+'Public Const MaxCallersScannerRequestId         As Long = BaseHistoricalDataRequestId - BaseScannerRequestId - 1
+'Public Const MaxCallersHistoricalDataRequestId  As Long = BaseExecutionsRequestId - BaseHistoricalDataRequestId - 1
+'Public Const MaxCallersExecutionsRequestId      As Long = BaseContractRequestId - BaseExecutionsRequestId - 1
+'Public Const MaxCallersContractRequestId        As Long = BaseOrderId - BaseContractRequestId - 1
+'Public Const MaxCallersOrderId                  As Long = &H7FFFFFFF - BaseOrderId - 1
 
-Public Const MaxCallersMarketDataRequestId      As Long = BaseMarketDepthRequestId - 1
-Public Const MaxCallersMarketDepthRequestId     As Long = BaseScannerRequestId - BaseMarketDepthRequestId - 1
-Public Const MaxCallersScannerRequestId         As Long = BaseHistoricalDataRequestId - BaseScannerRequestId - 1
-Public Const MaxCallersHistoricalDataRequestId  As Long = BaseExecutionsRequestId - BaseHistoricalDataRequestId - 1
-Public Const MaxCallersExecutionsRequestId      As Long = BaseContractRequestId - BaseExecutionsRequestId - 1
-Public Const MaxCallersContractRequestId        As Long = BaseOrderId - BaseContractRequestId - 1
-Public Const MaxCallersOrderId                  As Long = &H7FFFFFFF - BaseOrderId - 1
+Public CompeteAgainstBestOffsetUpToMid          As Variant
+Public Const Infinity                           As String = "Infinity"
 
 '================================================================================
 ' Enums
@@ -92,25 +95,47 @@ Public Enum ApiServerVersions
     AUTO_PRICE_FOR_HEDGE = 141
     WHAT_IF_EXT_FIELDS = 142
     SCANNER_GENERIC_OPTS = 143
+    API_BIND_ORDER = 144
+    ORDER_CONTAINER = 145
+    SMART_DEPTH = 146
+    D_PEG_ORDERS = 148
+    MKT_DEPTH_PRIM_EXCHANGE = 149
+    COMPLETED_ORDERS = 150
+    PRICE_MGMT_ALGO = 151
+    STOCK_TYPE = 152
+    ENCODE_MSG_ASCII7 = 153
+    SEND_ALL_FAMILY_CODES = 154
+    NO_DEFAULT_OPEN_CLOSE = 155
+    PRICE_BASED_VOLATILITY = 156
+    REPLACE_FA_END = 157
+    Duration = 158
+    MARKET_DATA_IN_SHARES = 159
+    POST_TO_ATS = 160
+    WSHE_CALENDAR = 161
+    AUTO_CANCEL_PARENT = 162
+    FRACTIONAL_SIZE_SUPPORT = 163
+    SIZE_RULES = 164
+    HISTORICAL_SCHEDULE = 165
+    ADVANCED_ORDER_REJECT = 166
+    USER_INFO = 167
+    CRYPTO_AGGREGATED_TRADES = 168
+    MANUAL_ORDER_TIME = 169
+    PEGBEST_PEGMID_OFFSETS = 170
+    WSH_EVENT_DATA_FILTERS = 171
+    IPO_PRICES = 172
+    WSH_EVENT_DATA_FILTERS_DATE = 173
+    INSTRUMENT_TIMEZONE = 174
+    MARKET_DATA_IN_SHARES_1 = 175
+    BOND_ISSUERID = 176
+    FA_PROFILE_DESUPPORT = 177
 
     ' Max for API 973.07
 
-    Max = SCANNER_GENERIC_OPTS
+    Max = FA_PROFILE_DESUPPORT
 End Enum
 
 Public Enum InternalErrorCodes
     DataIncomplete = vbObjectError + 4327   ' let's hope nothing else uses this number!
-End Enum
-
-Public Enum IdTypes
-    IdTypeNone
-    IdTypeRealtimeData
-    IdTypeMarketDepth
-    IdTypeHistoricalData
-    IdTypeOrder
-    IdTypeContractData
-    IdTypeExecution
-    IdTypeScanner
 End Enum
 
 Public Enum TwsSocketInMsgTypes
@@ -192,8 +217,14 @@ Public Enum TwsSocketInMsgTypes
     HISTORICALTICKBIDASK = 97
     HISTORICALTICKLAST = 98
     TICKBYTICK = 99
-
-    ' Max for API 973.07
+    OrderBound = 100
+    CompletedOrder = 101
+    CompletedOrdersEnd = 102
+    ReplaceFAEnd = 103
+    WshMetaData = 104
+    WshEventData = 105
+    HistoricalSchedule = 106
+    UserInformation = 107
 
     MAX_SOCKET_INMSG
 End Enum
@@ -273,8 +304,12 @@ Public Enum TwsSocketOutMsgTypes
     RequestHistoricalTickData = 96
     RequestTickByTickData = 97
     CancelTickByTickData = 98
-
-    ' Max for API 973.07
+    RequestCompletedOrders = 99
+    RequestWshMetaData = 100
+    CancelWshMetaData = 101
+    RequestWshEventData = 102
+    CancelWshEventData = 103
+    RequestUserInformation = 104
 
 End Enum
 
@@ -310,88 +345,59 @@ Private mOutputMessageIdMap                             As SortedDictionary
 ' Properties
 '================================================================================
 
-Public Function gGetCallersRequestIdFromTwsContractRequestId(ByVal pId As Long) As Long
-gGetCallersRequestIdFromTwsContractRequestId = pId - BaseContractRequestId
-End Function
-
-Public Function gGetCallersRequestIdFromTwsExecutionsRequestId(ByVal pId As Long) As Long
-gGetCallersRequestIdFromTwsExecutionsRequestId = pId - BaseExecutionsRequestId
-End Function
-
-Public Function gGetCallersRequestIdFromTwsHistRequestId(ByVal pId As Long) As Long
-gGetCallersRequestIdFromTwsHistRequestId = pId - BaseHistoricalDataRequestId
-End Function
-
-Public Function gGetCallersRequestIdFromTwsMarketDataRequestId(ByVal pId As Long) As Long
-gGetCallersRequestIdFromTwsMarketDataRequestId = pId - BaseMarketDataRequestId
-End Function
-
-Public Function gGetCallersRequestIdFromTwsMarketDepthRequestId(ByVal pId As Long) As Long
-gGetCallersRequestIdFromTwsMarketDepthRequestId = pId - BaseMarketDepthRequestId
-End Function
-
-Public Function gGetCallersRequestIdFromTwsScannerRequestId(ByVal pId As Long) As Long
-gGetCallersRequestIdFromTwsScannerRequestId = pId - BaseScannerRequestId
-End Function
-
-Public Function gGetIdType( _
-                ByVal id As Long) As IdTypes
-Const ProcName As String = "ggGetIdType"
-On Error GoTo Err
-
-If id >= BaseOrderId Then
-    gGetIdType = IdTypeOrder
-ElseIf id >= BaseContractRequestId Then
-    gGetIdType = IdTypeContractData
-ElseIf id >= BaseExecutionsRequestId Then
-    gGetIdType = IdTypeExecution
-ElseIf id >= BaseHistoricalDataRequestId Then
-    gGetIdType = IdTypeHistoricalData
-ElseIf id >= BaseScannerRequestId Then
-    gGetIdType = IdTypeScanner
-ElseIf id >= BaseMarketDepthRequestId Then
-    gGetIdType = IdTypeMarketDepth
-ElseIf id >= 0 Then
-    gGetIdType = IdTypeRealtimeData
-Else
-    gGetIdType = IdTypeNone
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Function
-
-Public Function gGetTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersContractRequestId, "Max request id is " & MaxCallersContractRequestId
-gGetTwsContractRequestIdFromCallersRequestId = pId + BaseContractRequestId
-End Function
-
-Public Function gGetTwsExecutionsRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersExecutionsRequestId, "Max request id is " & MaxCallersExecutionsRequestId
-gGetTwsExecutionsRequestIdFromCallersRequestId = pId + BaseExecutionsRequestId
-End Function
-
-Public Function gGetTwsHistRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersHistoricalDataRequestId, "Max request id is " & MaxCallersHistoricalDataRequestId
-gGetTwsHistRequestIdFromCallersRequestId = pId + BaseHistoricalDataRequestId
-End Function
-
-Public Function gGetTwsMarketDataRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersMarketDataRequestId, "Max request id is " & MaxCallersMarketDataRequestId
-gGetTwsMarketDataRequestIdFromCallersRequestId = pId + BaseMarketDataRequestId
-End Function
-
-Public Function gGetTwsMarketDepthRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersMarketDepthRequestId, "Max request id is " & MaxCallersMarketDepthRequestId
-gGetTwsMarketDepthRequestIdFromCallersRequestId = pId + BaseMarketDepthRequestId
-End Function
-
-Public Function gGetTwsScannerRequestIdFromCallersRequestId(ByVal pId As Long) As Long
-AssertArgument pId <= MaxCallersScannerRequestId, "Max request id is " & MaxCallersScannerRequestId
-gGetTwsScannerRequestIdFromCallersRequestId = pId + BaseScannerRequestId
-End Function
+'Public Function gGetCallersRequestIdFromTwsContractRequestId(ByVal pId As Long) As Long
+'gGetCallersRequestIdFromTwsContractRequestId = pId - BaseContractRequestId
+'End Function
+'
+'Public Function gGetCallersRequestIdFromTwsExecutionsRequestId(ByVal pId As Long) As Long
+'gGetCallersRequestIdFromTwsExecutionsRequestId = pId - BaseExecutionsRequestId
+'End Function
+'
+'Public Function gGetCallersRequestIdFromTwsHistRequestId(ByVal pId As Long) As Long
+'gGetCallersRequestIdFromTwsHistRequestId = pId - BaseHistoricalDataRequestId
+'End Function
+'
+'Public Function gGetCallersRequestIdFromTwsMarketDataRequestId(ByVal pId As Long) As Long
+'gGetCallersRequestIdFromTwsMarketDataRequestId = pId - BaseMarketDataRequestId
+'End Function
+'
+'Public Function gGetCallersRequestIdFromTwsMarketDepthRequestId(ByVal pId As Long) As Long
+'gGetCallersRequestIdFromTwsMarketDepthRequestId = pId - BaseMarketDepthRequestId
+'End Function
+'
+'Public Function gGetCallersRequestIdFromTwsScannerRequestId(ByVal pId As Long) As Long
+'gGetCallersRequestIdFromTwsScannerRequestId = pId - BaseScannerRequestId
+'End Function
+'
+'Public Function gGetTwsContractRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+'AssertArgument pId <= MaxCallersContractRequestId, "Max request id is " & MaxCallersContractRequestId
+'gGetTwsContractRequestIdFromCallersRequestId = pId + BaseContractRequestId
+'End Function
+'
+'Public Function gGetTwsExecutionsRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+'AssertArgument pId <= MaxCallersExecutionsRequestId, "Max request id is " & MaxCallersExecutionsRequestId
+'gGetTwsExecutionsRequestIdFromCallersRequestId = pId + BaseExecutionsRequestId
+'End Function
+'
+'Public Function gGetTwsHistRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+'AssertArgument pId <= MaxCallersHistoricalDataRequestId, "Max request id is " & MaxCallersHistoricalDataRequestId
+'gGetTwsHistRequestIdFromCallersRequestId = pId + BaseHistoricalDataRequestId
+'End Function
+'
+'Public Function gGetTwsMarketDataRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+'AssertArgument pId <= MaxCallersMarketDataRequestId, "Max request id is " & MaxCallersMarketDataRequestId
+'gGetTwsMarketDataRequestIdFromCallersRequestId = pId + BaseMarketDataRequestId
+'End Function
+'
+'Public Function gGetTwsMarketDepthRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+'AssertArgument pId <= MaxCallersMarketDepthRequestId, "Max request id is " & MaxCallersMarketDepthRequestId
+'gGetTwsMarketDepthRequestIdFromCallersRequestId = pId + BaseMarketDepthRequestId
+'End Function
+'
+'Public Function gGetTwsScannerRequestIdFromCallersRequestId(ByVal pId As Long) As Long
+'AssertArgument pId <= MaxCallersScannerRequestId, "Max request id is " & MaxCallersScannerRequestId
+'gGetTwsScannerRequestIdFromCallersRequestId = pId + BaseScannerRequestId
+'End Function
 
 Public Property Get gLogger() As FormattingLogger
 If mLogger Is Nothing Then Set mLogger = CreateFormattingLogger("tradebuild.log.ibapi", ProjectName)
@@ -846,6 +852,14 @@ Case TwsOrderTIFs.TwsOrderTIFGoodTillCancelled
     gTwsOrderTIFToString = "GTC"
 Case TwsOrderTIFs.TwsOrderTIFImmediateOrCancel
     gTwsOrderTIFToString = "IOC"
+Case TwsOrderTIFGoodTillDate
+    gTwsOrderTIFToString = "GTD"
+Case TwsOrderTIFFillOrKill
+    gTwsOrderTIFToString = "FOK"
+Case TwsOrderTIFDayTillCancelled
+    gTwsOrderTIFToString = "DTC"
+Case TwsOrderTIFAuction
+    gTwsOrderTIFToString = "AUC"
 Case TwsOrderTIFs.TwsOrderTIFNone
     gTwsOrderTIFToString = ""
 Case Else
@@ -855,20 +869,20 @@ End Function
 
 Public Function gTwsOrderTypeFromString(ByVal Value As String) As TwsOrderTypes
 Select Case UCase$(Value)
+Case ""
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeNone
 Case "MKT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarket
-Case "MKTCLS"
+Case "MOC"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketOnClose
 Case "LMT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeLimit
-Case "LMTCLS"
+Case "LOC"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeLimitOnClose
-Case "PEGMKT"
+Case "PEG MKT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToMarket
 Case "STP"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStop
-Case "STPLMT"
-    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopLimit
 Case "STP LMT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopLimit
 Case "TRAIL"
@@ -889,26 +903,38 @@ Case "LIT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeLimitIfTouched
 Case "MIT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketIfTouched
-Case "TRAIL LIMIT", "TRAILLMT"
-    ' Note that we get both spellings in the API, eg "TRAIL LIMIT" is OrderStatus
-    ' and "TRAILLMT" in permitted order types
+Case "TRAIL LIMIT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeTrailLimit
-Case "MKTPROT"
+Case "MKT PROT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketWithProtection
-Case "MOO"
+Case "MKT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketOnOpen
-Case "MOC"
-    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketOnClose
-Case "LOO"
+Case "LMT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeLimitOnOpen
-Case "LOC"
-    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeLimitOnClose
-Case "PEGPRI"
+Case "REL"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToPrimary
 Case "VOL"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeVol
 Case "PEG BENCH"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToBenchmark
+Case "AUC"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeAuction
+Case "PEG STK"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToStock
+Case "BOX TOP"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeBoxTop
+Case "PASSV REL"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePassiveRelative
+Case "PEG MID"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToMidpoint
+Case "STP PRT"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopWithProtection
+Case "REL + LMT"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeRelativeLimitCombo
+Case "REL + MKT"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeRelativeMarketCombo
+Case "PEG BEST"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToBest
 Case Else
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeNone
 End Select
@@ -934,7 +960,7 @@ Case TwsOrderTypes.TwsOrderTypePeggedToMarket
 Case TwsOrderTypes.TwsOrderTypeStop
     gTwsOrderTypeToString = "STP"
 Case TwsOrderTypes.TwsOrderTypeStopLimit
-    gTwsOrderTypeToString = "STPLMT"
+    gTwsOrderTypeToString = "STP LMT"
 Case TwsOrderTypes.TwsOrderTypeTrail
     gTwsOrderTypeToString = "TRAIL"
 Case TwsOrderTypes.TwsOrderTypeRelative
@@ -944,7 +970,7 @@ Case TwsOrderTypes.TwsOrderTypeVWAP
 Case TwsOrderTypes.TwsOrderTypeMarketToLimit
     gTwsOrderTypeToString = "MTL"
 Case TwsOrderTypes.TwsOrderTypeQuote
-    gTwsOrderTypeToString = "QUOTE"
+    gTwsOrderTypeToString = "RFQ"
 Case TwsOrderTypes.TwsOrderTypeAdjust
     gTwsOrderTypeToString = "ADJUST"
 Case TwsOrderTypes.TwsOrderTypeAlert
@@ -956,17 +982,35 @@ Case TwsOrderTypes.TwsOrderTypeMarketIfTouched
 Case TwsOrderTypes.TwsOrderTypeTrailLimit
     gTwsOrderTypeToString = "TRAIL LIMIT"
 Case TwsOrderTypes.TwsOrderTypeMarketWithProtection
-    gTwsOrderTypeToString = "MKTPROT"
+    gTwsOrderTypeToString = "MKT PROT"
 Case TwsOrderTypes.TwsOrderTypeMarketOnOpen
-    gTwsOrderTypeToString = "MOO"
+    gTwsOrderTypeToString = "MKT"
 Case TwsOrderTypes.TwsOrderTypeLimitOnOpen
-    gTwsOrderTypeToString = "LOO"
+    gTwsOrderTypeToString = "LMT"
 Case TwsOrderTypes.TwsOrderTypePeggedToPrimary
-    gTwsOrderTypeToString = "PEGPRI"
+    gTwsOrderTypeToString = "REL"
 Case TwsOrderTypes.TwsOrderTypeVol
     gTwsOrderTypeToString = "VOL"
 Case TwsOrderTypes.TwsOrderTypePeggedToBenchmark
     gTwsOrderTypeToString = "PEG BENCH"
+Case TwsOrderTypes.TwsOrderTypeAuction
+    gTwsOrderTypeToString = "AUC"
+Case TwsOrderTypes.TwsOrderTypePeggedToStock
+    gTwsOrderTypeToString = "PEG STK"
+Case TwsOrderTypes.TwsOrderTypeBoxTop
+    gTwsOrderTypeToString = "BOX TOP"
+Case TwsOrderTypes.TwsOrderTypePassiveRelative
+    gTwsOrderTypeToString = "PASSV REL"
+Case TwsOrderTypes.TwsOrderTypePeggedToMidpoint
+    gTwsOrderTypeToString = "PEG MID"
+Case TwsOrderTypes.TwsOrderTypeStopWithProtection
+    gTwsOrderTypeToString = "STP PRT"
+Case TwsOrderTypes.TwsOrderTypeRelativeLimitCombo
+    gTwsOrderTypeToString = "REL + LMT"
+Case TwsOrderTypes.TwsOrderTypeRelativeMarketCombo
+    gTwsOrderTypeToString = "REL + MKT"
+Case TwsOrderTypes.TwsOrderTypePeggedToBest
+    gTwsOrderTypeToString = "PEG BEST"
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
@@ -1130,11 +1174,16 @@ Public Sub Main()
 Const ProcName As String = "Main"
 On Error GoTo Err
 
+CompeteAgainstBestOffsetUpToMid = MinDouble
+
 Set mInputMessageIdMap = CreateSortedDictionary(KeyTypeInteger)
 setupInputMessageIdMap
 
 Set mOutputMessageIdMap = CreateSortedDictionary(KeyTypeInteger)
 setupOutputMessageIdMap
+
+GIdManager.SetNextOrderId GIdManager.BaseOrderId
+
 
 Exit Sub
 

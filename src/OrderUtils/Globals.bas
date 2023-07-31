@@ -366,7 +366,7 @@ Public Function gCreateOptionRolloverSpecification( _
                 ByVal pRolloverStrikeParameter As Double, _
                 ByVal pRolloverStrikeOperator As OptionStrikeSelectionOperators, _
                 ByVal pRolloverQuantityMode As RolloverQuantityModes, _
-                ByVal pRolloverQuantityParameter As Double, _
+                ByVal pRolloverQuantityParameter As BoxedDecimal, _
                 ByVal pRolloverQuantityLotSize As Long, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pCloseOrderType As OrderTypes, _
@@ -529,8 +529,12 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Public Function gGetSignedQuantity(ByVal pExec As IExecutionReport) As Long
-gGetSignedQuantity = IIf(pExec.Action = OrderActionBuy, pExec.Quantity, -pExec.Quantity)
+Public Function gGetSignedQuantity(ByVal pExec As IExecutionReport) As BoxedDecimal
+If pExec.Action = OrderActionBuy Then
+    Set gGetSignedQuantity = pExec.Quantity
+Else
+    Set gGetSignedQuantity = CreateBoxedDecimal(-pExec.Quantity)
+End If
 End Function
 
 Public Function gGetSourceDesignator( _
@@ -1145,12 +1149,6 @@ Select Case Value
         gOrderAttributeToString = "MinimumQuantity"
     Case OrderAttPercentOffset
         gOrderAttributeToString = "PercentOffset"
-    Case OrderAttETradeOnly
-        gOrderAttributeToString = "ETradeOnly"
-    Case OrderAttFirmQuoteOnly
-        gOrderAttributeToString = "FirmQuoteOnly"
-    Case OrderAttNBBOPriceCap
-        gOrderAttributeToString = "NBBOPriceCap"
     Case OrderAttOverrideConstraints
         gOrderAttributeToString = "OverrideConstraints"
     Case OrderAttAction
@@ -1454,9 +1452,7 @@ With pTargetOrder
     .DisplaySize = pSourceOrder.DisplaySize
     .ErrorCode = pSourceOrder.ErrorCode
     .ErrorMessage = pSourceOrder.ErrorMessage
-    .ETradeOnly = pSourceOrder.ETradeOnly
     .FillTime = pSourceOrder.FillTime
-    .FirmQuoteOnly = pSourceOrder.FirmQuoteOnly
     .GoodAfterTime = pSourceOrder.GoodAfterTime
     .GoodAfterTimeTZ = pSourceOrder.GoodAfterTimeTZ
     .GoodTillDate = pSourceOrder.GoodTillDate
@@ -1465,7 +1461,6 @@ With pTargetOrder
     .IsSimulated = pSourceOrder.IsSimulated
     .LastFillPrice = pSourceOrder.LastFillPrice
     .MinimumQuantity = pSourceOrder.MinimumQuantity
-    .NbboPriceCap = pSourceOrder.NbboPriceCap
     .OrderType = pSourceOrder.OrderType
     .Origin = pSourceOrder.Origin
     .OriginatorRef = pSourceOrder.OriginatorRef

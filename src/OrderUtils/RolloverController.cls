@@ -516,7 +516,7 @@ Set lTargetOrder = createNextTargetOrder
 
 Dim lAutosizeType As BracketAutosizeTypes
 Dim lAutosizeValue As Double
-Dim lQuantity As Long
+Dim lQuantity As BoxedDecimal
 Dim lLotSize As Long
 
 getQuantityParameters pCurrentContractSpec, lAutosizeType, lAutosizeValue, lQuantity, lLotSize
@@ -991,7 +991,7 @@ Private Sub getQuantityParameters( _
                 ByVal pCurrentContractSpec As IContractSpecifier, _
                 ByRef pAutosizeType As BracketAutosizeTypes, _
                 ByRef pAutosizeValue As Double, _
-                ByRef pQuantity As Long, _
+                ByRef pQuantity As BoxedDecimal, _
                 ByRef pLotSize As Long)
 Const ProcName As String = "getQuantityParameters"
 On Error GoTo Err
@@ -1004,17 +1004,17 @@ Case RolloverQuantityModeNone, _
         RolloverQuantityModeAsPrevious
     If mBracketOrder.AutosizeType = BracketAutosizeNone Then
         pAutosizeType = BracketAutosizeNone
-        pQuantity = mBracketOrder.EntryOrder.QuantityFilled
+        Set pQuantity = mBracketOrder.EntryOrder.QuantityFilled
     Else
         pAutosizeType = mBracketOrder.AutosizeType
         pAutosizeValue = mBracketOrder.AutosizeValue
         pLotSize = mBracketOrder.LotSize
-        pQuantity = 1
+        Set pQuantity = DecimalOne
     End If
 Case RolloverQuantityModeNumber
-    pQuantity = lRolloverSpec.RolloverQuantityParameter
+    Set pQuantity = lRolloverSpec.RolloverQuantityParameter
 Case RolloverQuantityModePreviousNumber
-    pQuantity = mBracketOrder.EntryOrder.QuantityFilled
+    Set pQuantity = mBracketOrder.EntryOrder.QuantityFilled
 Case RolloverQuantityModeMonetaryAmount
     pAutosizeType = BracketAutosizeMonetaryAmount
     pAutosizeValue = lRolloverSpec.RolloverQuantityParameter

@@ -43,7 +43,7 @@ End Enum
 
 Private Type PriceTableEntry
     Price                   As Double
-    Size                    As Long
+    Size                    As BoxedDecimal
     MarketMaker             As String
 End Type
 
@@ -207,7 +207,7 @@ On Error GoTo Err
 AssertArgument pTick.TickType = TickTypeTrade, "Incorrect tick type"
 
 If pTick.Price <> mPrevTradePrice Then
-    mDataSources.DOMSetCell DOMSides.DOMTrade, mPrevTradePrice, 0
+    mDataSources.DOMSetCell DOMSides.DOMTrade, mPrevTradePrice, DecimalZero
 End If
 
 If pTick.Size <> 0 Then
@@ -249,7 +249,7 @@ If pDataSource.CurrentTick(TickTypeTrade).Price <> 0# Then
     Dim ev As MarketDepthEventData
     Set ev.Source = pDataSource
     ev.Price = pDataSource.CurrentTick(TickTypeTrade).Price
-    ev.Size = pDataSource.CurrentTick(TickTypeTrade).Size
+    Set ev.Size = pDataSource.CurrentTick(TickTypeTrade).Size
     ev.Type = DOMTrade
     pListener.SetMarketDepthCell ev
 End If
@@ -319,7 +319,7 @@ Const ProcName As String = "notifyDOMValue"
 On Error GoTo Err
 
 ev.Price = pValue.Price
-ev.Size = pValue.Size
+Set ev.Size = pValue.Size
 pListener.SetMarketDepthCell ev
 Exit Sub
 
@@ -342,7 +342,7 @@ ev.Operation = pOperation
 ev.Position = pPosition
 ev.Price = pValue.Price
 ev.Side = pSide
-ev.Size = pValue.Size
+Set ev.Size = pValue.Size
 pListener.UpdateMarketDepth ev
 Exit Sub
 
@@ -385,7 +385,7 @@ Private Sub updatePrices(ByRef pPrices() As PriceTableEntry, _
                     ByVal pPosition As Long, _
                     ByVal pOperation As DOMOperations, _
                     ByVal pPrice As Double, _
-                    ByVal pSize As Long)
+                    ByVal pSize As BoxedDecimal)
 ' NB: we don't update the screen if pPosition is 0, since these are
 ' passed earlier via the notifyBid and notifyAsk methods. Except for deletions
 ' (for example if the Bid drops, the current entry 0 must be deleted - though
@@ -421,7 +421,7 @@ Case DOMOperations.DOMInsert
         pPrices(i + 1) = pPrices(i)
     Next
     pPrices(pPosition).Price = pPrice
-    pPrices(pPosition).Size = pSize
+    Set pPrices(pPosition).Size = pSize
     mDataSources.DOMSetCell pSide, pPrice, pSize
 Case DOMOperations.DOMUpdate
     If pPrice <> pPrices(pPosition).Price And pPrices(pPosition).Price <> 0 Then
@@ -431,18 +431,18 @@ Case DOMOperations.DOMUpdate
         ' only blank the pSize if the adjacent slot(s) are for a different pPrice.
         If pPosition = 0 Then
             If pPrices(1).Price <> pPrices(0).Price Then
-                mDataSources.DOMSetCell pSide, pPrices(0).Price, 0
+                mDataSources.DOMSetCell pSide, pPrices(0).Price, DecimalZero
             End If
         Else
             If pPrices(pPosition + 1).Price <> pPrices(pPosition).Price And _
                 pPrices(pPosition - 1).Price <> pPrices(pPosition).Price _
             Then
-                mDataSources.DOMSetCell pSide, pPrices(pPosition).Price, 0
+                mDataSources.DOMSetCell pSide, pPrices(pPosition).Price, DecimalZero
             End If
         End If
     End If
     pPrices(pPosition).Price = pPrice
-    pPrices(pPosition).Size = pSize
+    Set pPrices(pPosition).Size = pSize
     mDataSources.DOMSetCell pSide, pPrice, pSize
 Case DOMOperations.DOMDelete
 '    If (pPosition = 0 And pSide = DOMSides.DOMBid And pPrices(pPosition).Price = currentBid) _
@@ -460,7 +460,7 @@ Case DOMOperations.DOMDelete
             ' we getting a delete before a pPrice has been inserted in this pPosition,
             ' so just ignore it
         Else
-            mDataSources.DOMSetCell pSide, pPrices(pPosition).Price, 0
+            mDataSources.DOMSetCell pSide, pPrices(pPosition).Price, DecimalZero
         End If
 '    End If
     
@@ -468,7 +468,7 @@ Case DOMOperations.DOMDelete
         pPrices(i) = pPrices(i + 1)
     Next
     pPrices(pMaxIndex).Price = 0
-    pPrices(pMaxIndex).Size = 0
+    Set pPrices(pMaxIndex).Size = DecimalZero
     pMaxIndex = pMaxIndex - 1
 End Select
 

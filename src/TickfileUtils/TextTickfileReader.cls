@@ -30,6 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements IDeferredAction
 Implements ITickfileReader
 Implements ITask
 
@@ -83,14 +84,14 @@ Private mTicksReplayed                          As Long
 Private mTickfileSpec                           As ITickfileSpecifier
 
 Private mPrevLast                               As Double
-Private mPrevLastSize                           As Long
+Private mPrevLastSize                           As BoxedDecimal
 Private mBidAtLastTrade                         As Double
 Private mAskAtLastTrade                         As Double
 Private mPrevBid                                As Double
-Private mPrevBidSize                            As Long
+Private mPrevBidSize                            As BoxedDecimal
 Private mPrevAsk                                As Double
-Private mPrevAskSize                            As Long
-Private mVolume                                 As Double
+Private mPrevAskSize                            As BoxedDecimal
+Private mVolume                                 As BoxedDecimal
 
 Private mTaskContext                            As TaskContext
 
@@ -104,13 +105,36 @@ mNextFreeRecordIndex = 0
 End Sub
 
 '================================================================================
+' IDeferredAction Interface Members
+'================================================================================
+
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+If Data = "NOTIFYEVENT" Then
+    NotifyEvent mFileReader.EventCode, mFileReader.EventMessage
+Else
+    If mFileReader.EventCode <> 0 Then
+        NotifyEvent mFileReader.EventCode, mFileReader.EventMessage
+    End If
+    mReplayMonitor.NotifyReady Me, mTickfileSpec, mFileReader.ContractSpecifier
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' ITickfileReader Interface Members
 '================================================================================
 
 Private Sub ITickfileReader_CloseInputFile()
 Const ProcName As String = "ITickfileReader_CloseInputFile"
 On Error GoTo Err
-Finish
+'Finish
 mTickfileStore.DataReaderFinished Me
 
 Exit Sub
@@ -139,13 +163,18 @@ If mPendingImpliedVolumeTick Then
     mPendingImpliedVolumeTick = False
     ev.Tick.TickType = TickTypeVolume
     ev.Tick.Timestamp = mCurrentTimestamp
-    ev.Tick.Size = mVolume
+    Set ev.Tick.Size = mVolume
     Set ev.Source = Me
     mDataConsumer.NotifyTick ev
     mTicksReplayed = mTicksReplayed + 1
     ITickfileReader_FireNextTick = True
 Else
-    Do While readNextFilteredTickRecord
+    Do While True
+        If Not readNextFilteredTickRecord Then
+            mReplayMonitor.NotifyReplayComplete Me, mTicksReplayed
+            mCurrentTimestamp = 0
+            Exit Do
+        End If
         If processTickData(True) Then
             moveToNextUnprocessedRecord
             mTicksReplayed = mTicksReplayed + 1
@@ -166,15 +195,14 @@ Const ProcName As String = "ITickfileReader_PrepareTickfile"
 On Error GoTo Err
 
 Set mTickfileSpec = pTickfileSpec
-gLogger.Log "Preparing tickfile " & mTickfileSpec.Filename, ProcName, ModuleName
+gLogger.Log "Preparing tickfile: " & mTickfileSpec.Filename, ProcName, ModuleName
 
 Set mFileReader = New FileReader
 If Not mFileReader.Initialise(mTickfileSpec) Then
     NotifyEvent mFileReader.EventCode, mFileReader.EventMessage
-    ITickfileReader_PrepareTickfile = False
 Else
+    mReplayMonitor.NotifyTickfilePrepared Me, mTickfileSpec
     mReplayMonitor.NotifyReady Me, mTickfileSpec, mFileReader.ContractSpecifier
-    ITickfileReader_PrepareTickfile = True
 End If
 
 Exit Function
@@ -227,6 +255,9 @@ ElseIf fromFilterRecord Then
         End If
         moveToNextUnprocessedRecord
     Loop
+    gLogger.Log "No ticks meet filter criteria: " & mTickfileSpec.Filename, ProcName, ModuleName
+    mReplayMonitor.NotifyReplayComplete Me, mTicksReplayed
+    mCurrentTimestamp = 0
     mTaskContext.Finish Empty, False
 Else
     processTickData False
@@ -512,20 +543,20 @@ Do While lookAhead(lookAheadIndex)
                 If mRecordTable(lookAheadAnotherIndex).Tick.TickType = FileTickTypes.Volume And _
                     mVolume + mRecordTable(lookAheadIndex).Tick.TickSize = mRecordTable(lookAheadAnotherIndex).Tick.TickSize _
                 Then
-                    mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
+                    Set mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
                         mRecordTable(lookAheadIndex).Tick.TickSize
                     mRecordTable(lookAheadIndex).Processed = True
                     Exit Sub
                 End If
             Loop
-            mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
+            Set mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
                 mRecordTable(mCurrentRecordIndex).Tick.TickSize + _
                 mRecordTable(lookAheadIndex).Tick.TickSize
             mRecordTable(lookAheadIndex).Processed = True
         End If
         Exit Sub
     Case FileTickTypes.LastSizeCorrection
-        mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
+        Set mRecordTable(mCurrentRecordIndex).Tick.TickSize = _
             mRecordTable(mCurrentRecordIndex).Tick.TickSize + _
             mRecordTable(lookAheadIndex).Tick.TickSize
         mRecordTable(lookAheadIndex).Processed = True
@@ -555,7 +586,7 @@ With mRecordTable(mCurrentRecordIndex).Tick
     ev.Tick.Position = .MDposition
     ev.Tick.Price = .TickPrice
     ev.Tick.Side = .MDSide
-    ev.Tick.Size = .TickSize
+    Set ev.Tick.Size = .TickSize
     ev.Tick.Timestamp = .Timestamp
     Select Case .TickType
     Case FileTickTypes.Bid
@@ -564,30 +595,30 @@ With mRecordTable(mCurrentRecordIndex).Tick
         mPrevBid = ev.Tick.Price
         If .TickSize = 0 Then
             If lookForTick(FileTickTypes.BidSize, .Timestamp) Then Exit Function
-            ev.Tick.Size = mPrevBidSize
+            Set ev.Tick.Size = mPrevBidSize
         Else
-            mPrevBidSize = .TickSize
+            Set mPrevBidSize = .TickSize
         End If
     Case FileTickTypes.BidSize
         ev.Tick.TickType = TickTypeBid
         If mPrevBid = 0 Then Exit Function
         ev.Tick.Price = mPrevBid
-        mPrevBidSize = .TickSize
+        Set mPrevBidSize = .TickSize
     Case FileTickTypes.Ask
         ev.Tick.TickType = TickTypeAsk
         If ev.Tick.Price = 0 Then ev.Tick.Price = mPrevAsk
         mPrevAsk = .TickPrice
         If .TickSize = 0 Then
             If lookForTick(FileTickTypes.AskSize, .Timestamp) Then Exit Function
-            ev.Tick.Size = mPrevAskSize
+            Set ev.Tick.Size = mPrevAskSize
         Else
-            mPrevAskSize = .TickSize
+            Set mPrevAskSize = .TickSize
         End If
     Case FileTickTypes.AskSize
         ev.Tick.TickType = TickTypeAsk
         If mPrevAsk = 0 Then Exit Function
         ev.Tick.Price = mPrevAsk
-        mPrevAskSize = .TickSize
+        Set mPrevAskSize = .TickSize
     Case FileTickTypes.Last
         If isImpliedTrade(mCurrentRecordIndex, _
                             mPrevLast, _
@@ -605,11 +636,11 @@ With mRecordTable(mCurrentRecordIndex).Tick
         
         processLastSizeCorrection
         ev.Tick.TickType = TickTypeTrade
-        ev.Tick.Size = .TickSize
+        Set ev.Tick.Size = .TickSize
         If ev.Tick.Price = 0 Then ev.Tick.Price = mPrevLast
         processDuplicateLast
         mPrevLast = ev.Tick.Price
-        mPrevLastSize = .TickSize
+        Set mPrevLastSize = .TickSize
         mBidAtLastTrade = mPrevBid
         mAskAtLastTrade = mPrevAsk
         processVolume
@@ -624,7 +655,7 @@ With mRecordTable(mCurrentRecordIndex).Tick
         ev.Tick.TickType = TickTypeClosePrice
     Case FileTickTypes.Volume
         ev.Tick.TickType = TickTypeVolume
-        mVolume = .TickSize
+        Set mVolume = .TickSize
     Case FileTickTypes.LastSizeCorrection
     Case FileTickTypes.MarketDepth
         ev.Tick.TickType = TickTypeMarketDepth
@@ -670,7 +701,7 @@ If Not (mFileReader.TickfileVersion = TickFileVersions.CrescendoV1 Or _
 
 If mRecordTable(mCurrentRecordIndex).Tick.TickType <> FileTickTypes.Last Then Exit Sub
                     
-mVolume = mVolume + mRecordTable(mCurrentRecordIndex).Tick.TickSize
+Set mVolume = mVolume.Add(mRecordTable(mCurrentRecordIndex).Tick.TickSize)
 
 lookAheadIndex = mCurrentRecordIndex
 
@@ -697,8 +728,6 @@ If ReadNextTickRecord Then
     End If
 End If
 
-mReplayMonitor.NotifyReplayComplete Me, mTicksReplayed
-mCurrentTimestamp = 0
 readNextFilteredTickRecord = False
 
 Exit Function

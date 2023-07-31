@@ -31,11 +31,11 @@ Public Sub Setup()
 Dim lContractsBuilder As New ContractsBuilder
 
 lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM03")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU4")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU14")
 
 Set mContracts = lContractsBuilder.Contracts
 End Sub
@@ -366,7 +366,7 @@ End Sub
 
 Public Sub Generate200ExpiringNonSession()
 Dim lContractsBuilder As New ContractsBuilder
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH13")
 Dim lContracts As IContracts: Set lContracts = lContractsBuilder.Contracts
 
 Dim tfSpecs As TickFileSpecifiers
@@ -393,7 +393,7 @@ End Sub
 
 Public Sub Generate210ExpiringNonSession()
 Dim lContractsBuilder As New ContractsBuilder
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH13")
 Dim lContracts As IContracts: Set lContracts = lContractsBuilder.Contracts
 
 On Error Resume Next
@@ -411,10 +411,10 @@ End Sub
 
 Public Sub Generate220ExpiringNonSession()
 Dim lContractsBuilder As New ContractsBuilder
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM13")
 lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ13")
 Dim lContracts As IContracts: Set lContracts = lContractsBuilder.Contracts
 
 Dim tfSpecs As TickFileSpecifiers
@@ -442,8 +442,8 @@ End Sub
 Public Sub Generate230ExpiringNonSession()
 Dim lContractsBuilder As New ContractsBuilder
 lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ2")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM13")
 lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU3")
 Dim lContracts As IContracts: Set lContracts = lContractsBuilder.Contracts
 
@@ -494,10 +494,10 @@ End Sub
 
 Public Sub Generate310ExpiringWholeSession()
 Dim lContractsBuilder As New ContractsBuilder
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM13")
 lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ13")
 Dim lContracts As IContracts: Set lContracts = lContractsBuilder.Contracts
 
 Dim tfSpecs As TickFileSpecifiers
@@ -524,10 +524,10 @@ End Sub
 
 Public Sub Generate320ExpiringWholeSession()
 Dim lContractsBuilder As New ContractsBuilder
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZH13")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZM13")
 lContractsBuilder.Add gCreateContractFromLocalSymbol("ZU3")
-lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ3")
+lContractsBuilder.Add gCreateContractFromLocalSymbol("ZZ13")
 Dim lContracts As IContracts: Set lContracts = lContractsBuilder.Contracts
 
 Dim tfSpecs As TickFileSpecifiers

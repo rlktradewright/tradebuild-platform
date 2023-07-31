@@ -50,6 +50,7 @@ Public Enum TickfileEventCodes
     TickfileEventNoContractDetails
     TickfileEventDataSourceNotAvailable
     TickfileEventAmbiguousContractDetails
+    TickfileEventNoTickData
 End Enum
 
 Public Enum TickfileGranularities

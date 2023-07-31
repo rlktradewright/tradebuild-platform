@@ -62,7 +62,7 @@ Private mIsLiquidation                              As Boolean
 Private mBrokerId                                   As String
 Private mOrderId                                    As String
 Private mPrice                                      As Double
-Private mQuantity                                   As Long
+Private mQuantity                                   As BoxedDecimal
 Private mTimezoneName                               As String
 Private mIsSimulated                                As Boolean
 
@@ -126,8 +126,8 @@ Private Property Get IExecutionReport_Price() As Double
 IExecutionReport_Price = mPrice
 End Property
 
-Private Property Get IExecutionReport_Quantity() As Long
-IExecutionReport_Quantity = mQuantity
+Private Property Get IExecutionReport_Quantity() As BoxedDecimal
+Set IExecutionReport_Quantity = mQuantity
 End Property
 
 Private Property Get IExecutionReport_SecurityName() As String

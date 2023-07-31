@@ -49,7 +49,7 @@ Private mAllowedTickType                            As TickTypes
 Private mTick                                       As GenericTick
 Private mPreviousTick                               As GenericTick
 
-Private mIsLive                                    As Boolean
+Private mIsLive                                     As Boolean
 
 Private mPriceChange                                As ValueChanges
 Private mSizeChange                                 As ValueChanges
@@ -94,7 +94,7 @@ Quote.Price = mTick.Price
 Quote.PriceChange = mPriceChange
 Quote.RecentPriceChange = mPrevPriceChange
 Quote.RecentSizeChange = mPrevSizeChange
-Quote.Size = mTick.Size
+Set Quote.Size = mTick.Size
 Quote.SizeChange = mSizeChange
 Quote.Timestamp = mTick.Timestamp
 End Property
@@ -135,6 +135,7 @@ On Error GoTo Err
 
 Dim lTick As GenericTick
 mTick = lTick
+Set mTick.Size = DecimalZero
 mPreviousTick = lTick
 mIsLive = False
 

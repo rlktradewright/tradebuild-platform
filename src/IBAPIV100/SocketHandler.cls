@@ -446,7 +446,7 @@ Set mSocket = Nothing
 mIsConnected = False
 
 RaiseEvent ConnectionClosed(pMessage)
-If Not pClosedByApplication Then retryConnection
+If Not pClosedByApplication Then retryConnection 60
 
 Exit Sub
 
@@ -472,12 +472,13 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub retryConnection()
+Private Sub retryConnection(Optional ByVal pRetryInterval As Long = 0)
 Const ProcName As String = "retryConnection"
 On Error GoTo Err
 
 Dim lRetryInterval As Long
 If mConnectionRetryIntervalSecs <> 0 Then lRetryInterval = mConnectionRetryIntervalSecs
+If pRetryInterval <> 0 Then lRetryInterval = pRetryInterval
 If mTempConnectionRetryIntervalSecs <> 0 And mTempConnectionRetryIntervalSecs < lRetryInterval Then lRetryInterval = mTempConnectionRetryIntervalSecs
 
 If lRetryInterval <> 0 Then

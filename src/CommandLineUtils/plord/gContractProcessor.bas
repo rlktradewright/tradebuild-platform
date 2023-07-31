@@ -114,7 +114,7 @@ Set lClp = CreateCommandLineParser(pParams, " ")
 AssertArgument lClp.NumberOfArgs = 0, "Only attributes beginning with ""/"" are permitted"
 
 Dim lQuantityMode As RolloverQuantityModes: lQuantityMode = RolloverQuantityModeAsPrevious
-Dim lQuantityParameter As Double
+Dim lQuantityParameter As BoxedDecimal
 Dim lLotSize As Long
 If lClp.Switch(QuantitySwitch) Then processRolloverQuantity _
                         lClp.SwitchValue(QuantitySwitch), _
@@ -421,7 +421,7 @@ End Sub
 Private Sub processRolloverQuantity( _
                 ByVal pValue As String, _
                 ByRef pQuantityMode As RolloverQuantityModes, _
-                ByRef pQuantityParameter As Double, _
+                ByRef pQuantityParameter As BoxedDecimal, _
                 ByRef pLotSize As Long)
 Const ProcName As String = "processRolloverQuantity"
 On Error GoTo Err
@@ -461,7 +461,7 @@ Dim lParameter As String
 lParameter = lMatch.SubMatches(0)
 If lParameter <> "" Then
     pQuantityMode = RolloverQuantityModeNumber
-    pQuantityParameter = CDbl(lParameter)
+    Set pQuantityParameter = CreateBoxedDecimal(lParameter)
     Exit Sub
 End If
 
@@ -473,7 +473,7 @@ End If
 lParameter = lMatch.SubMatches(2)
 If lParameter <> "" Then
     pQuantityMode = RolloverQuantityModeMonetaryAmount
-    pQuantityParameter = CDbl(lParameter)
+    Set pQuantityParameter = CreateBoxedDecimal(lParameter)
     pLotSize = CLng("0" & lMatch.SubMatches(3))
     Exit Sub
 End If
@@ -486,7 +486,7 @@ End If
 lParameter = lMatch.SubMatches(5)
 If lParameter <> "" Then
     pQuantityMode = RolloverQuantityModePercentageOfAccount
-    pQuantityParameter = CDbl(lParameter)
+    Set pQuantityParameter = CreateBoxedDecimal(lParameter)
     pLotSize = CLng("0" & lMatch.SubMatches(6))
     Exit Sub
 End If
@@ -498,14 +498,14 @@ End If
 
 If lMatch.SubMatches(8) <> "" Then
     pQuantityMode = RolloverQuantityModeCurrentValue
-    pQuantityParameter = CDbl(lMatch.SubMatches(9))
+    Set pQuantityParameter = CreateBoxedDecimal(lMatch.SubMatches(9))
     Exit Sub
 End If
 
 lParameter = lMatch.SubMatches(10)
 If lParameter <> "" Then
     pQuantityMode = RolloverQuantityModeCurrentProfit
-    pQuantityParameter = CDbl(lParameter)
+    Set pQuantityParameter = CreateBoxedDecimal(lParameter)
     pLotSize = CLng("0" & lMatch.SubMatches(11))
     Exit Sub
 End If

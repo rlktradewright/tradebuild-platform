@@ -76,7 +76,7 @@ Do
 Loop Until mTestCompleted
 
 Assert.IsTrue tfmev.NotifyEventCount = 1, "NotifyEvent should be invoked once"
-Assert.IsTrue tfmev.NotifyEventEv.EventCode = TickfileEventCodes.TickfileEventFileIsEmpty, "NotifyEvent has invalid event code"
+Assert.IsTrue tfmev.NotifyEventEv.EventCode = TickfileEventCodes.TickfileEventNoTickData, "NotifyEvent has invalid event code"
 Assert.IsTrue tfmev.ReplayProgressCount = 0, "ReplayProgress should not be invoked"
 Assert.IsTrue tfmev.TickfileCompletedCount = 1, "TickfileCompleted should be invoked once"
 End Sub
@@ -116,7 +116,7 @@ End Sub
 
 Public Sub ReplayWithDatabaseTickfile()
 Dim lTickfileSpec As New TickfileSpecifier
-lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZH3")
+lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZH13")
 lTickfileSpec.FromDate = CDate("2013/03/08 18:19:39")
 lTickfileSpec.ToDate = CDate("2013/03/08 18:19:58")
 
@@ -141,7 +141,7 @@ End Sub
 
 Public Sub ReplayWithVeryLargeValidDatabaseTickfile()
 Dim lTickfileSpec As New TickfileSpecifier
-lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZM3")
+lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZM13")
 lTickfileSpec.FromDate = CDate("2013/04/08")
 lTickfileSpec.ToDate = CDate("2013/04/13")
 
@@ -173,7 +173,7 @@ End Sub
 
 Public Sub ReplayWithVeryLargeValidDatabaseTickfileSessionOnly()
 Dim lTickfileSpec As New TickfileSpecifier
-lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZU4")
+lTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZU14")
 lTickfileSpec.FromDate = CDate("2014/09/01")
 lTickfileSpec.ToDate = CDate("2014/09/05")
 lTickfileSpec.EntireSession = True
@@ -243,7 +243,7 @@ End Function
 
 Private Function CreateTickfileSpecWithVeryLargeValidTradeBuildv5File() As TickfileSpecifier
 Dim tickfileSpec As New TickfileSpecifier
-tickfileSpec.FileName = TickfilePath & "\ZM3-Week-20130408.tck"
+tickfileSpec.FileName = TickfilePath & "\ZM13-Week-20130408.tck"
 Set CreateTickfileSpecWithVeryLargeValidTradeBuildv5File = tickfileSpec
 End Function
 

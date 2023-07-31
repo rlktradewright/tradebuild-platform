@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "IOrderAuthoriser"
+Attribute VB_Name = "FatalErrorHandler"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -38,23 +38,36 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "IOrderAuthoriser"
+Private Const ModuleName                            As String = "FatalErrorHandler"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
+Private WithEvents mUnhandledErrorHandler           As UnhandledErrorHandler
+Attribute mUnhandledErrorHandler.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mUnhandledErrorHandler = UnhandledErrorHandler
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mUnhandledErrorHandler Event Handlers
 '@================================================================================
+
+Private Sub mUnhandledErrorHandler_UnhandledError(ev As ErrorEventData)
+
+gHandleFatalError ev
+
+End Sub
 
 '@================================================================================
 ' Properties
@@ -64,16 +77,10 @@ Private Const ModuleName                            As String = "IOrderAuthorise
 ' Methods
 '@================================================================================
 
-Public Function AllowOrder( _
-                ByVal pBracketOrder As IBracketOrder, _
-                ByVal pTimestamp As Date, _
-                ByRef pNewOrderSize As BoxedDecimal, _
-                ByRef pMessage As String) As Boolean
-End Function
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
 
 
 

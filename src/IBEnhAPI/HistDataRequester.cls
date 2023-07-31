@@ -209,7 +209,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IHistDataConsumer_NotifyRealtimeBar(ByVal pRequestId As Long, pBar As TwsRealtimeBar)
+Private Sub IHistDataConsumer_NotifyRealtimeBar(ByVal pRequestId As Long, pBar As TwsBar)
 Const ProcName As String = "IHistDataConsumer_NotifyRealtimeBar"
 On Error GoTo Err
 

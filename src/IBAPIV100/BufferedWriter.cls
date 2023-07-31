@@ -153,6 +153,24 @@ Err:
 gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
+Friend Sub AddDecimal( _
+                ByVal data As BoxedDecimal, _
+                ByRef fieldName As String)
+Const ProcName As String = "AddDecimal"
+On Error GoTo Err
+
+If data Is Nothing Then
+    AddString "", fieldName
+Else
+    AddString DecimalToString(data.DecimalValue), fieldName
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
 Friend Sub AddDouble( _
                 ByVal data As Double, _
                 ByRef fieldName As String)
@@ -175,6 +193,8 @@ On Error GoTo Err
 
 If data = MaxDouble Then
     AddString "", fieldName
+ElseIf data = MinDouble Then
+    AddString Infinity, fieldName
 Else
     AddString DoubleToString(data), fieldName
 End If

@@ -365,6 +365,7 @@ lInstr.InstrumentClass = gInstrumentClass
 lInstr.name = name
 lInstr.shortname = shortname
 lInstr.symbol = symbol
+lInstr.tradingclass = tradingclass
 If gInstrumentClass.sectype = SecTypeFuture Then
     lInstr.expiryDate = expiryDate
 ElseIf gInstrumentClass.sectype = SecTypeOption Or _

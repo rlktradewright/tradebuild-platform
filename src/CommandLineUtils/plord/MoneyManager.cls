@@ -61,7 +61,7 @@ Private Function IMoneyManager_AllowOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pPositionManager As PositionManager, _
                 ByVal pTimestamp As Date, _
-                ByRef pNewOrderSize As Long, _
+                ByRef pNewOrderSize As BoxedDecimal, _
                 ByRef pMessage As String, _
                 ByRef pSessionMustBeEnded As Boolean) As Boolean
 Const ProcName As String = "IMoneyManager_AllowOrder"
@@ -98,8 +98,8 @@ If lPrice = 0 Then
     pMessage = "No price currently available to size order"
     IMoneyManager_AllowOrder = False
 Else
-    pNewOrderSize = Int(mMaxOrderCost / (lContract.Specifier.Multiplier * lPrice))
-    If mLotSize <> 0 Then pNewOrderSize = mLotSize * Int(pNewOrderSize / mLotSize)
+    Set pNewOrderSize = CreateBoxedDecimal(Int(mMaxOrderCost / (lContract.Specifier.Multiplier * lPrice)))
+    If mLotSize <> 0 Then Set pNewOrderSize = CreateBoxedDecimal(mLotSize * Int(pNewOrderSize / mLotSize))
     
     If pNewOrderSize > 0 Then
         pMessage = "Order quantity set to " & pNewOrderSize

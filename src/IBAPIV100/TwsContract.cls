@@ -62,13 +62,17 @@ Private mLiquidHours                                As String
 
 Private mEvRule                                     As String
 Private mEvMultiplier                               As Double
-Public MDSizeMultiplier                             As Long
 Public AggGroup                                     As Long
 Public UnderSymbol                                  As String
 Public UnderSecType                                 As TwsSecTypes
 Public MarketRuleIds                                As String
 Public RealExpirationDate                           As String
 Public LastTradeTime                                As Date
+
+Private mStockType                                  As String
+Private mMinimumSize                                As BoxedDecimal
+Private mSizeIncrement                              As BoxedDecimal
+Private mSuggestedSizeIncrement                     As BoxedDecimal
 
 Private mSecIdList                                  As Parameters  ' CUSIP/ISIN/etc.
 
@@ -234,6 +238,38 @@ End Property
 
 Public Property Get ValidExchanges() As String
 ValidExchanges = mValidExchanges
+End Property
+
+Public Property Let StockType(ByVal Value As String)
+mStockType = Value
+End Property
+
+Public Property Get StockType() As String
+StockType = mStockType
+End Property
+
+Public Property Let MinimumSize(ByVal Value As BoxedDecimal)
+Set mMinimumSize = Value
+End Property
+
+Public Property Get MinimumSize() As BoxedDecimal
+Set MinimumSize = mMinimumSize
+End Property
+
+Public Property Let SizeIncrement(ByVal Value As BoxedDecimal)
+Set mSizeIncrement = Value
+End Property
+
+Public Property Get SizeIncrement() As BoxedDecimal
+Set SizeIncrement = mSizeIncrement
+End Property
+
+Public Property Let SuggestedSizeIncrement(ByVal Value As BoxedDecimal)
+Set mSuggestedSizeIncrement = Value
+End Property
+
+Public Property Get SuggestedSizeIncrement() As BoxedDecimal
+Set SuggestedSizeIncrement = mSuggestedSizeIncrement
 End Property
 
 '@================================================================================

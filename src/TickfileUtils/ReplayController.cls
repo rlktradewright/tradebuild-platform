@@ -635,13 +635,8 @@ Set lTickfileReader = mTickfileStore.CreateTickfileReader(pPlayer, pPlayer, pStr
 
 Assert Not lTickfileReader Is Nothing, "Failed to create TickfileReader"
 
-If pPlayer.PrepareTickfile(lTickfileReader, tickfileSpec) Then
-    gLogger.Log "Tickfile player awaiting ready", ProcName, ModuleName, , tickfileSpec.ToString
-    mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady + 1
-Else
-    gLogger.Log "Tickfile player awaiting prepare", ProcName, ModuleName, , tickfileSpec.ToString
-    mNumberOfPlayersAwaitingPrepare = mNumberOfPlayersAwaitingPrepare + 1
-End If
+mNumberOfPlayersAwaitingPrepare = mNumberOfPlayersAwaitingPrepare + 1
+pPlayer.PrepareTickfile lTickfileReader, tickfileSpec
 
 Exit Sub
 

@@ -63,7 +63,7 @@ mNotifyReadyCount = 0
 mNotifyOutputTickfileClosedCount = 0
 mOutputTickfileName = ""
 
-Set mContractFuture = CreateFuture(gCreateContractFromLocalSymbol("ZH3"))
+Set mContractFuture = CreateFuture(gCreateContractFromLocalSymbol("ZH13"))
 
 End Sub
 
@@ -199,10 +199,10 @@ Loop Until mTaskCompleted
 End Sub
 
 Private Sub writeTicksA(ByVal pWriter As ITickfileWriter)
-writeTick pWriter, CDate("21/02/2013 08:14:25"), TickTypeAsk, 6720#, 3
-writeTick pWriter, CDate("21/02/2013 08:14:26"), TickTypeBid, 6720.5, 5
-writeTick pWriter, CDate("21/02/2013 08:14:27") + 120 * OneMillisec, TickTypeTrade, 6720#, 1
-writeTick pWriter, CDate("21/02/2013 08:14:27") + 255 * OneMillisec, TickTypeVolume, , 7625
+writeTick pWriter, CDate("21/02/2013 08:14:25"), TickTypeAsk, 6720#, CreateBoxedDecimal(3)
+writeTick pWriter, CDate("21/02/2013 08:14:26"), TickTypeBid, 6720.5, CreateBoxedDecimal(5)
+writeTick pWriter, CDate("21/02/2013 08:14:27") + 120 * OneMillisec, TickTypeTrade, 6720#, CreateBoxedDecimal(1)
+writeTick pWriter, CDate("21/02/2013 08:14:27") + 255 * OneMillisec, TickTypeVolume, , CreateBoxedDecimal(7625)
 writeTick pWriter, CDate("21/02/2013 08:14:29"), TickTypeClosePrice, 6708#
 End Sub
 
@@ -211,7 +211,7 @@ Private Sub writeTick( _
                 ByVal pTimestamp As Date, _
                 ByVal pTickType As TickTypes, _
                 Optional ByVal pPrice As Double, _
-                Optional ByVal pSize As Long, _
+                Optional ByVal pSize As BoxedDecimal, _
                 Optional ByVal pSide As DOMSides, _
                 Optional ByVal pPosition As Long, _
                 Optional ByVal pOperation As DOMOperations, _

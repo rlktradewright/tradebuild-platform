@@ -76,7 +76,7 @@ Private mClosedBracketOrders                    As BracketOrders
     ' this contains all bracket orders for which all orders have completed (or
     ' been cancelled)
     
-Private mCompletedSize                          As Long
+Private mCompletedSize                          As BoxedDecimal
     ' the total Size for all completed bracket orders (may be non-zero if one
     ' or more completed bracket orders has no target or stop-loss orders)
     
@@ -120,6 +120,7 @@ Private Sub Class_Initialize()
 Set mActiveBracketOrders = New BracketOrders
 Set mClosedBracketOrders = New BracketOrders
 Set mFutureWaiter = New FutureWaiter
+Set mCompletedSize = DecimalZero
 mTickSize = -1
 End Sub
 
@@ -183,14 +184,18 @@ Public Property Get ActiveBracketOrders() As BracketOrders
 Set ActiveBracketOrders = mActiveBracketOrders
 End Property
 
-Public Property Get ActiveSize() As Long
+Public Property Get ActiveSize() As BoxedDecimal
 Const ProcName As String = "ActiveSize"
 On Error GoTo Err
 
+Dim lSize As Variant
+
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    ActiveSize = ActiveSize + lBracketOrder.Size
+    lSize = lSize + lBracketOrder.Size
 Next
+
+Set ActiveSize = CreateBoxedDecimal(lSize)
 
 Exit Property
 
@@ -230,8 +235,8 @@ Public Property Get ClosedBracketOrders() As BracketOrders
 Set ClosedBracketOrders = mClosedBracketOrders
 End Property
 
-Public Property Get CompletedSize() As Long
-CompletedSize = mCompletedSize
+Public Property Get CompletedSize() As BoxedDecimal
+Set CompletedSize = mCompletedSize
 End Property
 
 Public Property Get CurrencyConverter() As ICurrencyConverter
@@ -380,14 +385,18 @@ Public Property Get OrderSubmitter() As IOrderSubmitter
 Set OrderSubmitter = mOrderSubmitter
 End Property
 
-Public Property Get PendingBuySize() As Long
+Public Property Get PendingBuySize() As BoxedDecimal
 Const ProcName As String = "PendingBuySize"
 On Error GoTo Err
 
+Dim lSize As Variant
+
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    If lBracketOrder.LongPosition Then PendingBuySize = PendingBuySize + lBracketOrder.PendingSize
+    If lBracketOrder.LongPosition Then lSize = lSize + lBracketOrder.PendingSize
 Next
+
+Set PendingBuySize = CreateBoxedDecimal(lSize)
 
 Exit Property
 
@@ -395,14 +404,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSellSize() As Long
+Public Property Get PendingSellSize() As BoxedDecimal
 Const ProcName As String = "PendingSellSize"
 On Error GoTo Err
 
+Dim lSize As BoxedDecimal
+Set lSize = DecimalZero
+
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    If Not lBracketOrder.LongPosition Then PendingSellSize = PendingSellSize + lBracketOrder.PendingSize
+    If Not lBracketOrder.LongPosition Then Set lSize = lSize.Add(lBracketOrder.PendingSize)
 Next
+
+Set PendingSellSize = lSize
 
 Exit Property
 
@@ -410,14 +424,19 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSize() As Long
+Public Property Get PendingSize() As BoxedDecimal
 Const ProcName As String = "PendingSize"
 On Error GoTo Err
 
+Dim lSize As BoxedDecimal
+Set lSize = DecimalZero
+
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    PendingSize = PendingSize + lBracketOrder.PendingSize
+    Set lSize = lSize.Add(lBracketOrder.PendingSize)
 Next
+
+Set PendingSize = lSize
 
 Exit Property
 
@@ -473,15 +492,15 @@ Friend Property Get ScopeName() As String
 ScopeName = mBracketOrderRecoveryController.ScopeName
 End Property
 
-Public Property Get Size() As Long
+Public Property Get Size() As BoxedDecimal
 Const ProcName As String = "Size"
 On Error GoTo Err
 
-Size = mCompletedSize
+Set Size = mCompletedSize
 
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    Size = Size + lBracketOrder.Size
+    Set Size = Size.Add(lBracketOrder.Size)
 Next
 
 Exit Property
@@ -543,76 +562,29 @@ End Sub
 '
 ' @return the <code>BracketOrder</code> object created
 '
-' @param number         quantity to buy
-'       EntryType  the type of order to enter the position:
-'           BracketEntryTypeMarket            a market order
-'           BracketEntryTypeMarketOnOpen      a market on open order
-'           BracketEntryTypeMarketOnClose     a market on close order
-'           BracketEntryTypeMarketIfTouched   a market if touched order
-'           BracketEntryTypeMarketToLimit     a market to limit order
-'           BracketEntryTypeBid               a limit order at the current Bid
-'           BracketEntryTypeAsk               a limit order at the current Ask
-'           BracketEntryTypeLast              a limit order at the last Trade Price
-'           BracketEntryTypeLimit             a limit order
-'           BracketEntryTypeLimitOnOpen       a limit on open order
-'           BracketEntryTypeLimitOnClose      a limit on close order
-'           BracketEntryTypeLimitIfTouched    a limit if touched order
-'           BracketEntryTypeStop              a stop order
-'           BracketEntryTypeStopLimit         a stop limit order
-' @param BuyPrice       the limit Price for a limit order (ignored for BracketEntryTypeBid,
-'                       BracketEntryTypeAsk and BracketEntryTypeLast)
-' @param BuyOffset      number of ticks to modify the BuyPrice. For example, to place an order
-'                       one tick below the current Ask, use BracketEntryTypeAsk and set
-'                       BuyOffset to -1
-' @param TriggerPrice   used with BracketEntryTypeMarketIfTouched, BracketEntryTypeLimitIfTouched,
-'                       BracketEntryTypeStop and BracketEntryTypeStopLimit to specify the Price
-'                       at which the order is triggered
-' @param StopLossType  the type of stop-loss order to place:
-'           BracketStopLossTypeNone               no stop-loss order
-'           OrderTypestop               use a stop order
-'           OrderTypestopLimit          use a stop limit order
-'           BracketStopLossTypeBid                use a stop order at the current Bid (see StopOffset)
-'           BracketStopLossTypeAsk                use a stop order at the current Ask (see StopOffset)
-'           BracketStopLossTypeLast               use a stop order at the last Trade Price (see StopOffset)
-'           BracketStopLossTypeAuto               use a stop order at the fill Price for the
-'                                           entry order (see StopOffset)
-' @param StopPrice      the trigger Price for OrderTypestop and OrderTypestopLimit
-' @param StopOffset     number of ticks to modify the StopPrice. For example, for a stop-loss
-'                       order 4 ticks below the entry order fill Price, use BracketStopLossTypeAuto
-'                       and set StopOffset to -4
-' @param StopLimitPrice the limit Price for OrderTypestopLimit
-' @param TargetType the type of target order to place:
-'           BracketTargetTypeNone             no target order
-'           BracketTargetTypeLimit            use a limit order
-'           BracketTargetTypeLimitIfTouched   use a limit if touched order
-'           BracketTargetTypeMarketIfTouched  use a market if touched order
-'           BracketTargetTypeBid              use a limit order at the current Bid (see TargetOffset)
-'           BracketTargetTypeAsk              use a limit order at the current Ask (see TargetOffset)
-'           BracketTargetTypeLast             use a limit order at the last Trade Price (see TargetOffset)
-'           BracketTargetTypeAuto             use a limit order at the fill Price for the
-'                                           entry order (see TargetOffset)
-' @param TargetPrice    the limit Price for the target order
-' @param TargetOffset   number of ticks to modify the TargetPrice. For example, for a target
-'                       order 10 ticks above the entry order fill Price, use BracketTargetTypeAuto
-'                       and set TargetOffset to 10
-' @param TargetTriggerPrice  the trigger Price for BracketTargetTypeLimitIfTouched and BracketTargetTypeMarketIfTouched
+' @param quantity       quantity to buy
+' @param EntryOrder     the order to enter the position
+' @param StopLossOrder  the order to act as a stop-loss
+' @param TargetOrder    the order to act as the profit target
+' @param EntryTIF       specifies the time in force for the entry order
+' @param StopTIF        specifies the time in force for the stop-loss order
+' @param TargetTIF      specifies the time in force for the target order
 ' @param CancelPrice    if the entry order is a limit order and market Price rises to this
 '                       Price before the entry order is filled, then the order is cancelled.
 '                       If the entry order is a stop or stop limit order and market Price
 '                       falls to this Price before the entry order is filled, then the order
 '                       is cancelled
-' @param EntryTIF       specifies the time in force for the entry order
-' @param StopTIF        specifies the time in force for the stop-loss order
-' @param TargetTIF      specifies the time in force for the target order
+' @param CancelAfter    a time in seconds after which the bracket order is to be
+'                       cancelled if tne entry order has not been filled
 '
 ' @see
 '
 '@/
 Public Function Buy( _
-    ByVal Number As Long, _
-    ByVal pEntryOrder As IOrder, _
-    Optional ByVal pStopLossOrder As IOrder, _
-    Optional ByVal pTargetOrder As IOrder, _
+    ByVal Quantity As BoxedDecimal, _
+    ByVal EntryOrder As IOrder, _
+    Optional ByVal StopLossOrder As IOrder, _
+    Optional ByVal TargetOrder As IOrder, _
     Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
     Optional ByVal StopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
     Optional ByVal TargetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
@@ -623,14 +595,14 @@ On Error GoTo Err
 
 Set Buy = CreateBracketOrder(OrderActions. _
                             OrderActionBuy, _
-                            Number, _
-                            pEntryOrder, _
-                            pStopLossOrder, _
-                            pTargetOrder)
+                            Quantity, _
+                            EntryOrder, _
+                            StopLossOrder, _
+                            TargetOrder)
 
-pEntryOrder.TimeInForce = EntryTIF
-If Not pStopLossOrder Is Nothing Then pStopLossOrder.TimeInForce = StopTIF
-If Not pTargetOrder Is Nothing Then pTargetOrder.TimeInForce = TargetTIF
+EntryOrder.TimeInForce = EntryTIF
+If Not StopLossOrder Is Nothing Then StopLossOrder.TimeInForce = StopTIF
+If Not TargetOrder Is Nothing Then TargetOrder.TimeInForce = TargetTIF
 Buy.CancelPrice = CancelPrice
 Buy.CancelAfter = CancelAfter
 
@@ -707,19 +679,19 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBuyBracketOrder( _
-    ByVal Number As Long, _
-    ByVal pEntryOrder As IOrder, _
-    Optional ByVal pStopLossOrder As IOrder, _
-    Optional ByVal pTargetOrder As IOrder) As IBracketOrder
+    ByVal Quantity As BoxedDecimal, _
+    ByVal EntryOrder As IOrder, _
+    Optional ByVal StopLossOrder As IOrder, _
+    Optional ByVal TargetOrder As IOrder) As IBracketOrder
 Const ProcName As String = "CreateBuyBracketOrder"
 On Error GoTo Err
 
 Set CreateBuyBracketOrder = CreateBracketOrder( _
                                         OrderActions.OrderActionBuy, _
-                                        Number, _
-                                        pEntryOrder, _
-                                        pStopLossOrder, _
-                                        pTargetOrder)
+                                        Quantity, _
+                                        EntryOrder, _
+                                        StopLossOrder, _
+                                        TargetOrder)
 
 Exit Function
 
@@ -857,7 +829,7 @@ End Function
 
 Public Function CreateBracketOrder( _
                 ByVal pAction As OrderActions, _
-                ByVal pQuantity As Long, _
+                ByVal pQuantity As BoxedDecimal, _
                 ByVal pEntryOrder As IOrder, _
                 Optional ByVal pStopLossOrder As IOrder, _
                 Optional ByVal pTargetOrder As IOrder) As IBracketOrder
@@ -882,7 +854,7 @@ End Function
 
 Public Function CreateBracketOrderWithId( _
                 ByVal pAction As OrderActions, _
-                ByVal pQuantity As Long, _
+                ByVal pQuantity As BoxedDecimal, _
                 ByVal pEntryOrder As IOrder, _
                 ByVal pId As String, _
                 Optional ByVal pStopLossOrder As IOrder, _
@@ -962,19 +934,19 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSellBracketOrder( _
-    ByVal Number As Long, _
-    ByVal pEntryOrder As IOrder, _
-    Optional ByVal pStopLossOrder As IOrder, _
-    Optional ByVal pTargetOrder As IOrder) As IBracketOrder
+    ByVal Quantity As BoxedDecimal, _
+    ByVal EntryOrder As IOrder, _
+    Optional ByVal StopLossOrder As IOrder, _
+    Optional ByVal TargetOrder As IOrder) As IBracketOrder
 Const ProcName As String = "CreateSellBracketOrder"
 On Error GoTo Err
 
 Set CreateSellBracketOrder = CreateBracketOrder( _
                                         OrderActions.OrderActionSell, _
-                                        Number, _
-                                        pEntryOrder, _
-                                        pStopLossOrder, _
-                                        pTargetOrder)
+                                        Quantity, _
+                                        EntryOrder, _
+                                        StopLossOrder, _
+                                        TargetOrder)
 
 Exit Function
 
@@ -1013,11 +985,11 @@ If TypeOf pBracketOrder Is IAutoSizingBracket Then
 End If
 
 If pCheckMoneyManagement And Not mIsSimulated Then
-    Dim lOrigQuantity As Long
-    lOrigQuantity = pBracketOrder.EntryOrder.Quantity
+    Dim lOrigQuantity As BoxedDecimal
+    Set lOrigQuantity = pBracketOrder.EntryOrder.Quantity
     
-    Dim lNewQuantity As Long
-    lNewQuantity = lOrigQuantity
+    Dim lNewQuantity As BoxedDecimal
+    Set lNewQuantity = lOrigQuantity
     If Not mOrderAuthoriser Is Nothing Then
         If Not mOrderAuthoriser.AllowOrder( _
                                 pBracketOrder, _
@@ -1543,7 +1515,7 @@ Else
     lOrder.Message = ""
     lOrder.FillTime = 0
     lOrder.LastFillPrice = 0#
-    lOrder.QuantityFilled = 0
+    lOrder.QuantityFilled = DecimalZero
     lOrder.QuantityRemaining = lOrder.Quantity
     lOrder.Status = OrderStatusCreated
     lOrder.TriggerPrice = MaxDoubleValue
@@ -1576,8 +1548,8 @@ If mActiveBracketOrders.Contains(pBracketOrder) Then mActiveBracketOrders.Remove
 
 If Not mClosedBracketOrders.Contains(pBracketOrder.Key) Then
     mClosedBracketOrders.Add pBracketOrder
-    mCompletedSize = mCompletedSize + pBracketOrder.Size
-    ' now check if there are any active bracket orders left -
+    Set mCompletedSize = mCompletedSize.Add(pBracketOrder.Size)
+    ' now check if there are any active bracket orders left
     If mActiveBracketOrders.Count = 0 Then fireChange OrderContextActiveStateChanged
 End If
 Exit Function
@@ -1634,10 +1606,10 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Sell( _
-    ByVal Number As Long, _
-    ByVal pEntryOrder As IOrder, _
-    Optional ByVal pStopLossOrder As IOrder, _
-    Optional ByVal pTargetOrder As IOrder, _
+    ByVal Quantity As BoxedDecimal, _
+    ByVal EntryOrder As IOrder, _
+    Optional ByVal StopLossOrder As IOrder, _
+    Optional ByVal TargetOrder As IOrder, _
     Optional ByVal EntryTIF As OrderTIFs = OrderTIFDay, _
     Optional ByVal StopTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
     Optional ByVal TargetTIF As OrderTIFs = OrderTIFGoodTillCancelled, _
@@ -1647,14 +1619,14 @@ Const ProcName As String = "Sell"
 On Error GoTo Err
 
 Set Sell = CreateBracketOrder(OrderActions.OrderActionSell, _
-                                Number, _
-                                pEntryOrder, _
-                                pStopLossOrder, _
-                                pTargetOrder)
+                                Quantity, _
+                                EntryOrder, _
+                                StopLossOrder, _
+                                TargetOrder)
 
-pEntryOrder.TimeInForce = EntryTIF
-If Not pStopLossOrder Is Nothing Then pStopLossOrder.TimeInForce = StopTIF
-If Not pTargetOrder Is Nothing Then pTargetOrder.TimeInForce = TargetTIF
+EntryOrder.TimeInForce = EntryTIF
+If Not StopLossOrder Is Nothing Then StopLossOrder.TimeInForce = StopTIF
+If Not TargetOrder Is Nothing Then TargetOrder.TimeInForce = TargetTIF
 Sell.CancelPrice = CancelPrice
 Sell.CancelAfter = CancelAfter
 
@@ -1691,15 +1663,15 @@ On Error GoTo Err
 
 Dim lBracketOrder As IBracketOrder: Set lBracketOrder = pBracketOrder
 
-Dim lQuantity As Long
+Dim lQuantity As BoxedDecimal
 
 If pBracketOrder.AutosizeType = BracketAutosizeMonetaryAmount Then
-    lQuantity = autoSizeAmount(pBracketOrder.AutosizeValue, _
+    Set lQuantity = autoSizeAmount(pBracketOrder.AutosizeValue, _
                                 pBracketOrder.LotSize, _
                                 lBracketOrder.LongPosition, _
                                 pMessage)
 Else
-    lQuantity = autoSizePercent(pBracketOrder.AutosizeValue, _
+    Set lQuantity = autoSizePercent(pBracketOrder.AutosizeValue, _
                                 pBracketOrder.LotSize, _
                                 lBracketOrder.LongPosition, _
                                 pMessage)
@@ -1732,7 +1704,7 @@ Private Function autoSizeAmount( _
                 ByVal pAmount As Double, _
                 ByVal pLotSize As Long, _
                 ByVal pIsLong As Boolean, _
-                ByRef pMessage As String) As Long
+                ByRef pMessage As String) As BoxedDecimal
 Const ProcName As String = "autoSizeAmount"
 On Error GoTo Err
 
@@ -1759,7 +1731,6 @@ End If
 Dim lQuantity As Long
 If lPrice = 0 Then
     pMessage = "No price currently available to size order"
-    autoSizeAmount = 0
 Else
     lQuantity = Int(pAmount / (mContract.Specifier.Multiplier * lPrice))
     If pLotSize <> 0 Then lQuantity = pLotSize * Int(lQuantity / pLotSize)
@@ -1771,7 +1742,7 @@ Else
     End If
 End If
 
-autoSizeAmount = lQuantity
+Set autoSizeAmount = CreateBoxedDecimal(lQuantity)
 
 Exit Function
 
@@ -1783,7 +1754,7 @@ Private Function autoSizePercent( _
                 ByVal pPercent As Double, _
                 ByVal pLotSize As Long, _
                 ByVal pIsLong As Boolean, _
-                ByRef pMessage As String) As Long
+                ByRef pMessage As String) As BoxedDecimal
 Const ProcName As String = "autoSizePercent"
 On Error GoTo Err
 
@@ -1805,7 +1776,7 @@ End If
 
 Dim lAmount As Double
 lAmount = Int(pPercent * lAccountBalance / 100#)
-autoSizePercent = autoSizeAmount(lAmount, pLotSize, pIsLong, pMessage)
+Set autoSizePercent = CreateBoxedDecimal(CDec(autoSizeAmount(lAmount, pLotSize, pIsLong, pMessage)))
 
 Exit Function
 

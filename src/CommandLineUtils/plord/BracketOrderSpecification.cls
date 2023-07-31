@@ -49,7 +49,7 @@ Private Const ModuleName                            As String = "BracketOrderSpe
 Public ID                                           As String
 Public Contract                                     As IContract
 Public Action                                       As OrderActions
-Public Quantity                                     As Long
+Public Quantity                                     As BoxedDecimal
 Public AutosizeType                                 As BracketAutosizeTypes
 Public AutosizeValue                                As Double
 Public LotSize                                      As Long

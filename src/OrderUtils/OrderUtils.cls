@@ -263,7 +263,7 @@ Public Function CreateOptionRolloverSpecification( _
                 ByVal pRolloverStrikeValue As Double, _
                 ByVal pRolloverStrikeOperator As OptionStrikeSelectionOperators, _
                 ByVal pRolloverQuantityMode As RolloverQuantityModes, _
-                ByVal pRolloverQuantityParameter As Double, _
+                ByVal pRolloverQuantityParameter As BoxedDecimal, _
                 ByVal pRolloverQuantityLotSize As Long, _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pCloseOrderType As OrderTypes, _

@@ -54,7 +54,6 @@ Private mBlockOrder As Boolean
 Private mBrokerId As String
 Private mDiscretionaryAmount As Double
 Private mDisplaySize As Long
-Private mETradeOnly As Boolean
 Private mFirmQuoteOnly As Boolean
 Private mGoodAfterTime As Date
 Private mGoodAfterTimeTZ As String
@@ -71,7 +70,7 @@ Private mOrigin As OrderOrigins
 Private mOriginatorRef As String
 Private mOverrideConstraints As Boolean
 Private mProviderProperties As Parameters
-Private mQuantity As Long
+Private mQuantity As BoxedDecimal
 Private mSettlingFirm As String
 Private mStatus As OrderStatuses
 Private mStopTriggerMethod As OrderStopTriggerMethods
@@ -135,14 +134,6 @@ End Property
 
 Private Property Get IOrderReport_DisplaySize() As Long
 IOrderReport_DisplaySize = mDisplaySize
-End Property
-
-Private Property Let IOrderReport_ETradeOnly(ByVal Value As Boolean)
-mETradeOnly = Value
-End Property
-
-Private Property Get IOrderReport_ETradeOnly() As Boolean
-IOrderReport_ETradeOnly = mETradeOnly
 End Property
 
 Private Property Let IOrderReport_FirmQuoteOnly(ByVal Value As Boolean)
@@ -285,12 +276,12 @@ Private Property Get IOrderReport_ProviderProperties() As Parameters
 Set IOrderReport_ProviderProperties = ProviderProperties
 End Property
 
-Private Property Let IOrderReport_Quantity(ByVal Value As Long)
-mQuantity = Value
+Private Property Let IOrderReport_Quantity(ByVal Value As BoxedDecimal)
+Set mQuantity = Value
 End Property
 
-Private Property Get IOrderReport_Quantity() As Long
-IOrderReport_Quantity = mQuantity
+Private Property Get IOrderReport_Quantity() As BoxedDecimal
+Set IOrderReport_Quantity = mQuantity
 End Property
 
 Private Property Let IOrderReport_SettlingFirm(ByVal Value As String)
@@ -413,22 +404,6 @@ Public Property Get DisplaySize() As Long
 DisplaySize = mDisplaySize
 End Property
 
-Public Property Let ETradeOnly(ByVal Value As Boolean)
-mETradeOnly = Value
-End Property
-
-Public Property Get ETradeOnly() As Boolean
-ETradeOnly = mETradeOnly
-End Property
-
-Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
-mFirmQuoteOnly = Value
-End Property
-
-Public Property Get FirmQuoteOnly() As Boolean
-FirmQuoteOnly = mFirmQuoteOnly
-End Property
-
 Public Property Let GoodAfterTime(ByVal Value As Date)
 mGoodAfterTime = Value
 End Property
@@ -517,14 +492,6 @@ Public Property Get MinimumQuantity() As Long
 MinimumQuantity = mMinimumQuantity
 End Property
 
-Public Property Let NbboPriceCap(ByVal Value As Double)
-mNBBOPriceCap = Value
-End Property
-
-Public Property Get NbboPriceCap() As Double
-NbboPriceCap = mNBBOPriceCap
-End Property
-
 Public Property Let OrderType(ByVal Value As OrderTypes)
 mOrderType = Value
 End Property
@@ -566,12 +533,12 @@ If mProviderProperties Is Nothing Then Exit Property
 Set ProviderProperties = mProviderProperties.Clone
 End Property
 
-Public Property Let Quantity(ByVal Value As Long)
-mQuantity = Value
+Public Property Let Quantity(ByVal Value As BoxedDecimal)
+Set mQuantity = Value
 End Property
 
-Public Property Get Quantity() As Long
-Quantity = mQuantity
+Public Property Get Quantity() As BoxedDecimal
+Set Quantity = mQuantity
 End Property
 
 Public Property Let SettlingFirm(ByVal Value As String)
@@ -655,9 +622,6 @@ jb.EncodeValue mDiscretionaryAmount
 
 jb.EncodeName "DisplaySize"
 jb.EncodeValue mDisplaySize
-
-jb.EncodeName "ETradeOnly"
-jb.EncodeValue mETradeOnly
 
 jb.EncodeName "FirmQuoteOnly"
 jb.EncodeValue mFirmQuoteOnly

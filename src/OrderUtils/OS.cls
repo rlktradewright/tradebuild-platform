@@ -54,8 +54,6 @@ Private mDiscretionaryAmount                        As Double
 Private mDisplaySize                                As Long
 Private mErrorCode                                  As Long
 Private mErrorMessage                               As String
-Private mETradeOnly                                 As Boolean
-Private mFirmQuoteOnly                              As Boolean
 Private mGoodAfterTime                              As Date
 Private mGoodAfterTimeTZ                            As String
 Private mGoodTillDate                               As Date
@@ -72,7 +70,7 @@ Private mOrderType                                  As OrderTypes
 Private mOrigin                                     As OrderOrigins
 Private mOriginatorRef                              As String
 Private mOverrideConstraints                        As Boolean
-Private mQuantity                                   As Long
+Private mQuantity                                   As BoxedDecimal
 Private mSettlingFirm                               As String
 Private mStatus                                     As OrderStatuses
 Private mStopTriggerMethod                          As OrderStopTriggerMethods
@@ -83,8 +81,8 @@ Private mTriggerPrice                               As Double
 Private mTriggerPriceSpec                           As PriceSpecifier
 Private mAveragePrice                               As Double
 Private mFillTime                                   As Date
-Private mQuantityFilled                             As Long
-Private mQuantityRemaining                          As Long
+Private mQuantityFilled                             As BoxedDecimal
+Private mQuantityRemaining                          As BoxedDecimal
 Private mLastFillPrice                              As Double
 Private mPercentOffset                              As Double
 
@@ -230,17 +228,6 @@ Public Property Get ErrorMessage() As String
 ErrorMessage = mErrorMessage
 End Property
 
-Public Property Let ETradeOnly(ByVal Value As Boolean)
-If mETradeOnly = Value Then Exit Property
-mETradeOnly = Value
-mIsDirty = True
-mDiff.SetProperty "ETradeOnly", Value
-End Property
-
-Public Property Get ETradeOnly() As Boolean
-ETradeOnly = mETradeOnly
-End Property
-
 Public Property Let FillTime(ByVal Value As Date)
 If mFillTime = Value Then Exit Property
 mFillTime = Value
@@ -250,17 +237,6 @@ End Property
 
 Public Property Get FillTime() As Date
 FillTime = mFillTime
-End Property
-
-Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
-If mFirmQuoteOnly = Value Then Exit Property
-mFirmQuoteOnly = Value
-mIsDirty = True
-mDiff.SetProperty "FirmQuoteOnly", Value
-End Property
-
-Public Property Get FirmQuoteOnly() As Boolean
-FirmQuoteOnly = mFirmQuoteOnly
 End Property
 
 Public Property Let GoodAfterTime(ByVal Value As Date)
@@ -408,17 +384,6 @@ Public Property Get MinimumQuantity() As Long
 MinimumQuantity = mMinimumQuantity
 End Property
 
-Public Property Let NbboPriceCap(ByVal Value As Double)
-If mNBBOPriceCap = Value Then Exit Property
-mNBBOPriceCap = Value
-mIsDirty = True
-mDiff.SetProperty "NBBOPriceCap", Value
-End Property
-
-Public Property Get NbboPriceCap() As Double
-NbboPriceCap = mNBBOPriceCap
-End Property
-
 Public Property Let OrderType(ByVal Value As OrderTypes)
 If mOrderType = Value Then Exit Property
 mOrderType = Value
@@ -474,37 +439,37 @@ Public Property Get PercentOffset() As Double
 PercentOffset = mPercentOffset
 End Property
 
-Public Property Let Quantity(ByVal Value As Long)
-If mQuantity = Value Then Exit Property
-mQuantity = Value
+Public Property Let Quantity(ByVal Value As BoxedDecimal)
+If mQuantity.EQ(Value) Then Exit Property
+Set mQuantity = Value
 mIsDirty = True
 mDiff.SetProperty "Quantity", Value
 End Property
 
-Public Property Get Quantity() As Long
-Quantity = mQuantity
+Public Property Get Quantity() As BoxedDecimal
+Set Quantity = mQuantity
 End Property
 
-Public Property Let QuantityFilled(ByVal Value As Long)
-If mQuantityFilled = Value Then Exit Property
-mQuantityFilled = Value
+Public Property Let QuantityFilled(ByVal Value As BoxedDecimal)
+If mQuantityFilled.EQ(Value) Then Exit Property
+Set mQuantityFilled = Value
 mIsDirty = True
 mDiff.SetProperty "QuantityFilled", Value
 End Property
 
-Public Property Get QuantityFilled() As Long
-QuantityFilled = mQuantityFilled
+Public Property Get QuantityFilled() As BoxedDecimal
+Set QuantityFilled = mQuantityFilled
 End Property
 
-Public Property Let QuantityRemaining(ByVal Value As Long)
-If mQuantityRemaining = Value Then Exit Property
-mQuantityRemaining = Value
+Public Property Let QuantityRemaining(ByVal Value As BoxedDecimal)
+If mQuantityRemaining.EQ(Value) Then Exit Property
+Set mQuantityRemaining = Value
 mIsDirty = True
 mDiff.SetProperty "QuantityRemaining", Value
 End Property
 
-Public Property Get QuantityRemaining() As Long
-QuantityRemaining = mQuantityRemaining
+Public Property Get QuantityRemaining() As BoxedDecimal
+Set QuantityRemaining = mQuantityRemaining
 End Property
 
 Public Property Let SettlingFirm(ByVal Value As String)

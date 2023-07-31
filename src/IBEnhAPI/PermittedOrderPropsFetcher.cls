@@ -150,7 +150,6 @@ Dim lPermittedOrderAttributes As OrderAttributes
 lPermittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttIgnoreRTH
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttMinimumQuantity
-lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttNBBOPriceCap
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttOriginatorRef
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttOverrideConstraints
 lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttPercentOffset
@@ -180,10 +179,6 @@ For i = 0 To UBound(lOrderTypesStr)
             lPermittedOrderTifs = lPermittedOrderTifs Or OrderTIFs.OrderTIFDay
         Case "DIS"  ' discretionary amount
             lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttDiscretionaryAmount
-        Case "ELECONLY"  ' electronic trade only
-            lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttETradeOnly
-        Case "FIRMONLY"  ' firm quote only
-            lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttFirmQuoteOnly
         Case "GAT"  ' good after Time
             lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttGoodAfterTime
             lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttGoodAfterTimeTZ

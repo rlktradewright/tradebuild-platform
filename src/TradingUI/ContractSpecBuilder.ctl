@@ -1,12 +1,21 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#34.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
-   ClientHeight    =   3585
+   ClientHeight    =   3990
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   2190
-   ScaleHeight     =   3585
+   ScaleHeight     =   3990
    ScaleWidth      =   2190
+   Begin VB.TextBox TradingClassText 
+      Appearance      =   0  'Flat
+      BorderStyle     =   0  'None
+      Height          =   285
+      Left            =   840
+      TabIndex        =   9
+      Top             =   3240
+      Width           =   1335
+   End
    Begin VB.TextBox MultiplierText 
       Appearance      =   0  'Flat
       BorderStyle     =   0  'None
@@ -19,8 +28,8 @@ Begin VB.UserControl ContractSpecBuilder
    Begin TWControls40.TWButton AdvancedButton 
       Height          =   330
       Left            =   840
-      TabIndex        =   17
-      Top             =   3240
+      TabIndex        =   18
+      Top             =   3600
       Width           =   1335
       _ExtentX        =   0
       _ExtentY        =   0
@@ -156,11 +165,19 @@ Begin VB.UserControl ContractSpecBuilder
       Top             =   0
       Width           =   1335
    End
+   Begin VB.Label TradingClassLabel 
+      Caption         =   "Trading class"
+      Height          =   495
+      Left            =   0
+      TabIndex        =   20
+      Top             =   3240
+      Width           =   855
+   End
    Begin VB.Label MultiplierLabel 
       Caption         =   "Multiplier"
       Height          =   255
       Left            =   0
-      TabIndex        =   18
+      TabIndex        =   19
       Top             =   2160
       Width           =   855
    End
@@ -168,7 +185,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Right"
       Height          =   255
       Left            =   0
-      TabIndex        =   16
+      TabIndex        =   17
       Top             =   2880
       Width           =   855
    End
@@ -176,7 +193,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Strike price"
       Height          =   255
       Left            =   0
-      TabIndex        =   15
+      TabIndex        =   16
       Top             =   2520
       Width           =   855
    End
@@ -184,7 +201,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Symbol"
       Height          =   255
       Left            =   0
-      TabIndex        =   14
+      TabIndex        =   15
       Top             =   360
       Width           =   855
    End
@@ -192,7 +209,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Type"
       Height          =   255
       Left            =   0
-      TabIndex        =   13
+      TabIndex        =   14
       Top             =   720
       Width           =   855
    End
@@ -200,7 +217,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Expiry"
       Height          =   255
       Left            =   0
-      TabIndex        =   12
+      TabIndex        =   13
       Top             =   1080
       Width           =   855
    End
@@ -208,7 +225,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Exchange"
       Height          =   255
       Left            =   0
-      TabIndex        =   11
+      TabIndex        =   12
       Top             =   1440
       Width           =   855
    End
@@ -216,7 +233,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Currency"
       Height          =   255
       Left            =   0
-      TabIndex        =   10
+      TabIndex        =   11
       Top             =   1800
       Width           =   855
    End
@@ -224,7 +241,7 @@ Begin VB.UserControl ContractSpecBuilder
       Caption         =   "Short name"
       Height          =   255
       Left            =   0
-      TabIndex        =   9
+      TabIndex        =   10
       Top             =   0
       Width           =   855
    End
@@ -796,7 +813,8 @@ If SymbolText.Text <> "" And _
     ExpiryText = "" And _
     MultiplierText.Text = "" And _
     StrikePriceText.Text = "" And _
-    RightCombo.Text = "" _
+    RightCombo.Text = "" And _
+    TradingClassText.Text = "" _
 Then
     Set ContractSpecifier = CreateContractSpecifierFromString(SymbolText)
 Else
@@ -809,6 +827,7 @@ Else
     
     Set ContractSpecifier = CreateContractSpecifier( _
                                 LocalSymbolText, _
+                                TradingClassText, _
                                 SymbolText, _
                                 ExchangeCombo, _
                                 SecTypeFromString(TypeCombo), _
@@ -965,7 +984,8 @@ If SymbolText.Text <> "" And _
     ExpiryText = "" And _
     MultiplierText.Text = "" And _
     StrikePriceText.Text = "" And _
-    RightCombo.Text = "" _
+    RightCombo.Text = "" And _
+    TradingClassText.Text = "" _
 Then
     On Error Resume Next
     Set ContractSpecifier = CreateContractSpecifierFromString(SymbolText)
@@ -1174,7 +1194,14 @@ RightCombo.Top = RightLabel.Top
 RightCombo.Left = LocalSymbolLabel.Width
 RightCombo.Width = controlWidth
 
-AdvancedButton.Top = RightCombo.Top + RightCombo.Height + lRowSpacing
+TradingClassLabel.Visible = mModeAdvanced
+TradingClassLabel.Top = RightCombo.Top + RightCombo.Height + lRowSpacing
+TradingClassText.Visible = mModeAdvanced
+TradingClassText.Top = TradingClassLabel.Top
+TradingClassText.Left = LocalSymbolLabel.Width
+TradingClassText.Width = controlWidth
+
+AdvancedButton.Top = TradingClassText.Top + TradingClassText.Height + lRowSpacing
 AdvancedButton.Left = UserControl.Width - AdvancedButton.Width
 AdvancedButton.Caption = IIf(mModeAdvanced, "Advanced <<", "Advanced >>")
 

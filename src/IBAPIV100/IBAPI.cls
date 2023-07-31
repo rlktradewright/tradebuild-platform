@@ -174,6 +174,10 @@ Public Enum TwsOrderTIFs
     TwsOrderTIFDay
     TwsOrderTIFGoodTillCancelled
     TwsOrderTIFImmediateOrCancel
+    TwsOrderTIFGoodTillDate
+    TwsOrderTIFFillOrKill
+    TwsOrderTIFDayTillCancelled
+    TwsOrderTIFAuction
 End Enum
 
 Public Enum TwsOrderTypes
@@ -201,6 +205,15 @@ Public Enum TwsOrderTypes
     TwsOrderTypePeggedToPrimary
     TwsOrderTypeVol
     TwsOrderTypePeggedToBenchmark
+    TwsOrderTypeAuction
+    TwsOrderTypePeggedToStock
+    TwsOrderTypeBoxTop
+    TwsOrderTypePassiveRelative
+    TwsOrderTypePeggedToBest
+    TwsOrderTypePeggedToMidpoint
+    TwsOrderTypeStopWithProtection
+    TwsOrderTypeRelativeLimitCombo
+    TwsOrderTypeRelativeMarketCombo
 End Enum
 
 Public Enum TwsSecTypes
@@ -321,8 +334,24 @@ Public Enum TwsTickTypes
     TwsTickFuturesOpenInterest
     TwsTickAverageOptionVolume
     TwsTickDelayedLastTimestamp
+    TwsTickShortableShares
+    TwsTickDelayedHalted
+    TwsTickReuters2MutualFunds
+    TwsTickEtfNavClose
+    TwsTickEtfNavPriorClose
+    TwsTickEtfNavBid
+    TwsTickEtfNavAsk
+    TwsTickEtfNavLast
+    TwsTickEtfFrozenNavLast
+    TwsTickEtfNavHigh
+    TwsTickEtfNavLow
+    TwsTickSocialMarketAnalytics
+    TwsTickEstimatedIpoMidpoint
+    TwsTickFinalIpoLast
+    TwsTickDelayedYieldBid
+    TwsTickDelayedYieldAsk
     
-    TwsTickMax = TwsTickDelayedLastTimestamp
+    TwsTickMax = TwsTickDelayedYieldAsk
 End Enum
 
 '@================================================================================
@@ -344,26 +373,14 @@ Public Type TwsBar
     HighValue               As Double
     LowValue                As Double
     CloseValue              As Double
-    Volume                  As Long
+    Volume                  As BoxedDecimal
     TickVolume              As Long
-    WAP                     As Double
-    HasGaps                 As Boolean
+    WAP                     As BoxedDecimal
 End Type
 
 Public Type TwsPriceIncrement
     LowEdge                 As Double
     Increment               As Double
-End Type
-
-Public Type TwsRealtimeBar
-    Timestamp               As String
-    OpenValue               As Double
-    HighValue               As Double
-    LowValue                As Double
-    CloseValue              As Double
-    Volume                  As Long
-    TickVolume              As Long
-    WAP                     As Double
 End Type
 
 Public Type TwsTickAttributes

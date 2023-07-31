@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFlxGrd.ocx"
 Begin VB.UserControl OrdersSummary 
    Alignable       =   -1  'True
    ClientHeight    =   4245
@@ -2307,11 +2307,11 @@ ElseIf mEditedCol = OrderQuantity Then
     If IsInteger(EditText.Text, 0) Then
         Select Case SelectedOrderRole
         Case BracketOrderRoleEntry
-            mSelectedBracketOrder.SetNewEntryQuantity CLng(EditText.Text)
+            mSelectedBracketOrder.SetNewEntryQuantity CreateBoxedDecimal(EditText.Text)
         Case BracketOrderRoleStopLoss
-            mSelectedBracketOrder.SetNewStopLossQuantity CLng(EditText.Text)
+            mSelectedBracketOrder.SetNewStopLossQuantity CreateBoxedDecimal(EditText.Text)
         Case BracketOrderRoleTarget
-            mSelectedBracketOrder.SetNewTargetQuantity CLng(EditText.Text)
+            mSelectedBracketOrder.SetNewTargetQuantity CreateBoxedDecimal(EditText.Text)
         End Select
     End If
 End If

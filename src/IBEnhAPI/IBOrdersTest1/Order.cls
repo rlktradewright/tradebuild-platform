@@ -68,9 +68,9 @@ Private mBrokerId                   As String
 Private mBrokerData                 As Variant
     
 Private mAction                     As OrderActions
-Private mQuantity                   As Long
-Private mQuantityFilled             As Long
-Private mQuantityRemaining          As Long
+Private mQuantity                   As BoxedDecimal
+Private mQuantityFilled             As BoxedDecimal
+Private mQuantityRemaining          As BoxedDecimal
 Private mAveragePrice               As Double
 Private mLastFillPrice              As Double
 Private mOrderType                  As OrderTypes
@@ -444,28 +444,28 @@ Private Property Get IOrder_ProviderProperties() As Parameters
 Set IOrder_ProviderProperties = mProviderProperties
 End Property
 
-Private Property Let IOrder_Quantity(ByVal Value As Long)
+Private Property Let IOrder_Quantity(ByVal Value As BoxedDecimal)
 Quantity = Value
 End Property
 
-Private Property Get IOrder_Quantity() As Long
-IOrder_Quantity = mQuantity
+Private Property Get IOrder_Quantity() As BoxedDecimal
+Set IOrder_Quantity = mQuantity
 End Property
 
-Private Property Let IOrder_QuantityFilled(ByVal Value As Long)
+Private Property Let IOrder_QuantityFilled(ByVal Value As BoxedDecimal)
 QuantityFilled = Value
 End Property
 
-Private Property Get IOrder_QuantityFilled() As Long
-IOrder_QuantityFilled = mQuantityFilled
+Private Property Get IOrder_QuantityFilled() As BoxedDecimal
+Set IOrder_QuantityFilled = mQuantityFilled
 End Property
 
-Private Property Let IOrder_QuantityRemaining(ByVal Value As Long)
+Private Property Let IOrder_QuantityRemaining(ByVal Value As BoxedDecimal)
 QuantityRemaining = Value
 End Property
 
-Private Property Get IOrder_QuantityRemaining() As Long
-IOrder_QuantityRemaining = mQuantityRemaining
+Private Property Get IOrder_QuantityRemaining() As BoxedDecimal
+Set IOrder_QuantityRemaining = mQuantityRemaining
 End Property
 
 Private Property Let IOrder_SettlingFirm(ByVal Value As String)
@@ -1033,15 +1033,15 @@ Public Property Get ProviderProperties() As Parameters
 Set ProviderProperties = mProviderProperties
 End Property
 
-Public Property Let Quantity(ByVal Value As Long)
+Public Property Let Quantity(ByVal Value As BoxedDecimal)
 Const ProcName As String = "quantity"
 
 On Error GoTo Err
 
 If Value = mQuantity Then Exit Property
-mQuantity = Value
+Set mQuantity = Value
 setDirty
-mQuantityRemaining = mQuantity - mQuantityFilled
+Set mQuantityRemaining = mQuantity.Subtr(mQuantityFilled)
 
 Exit Property
 
@@ -1049,24 +1049,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Quantity() As Long
-Quantity = mQuantity
+Public Property Get Quantity() As BoxedDecimal
+Set Quantity = mQuantity
 End Property
 
-Friend Property Let QuantityFilled(ByVal Value As Long)
-mQuantityFilled = Value
+Friend Property Let QuantityFilled(ByVal Value As BoxedDecimal)
+Set mQuantityFilled = Value
 End Property
 
-Public Property Get QuantityFilled() As Long
-QuantityFilled = mQuantityFilled
+Public Property Get QuantityFilled() As BoxedDecimal
+Set QuantityFilled = mQuantityFilled
 End Property
 
-Friend Property Let QuantityRemaining(ByVal Value As Long)
-mQuantityRemaining = Value
+Friend Property Let QuantityRemaining(ByVal Value As BoxedDecimal)
+Set mQuantityRemaining = Value
 End Property
 
-Public Property Get QuantityRemaining() As Long
-QuantityRemaining = mQuantityRemaining
+Public Property Get QuantityRemaining() As BoxedDecimal
+Set QuantityRemaining = mQuantityRemaining
 End Property
 
 Public Property Let SettlingFirm(Value As String)
@@ -1189,8 +1189,8 @@ Const ProcName As String = "NotifyFill"
 On Error GoTo Err
 
 mAveragePrice = (mQuantityFilled * mAveragePrice + exec.Quantity * exec.Price) / (mQuantityFilled + exec.Quantity)
-mQuantityFilled = mQuantityFilled + exec.Quantity
-mQuantityRemaining = mQuantityRemaining - exec.Quantity
+Set mQuantityFilled = mQuantityFilled.Add(exec.Quantity)
+Set mQuantityRemaining = mQuantityRemaining.Subtr(exec.Quantity)
 mLastFillPrice = exec.Price
 mFillTime = exec.FillTime
 If mQuantityRemaining = 0 Then

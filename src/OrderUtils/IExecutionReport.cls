@@ -96,7 +96,7 @@ End Property
 Public Property Get Price() As Double
 End Property
 
-Public Property Get Quantity() As Long
+Public Property Get Quantity() As BoxedDecimal
 End Property
 
 Public Property Get SecurityName() As String

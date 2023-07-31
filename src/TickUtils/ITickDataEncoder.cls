@@ -148,7 +148,7 @@ End Property
 Public Sub EncodeAsk( _
                 ByVal pTimestamp As Date, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 End Sub
 
 ''
@@ -160,7 +160,7 @@ End Sub
 Public Sub EncodeBid( _
                 ByVal pTimestamp As Date, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 End Sub
 
 ''
@@ -210,7 +210,7 @@ Public Sub EncodeMarketDepthData( _
                 ByVal pOperation As Long, _
                 ByVal pSide As Long, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 End Sub
 
 ''
@@ -237,7 +237,7 @@ End Sub
 ' @param pSize The tick size.
 '@/
 Public Sub EncodeOpenInterest( _
-                ByVal pTimestamp As Date, ByVal pSize As Long)
+                ByVal pTimestamp As Date, ByVal pSize As BoxedDecimal)
 End Sub
 
 ''
@@ -249,7 +249,7 @@ End Sub
 Public Sub EncodeTrade( _
                 ByVal pTimestamp As Date, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 End Sub
 
 ''
@@ -259,7 +259,7 @@ End Sub
 '@/
 Public Sub EncodeVolume( _
                 ByVal pTimestamp As Date, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 End Sub
 
 '@================================================================================

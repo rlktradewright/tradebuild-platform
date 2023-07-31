@@ -239,8 +239,6 @@ With lOrderReport
     .BrokerId = pOrder.OrderId
     .DiscretionaryAmount = pOrder.DiscretionaryAmt
     .DisplaySize = pOrder.DisplaySize
-    .ETradeOnly = pOrder.ETradeOnly
-    .FirmQuoteOnly = pOrder.FirmQuoteOnly
     
     Dim lTimezoneName As String ' returned byref from TwsDateStringToDate
     .GoodAfterTime = TwsDateStringToDate(pOrder.GoodAfterTime, gTwsTimezoneNameToStandardTimeZoneName(lTimezoneName))
@@ -254,7 +252,6 @@ With lOrderReport
     .LimitPrice = pOrder.LmtPrice
     .Message = pOrderState.WarningText
     .MinimumQuantity = pOrder.MinQty
-    .NbboPriceCap = pOrder.NbboPriceCap
     .OrderType = gTwsOrderTypeToOrderType(pOrder.OrderType)
     .Origin = pOrder.Origin
     .OriginatorRef = pOrder.OrderRef
@@ -288,14 +285,15 @@ End Sub
 Private Sub IOrderInfoConsumer_NotifyOrderStatus( _
                 ByVal pBrokerId As Long, _
                 ByVal pStatus As String, _
-                ByVal pFilled As Long, _
-                ByVal pRemaining As Long, _
+                ByVal pFilled As BoxedDecimal, _
+                ByVal pRemaining As BoxedDecimal, _
                 ByVal pAvgFillPrice As Double, _
                 ByVal pPermId As Long, _
                 ByVal pParentId As Long, _
                 ByVal pLastFillPrice As Double, _
                 ByVal pClientId As Long, _
-                ByVal pWhyHeld As String)
+                ByVal pWhyHeld As String, _
+                ByVal pMarketCapPrice As Double)
 Const ProcName As String = "IOrderInfoConsumer_NotifyOrderStatus"
 On Error GoTo Err
 
@@ -395,7 +393,7 @@ If pOrder.Status = OrderStatusPendingSubmit Then
     generateDeferredOrderCancelNotification pOrder.BrokerId
 End If
 
-mTwsAPI.CancelOrder pOrder.BrokerId
+mTwsAPI.CancelOrder pOrder.BrokerId, ""
 
 If Not mKnownOrders.Contains(pOrder.BrokerId, mTwsAPI.ClientId) Then
     ' this can happen during order recovery if the order has been cancelled

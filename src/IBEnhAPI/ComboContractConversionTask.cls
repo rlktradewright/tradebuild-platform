@@ -138,7 +138,7 @@ Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Lon
 
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Long, pExpirations() As String, pStrikes() As Double)
+Private Sub IContractDetailsConsumer_NotifyOptionParameter(ByVal pRequestId As Long, ByVal pExchange As String, ByVal pUnderlyingContractId As Long, ByVal pTradingClass As String, ByVal pMultiplier As Double, pExpirations() As String, pStrikes() As Double)
 
 End Sub
 

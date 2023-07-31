@@ -109,7 +109,7 @@ Public Sub NotifyTickPrice( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As TwsTickTypes, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long, _
+                ByVal pSize As BoxedDecimal, _
                 ByRef pAttributes As TwsTickAttributes)
 End Sub
 
@@ -124,7 +124,7 @@ End Sub
 Public Sub NotifyTickSize( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As Long, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 End Sub
 
 Public Sub NotifyTickString( _

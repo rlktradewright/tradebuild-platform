@@ -65,11 +65,11 @@ Public Property Get AccountBalance() As Double
 AccountBalance = 50000
 End Property
 
-Public Property Get ActiveBuySize() As Long
+Public Property Get ActiveBuySize() As BoxedDecimal
 Const ProcName As String = "ActiveBuySize"
 On Error GoTo Err
 
-ActiveBuySize = getDefaultOrderContext(True, False).ActiveSize
+Set ActiveBuySize = getDefaultOrderContext(True, False).ActiveSize
 
 Exit Property
 
@@ -77,11 +77,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ActiveSellSize() As Long
+Public Property Get ActiveSellSize() As BoxedDecimal
 Const ProcName As String = "ActiveSellSize"
 On Error GoTo Err
 
-ActiveSellSize = getDefaultOrderContext(False, False).ActiveSize
+Set ActiveSellSize = getDefaultOrderContext(False, False).ActiveSize
 
 Exit Property
 
@@ -89,11 +89,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ActiveSimulatedBuySize() As Long
+Public Property Get ActiveSimulatedBuySize() As BoxedDecimal
 Const ProcName As String = "ActiveSimulatedBuySize"
 On Error GoTo Err
 
-ActiveSimulatedBuySize = getDefaultOrderContext(True, True).ActiveSize
+Set ActiveSimulatedBuySize = getDefaultOrderContext(True, True).ActiveSize
 
 Exit Property
 
@@ -101,11 +101,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ActiveSimulatedSellSize() As Long
+Public Property Get ActiveSimulatedSellSize() As BoxedDecimal
 Const ProcName As String = "ActiveSimulatedSellSize"
 On Error GoTo Err
 
-ActiveSimulatedSellSize = getDefaultOrderContext(False, True).ActiveSize
+Set ActiveSimulatedSellSize = getDefaultOrderContext(False, True).ActiveSize
 
 Exit Property
 
@@ -113,11 +113,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ActiveSize(ByVal OrderContext As ResourceIdentifier) As Long
+Public Property Get ActiveSize(ByVal OrderContext As ResourceIdentifier) As BoxedDecimal
 Const ProcName As String = "ActiveSize"
 On Error GoTo Err
 
-ActiveSize = getOrderContext(OrderContext).ActiveSize
+Set ActiveSize = getOrderContext(OrderContext).ActiveSize
 
 Exit Property
 
@@ -221,11 +221,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingBuySize() As Long
+Public Property Get PendingBuySize() As BoxedDecimal
 Const ProcName As String = "PendingBuySize"
 On Error GoTo Err
 
-PendingBuySize = getDefaultOrderContext(True, False).PendingSize
+Set PendingBuySize = getDefaultOrderContext(True, False).PendingSize
 
 Exit Property
 
@@ -233,11 +233,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSellSize() As Long
+Public Property Get PendingSellSize() As BoxedDecimal
 Const ProcName As String = "PendingSellSize"
 On Error GoTo Err
 
-PendingSellSize = getDefaultOrderContext(False, False).PendingSize
+Set PendingSellSize = getDefaultOrderContext(False, False).PendingSize
 
 Exit Property
 
@@ -245,11 +245,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSimulatedBuySize() As Long
+Public Property Get PendingSimulatedBuySize() As BoxedDecimal
 Const ProcName As String = "PendingSimulatedBuySize"
 On Error GoTo Err
 
-PendingSimulatedBuySize = getDefaultOrderContext(True, True).PendingSize
+Set PendingSimulatedBuySize = getDefaultOrderContext(True, True).PendingSize
 
 Exit Property
 
@@ -257,11 +257,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSimulatedSellSize() As Long
+Public Property Get PendingSimulatedSellSize() As BoxedDecimal
 Const ProcName As String = "PendingSimulatedSellSize"
 On Error GoTo Err
 
-PendingSimulatedSellSize = getDefaultOrderContext(False, True).PendingSize
+Set PendingSimulatedSellSize = getDefaultOrderContext(False, True).PendingSize
 
 Exit Property
 
@@ -269,11 +269,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSize(ByVal OrderContext As ResourceIdentifier) As Long
+Public Property Get PendingSize(ByVal OrderContext As ResourceIdentifier) As BoxedDecimal
 Const ProcName As String = "PendingSize"
 On Error GoTo Err
 
-PendingSize = getOrderContext(OrderContext).PendingSize
+Set PendingSize = getOrderContext(OrderContext).PendingSize
 
 Exit Property
 
@@ -293,11 +293,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get QuantityFilled(Optional ByVal BracketOrder As ResourceIdentifier) As Long
+Public Property Get QuantityFilled(Optional ByVal BracketOrder As ResourceIdentifier) As BoxedDecimal
 Const ProcName As String = "QuantityFilled"
 On Error GoTo Err
 
-QuantityFilled = getBracketOrder(BracketOrder).EntryOrder.QuantityFilled
+Set QuantityFilled = getBracketOrder(BracketOrder).EntryOrder.QuantityFilled
 
 Exit Property
 
@@ -305,11 +305,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Size(ByVal OrderContext As ResourceIdentifier) As Long
+Public Property Get Size(ByVal OrderContext As ResourceIdentifier) As BoxedDecimal
 Const ProcName As String = "Size"
 On Error GoTo Err
 
-Size = getOrderContext(OrderContext).Size
+Set Size = getOrderContext(OrderContext).Size
 
 Exit Property
 
@@ -413,11 +413,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TotalPendingPositionSize() As Long
+Public Property Get TotalPendingPositionSize() As BoxedDecimal
 Const ProcName As String = "TotalPendingPositionSize"
 On Error GoTo Err
 
-TotalPendingPositionSize = gTradingContext.PositionManager.PendingPositionSize
+Set TotalPendingPositionSize = gTradingContext.PositionManager.PendingPositionSize
 
 Exit Property
 
@@ -425,11 +425,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TotalPositionSize() As Long
+Public Property Get TotalPositionSize() As BoxedDecimal
 Const ProcName As String = "TotalPositionSize"
 On Error GoTo Err
 
-TotalPositionSize = gTradingContext.PositionManager.PositionSize
+Set TotalPositionSize = gTradingContext.PositionManager.PositionSize
 
 Exit Property
 
@@ -437,11 +437,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TotalSimulatedPendingPositionSize() As Long
+Public Property Get TotalSimulatedPendingPositionSize() As BoxedDecimal
 Const ProcName As String = "TotalSimulatedPendingPositionSize"
 On Error GoTo Err
 
-TotalSimulatedPendingPositionSize = gTradingContext.PositionManagerSimulated.PendingPositionSize
+Set TotalSimulatedPendingPositionSize = gTradingContext.PositionManagerSimulated.PendingPositionSize
 
 Exit Property
 
@@ -449,11 +449,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get TotalSimulatedPositionSize() As Long
+Public Property Get TotalSimulatedPositionSize() As BoxedDecimal
 Const ProcName As String = "TotalSimulatedPositionSize"
 On Error GoTo Err
 
-TotalSimulatedPositionSize = gTradingContext.PositionManagerSimulated.PositionSize
+Set TotalSimulatedPositionSize = gTradingContext.PositionManagerSimulated.PositionSize
 
 Exit Property
 
@@ -467,7 +467,7 @@ End Property
 
 Public Sub AdjustStop( _
                 ByVal Price As String, _
-                Optional ByVal Quantity As Long = -1, _
+                Optional ByVal Quantity As BoxedDecimal, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "AdjustStop"
 On Error GoTo Err
@@ -484,7 +484,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Buy( _
-                ByVal Number As Long, _
+                ByVal Quantity As BoxedDecimal, _
                 ByVal EntryOrder As ResourceIdentifier, _
                 Optional ByVal StopLossOrder As ResourceIdentifier, _
                 Optional ByVal TargetOrder As ResourceIdentifier, _
@@ -495,7 +495,7 @@ Public Function Buy( _
 Const ProcName As String = "Buy"
 On Error GoTo Err
 
-Set Buy = buyOrSell(True, OrderContext, False, Number, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
+Set Buy = buyOrSell(True, OrderContext, False, Quantity, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
 
 Exit Function
 
@@ -504,7 +504,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function BuySimulated( _
-                ByVal Number As Long, _
+                ByVal Quantity As BoxedDecimal, _
                 ByVal EntryOrder As ResourceIdentifier, _
                 Optional ByVal StopLossOrder As ResourceIdentifier, _
                 Optional ByVal TargetOrder As ResourceIdentifier, _
@@ -515,7 +515,7 @@ Public Function BuySimulated( _
 Const ProcName As String = "BuySimulated"
 On Error GoTo Err
 
-Set BuySimulated = buyOrSell(True, OrderContext, True, Number, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
+Set BuySimulated = buyOrSell(True, OrderContext, True, Quantity, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
 
 Exit Function
 
@@ -621,7 +621,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Sell( _
-                ByVal Number As Long, _
+                ByVal Quantity As BoxedDecimal, _
                 ByVal EntryOrder As ResourceIdentifier, _
                 Optional ByVal StopLossOrder As ResourceIdentifier, _
                 Optional ByVal TargetOrder As ResourceIdentifier, _
@@ -632,7 +632,7 @@ Public Function Sell( _
 Const ProcName As String = "Sell"
 On Error GoTo Err
 
-Set Sell = buyOrSell(False, OrderContext, False, Number, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
+Set Sell = buyOrSell(False, OrderContext, False, Quantity, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
 
 Exit Function
 
@@ -641,7 +641,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SellSimulated( _
-                ByVal Number As Long, _
+                ByVal Quantity As BoxedDecimal, _
                 ByVal EntryOrder As ResourceIdentifier, _
                 Optional ByVal StopLossOrder As ResourceIdentifier, _
                 Optional ByVal TargetOrder As ResourceIdentifier, _
@@ -652,7 +652,7 @@ Public Function SellSimulated( _
 Const ProcName As String = "SellSimulated"
 On Error GoTo Err
 
-Set SellSimulated = buyOrSell(False, OrderContext, True, Number, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
+Set SellSimulated = buyOrSell(False, OrderContext, True, Quantity, EntryOrder, StopLossOrder, TargetOrder, CancelPrice, CancelAfter, NotifyCompletion)
 
 Exit Function
 
@@ -709,7 +709,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewQuantity( _
-                ByVal Quantity As Double, _
+                ByVal Quantity As BoxedDecimal, _
                 Optional ByVal BracketOrder As ResourceIdentifier)
 Const ProcName As String = "SetNewQuantity"
 On Error GoTo Err
@@ -854,7 +854,7 @@ Private Function buyOrSell( _
                 ByVal pIsBuy As Boolean, _
                 ByVal pOrderContext As ResourceIdentifier, _
                 ByVal pIsSimulated As Boolean, _
-                ByVal pNumber As Long, _
+                ByVal pQuantity As BoxedDecimal, _
                 ByVal pEntryOrder As ResourceIdentifier, _
                 ByVal pStopLossOrder As ResourceIdentifier, _
                 ByVal pTargetOrder As ResourceIdentifier, _
@@ -865,7 +865,8 @@ Const ProcName As String = "buyOrSell"
 On Error GoTo Err
 
 Assert Not gTradingContext Is Nothing, "Method can only be called during strategy execution"
-AssertArgument pNumber > 0, "Number must be greater than 0"
+AssertArgument Not pQuantity Is Nothing, "pQuantity must be supplied"
+AssertArgument pQuantity > 0, "pQuantity must be greater than 0"
 AssertArgument Not pEntryOrder Is Nothing, "pEntryOrder must be supplied"
 
 Dim lOrderContext As OrderContext
@@ -915,7 +916,7 @@ End If
 Dim lBracketOrder As IBracketOrder
 Set lBracketOrder = lOrderContext.CreateBracketOrder( _
                         IIf(pIsBuy, OrderActionBuy, OrderActionSell), _
-                        pNumber, _
+                        pQuantity, _
                         lEntryOrder, _
                         lStopLossOrder, _
                         lTargetOrder)

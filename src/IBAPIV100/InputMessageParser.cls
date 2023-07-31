@@ -68,8 +68,6 @@ Private mAccountDataConsumer                        As IAccountDataConsumer
 Private mScannerDataConsumer                        As IScannerDataConsumer
 Private mErrorAndNotificationConsumer               As IErrorAndNotificationConsumer
 
-Private mNextOrderID                                As Long
-
 Private mIsTwsConnectedToIBServers                  As Boolean
 
 '@================================================================================
@@ -118,15 +116,6 @@ End Property
 
 Friend Property Get IsTwsConnectedToIBServers() As Boolean
 IsTwsConnectedToIBServers = mIsTwsConnectedToIBServers
-End Property
-
-Friend Property Let NextOrderId(ByVal Value As Long)
-mNextOrderID = Value
-End Property
-
-Friend Property Get NextOrderId() As Long
-NextOrderId = mNextOrderID
-mNextOrderID = mNextOrderID + 1
 End Property
 
 Friend Property Let OrderInfoConsumer(ByVal Value As IOrderInfoConsumer)
@@ -388,6 +377,7 @@ mReader.BeginLogMessage
 
 Dim lRequestId As Long
 If (pVersion >= 3) Then lRequestId = mReader.GetLong("Req Id")
+lRequestId = GIdManager.GetCallerId(lRequestId, IdTypeContractData)
 mReader.GetString "Symbol"
 mReader.GetString "SecType"
 mReader.GetString "Cusip"
@@ -471,16 +461,22 @@ Dim lContract As New TwsContract
 
 lContract.Specifier = lContractSpec
 
-If (pVersion >= 3) Then lReqId = gGetCallersRequestIdFromTwsContractRequestId(mReader.GetLong("Req Id"))
+If (pVersion >= 3) Then lReqId = GIdManager.GetCallerId(mReader.GetLong("Req Id"), IdTypeContractData)
 
 lContractSpec.Symbol = mReader.GetString("Symbol")
 lContractSpec.SecType = gTwsSecTypeFromString(mReader.GetString("Sec type"))
 
 Dim lExpiry As String: lExpiry = mReader.GetString("Expiry")
 If lExpiry <> "" Then
-    Dim ar() As String: ar = Split(lExpiry, " ")
+    Dim ar() As String
+    If InStr(1, lExpiry, "-") <> 0 Then
+        ar = Split(lExpiry, "-")
+    Else
+        ar = Split(lExpiry, " ")
+    End If
     If UBound(ar) >= 0 Then lContractSpec.Expiry = ar(0)
     If UBound(ar) >= 1 Then lContract.LastTradeTime = CDate(ar(1))
+    If UBound(ar) >= 2 Then lContract.TimeZoneId = ar(2)
 End If
 
 lContractSpec.Strike = mReader.GetDouble("Strike")
@@ -498,11 +494,14 @@ lContract.MinTick = mReader.GetDouble("Minimum tick")
 ' something that reflects reality!
 If lContractSpec.CurrencyCode = "GBP" And lContractSpec.SecType = TwsSecTypeStock And lContract.MinTick < 0.0001 Then lContract.MinTick = 0.0001
 
-If mServerVersion >= ApiServerVersions.MD_SIZE_MULTIPLIER Then
-    lContract.MDSizeMultiplier = mReader.GetLong("MDSizeMultiplier")
+If mServerVersion >= ApiServerVersions.MD_SIZE_MULTIPLIER And _
+    mServerVersion < ApiServerVersions.SIZE_RULES _
+Then
+    ' MDSizeMultiplier is no longer used
+    mReader.GetLong ("MDSizeMultiplier")
 End If
 
-lContractSpec.Multiplier = mReader.GetLong("Multiplier")
+lContractSpec.Multiplier = mReader.GetDouble("Multiplier")
 
 lContract.OrderTypes = mReader.GetString("Order types")
 lContract.ValidExchanges = mReader.GetString("Valid exchanges")
@@ -543,6 +542,19 @@ If mServerVersion >= ApiServerVersions.MARKET_RULES Then lContract.MarketRuleIds
 
 If mServerVersion >= ApiServerVersions.REAL_EXPIRATION_DATE Then lContract.RealExpirationDate = mReader.GetString("Real Expiration Date")
 
+        If mServerVersion >= ApiServerVersions.STOCK_TYPE Then lContract.StockType = mReader.GetString("StockType")
+
+        If mServerVersion >= ApiServerVersions.FRACTIONAL_SIZE_SUPPORT And mServerVersion < ApiServerVersions.SIZE_RULES Then
+            ' SizeMinTick is no longer used
+            mReader.GetDecimal "SizeMinTick"
+        End If
+
+        If mServerVersion >= ApiServerVersions.SIZE_RULES Then
+            lContract.MinimumSize = mReader.GetDecimal("MinimumSize")
+            lContract.SizeIncrement = mReader.GetDecimal("SizeIncrement")
+            lContract.SuggestedSizeIncrement = mReader.GetDecimal("SuggestedSizeIncrement")
+        End If
+
 mReader.EndLogMessage
 
 If Not mContractDetailsConsumer Is Nothing Then mContractDetailsConsumer.NotifyContract lReqId, lContract
@@ -560,7 +572,7 @@ On Error GoTo Err
 mReader.BeginLogMessage
 
 Dim reqId As Long
-reqId = gGetCallersRequestIdFromTwsContractRequestId(mReader.GetLong("Req Id"))
+reqId = GIdManager.GetCallerId(mReader.GetLong("Req Id"), IdTypeContractData)
 
 mReader.EndLogMessage
 
@@ -626,6 +638,11 @@ Debug.Print "Error code: " & lErrorCode
 Dim lErrorMsg As String: lErrorMsg = mReader.GetString("Error msg")
 Debug.Print "Error msg: " & lErrorMsg
 
+Dim advancedOrderRejectJson As String
+If mServerVersion >= ApiServerVersions.ADVANCED_ORDER_REJECT Then
+    advancedOrderRejectJson = mReader.GetString("Advanced order reject")
+End If
+
 mReader.EndLogMessage
 
 ' first handle some messages that relate to specific ids, but need to be handled
@@ -638,25 +655,26 @@ Case 320, 321, 322, 323 ' server error when processing request
     Exit Sub
 End Select
 
-Select Case gGetIdType(id)
+Select Case GIdManager.GetIdType(id)
 Case IdTypeContractData
-    processContractError gGetCallersRequestIdFromTwsContractRequestId(id), lErrorCode, lErrorMsg
+    processContractError GIdManager.GetCallerId(id, IdTypeContractData), lErrorCode, lErrorMsg
     Exit Sub
-Case IdTypeRealtimeData
-    If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyError gGetCallersRequestIdFromTwsMarketDataRequestId(id), lErrorCode, lErrorMsg
+Case IdTypeMarketData
+    If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyError GIdManager.GetCallerId(id, IdTypeMarketData), lErrorCode, lErrorMsg
     Exit Sub
 Case IdTypeMarketDepth
-    If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyError gGetCallersRequestIdFromTwsMarketDepthRequestId(id), lErrorCode, lErrorMsg
+    If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyError GIdManager.GetCallerId(id, IdTypeMarketDepth), lErrorCode, lErrorMsg
     Exit Sub
 Case IdTypeHistoricalData
     If lErrorCode = 165 Then
         gLog "Connected to IB Historical Market Data Service - " & lErrorMsg, ModuleName, ProcName
     Else
-        If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyError gGetCallersRequestIdFromTwsHistRequestId(id), lErrorCode, lErrorMsg
+        If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyError GIdManager.GetCallerId(id, IdTypeHistoricalData), lErrorCode, lErrorMsg
     End If
     Exit Sub
 Case IdTypeOrder
     If sLostConnectionToIb And lErrorCode = 200 Then Exit Sub
+    If advancedOrderRejectJson <> "" Then gLog "Order id: " & id & " ; advanced order rejection: " & vbCrLf & advancedOrderRejectJson, ModuleName, ProcName
     If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyError id, lErrorCode, lErrorMsg
     Exit Sub
 Case IdTypeScanner
@@ -667,7 +685,7 @@ Case IdTypeScanner
             lErrorMsg = Mid$(lErrorMsg, l + Len(HistMarketDataServiceErrorMessagePrefix))
         End If
     End If
-    If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.NotifyError gGetCallersRequestIdFromTwsScannerRequestId(id), lErrorCode, lErrorMsg
+    If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.NotifyError GIdManager.GetCallerId(id, IdTypeScanner), lErrorCode, lErrorMsg
     Exit Sub
 End Select
 
@@ -741,7 +759,7 @@ mReader.BeginLogMessage True
 Dim lReqId As Long: lReqId = -1
 If (pVersion >= 7) Then
     lReqId = mReader.GetLong("ReqId")
-    If lReqId <> -1 Then lReqId = gGetCallersRequestIdFromTwsExecutionsRequestId(lReqId)
+    If lReqId <> -1 Then lReqId = GIdManager.GetCallerId(lReqId, IdTypeExecution)
 End If
 
 Dim lExecution As New TwsExecution
@@ -755,7 +773,7 @@ With lContract
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
-    If pVersion >= 9 Then .Multiplier = mReader.GetLong("Multiplier")
+    If pVersion >= 9 Then .Multiplier = mReader.GetDouble("Multiplier")
     .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
     .LocalSymbol = mReader.GetString("Local Symbol")
@@ -768,7 +786,7 @@ With lExecution
     .AcctNumber = mReader.GetString("Account id")
     .Exchange = mReader.GetString("Exchange")
     .Side = mReader.GetString("Side")
-    .Shares = mReader.GetLong("Shares")
+    .Shares = mReader.GetDecimal("Shares")
     .Price = mReader.GetDouble("Price")
     .Price = adjustPrice(.Price, lContract.CurrencyCode)
         
@@ -779,7 +797,7 @@ With lExecution
     If pVersion >= 4 Then .Liquidation = mReader.GetBoolean("Liquidation")
     
     If (pVersion >= 6) Then
-        .CumQty = mReader.GetLong("Cum Qty")
+        .CumQty = mReader.GetDecimal("Cum Qty")
         .AvgPrice = mReader.GetDouble("Avg Price")
     End If
     
@@ -814,7 +832,7 @@ mReader.BeginLogMessage True
 
 Dim reqId  As Long
 
-reqId = gGetCallersRequestIdFromTwsExecutionsRequestId(mReader.GetLong("reqId"))
+reqId = GIdManager.GetCallerId(mReader.GetLong("reqId"), IdTypeExecution)
 mReader.EndLogMessage
 
 If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.EndExecutions reqId
@@ -870,12 +888,13 @@ Static i As Long
 
 Dim lBar As TwsBar
 Dim lReqId As Long
+Dim lNotUsed As Boolean
 
 mReader.BeginCheckpointScope
     If mReader.GetLongCheckpointed(lReqId, "Request id") Then
         i = 0
         sBar = lBar
-        sStartInfo.requestId = gGetCallersRequestIdFromTwsHistRequestId(lReqId)
+        sStartInfo.requestId = GIdManager.GetCallerId(lReqId, IdTypeHistoricalData)
     End If
     
     If pVersion >= 2 Then
@@ -896,10 +915,10 @@ mReader.BeginCheckpointScope
             mReader.GetDoubleCheckpointed sBar.HighValue, "High"
             mReader.GetDoubleCheckpointed sBar.LowValue, "Low"
             mReader.GetDoubleCheckpointed sBar.CloseValue, "Close"
-            mReader.GetLongCheckpointed sBar.Volume, "Volume"
-            mReader.GetDoubleCheckpointed sBar.WAP, "WAP"
+            mReader.GetDecimalCheckpointed sBar.Volume, "Volume"
+            mReader.GetDecimalCheckpointed sBar.WAP, "WAP"
             If mServerVersion < ApiServerVersions.SYNT_REALTIME_BARS Then _
-                mReader.GetBooleanCheckpointed sBar.HasGaps, "Has gaps"
+                mReader.GetBooleanCheckpointed lNotUsed, "Has gaps"
             If pVersion >= 3 Then mReader.GetLongCheckpointed sBar.TickVolume, "Tick volume"
             
             If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyBar sStartInfo.requestId, sBar
@@ -958,15 +977,15 @@ On Error GoTo Err
 mReader.BeginLogMessage
 
 Dim id As Long: id = mReader.GetLong("Id")
-Dim lPosition As Long: lPosition = mReader.GetLong("POSITION")
+Dim lPosition As Long: lPosition = mReader.GetLong("Position")
 Dim lOperation As TwsDOMOperations:  lOperation = mReader.GetLong("Operation")
 Dim lSide As TwsDOMSides: lSide = mReader.GetLong("Side")
 Dim lPrice As Double: lPrice = mReader.GetDouble("Price")
-Dim lSize As Long: lSize = mReader.GetLong("Size")
+Dim lSize As BoxedDecimal: Set lSize = mReader.GetDecimal("Size")
 
 mReader.EndLogMessage
 
-If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyMarketDepth gGetCallersRequestIdFromTwsMarketDepthRequestId(id), lPosition, "", lOperation, lSide, lPrice, lSize
+If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyMarketDepth GIdManager.GetCallerId(id, IdTypeMarketDepth), lPosition, "", lOperation, lSide, lPrice, lSize
 
 Exit Sub
 
@@ -981,16 +1000,16 @@ On Error GoTo Err
 mReader.BeginLogMessage
 
 Dim id As Long: id = mReader.GetLong("Id")
-Dim lPosition As Long: lPosition = mReader.GetLong("POSITION")
+Dim lPosition As Long: lPosition = mReader.GetLong("Position")
 Dim lMarketMaker As String: lMarketMaker = mReader.GetString("Marketmaker")
 Dim lOperation As TwsDOMOperations:  lOperation = mReader.GetLong("Operation")
 Dim lSide As TwsDOMSides: lSide = mReader.GetLong("Side")
 Dim lPrice As Double: lPrice = mReader.GetDouble("Price")
-Dim lSize As Long: lSize = mReader.GetLong("Size")
+Dim lSize As BoxedDecimal: Set lSize = mReader.GetDecimal("Size")
 
 mReader.EndLogMessage
 
-If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyMarketDepth gGetCallersRequestIdFromTwsMarketDepthRequestId(id), lPosition, lMarketMaker, lOperation, lSide, lPrice, lSize
+If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyMarketDepth GIdManager.GetCallerId(id, IdTypeMarketDepth), lPosition, lMarketMaker, lOperation, lSide, lPrice, lSize
 
 Exit Sub
 
@@ -1053,15 +1072,23 @@ On Error GoTo Err
 ' in the log when it occurs
 mReader.BeginLogMessage True
 
-mNextOrderID = mReader.GetLong("Next id")
+Dim lNextOrderID As Long
+lNextOrderID = mReader.GetLong("Next id")
 
 mReader.EndLogMessage
 
-If mNextOrderID < BaseOrderId Then mNextOrderID = BaseOrderId
+If lNextOrderID <= GIdManager.GetNextOrderId(pPeekOnly:=True) Then
+    ' no need to do anything - either this is a 'new' client id, or
+    ' we're in a reconnection during an existing session so we've already
+    ' got the right order id
+Else
+    ' add an arbitrary large number to cater for the case where the last
+    ' TWS session was ended untidily, without TWS saving its settings
+    lNextOrderID = lNextOrderID + 10000
+    GIdManager.SetNextOrderId lNextOrderID
+End If
 
-' add an arbitrary large number to cater for the case where the last
-' TWS session was ended untidily, without TWS saving its settings
-mNextOrderID = mNextOrderID + 10000
+
 
 
 ' Note that we do this here rather than in processInitialData().
@@ -1105,22 +1132,31 @@ With lContractSpec
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
-    If pVersion >= 32 Then .Multiplier = mReader.GetLong("Multiplier")
+    .Multiplier = mReader.GetDouble("Multiplier")
     .Exchange = mReader.GetString("Exchange")
     .CurrencyCode = mReader.GetString("Currency")
-    If pVersion >= 2 Then .LocalSymbol = mReader.GetString("Local Symbol")
-    If pVersion >= 32 Then .TradingClass = mReader.GetString("Trading Class")
+    .LocalSymbol = mReader.GetString("Local Symbol")
+    .TradingClass = mReader.GetString("Trading Class")
 End With
 
 ' read Order fields
 With lOrder
     .Action = gTwsOrderActionFromString(mReader.GetString("Action"))
-    .TotalQuantity = mReader.GetDouble("Quantity")
+    .TotalQuantity = mReader.GetDecimal("Quantity")
     .OrderType = gTwsOrderTypeFromString(mReader.GetString("Order type"))
     If .OrderType = TwsOrderTypeNone Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid OrderType"
     .LmtPrice = mReader.GetDoubleMax("Limit price")
     .AuxPrice = mReader.GetDoubleMax("Aux price")
-    .Tif = gTwsOrderTIFFromString(mReader.GetString("Time in force"))
+    Dim tifString As String: tifString = mReader.GetString("Tif")
+    If UCase$(tifString) = "OPG" Then
+        If .OrderType = TwsOrderTypes.TwsOrderTypeMarket Then
+            .OrderType = TwsOrderTypes.TwsOrderTypeMarketOnOpen
+        ElseIf .OrderType = TwsOrderTypes.TwsOrderTypeLimit Then
+            .OrderType = TwsOrderTypes.TwsOrderTypeLimitOnOpen
+        End If
+    Else
+        .Tif = gTwsOrderTIFFromString(tifString)
+    End If
     .OcaGroup = mReader.GetString("OCA group")
     .Account = mReader.GetString("Account")
     .OpenClose = mReader.GetString("Open/close")
@@ -1140,7 +1176,7 @@ With lOrder
     .FaGroup = mReader.GetString("FA Group")
     .FaMethod = mReader.GetString("FA method")
     .FaPercentage = mReader.GetString("FA Percentage")
-    .FaProfile = mReader.GetString("FA Profile")
+    If mServerVersion < ApiServerVersions.FA_PROFILE_DESUPPORT Then mReader.GetString ("FA Profile")
     
     If mServerVersion >= ApiServerVersions.MODELS_SUPPORT Then _
         .ModelCode = mReader.GetString("Model Code")
@@ -1148,38 +1184,48 @@ With lOrder
     .GoodTillDate = mReader.GetString("Good till date")
     
     .Rule80A = mReader.GetString("Rule80A")
-    .PercentOffset = mReader.GetDouble("Percent Offset")
+    .PercentOffset = mReader.GetDoubleMax("Percent Offset")
     .SettlingFirm = mReader.GetString("Settling Firm")
+    
     .ShortSaleSlot = mReader.GetLong("shortSaleSlot")
     .DesignatedLocation = mReader.GetString("designatedLocation")
     .ExemptCode = mReader.GetLong("ExemptCode")
+    
     .AuctionStrategy = mReader.GetLong("Auction Strategy")
+    
     .StartingPrice = mReader.GetDouble("starting Price")
     .StockRefPrice = mReader.GetDouble("stockRefPrice")
     .Delta = mReader.GetDouble("delta")
+    
     .StockRangeLower = mReader.GetDouble("stockRangeLower")
     .StockRangeUpper = mReader.GetDouble("stockRangeUpper")
+    
     .DisplaySize = mReader.GetLong("displaySize")
+    
     .BlockOrder = mReader.GetBoolean("blockOrder")
+    
     .SweepToFill = mReader.GetBoolean("sweepToFill")
     .AllOrNone = mReader.GetBoolean("allOrNone")
     .MinQty = mReader.GetLong("minQty")
     .OcaType = mReader.GetLong("ocaType")
-    .ETradeOnly = mReader.GetBoolean("eTradeOnly")
-    .FirmQuoteOnly = mReader.GetBoolean("firmQuoteOnly")
-    .NbboPriceCap = mReader.GetDouble("nbboPriceCap")
 
+    mReader.GetBoolean "eTradeOnly"      ' desupported
+    mReader.GetBoolean "firmQuoteOnly"   ' desupported
+    mReader.GetDouble "nbboPriceCap"     ' desupported
+    
     .ParentId = mReader.GetLong("ParentId")
+    
     .TriggerMethod = mReader.GetLong("TriggerMethod")
 
     .Volatility = mReader.GetDouble("Volatility")
     .VolatilityType = mReader.GetLong("VolatilityType")
+    
     Dim lDeltaNeutralOrderType As String
     lDeltaNeutralOrderType = mReader.GetString("DeltaNeutralOrderType")
     .DeltaNeutralOrderType = gTwsOrderTypeFromString(lDeltaNeutralOrderType)
     .DeltaNeutralAuxPrice = mReader.GetDoubleMax("DeltaNeutralAuxPrice")
     
-    If lDeltaNeutralOrderType <> "" Then
+    If .DeltaNeutralOrderType <> TwsOrderTypeNone Then
         .DeltaNeutralConId = mReader.GetLong("DeltaNeutralConId")
         .DeltaNeutralSettlingFirm = mReader.GetString("DeltaNeutralSettlingFirm")
         .DeltaNeutralClearingAccount = mReader.GetString("DeltaNeutralClearingAccount")
@@ -1189,15 +1235,16 @@ With lOrder
         .DeltaNeutralShortSaleSlot = mReader.GetLong("DeltaNeutralShortSaleSlot")
         .DeltaNeutralDesignatedLocation = mReader.GetString("DeltaNeutralDesignatedLocation")
     End If
+    
     .ContinuousUpdate = mReader.GetLong("ContinuousUpdate")
     .ReferencePriceType = mReader.GetLong("ReferencePriceType")
     
     .TrailStopPrice = mReader.GetDoubleMax("TrailStopPrice")
-
     .TrailingPercent = mReader.GetDoubleMax("TrailingPercent")
     
     .BasisPoints = mReader.GetDoubleMax("BasisPoints")
     .BasisPointsType = mReader.GetLongMax("BasisPointsType")
+    
     lContractSpec.ComboLegsDescription = mReader.GetString("ComboLegsDescrip")
 
     Dim lComboLegsCount As Long: lComboLegsCount = mReader.GetLong("ComboLegsCount")
@@ -1348,6 +1395,34 @@ With lOrder
         .DontUseAutoPriceForHedge = mReader.GetBoolean("Dont Use Auto Price For Hedge")
     End If
 
+    If mServerVersion >= ApiServerVersions.ORDER_CONTAINER Then
+        .IsOmsContainer = mReader.GetBoolean("IsOmsContainer")
+    End If
+
+    If mServerVersion >= ApiServerVersions.D_PEG_ORDERS Then
+        .DiscretionaryUpToLimitPrice = mReader.GetBoolean("DiscretionaryUpToLimitPrice")
+    End If
+    If mServerVersion >= ApiServerVersions.PRICE_MGMT_ALGO Then
+        .UsePriceMgmtAlgo = mReader.GetBoolean("UsePriceMgmtAlgo")
+    End If
+    If mServerVersion >= ApiServerVersions.Duration Then
+        .Duration = mReader.GetLongMax("Duration")
+    End If
+    If mServerVersion >= ApiServerVersions.POST_TO_ATS Then
+        .PostToAts = mReader.GetLongMax("PostToAts")
+    End If
+    If mServerVersion >= ApiServerVersions.AUTO_CANCEL_PARENT Then
+        .AutoCancelParent = mReader.GetBoolean("AutoCancelParent")
+    End If
+
+    If mServerVersion >= ApiServerVersions.PEGBEST_PEGMID_OFFSETS Then
+        .MinimumTradeQuantity = mReader.GetLongMax("MinimumTradeQuantity")
+        .MinimumCompeteSize = mReader.GetLongMax("MinimumCompeteSize")
+        .CompeteAgainstBestOffset = mReader.GetDoubleMax("CompeteAgainstBestOffset")
+        .MidOffsetAtWhole = mReader.GetDoubleMax("MidOffsetAtWhole")
+        .MidOffsetAtHalf = mReader.GetDoubleMax("MidOffsetAtHalf")
+    End If
+
 End With
 
 mReader.EndLogMessage
@@ -1380,12 +1455,12 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim lRequestId As Long: lRequestId = gGetCallersRequestIdFromTwsContractRequestId(mReader.GetLong("Request id"))
+Dim lRequestId As Long: lRequestId = GIdManager.GetCallerId(mReader.GetLong("Request id"), IdTypeContractData)
 Dim lExchange  As String: lExchange = mReader.GetString("Exchange")
 Dim lUnderlyingConId As Long: lUnderlyingConId = mReader.GetLong("Und con id")
 Dim lTradingClass As String: lTradingClass = mReader.GetString("Trading Class")
 Dim lMult As String: lMult = mReader.GetString("Multiplier")
-Dim lMultiplier As Long: lMultiplier = IIf(lMult = "", 1, CLng(lMult))
+Dim lMultiplier As Double: lMultiplier = IIf(lMult = "", 1, CDbl(lMult))
 
 Dim lExpsCount: lExpsCount = mReader.GetLong("Expirations Count")
 ReDim lExpirations(lExpsCount - 1) As String
@@ -1427,7 +1502,7 @@ On Error GoTo Err
 mReader.BeginLogMessage
 
 Dim lRequestId  As Long
-lRequestId = gGetCallersRequestIdFromTwsContractRequestId(mReader.GetLong("Req Id"))
+lRequestId = GIdManager.GetCallerId(mReader.GetLong("Request id"), IdTypeContractData)
 
 mReader.EndLogMessage
 
@@ -1451,34 +1526,23 @@ mReader.BeginLogMessage True
 
 Dim lorderId As Long: lorderId = mReader.GetLong("id")
 Dim lStatus As String: lStatus = mReader.GetString("Status")
-Dim lFilled As Long: lFilled = mReader.GetLong("Filled")
-Dim lRemaining As Long: lRemaining = mReader.GetLong("Remaining")
+Dim lFilled As BoxedDecimal: Set lFilled = mReader.GetDecimal("Filled")
+Dim lRemaining As BoxedDecimal: Set lRemaining = mReader.GetDecimal("Remaining")
 Dim lAvgFillPrice As Double:  lAvgFillPrice = mReader.GetDouble("Avg fill price")
-Dim lLastFillPrice As Double
-Dim lClientID As Long
-Dim lPermId As Long
-Dim lParentId As Long
-Dim lWhyHeld As String
-
-If pVersion >= 2 Then lPermId = mReader.GetLong("Perm id")
-
-If pVersion >= 3 Then lParentId = mReader.GetLong("Parent id")
-
-If pVersion >= 4 Then lLastFillPrice = mReader.GetDouble("Last fill price")
-
-If pVersion >= 5 Then lClientID = mReader.GetLong("Client id")
-
-If pVersion >= 6 Then lWhyHeld = mReader.GetString("Why held")
-
-Dim marketCapPrice As Double: marketCapPrice = MaxDouble
+Dim lPermId As Long: lPermId = mReader.GetLong("Perm id")
+Dim lParentId As Long: lParentId = mReader.GetLong("Parent id")
+Dim lLastFillPrice As Double: lLastFillPrice = mReader.GetDouble("Last fill price")
+Dim lClientID As Long: lClientID = mReader.GetLong("Client id")
+Dim lWhyHeld As String: lWhyHeld = mReader.GetString("Why held")
+Dim lmarketCapPrice As Double: lmarketCapPrice = MaxDouble
 
 If mServerVersion >= ApiServerVersions.MARKET_CAP_PRICE Then
-    marketCapPrice = mReader.GetDouble("Market cap price")
+    lmarketCapPrice = mReader.GetDouble("Market cap price")
 End If
 
 mReader.EndLogMessage
 
-If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyOrderStatus lorderId, lStatus, lFilled, lRemaining, lAvgFillPrice, lPermId, lParentId, lLastFillPrice, lClientID, lWhyHeld
+If Not mOrderInfoConsumer Is Nothing Then mOrderInfoConsumer.NotifyOrderStatus lorderId, lStatus, lFilled, lRemaining, lAvgFillPrice, lPermId, lParentId, lLastFillPrice, lClientID, lWhyHeld, lmarketCapPrice
 
 Exit Sub
 
@@ -1502,7 +1566,7 @@ lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
 
-lContract.Multiplier = mReader.GetLong("Multiplier")
+lContract.Multiplier = mReader.GetDouble("Multiplier")
 lContract.PrimaryExch = mReader.GetString("Primary exchg")
 
 lContract.CurrencyCode = mReader.GetString("Currency")
@@ -1510,12 +1574,8 @@ lContract.CurrencyCode = mReader.GetString("Currency")
 lContract.LocalSymbol = mReader.GetString("Local Symbol")
 lContract.TradingClass = mReader.GetString("Trading Class")
 
-Dim lPosition As Double
-If mServerVersion >= ApiServerVersions.FRACTIONAL_POSITIONS Then
-    lPosition = mReader.GetDouble("POSITION")
-Else
-    lPosition = CDbl(mReader.GetLong("POSITION"))
-End If
+Dim lPosition As BoxedDecimal
+Set lPosition = mReader.GetDecimal("Position")
 
 Dim lMarketPrice As Double: lMarketPrice = mReader.GetDouble("Market price")
 Dim lMarketValue As Double: lMarketValue = mReader.GetDouble("Market Value")
@@ -1548,18 +1608,14 @@ lContract.SecType = gTwsSecTypeFromString(mReader.GetString("SecType"))
 lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = gTwsOptionRightFromString(mReader.GetString("Right"))
-lContract.Multiplier = mReader.GetLong("Multiplier")
+lContract.Multiplier = mReader.GetDouble("Multiplier")
 lContract.Exchange = mReader.GetString("Exchange")
 lContract.CurrencyCode = mReader.GetString("Currency")
 lContract.LocalSymbol = mReader.GetString("LocalSymbol")
 lContract.TradingClass = mReader.GetString("Trading Class")
 
-Dim lPosition As Double
-If mServerVersion >= ApiServerVersions.FRACTIONAL_POSITIONS Then
-    lPosition = mReader.GetDouble("Position")
-Else
-    lPosition = CDbl(mReader.GetLong("Position"))
-End If
+Dim lPosition As BoxedDecimal
+Set lPosition = mReader.GetDecimal("Position")
 
 Dim lAverageCost As Double
 If pVersion >= 3 Then lAverageCost = mReader.GetDouble("Average Cost")
@@ -1597,7 +1653,7 @@ mReader.BeginLogMessage
 
 Dim lReqId As Long: lReqId = mReader.GetLong("ReqId")
 
-Dim lBar As TwsRealtimeBar
+Dim lBar As TwsBar
 
 With lBar
     .Timestamp = gGetDateFromUnixSystemTime(mReader.GetDouble("Timestamp"))
@@ -1605,14 +1661,14 @@ With lBar
     .HighValue = mReader.GetDouble("High")
     .LowValue = mReader.GetDouble("Low")
     .CloseValue = mReader.GetDouble("Close")
-    .Volume = mReader.GetLong("Volume")
-    .WAP = mReader.GetDouble("Wap")
+    Set .Volume = mReader.GetDecimal("Volume")
+    Set .WAP = mReader.GetDecimal("Wap")
     .TickVolume = mReader.GetLong("TickVolume")
 End With
 
 mReader.EndLogMessage
 
-If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyRealtimeBar gGetCallersRequestIdFromTwsHistRequestId(lReqId), lBar
+If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyRealtimeBar GIdManager.GetCallerId(lReqId, IdTypeHistoricalData), lBar
 
 Exit Sub
 
@@ -1641,7 +1697,7 @@ Static sLegs As String
 mReader.BeginCheckpointScope
     Dim lRequestId As Long
     mReader.GetLongCheckpointed lRequestId, "Request Id"
-    sRequestId = gGetCallersRequestIdFromTwsScannerRequestId(lRequestId)
+    sRequestId = GIdManager.GetCallerId(lRequestId, IdTypeScanner)
     mReader.GetLongCheckpointed sNumberOfElements, "Number of elements"
     
     Dim i As Long
@@ -1747,7 +1803,7 @@ Dim lValue As Double: lValue = mReader.GetDouble("Value")
 
 mReader.EndLogMessage
 
-If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickGeneric gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lValue
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickGeneric GIdManager.GetCallerId(lTickerId, IdTypeMarketData), lTickType, lValue
 
 Exit Sub
 
@@ -1763,9 +1819,13 @@ mReader.BeginLogMessage
 
 Dim lTickerId As Long: lTickerId = mReader.GetLong("Ticker id")
 Dim lTickType As Long: lTickType = mReader.GetLong("Tick type")
+
+Dim lTickAttrib As Long
+If mServerVersion >= ApiServerVersions.PRICE_BASED_VOLATILITY Then lTickAttrib = mReader.GetLong("tickAttrib")
+
 Dim lImpliedVol As Double: lImpliedVol = mReader.GetDouble("impliedVol")
 
-If lImpliedVol < 0 Then
+If lImpliedVol = -1 Then
     ' -1 is the "not yet computed" indicator
     lImpliedVol = MaxDouble
 End If
@@ -1783,7 +1843,7 @@ Dim lVega As Double: lVega = MaxDouble
 Dim lTheta As Double: lTheta = MaxDouble
 Dim lUndPrice As Double: lUndPrice = MaxDouble
 
-If pVersion >= 6 Or lTickType = TwsTickTypes.TwsTickModelOption Then   ' introduced in pVersion == 5
+If pVersion >= 6 Or lTickType = TwsTickTypes.TwsTickModelOption Or lTickType = TwsTickTypes.TwsTickDelayedModelOption Then     ' introduced in pVersion == 5
     lOptPrice = mReader.GetDouble("optPrice")
     If lOptPrice < 0 Then   ' -1 is the "not yet computed" indicator
         lOptPrice = MaxDouble
@@ -1815,7 +1875,7 @@ End If
 
 mReader.EndLogMessage
 
-If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickOptionComputation gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lImpliedVol, lDelta, lOptPrice, lPvDividend, lGamma, lVega, lTheta, lUndPrice
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickOptionComputation GIdManager.GetCallerId(lTickerId, IdTypeMarketData), lTickType, lImpliedVol, lDelta, lOptPrice, lPvDividend, lGamma, lVega, lTheta, lUndPrice
 
 Exit Sub
 
@@ -1833,8 +1893,8 @@ Dim lTickerId As Long: lTickerId = mReader.GetLong("Ticker id")
 Dim lTickType As Long: lTickType = mReader.GetLong("Tick type")
 Dim lPrice As Double: lPrice = mReader.GetDouble("Price")
 
-Dim lSize As Long
-If pVersion >= 2 Then lSize = mReader.GetLong("Size")
+Dim lSize As BoxedDecimal
+If pVersion >= 2 Then Set lSize = mReader.GetDecimal("Size")
 
 Dim lAttributes As TwsTickAttributes
 
@@ -1844,7 +1904,6 @@ If pVersion >= 3 Then
     Const PreOpen = &H4&
 
     Dim lAttrMask As Long: lAttrMask = mReader.GetLong("Attr Mask")
-    Dim lCanAutoExecute As Boolean: lCanAutoExecute = (lAttrMask = 1)
     lAttributes.CanAutoExecute = (lAttrMask = 1)
 
     If mServerVersion >= ApiServerVersions.PAST_LIMIT Then
@@ -1858,7 +1917,7 @@ End If
 
 mReader.EndLogMessage
 
-If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickPrice gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lPrice, lSize, lAttributes
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickPrice GIdManager.GetCallerId(lTickerId, IdTypeMarketData), lTickType, lPrice, lSize, lAttributes
 
 Exit Sub
 
@@ -1879,7 +1938,7 @@ Dim lSnapshotPermissions As Long: lSnapshotPermissions = mReader.GetLong("Snapsh
 
 mReader.EndLogMessage
 
-If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickRequestParams gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lMinTick, lBboExchange, lSnapshotPermissions
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickRequestParams GIdManager.GetCallerId(lTickerId, IdTypeMarketData), lMinTick, lBboExchange, lSnapshotPermissions
 
 Exit Sub
 
@@ -1896,15 +1955,15 @@ mReader.BeginLogMessage
 
 Dim lTickType As Long
 Dim lTickerId As Long
-Dim lSize As Long
+Dim lSize As BoxedDecimal
 
 lTickerId = mReader.GetLong("Ticker id")
 lTickType = mReader.GetLong("Tick type")
-lSize = mReader.GetLong("Size")
+Set lSize = mReader.GetDecimal("Size")
 
 mReader.EndLogMessage
 
-If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickSize gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lSize
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickSize GIdManager.GetCallerId(lTickerId, IdTypeMarketData), lTickType, lSize
 
 Exit Sub
 
@@ -1922,7 +1981,7 @@ mReader.BeginLogMessage
 Dim lReqId As Long: lReqId = mReader.GetLong("Ticker id")
 mReader.EndLogMessage
 
-If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.EndTickSnapshot gGetCallersRequestIdFromTwsMarketDataRequestId(lReqId)
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.EndTickSnapshot GIdManager.GetCallerId(lReqId, IdTypeMarketData)
 
 Exit Sub
 
@@ -1942,7 +2001,7 @@ Dim lValue As String: lValue = mReader.GetString("Value")
 
 mReader.EndLogMessage
 
-If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickString gGetCallersRequestIdFromTwsMarketDataRequestId(lTickerId), lTickType, lValue
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyTickString GIdManager.GetCallerId(lTickerId, IdTypeMarketData), lTickType, lValue
 
 Exit Sub
 

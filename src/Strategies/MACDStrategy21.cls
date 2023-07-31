@@ -676,11 +676,11 @@ If Not calcPricesForBuy(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPrice
     Exit Sub
 End If
 
-Dim lSize As Long: lSize = calcTradeSize(lRisk)
+Dim lSize As BoxedDecimal: Set lSize = calcTradeSize(lRisk)
 
 LogTradeMessage "PlaceBuyOrders simulated"
 Set mBracketOrderBuyDummy = BuySimulated( _
-                                Number:=1, _
+                                Quantity:=DecimalOne, _
                                 EntryOrder:=DeclareSimulatedEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
                                 StopLossOrder:=DeclareSimulatedStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                                 CancelPrice:=lCancelPrice, _
@@ -692,7 +692,7 @@ If lSize = 0 Then Exit Sub
 
 LogTradeMessage "PlaceBuyOrders"
 SetPrimaryBracketOrder Buy( _
-                            Number:=lSize, _
+                            Quantity:=lSize, _
                             EntryOrder:=DeclareEntryOrder( _
                                                         EntryOrderTypeStopLimit, _
                                                         LimitPrice:=lTriggerPrice, _
@@ -734,11 +734,11 @@ If Not calcPricesForSell(lTriggerPrice, lStopPrice, lBreakevenPrice, lCancelPric
     Exit Sub
 End If
 
-Dim lSize As Long: lSize = calcTradeSize(lRisk)
+Dim lSize As BoxedDecimal: Set lSize = calcTradeSize(lRisk)
 
 LogTradeMessage "PlaceSellOrders simulated"
 Set mBracketOrderSellDummy = SellSimulated( _
-                                Number:=1, _
+                                Quantity:=DecimalOne, _
                                 EntryOrder:=DeclareSimulatedEntryOrder(EntryOrderTypeStop, TriggerPrice:=lTriggerPrice), _
                                 StopLossOrder:=DeclareSimulatedStopLossOrder(StopLossOrderTypeStop, TriggerPrice:=lStopPrice), _
                                 CancelPrice:=lCancelPrice, _
@@ -750,7 +750,7 @@ If lSize = 0 Then Exit Sub
 
 LogTradeMessage "PlaceSellOrders"
 SetPrimaryBracketOrder Sell( _
-                            Number:=lSize, _
+                            Quantity:=lSize, _
                             EntryOrder:=DeclareEntryOrder( _
                                                         EntryOrderTypeStopLimit, _
                                                         LimitPrice:=lTriggerPrice, _
@@ -855,13 +855,16 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function calcTradeSize(ByVal risk As Double) As Long
+Private Function calcTradeSize(ByVal risk As Double) As BoxedDecimal
 Const ProcName As String = "calcTradeSize"
 On Error GoTo Err
 
-calcTradeSize = Int((mRiskUnitPercent * AccountBalance / 100) / risk)
-If calcTradeSize > mMaxTradeSize Then calcTradeSize = mMaxTradeSize
-If calcTradeSize = 0 Then LogTradeMessage "    reject: allowable initial risk exceeded"
+Dim lSize As Long
+lSize = Int((mRiskUnitPercent * AccountBalance / 100) / risk)
+If lSize > mMaxTradeSize Then lSize = mMaxTradeSize
+If lSize = 0 Then LogTradeMessage "    reject: allowable initial risk exceeded"
+
+Set calcTradeSize = CreateBoxedDecimal(lSize)
 
 Exit Function
 

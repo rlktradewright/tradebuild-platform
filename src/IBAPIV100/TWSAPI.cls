@@ -208,7 +208,7 @@ Private Sub mSocketHandler_Connected()
 Const ProcName As String = "mSocketHandler_Connected"
 On Error GoTo Err
 
-Set mConnectionEstablishedTLI = GetGlobalTimerList.Add(Nothing, 30, ExpiryTimeUnitSeconds)
+Set mConnectionEstablishedTLI = GetGlobalTimerList.add(Nothing, 30, ExpiryTimeUnitSeconds)
 mInMessageHandler.Reset
 
 mConnectionNegotiator.NegotiateApiConnection
@@ -368,24 +368,28 @@ Public Property Get MarketDepthConsumer() As IMarketDepthConsumer
 Set MarketDepthConsumer = mInMessageHandler.MarketDepthConsumer
 End Property
 
+Public Property Get MaxAccountRequestId() As Long
+MaxAccountRequestId = GIdManager.MaxCallersAccountRequestId
+End Property
+
 Public Property Get MaxContractRequestId() As Long
-MaxContractRequestId = MaxCallersContractRequestId
+MaxContractRequestId = GIdManager.MaxCallersContractRequestId
 End Property
 
 Public Property Get MaxExecutionsRequestId() As Long
-MaxExecutionsRequestId = MaxCallersExecutionsRequestId
+MaxExecutionsRequestId = GIdManager.MaxCallersExecutionsRequestId
 End Property
 
 Public Property Get MaxHistoricalDataRequestId() As Long
-MaxHistoricalDataRequestId = MaxCallersHistoricalDataRequestId
+MaxHistoricalDataRequestId = GIdManager.MaxCallersHistoricalDataRequestId
 End Property
 
 Public Property Get MaxMarketDataRequestId() As Long
-MaxMarketDataRequestId = MaxCallersMarketDataRequestId
+MaxMarketDataRequestId = GIdManager.MaxCallersMarketDataRequestId
 End Property
 
 Public Property Get MaxMarketDepthRequestId() As Long
-MaxMarketDepthRequestId = MaxCallersMarketDepthRequestId
+MaxMarketDepthRequestId = GIdManager.MaxCallersMarketDepthRequestId
 End Property
 
 Public Property Get MaxOrderId() As Long
@@ -393,7 +397,7 @@ MaxOrderId = &H7FFFFFFF
 End Property
 
 Public Property Get NextOrderId() As Long
-NextOrderId = mInMessageHandler.NextOrderId
+NextOrderId = GIdManager.GetNextOrderId
 End Property
 
 Public Property Let OrderInfoConsumer(ByVal Value As IOrderInfoConsumer)
@@ -644,7 +648,7 @@ If mConnectionState = TwsConnConnected Then
 
     mWriter.AddMessageId CANCEL_HISTORICAL_DATA
     mWriter.AddLong VERSION, "Version"
-    mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pRequestId), "Request id"
+    mWriter.AddString GIdManager.GetTwsId(pRequestId, IdTypeHistoricalData), "RequestID"
     mWriter.Send
 End If
 
@@ -664,7 +668,7 @@ Const VERSION = 2
 
 mWriter.AddMessageId CANCEL_MKT_DATA
 mWriter.AddLong VERSION, "Version"
-mWriter.AddString gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.AddString GIdManager.GetTwsId(pTickerId, IdTypeMarketData), "TickerId"
 mWriter.Send
 
 Exit Sub
@@ -673,17 +677,19 @@ Err:
 gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub CancelMarketDepth(ByVal pTickerId As Long)
+Public Sub CancelMarketDepth(ByVal pTickerId As Long, pIsSmartDepth As Boolean)
 Const ProcName As String = "CancelMarketDepth"
 On Error GoTo Err
 
 If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
+AssertArgument Not (pIsSmartDepth And ServerVersion < ApiServerVersions.SMART_DEPTH), "SMART depth cancel is not supported"
 
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_MKT_DEPTH
 mWriter.AddLong VERSION, "Version"
-mWriter.AddString gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.AddString GIdManager.GetTwsId(pTickerId, IdTypeMarketDepth), "Ticker id"
+If ServerVersion >= ApiServerVersions.SMART_DEPTH Then mWriter.AddBoolean pIsSmartDepth, "IsSmartDepth"
 mWriter.Send
 
 Exit Sub
@@ -710,7 +716,7 @@ Err:
 gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub CancelOrder(ByVal pOrderId As Long)
+Public Sub CancelOrder(ByVal pOrderId As Long, pManualOrderCancelTime As String)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
@@ -720,6 +726,7 @@ Const VERSION = 1
 mWriter.AddMessageId CANCEL_ORDER
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong pOrderId, "Order id"
+If ServerVersion >= ApiServerVersions.MANUAL_ORDER_TIME Then mWriter.AddString pManualOrderCancelTime, "manualOrderCancelTime"
 mWriter.Send True
 
 Exit Sub
@@ -733,7 +740,7 @@ Const ProcName As String = "CancelPnL"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion > ApiServerVersions.PNL, "CancelPnL not supported"
+AssertArgument ServerVersion >= ApiServerVersions.PNL, "CancelPnL not supported"
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.CancelPnL
 mWriter.AddLong pRequestId, "Request Id"
@@ -750,7 +757,7 @@ Const ProcName As String = "CancelPnLSingle"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion > ApiServerVersions.PNL, "CancelPnLSingle not supported"
+AssertArgument ServerVersion >= ApiServerVersions.PNL, "CancelPnLSingle not supported"
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.CancelPnLSingle
 mWriter.AddLong pRequestId, "Request Id"
@@ -785,13 +792,13 @@ Const ProcName As String = "CancelPositionsMulti"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion > ApiServerVersions.MODELS_SUPPORT, "CancelPositionsMulti not supported"
+AssertArgument ServerVersion >= ApiServerVersions.MODELS_SUPPORT, "CancelPositionsMulti not supported"
 
 Const VERSION = 1
 
 mWriter.AddMessageId TwsSocketOutMsgTypes.CancelPositionsMulti
 mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pRequestId, "Requst Id)"
+mWriter.AddLong pRequestId, "Request Id)"
 mWriter.Send
 
 Exit Sub
@@ -810,7 +817,7 @@ Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_REAL_TIME_BARS
 mWriter.AddLong VERSION, "Version"
-mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pTickerId), "Ticker id"
+mWriter.AddString GIdManager.GetTwsId(pTickerId, IdTypeHistoricalData), "Ticker id"
 mWriter.Send True
 
 Exit Sub
@@ -830,9 +837,7 @@ Const VERSION = 1
 mWriter.AddMessageId CANCEL_SCANNER_SUBSCRIPTION
 mWriter.AddLong VERSION, "Version"
 
-Dim lApiId As Long
-lApiId = gGetTwsScannerRequestIdFromCallersRequestId(pRequestId)
-mWriter.AddLong lApiId, "Request Id"
+mWriter.AddLong GIdManager.GetTwsId(pRequestId, IdTypeScanner), "Request Id"
 mWriter.Send True
 
 Exit Sub
@@ -988,14 +993,27 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 AssertArgument ServerVersion >= ApiServerVersions.EXT_OPERATOR Or pOrder.ExtOperator = "", "ExtOperator parameter not supported"
 AssertArgument ServerVersion >= ApiServerVersions.CASH_QTY Or pOrder.CashQty = MaxDouble, "CashQty parameter not supported"
 
+AssertArgument ServerVersion >= ApiServerVersions.ORDER_CONTAINER Or Not pOrder.IsOmsContainer, "IsOmsContainer attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.D_PEG_ORDERS Or Not pOrder.DiscretionaryUpToLimitPrice, "DiscretionaryUpToLimitPrice attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.PRICE_MGMT_ALGO Or pOrder.UsePriceMgmtAlgo, "UsePriceMgmtAlgo attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.Duration Or Not pOrder.Duration = MaxLong, "Duration attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.POST_TO_ATS Or Not pOrder.PostToAts = MaxLong, "PostToAts attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.AUTO_CANCEL_PARENT Or Not pOrder.AutoCancelParent, "AutoCancelParent attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.ADVANCED_ORDER_REJECT Or pOrder.AdvancedErrorOverride = "", "AdvancedErrorOverride attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.MANUAL_ORDER_TIME Or pOrder.ManualOrderTime = "", "AdvancedErrorOverride attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.PEGBEST_PEGMID_OFFSETS Or (pOrder.MinimumTradeQuantity = MaxLong And _
+                                                                        pOrder.MinimumCompeteSize = MaxLong And _
+                                                                        pOrder.CompeteAgainstBestOffset = MaxDouble And _
+                                                                        pOrder.MidOffsetAtWhole = MaxDouble And _
+                                                                        pOrder.MidOffsetAtHalf = MaxDouble), "PEGBEST/PEGMID-related  attributes not supported"
 Const VERSION = 45
 
 mWriter.AddMessageId PLACE_ORDER
-mWriter.AddLong VERSION, "Version"
+If ServerVersion < ApiServerVersions.ORDER_CONTAINER Then mWriter.AddLong VERSION, "Version"
 
-If pOrder.OrderId = 0 Then pOrder.OrderId = NextOrderId
-Assert pOrder.OrderId >= BaseOrderId, "Order id must not be less than " & BaseOrderId
-If pOrder.OrderId > mInMessageHandler.NextOrderId Then mInMessageHandler.NextOrderId = pOrder.OrderId + 1
+If pOrder.OrderId = 0 Then pOrder.OrderId = GIdManager.GetNextOrderId
+AssertArgument pOrder.OrderId >= GIdManager.BaseOrderId, "Order id must not be less than " & GIdManager.BaseOrderId
+If pOrder.OrderId > GIdManager.GetNextOrderId Then GIdManager.SetNextOrderId pOrder.OrderId + 1
 
 mWriter.AddLong pOrder.OrderId, "Order id"
 
@@ -1008,14 +1026,18 @@ With pOrder
     
     ' mwriter.send main Order fields
     mWriter.AddString gTwsOrderActionToString(.Action), "Action"
-    mWriter.AddDouble .TotalQuantity, "Quantity"
+    mWriter.AddDecimal .TotalQuantity, "Quantity"
     mWriter.AddString gTwsOrderTypeToString(.OrderType), "Order type"
     
     mWriter.AddDoubleMax .LmtPrice, "Price"
     mWriter.AddDoubleMax .AuxPrice, "Aux price"
     
     ' mwriter.send extended Order fields
-    mWriter.AddString gTwsOrderTIFToString(.Tif), "TIF"
+    If .OrderType = TwsOrderTypes.TwsOrderTypeMarketOnOpen Or .OrderType = TwsOrderTypes.TwsOrderTypeLimitOnOpen Then
+        mWriter.AddString "OPG", "TIF"
+    Else
+        mWriter.AddString gTwsOrderTIFToString(.Tif), "TIF"
+    End If
     mWriter.AddString .OcaGroup, "Oca Group"
     mWriter.AddString .Account, "Account"
     mWriter.AddString .OpenClose, "OpenClose"
@@ -1031,7 +1053,7 @@ With pOrder
     mWriter.AddBoolean .Hidden, "Hidden"
 
     ' send contract combo legs for BAG requests
-    If pContractSpec.SecType = TwsSecTypeCombo Then
+    If pContractSpec.Sectype = TwsSecTypeCombo Then
         With pContractSpec
             If .ComboLegs.Count = 0 Then
                 mWriter.AddLong 0, "Combo legs count"
@@ -1085,7 +1107,7 @@ With pOrder
     mWriter.AddString .FaGroup, "FAGroup"
     mWriter.AddString .FaMethod, "FAMethod"
     mWriter.AddString .FaPercentage, "FAPercentage"
-    mWriter.AddString .FaProfile, "FAProfile"
+    If ServerVersion < ApiServerVersions.FA_PROFILE_DESUPPORT Then mWriter.AddString "", "FAProfile"
     
     If ServerVersion >= ApiServerVersions.MODELS_SUPPORT Then mWriter.AddString .ModelCode, "Model Code"
 
@@ -1101,9 +1123,9 @@ With pOrder
     mWriter.AddBoolean .AllOrNone, "All or none"
     mWriter.AddLongMax .MinQty, "Minimum quantity"
     mWriter.AddDoubleMax .PercentOffset, "Percent Offset"
-    mWriter.AddBoolean .ETradeOnly, "E-trade only"
-    mWriter.AddBoolean .FirmQuoteOnly, "Firm quote only"
-    mWriter.AddDoubleMax .NbboPriceCap, "NBBO price cap"
+    mWriter.AddBoolean False, "E-trade only"
+    mWriter.AddBoolean False, "Firm quote only"
+    mWriter.AddDoubleMax MaxDouble, "NBBO price cap"
     mWriter.AddLongMax .AuctionStrategy, "Auction strategy"
     mWriter.AddDoubleMax .StartingPrice, "Starting price"
     mWriter.AddDoubleMax .StockRefPrice, "Stock ref price"
@@ -1163,8 +1185,12 @@ With pOrder
     mWriter.AddString .ClearingAccount, "Clearing account"
     mWriter.AddString .ClearingIntent, "Clearing intent"
 
-    mWriter.AddBoolean .NotHeld, "Not held"
-
+    If .OrderType = TwsOrderTypes.TwsOrderTypePeggedToBest Or .OrderType = TwsOrderTypes.TwsOrderTypePeggedToMidpoint Then
+        mWriter.AddBoolean True, "Not held"
+    Else
+        mWriter.AddBoolean .NotHeld, "Not held"
+    End If
+    
     If pContractSpec.DeltaNeutralContract.ConId <> 0 Then
         mWriter.AddBoolean True, "Delta Neutral"
         mWriter.AddLong pContractSpec.DeltaNeutralContract.ConId, "Delta Neutral conid"
@@ -1245,6 +1271,54 @@ With pOrder
         mWriter.AddBoolean .DontUseAutoPriceForHedge, "DontUseAutoPriceForHedge"
     End If
 
+    If ServerVersion >= ApiServerVersions.ORDER_CONTAINER Then
+        mWriter.AddBoolean .IsOmsContainer, "IsOmsContainer"
+    End If
+
+    If ServerVersion >= ApiServerVersions.D_PEG_ORDERS Then
+        mWriter.AddBoolean .DiscretionaryUpToLimitPrice, "DiscretionaryUpToLimitPrice"
+    End If
+
+    If ServerVersion >= ApiServerVersions.PRICE_MGMT_ALGO Then
+        mWriter.AddBoolean .UsePriceMgmtAlgo, "UsePriceMgmtAlgo"
+    End If
+
+    If ServerVersion >= ApiServerVersions.Duration Then
+        mWriter.AddLongMax .Duration, "Duration"
+    End If
+
+    If ServerVersion >= ApiServerVersions.POST_TO_ATS Then
+        mWriter.AddLongMax .PostToAts, "PostToAts"
+    End If
+
+    If ServerVersion >= ApiServerVersions.AUTO_CANCEL_PARENT Then
+        mWriter.AddBoolean .AutoCancelParent, "AutoCancelParent"
+    End If
+
+    If ServerVersion >= ApiServerVersions.ADVANCED_ORDER_REJECT Then
+        mWriter.AddString .AdvancedErrorOverride, "AdvancedErrorOverride"
+    End If
+
+    If ServerVersion >= ApiServerVersions.MANUAL_ORDER_TIME Then
+        mWriter.AddString .ManualOrderTime, "ManualOrderTime"
+    End If
+
+    If ServerVersion >= ApiServerVersions.PEGBEST_PEGMID_OFFSETS Then
+        If UCase$(pContractSpec.Exchange) = "IBKRATS" Then
+            mWriter.AddDoubleMax .MinimumTradeQuantity, "MinimumTradeQuantity"
+        End If
+        If .OrderType = TwsOrderTypes.TwsOrderTypePeggedToBest Then
+            mWriter.AddLongMax .MinimumCompeteSize, "MinimumCompeteSize"
+            mWriter.AddDoubleMax .CompeteAgainstBestOffset, "CompeteAgainstBestOffset"
+            If .CompeteAgainstBestOffset = CompeteAgainstBestOffsetUpToMid Then
+                mWriter.AddDoubleMax .MidOffsetAtWhole, "MidOffsetAtWhole"
+                mWriter.AddDoubleMax .MidOffsetAtHalf, "MidOffsetAtHalf"
+            End If
+        ElseIf .OrderType = TwsOrderTypes.TwsOrderTypePeggedToMidpoint Then
+            mWriter.AddDoubleMax .MidOffsetAtWhole, "MidOffsetAtWhole"
+            mWriter.AddDoubleMax .MidOffsetAtHalf, "MidOffsetAtHalf"
+        End If
+    End If
 
 End With
 
@@ -1256,7 +1330,7 @@ Err:
 gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
                     
-Public Sub ReplaceFA(ByVal DataType As TwsFADataTypes, ByVal xml As String)
+Public Sub ReplaceFA(requestId As Integer, ByVal DataType As TwsFADataTypes, ByVal xml As String)
 Const ProcName As String = "ReplaceFA"
 On Error GoTo Err
 
@@ -1264,12 +1338,13 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-Assert mServerVersion >= 13, "Server version does not support ReplaceFA", ErrorCodes.ErrUnsupportedOperationException
-
 mWriter.AddMessageId REPLACE_FA
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong DataType, "Data type"
 mWriter.AddString xml, "XML"
+If ServerVersion >= ApiServerVersions.REPLACE_FA_END Then
+    mWriter.AddLong GIdManager.GetTwsId(requestId, IdTypes.IdTypeAccount), "Request id"
+End If
 
 mWriter.Send
 
@@ -1381,10 +1456,10 @@ On Error GoTo Err
 Const VERSION = 8
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument pContractSpec.SecType <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument pContractSpec.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
 
 Dim lApiId As Long
-lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
+lApiId = GIdManager.GetTwsId(pRequestId, IdTypeContractData)
 
 gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 
@@ -1396,6 +1471,8 @@ mWriter.AddContract pContractSpec
 mWriter.AddBoolean True, "Include expired"
 mWriter.AddString pSecIdType, "SecIdType"
 mWriter.AddString pSecId, "SecId"
+
+If ServerVersion >= ApiServerVersions.BOND_ISSUERID Then mWriter.AddString "", "IssuerId"
 
 mWriter.Send
 
@@ -1434,7 +1511,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 3
 
 Dim lApiId As Long
-lApiId = gGetTwsExecutionsRequestIdFromCallersRequestId(pRequestId)
+lApiId = GIdManager.GetTwsId(pRequestId, IdTypeExecution)
 
 gLog "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName, , LogLevelDetail
 
@@ -1454,9 +1531,13 @@ With theFilter
     mWriter.AddString .ClientID, "Client id"
     mWriter.AddString .AccountCode, "Account code"
     Dim lFromTime As Date: lFromTime = ConvertDateLocalToUTC(.Time)
-    mWriter.AddString IIf(CLng(lFromTime) <> 0, Format(lFromTime, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
-    mWriter.AddString .Symbol, "Symbol"
-    mWriter.AddString gTwsSecTypeToShortString(.SecType), "Sec type"
+    If .Timezone = "" Then
+        mWriter.AddString IIf(.Time <> MaxDate, Format(lFromTime, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
+    Else
+        mWriter.AddString IIf(.Time <> MaxDate, Format(lFromTime, "yyyymmdd hh\:nn\:ss") & .Timezone, ""), "Fill Time"
+    End If
+    mWriter.AddString .Symbol, UCase$("Symbol")
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
     mWriter.AddString .Exchange, "Exchange"
     mWriter.AddString gTwsOrderActionToString(.Action), "Action"
 End With
@@ -1508,7 +1589,7 @@ mWriter.AddLong pReqId, "ReqId"
 
 mWriter.AddString pContractSpec.ConId, "ConId"
 mWriter.AddString pContractSpec.Symbol, "Symbol"
-mWriter.AddString gTwsSecTypeToShortString(pContractSpec.SecType), "SecType"
+mWriter.AddString gTwsSecTypeToShortString(pContractSpec.Sectype), "SecType"
 mWriter.AddString pContractSpec.Exchange, "Exchange"
 mWriter.AddString pContractSpec.PrimaryExch, "PrimaryExch"
 mWriter.AddString pContractSpec.CurrencyCode, "Currency"
@@ -1551,9 +1632,10 @@ Const ProcName As String = "RequestHistoricalData"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+AssertArgument ServerVersion >= ApiServerVersions.HISTORICAL_SCHEDULE Or UCase$(pRequest.WhatToShow) <> "SCHEDULE", "Historical schedule requests not supported"
 
 Dim lApiId As Long
-lApiId = gGetTwsHistRequestIdFromCallersRequestId(pRequestId)
+lApiId = GIdManager.GetTwsId(pRequestId, IdTypeHistoricalData)
 
 gLog "Requesting historical data for: " & UCase$(pRequest.ContractSpec.LocalSymbol) & _
             "; requester id=" & pRequestId & _
@@ -1582,7 +1664,7 @@ mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
-If pRequest.ContractSpec.SecType = TwsSecTypeCombo Then
+If pRequest.ContractSpec.Sectype = TwsSecTypeCombo Then
     mWriter.AddLong pRequest.ContractSpec.ComboLegs.Count, "Combo legs count"
     Dim lComboLeg As TwsComboLeg
     Dim i As Long
@@ -1640,7 +1722,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 11
 
 Dim lApiId As Long
-lApiId = gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId)
+lApiId = GIdManager.GetTwsId(pTickerId, IdTypeMarketData)
 
 gLog "Requesting market data" & _
         IIf(pSnapshot, " (snapshot)", "") & _
@@ -1655,7 +1737,7 @@ mWriter.AddLong lApiId, "Ticker id"
 mWriter.AddContract pContractSpec
 With pContractSpec
     ' Add combo legs for BAG requests
-    If .SecType = TwsSecTypes.TwsSecTypeCombo Then
+    If .Sectype = TwsSecTypes.TwsSecTypeCombo Then
         mWriter.AddString .ComboLegs.Count, "Combolegs count"
         Dim comboLeg As TwsComboLeg
         Dim i As Long
@@ -1671,12 +1753,12 @@ With pContractSpec
     End If
     
     If .DeltaNeutralContract.ConId <> 0 Then
-        mWriter.AddBoolean True, "Under comp"
+        mWriter.AddBoolean True, "Delta neutral"
         mWriter.AddLong .DeltaNeutralContract.ConId, "Delta neutral conid"
         mWriter.AddDouble .DeltaNeutralContract.Delta, "Delta neutral delta"
         mWriter.AddDouble .DeltaNeutralContract.Price, "Delta neutral price"
     Else
-        mWriter.AddBoolean False, "Under comp"
+        mWriter.AddBoolean False, "Delta neutral"
     End If
     
     mWriter.AddString pGenericTicks, "Generic tick list"
@@ -1718,6 +1800,7 @@ End Sub
 Public Sub RequestMarketDepth( _
                 ByVal pTickerId As Long, _
                 ByVal pContractSpec As TwsContractSpecifier, _
+                Optional ByVal pIsSmartDepth As Boolean, _
                 Optional ByVal pNumberOfRows As Long = 20)
 Const ProcName As String = "RequestMarketDepth"
 On Error GoTo Err
@@ -1726,8 +1809,11 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 5
 
+AssertArgument ServerVersion >= ApiServerVersions.SMART_DEPTH Or (Not pIsSmartDepth), "SMART depth request is not supported"
+AssertArgument ServerVersion >= ApiServerVersions.MKT_DEPTH_PRIM_EXCHANGE Or pContractSpec.PrimaryExch = "", "PrimaryExch parameter is not supported"
+
 Dim lApiId As Long
-lApiId = gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
+lApiId = GIdManager.GetTwsId(pTickerId, IdTypeMarketDepth)
 
 gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 
@@ -1735,8 +1821,9 @@ mWriter.AddMessageId REQ_MKT_DEPTH
 mWriter.AddLong VERSION, "Version"
 mWriter.AddLong lApiId, "Request id"
 
-mWriter.AddContract pContractSpec, pIgnorePrimaryExchange:=True
+mWriter.AddContract pContractSpec, pIgnorePrimaryExchange:=(ServerVersion < ApiServerVersions.MKT_DEPTH_PRIM_EXCHANGE)
 mWriter.AddLong pNumberOfRows, "Num rows"
+If ServerVersion >= ApiServerVersions.SMART_DEPTH Then mWriter.AddBoolean pIsSmartDepth, "IsSmartDepth"
 mWriter.AddString "", "Options"
 
 mWriter.Send
@@ -1822,7 +1909,7 @@ Assert ServerVersion >= ApiServerVersions.SEC_DEF_OPT_PARAMS_REQ, "Option parame
 mWriter.AddMessageId TwsSocketOutMsgTypes.RequestOptionParameters
 
 Dim lApiId As Long
-lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
+lApiId = GIdManager.GetTwsId(pRequestId, IdTypeContractData)
 
 gLog "Requesting option parameters: " & _
         "requester id=" & pRequestId & _
@@ -1880,7 +1967,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 3
 
 Dim lApiId As Long
-lApiId = gGetTwsHistRequestIdFromCallersRequestId(pTickerId)
+lApiId = GIdManager.GetTwsId(pTickerId, IdTypeHistoricalData)
 
 gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
 
@@ -1934,7 +2021,7 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 4
 
 Dim lApiId As Long
-lApiId = gGetTwsScannerRequestIdFromCallersRequestId(pRequestId)
+lApiId = GIdManager.GetTwsId(pRequestId, IdTypeScanner)
 
 gLog "Requesting scanner subscription: requester id=" & pRequestId & _
         "; api id=" & lApiId, _
@@ -2034,7 +2121,7 @@ Private Sub startPerformanceTLIPeriod()
 Const ProcName As String = "startPerformanceTLIPeriod"
 On Error GoTo Err
 
-Set mPerformanceTLIPeriod = GetGlobalTimerList.Add(Nothing, _
+Set mPerformanceTLIPeriod = GetGlobalTimerList.add(Nothing, _
                                         CDate(Int((GetTimestamp + OneMinute + OneSecond) / OneMinute) * OneMinute), _
                                         ExpiryTimeUnitDateTime)
 Exit Sub
@@ -2047,7 +2134,7 @@ Private Sub startPerformanceTLISecond()
 Const ProcName As String = "startPerformanceTLISecond"
 On Error GoTo Err
 
-Set mPerformanceTLISecond = GetGlobalTimerList.Add(Nothing, _
+Set mPerformanceTLISecond = GetGlobalTimerList.add(Nothing, _
                                         CDate(Int((GetTimestamp + 2 * OneSecond) / OneSecond) * OneSecond), _
                                         ExpiryTimeUnitDateTime)
     

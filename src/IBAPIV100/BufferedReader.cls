@@ -325,6 +325,26 @@ Checkpoint
 GetBooleanCheckpointed = True
 End Function
 
+Friend Function GetDecimal( _
+                ByRef pFieldName As String) As BoxedDecimal
+Dim s As String
+s = GetString(pFieldName)
+If s = "" Then
+    Set GetDecimal = DecimalZero
+Else
+    Set GetDecimal = CreateBoxedDecimal(DecimalFromString(s))
+End If
+End Function
+
+Friend Function GetDecimalCheckpointed( _
+                ByRef pValue As BoxedDecimal, _
+                ByRef pFieldName As String) As Boolean
+If alreadyProcessedItem Then Exit Function
+Set pValue = GetDecimal(pFieldName)
+Checkpoint
+GetDecimalCheckpointed = True
+End Function
+
 Friend Function GetDouble( _
                 ByRef pFieldName As String) As Double
 Dim s As String
@@ -351,8 +371,10 @@ Dim s As String
 s = GetString(pFieldName)
 If s = "" Then
     GetDoubleMax = MaxDouble
+ElseIf s = Infinity Then
+    GetDoubleMax = MinDouble
 Else
-    GetDoubleMax = val(s)
+    GetDoubleMax = DoubleFromString(s)
 End If
 End Function
 

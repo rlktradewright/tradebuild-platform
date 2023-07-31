@@ -78,10 +78,10 @@ Private Sub IBracketOrder_AddBracketOrderMessageListener(ByVal pListener As Orde
 Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "AddBracketOrderMessageListener not supported"
 End Sub
 
-Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
+Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As BoxedDecimal)
 End Sub
 
-Private Sub IBracketOrder_AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
+Private Sub IBracketOrder_AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As BoxedDecimal)
 End Sub
 
 Private Property Get IBracketOrder_ApplicationIndex() As Long
@@ -179,7 +179,7 @@ Private Property Get IBracketOrder_OrderContext() As OrderContext
 
 End Property
 
-Private Property Get IBracketOrder_PendingSize() As Long
+Private Property Get IBracketOrder_PendingSize() As BoxedDecimal
 End Property
 
 Private Property Let IBracketOrder_PreventUnprotectedPosition(ByVal Value As Boolean)
@@ -206,7 +206,7 @@ End Property
 Private Sub IBracketOrder_SetNewEntryLimitPrice(ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
-Private Sub IBracketOrder_SetNewEntryQuantity(ByVal pNewQuantity As Long)
+Private Sub IBracketOrder_SetNewEntryQuantity(ByVal pNewQuantity As BoxedDecimal)
 End Sub
 
 Private Sub IBracketOrder_SetNewEntryTriggerPrice(ByVal pPriceSpec As PriceSpecifier)
@@ -230,7 +230,7 @@ End Sub
 Private Sub IBracketOrder_SetNewTargetTriggerPrice(ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
-Private Property Get IBracketOrder_Size() As Long
+Private Property Get IBracketOrder_Size() As BoxedDecimal
 End Property
 
 Private Property Get IBracketOrder_StartTime() As Date
@@ -277,7 +277,7 @@ End Sub
 Private Sub IBracketOrder_Checkpoint()
 End Sub
 
-Private Sub IBracketOrder_CloseOut()
+Private Sub IBracketOrder_CloseOut(Optional ByVal pCloseoutSpec As OrderUtils27.CloseoutSpecifier)
 End Sub
 
 Private Function IBracketOrder_ContainsOrder(ByVal pOrder As IOrder) As Boolean
@@ -307,7 +307,7 @@ End Sub
 Private Sub IBracketOrder_SetNewStopLossPrice(ByVal Value As Double)
 End Sub
 
-Private Sub IBracketOrder_SetNewStopLossQuantity(ByVal Value As Long)
+Private Sub IBracketOrder_SetNewStopLossQuantity(ByVal Value As BoxedDecimal)
 End Sub
 
 Private Sub IBracketOrder_SetNewTargetPrice(ByVal Value As Double)
@@ -316,7 +316,7 @@ End Sub
 Private Sub IBracketOrder_SetNewTargetOffset(ByVal Value As Long)
 End Sub
 
-Private Sub IBracketOrder_SetNewTargetQuantity(ByVal Value As Long)
+Private Sub IBracketOrder_SetNewTargetQuantity(ByVal Value As BoxedDecimal)
 End Sub
 
 Private Function IBracketOrder_ToString() As String

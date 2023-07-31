@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#366.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#393.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   7800
@@ -493,7 +493,7 @@ On Error GoTo Err
 Dim lOrder As Order
 lOrder.ContractSpecifier = ContractSpecBuilder1.ContractSpecifier
 lOrder.Action = OrderActionBuy
-lOrder.Quantity = CLng(QuantityText)
+lOrder.Quantity = CreateBoxedDecimal(QuantityText)
 lOrder.OrderType = OrderTypeMarket
 lOrder.ETradeOnly = True
 lOrder.FirmQuoteOnly = True
@@ -513,7 +513,7 @@ If ConnectButton.Caption = CaptionConnect Then
     mClientId = CLng(ClientIdText.Text)
     Set mClient = GetClient(ServerText.Text, CLng(PortText.Text), mClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
     Set mContractStore = mClient.GetContractStore
-    Set mMarketDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory)
+    Set mMarketDataManager = CreateRealtimeDataManager(mClient.GetMarketDataFactory, mContractStore)
     
     Set mFutureWaiter = New FutureWaiter
 Else
@@ -562,7 +562,7 @@ Dim lOrder As New Order
 
 lOrder.ContractSpecifier = ContractSpecBuilder1.ContractSpecifier
 lOrder.Action = OrderActionSell
-lOrder.Quantity = CLng(QuantityText)
+lOrder.Quantity = CreateBoxedDecimal(QuantityText)
 lOrder.OrderType = OrderTypeMarket
 lOrder.ETradeOnly = True
 lOrder.FirmQuoteOnly = True
@@ -736,7 +736,7 @@ lBracketOrder.Contract = pContract
 Dim lEntryOrder As New Order
 lEntryOrder.OrderType = EntryOrderTypeCombo.ItemData(EntryOrderTypeCombo.ListIndex)
 lEntryOrder.Action = pAction
-lEntryOrder.Quantity = CLng(QuantityText)
+lEntryOrder.Quantity = CreateBoxedDecimal(QuantityText)
 lEntryOrder.ETradeOnly = True
 lEntryOrder.FirmQuoteOnly = True
 If EntryPriceText.Text <> "" Then lEntryOrder.LimitPrice = CDbl(EntryPriceText.Text)
@@ -748,7 +748,7 @@ If StopLossOrderTypeCombo.Text <> "" Then
     Dim lStopLossOrder As New Order
     lStopLossOrder.OrderType = StopLossOrderTypeCombo.ItemData(StopLossOrderTypeCombo.ListIndex)
     lStopLossOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
-    lStopLossOrder.Quantity = CLng(QuantityText)
+    lStopLossOrder.Quantity = CreateBoxedDecimal(QuantityText)
     lStopLossOrder.ETradeOnly = True
     lStopLossOrder.FirmQuoteOnly = True
     If StopLossPriceText.Text <> "" Then lStopLossOrder.LimitPrice = CDbl(StopLossPriceText.Text)
@@ -761,7 +761,7 @@ If TargetOrderTypeCombo.Text <> "" Then
     Dim lTargetOrder As New Order
     lTargetOrder.OrderType = TargetOrderTypeCombo.ItemData(TargetOrderTypeCombo.ListIndex)
     lTargetOrder.Action = IIf(pAction = OrderActionBuy, OrderActionSell, OrderActionBuy)
-    lTargetOrder.Quantity = CLng(QuantityText)
+    lTargetOrder.Quantity = CreateBoxedDecimal(QuantityText)
     lTargetOrder.ETradeOnly = True
     lTargetOrder.FirmQuoteOnly = True
     If TargetPriceText.Text <> "" Then lTargetOrder.LimitPrice = CDbl(TargetPriceText.Text)

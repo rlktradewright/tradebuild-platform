@@ -46,9 +46,9 @@ Private Const ModuleName                            As String = "VolumeAdjuster"
 
 Private mGotFirstVolume                             As Boolean
 Private mReceivedFirstVolumeInSession               As Boolean
-Private mPrevSessionAccumulatedVolume               As Long
-Private mVolumeCorrectionIncrement                  As Long
-Private mAccumulatedVolume                          As Long
+Private mPrevSessionAccumulatedVolume               As BoxedDecimal
+Private mVolumeCorrectionIncrement                  As BoxedDecimal
+Private mAccumulatedVolume                          As BoxedDecimal
 
 Private mLatestTrade                                As GenericTick
 
@@ -62,6 +62,13 @@ Attribute mSession.VB_VarHelpID = -1
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Set mPrevSessionAccumulatedVolume = DecimalZero
+Set mVolumeCorrectionIncrement = DecimalZero
+Set mAccumulatedVolume = DecimalZero
+Set mLatestTrade.Size = DecimalZero
+End Sub
+
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
@@ -72,8 +79,8 @@ Attribute mSession.VB_VarHelpID = -1
 
 Private Sub mSession_SessionStarted(ev As SessionEventData)
 mReceivedFirstVolumeInSession = False
-mPrevSessionAccumulatedVolume = mAccumulatedVolume
-mAccumulatedVolume = 0
+Set mPrevSessionAccumulatedVolume = mAccumulatedVolume
+Set mAccumulatedVolume = DecimalZero
 End Sub
 
 '@================================================================================
@@ -93,9 +100,9 @@ If mNoVolumeAdjustments Or Not mGotFirstVolume Then Exit Function
 
 mLatestTrade = pTradeTick
 
-mAccumulatedVolume = mAccumulatedVolume + pTradeTick.Size
+Set mAccumulatedVolume = mAccumulatedVolume.Add(pTradeTick.Size)
 GetVolumeTickForTrade.TickType = TickTypeVolume
-GetVolumeTickForTrade.Size = mAccumulatedVolume
+Set GetVolumeTickForTrade.Size = CreateBoxedDecimal(mAccumulatedVolume)
 GetVolumeTickForTrade.Timestamp = pTradeTick.Timestamp
 
 Exit Function
@@ -137,10 +144,10 @@ If Not mReceivedFirstVolumeInSession Then
     Then
         ' this is the first true Volume tick for the new Session
         mReceivedFirstVolumeInSession = True
-        mVolumeCorrectionIncrement = 0
+        Set mVolumeCorrectionIncrement = DecimalZero
     Else
         ' correct this Volume figure
-        pTick.Size = pTick.Size - (mPrevSessionAccumulatedVolume - mVolumeCorrectionIncrement)
+        Set pTick.Size = pTick.Size.Subtr(mPrevSessionAccumulatedVolume.Subtr(mVolumeCorrectionIncrement))
     End If
 End If
 
@@ -152,8 +159,8 @@ If isInvalidSize(pTick.Size) Then Exit Function
 
 ' note that the previous Trade will have notified Volume of mAccumulatedVolume
 
-Dim lExpectedSize As Long
-lExpectedSize = mAccumulatedVolume - mVolumeCorrectionIncrement
+Dim lExpectedSize As BoxedDecimal
+Set lExpectedSize = CreateBoxedDecimal(mAccumulatedVolume.Subtr(mVolumeCorrectionIncrement))
 
 If pTick.Size = lExpectedSize Then
     ' nothing to do, because the volume will have been notified when processing
@@ -165,7 +172,7 @@ ElseIf pTick.Size < lExpectedSize Then
     If mNoVolumeAdjustments Then
         ProcessVolumeTick = True
     Else
-        mVolumeCorrectionIncrement = mAccumulatedVolume - pTick.Size
+        Set mVolumeCorrectionIncrement = mAccumulatedVolume.Subtr(pTick.Size)
         ProcessVolumeTick = False
     End If
 
@@ -173,8 +180,8 @@ Else
     ' size is too big
     If mNoImpliedTrades Then
         pAdjustedTick = getAdjustedVolumeTick(pTick)
-    ElseIf SizeImpliesUnnotifiedTrade(pTick.Size) Then
-        pImpliedTick = getImpliedTradeTick(pTick, pTick.Size - lExpectedSize)
+    ElseIf sizeImpliesUnnotifiedTrade(pTick.Size) Then
+        pImpliedTick = getImpliedTradeTick(pTick, pTick.Size.Subtr(lExpectedSize))
     Else
         pAdjustedTick = getAdjustedVolumeTick(pTick)
     End If
@@ -192,31 +199,31 @@ End Function
 '@================================================================================
 
 Private Function getAdjustedVolumeTick(ByRef pTick As GenericTick) As GenericTick
-mAccumulatedVolume = pTick.Size + mVolumeCorrectionIncrement
+Set mAccumulatedVolume = pTick.Size.Add(mVolumeCorrectionIncrement)
 getAdjustedVolumeTick.TickType = TickTypeVolume
 getAdjustedVolumeTick.Timestamp = pTick.Timestamp
-getAdjustedVolumeTick.Size = mAccumulatedVolume
+Set getAdjustedVolumeTick.Size = mAccumulatedVolume
 End Function
 
-Private Function getImpliedTradeTick(ByRef pTick As GenericTick, ByVal pImpliedSize As Long) As GenericTick
+Private Function getImpliedTradeTick(ByRef pTick As GenericTick, ByVal pImpliedSize As BoxedDecimal) As GenericTick
 getImpliedTradeTick.TickType = TickTypeTrade
 getImpliedTradeTick.Timestamp = pTick.Timestamp
 getImpliedTradeTick.Price = mLatestTrade.Price
-getImpliedTradeTick.Size = pImpliedSize
+Set getImpliedTradeTick.Size = pImpliedSize
 End Function
 
-Private Function isInvalidSize(pSize As Long) As Boolean
+Private Function isInvalidSize(pSize As BoxedDecimal) As Boolean
 Const ProcName As String = "isInvalidSize"
 On Error GoTo Err
 
-If pSize >= 0 Then Exit Function
+If pSize.GE(DecimalZero) Then Exit Function
     
 isInvalidSize = True
 ' tickfile encoding can't cope with negative volumes, so just log it
 gLogger.Log "Corrected Volume tick is negative" & vbCrLf & _
-                "Corrected Size: " & pSize & vbCrLf & _
-                "mPrevSessionAccumulatedVolume: " & mPrevSessionAccumulatedVolume & vbCrLf & _
-                "mVolumeCorrectionIncrement: " & mVolumeCorrectionIncrement, _
+                "Corrected Size: " & DecimalToString(pSize) & vbCrLf & _
+                "mPrevSessionAccumulatedVolume: " & DecimalToString(mPrevSessionAccumulatedVolume) & vbCrLf & _
+                "mVolumeCorrectionIncrement: " & DecimalToString(mVolumeCorrectionIncrement), _
             ProcName, _
             ModuleName, _
             LogLevelWarning
@@ -227,10 +234,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function SizeImpliesUnnotifiedTrade(pSize As Long) As Boolean
-Dim lExpectedSize As Long
-lExpectedSize = mAccumulatedVolume - mVolumeCorrectionIncrement
-SizeImpliesUnnotifiedTrade = (pSize - lExpectedSize = mLatestTrade.Size)
+Private Function sizeImpliesUnnotifiedTrade(pSize As BoxedDecimal) As Boolean
+Dim lExpectedSize As BoxedDecimal
+Set lExpectedSize = mAccumulatedVolume.Subtr(mVolumeCorrectionIncrement)
+sizeImpliesUnnotifiedTrade = pSize.Subtr(lExpectedSize).EQ(mLatestTrade.Size)
 End Function
 
 

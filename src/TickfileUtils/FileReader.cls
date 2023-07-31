@@ -47,7 +47,6 @@ Private Const ModuleName                            As String = "FileReader"
 Private mTickfileSpec                               As ITickfileSpecifier
 
 Private mTs                                         As Scripting.TextStream
-Private mAtEnd                                      As Boolean
 
 Private mSizeBytes                                  As Long
 Private mBytesRead                                  As Long
@@ -88,7 +87,7 @@ End Sub
 '@================================================================================
 
 Friend Property Get AtEnd()
-AtEnd = mAtEnd
+AtEnd = mTs.AtEndOfStream
 End Property
 
 Friend Property Get ContractSpecifier() As IContractSpecifier
@@ -152,7 +151,7 @@ On Error GoTo Err
 
 Set mTickfileSpec = pTickfileSpec
 
-gLogger.Log "Opening tickfile " & mTickfileSpec.Filename, ProcName, ModuleName
+gLogger.Log "Opening tickfile: " & mTickfileSpec.Filename, ProcName, ModuleName
     
 If Not openFile(mTickfileSpec.Filename) Then Exit Function
 If fileIsEmpty(mTickfileSpec.Filename) Then Exit Function
@@ -162,16 +161,12 @@ If Not getHeaderLineFields(mHeaderLineFields, mTickfileSpec.Filename) Then Exit 
 recogniseFileFormat mHeaderLineFields
 If Not getContractInfo(mHeaderLineFields, mTickfileSpec.Filename) Then Exit Function
 
-Dim lBuffer As String
-If Not getNextRecord(lBuffer) Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileIsEmpty, "Empty tickfile"
-    Initialise = False
-    Exit Function
-End If
-
-'mFirstTickFileTime = getFirstTickfileTime(lBuffer)
-
-repositionFile mTickfileSpec.Filename
+'Dim lBuffer As String
+'If Not getNextRecord(lBuffer) Then
+'    setEventDetails TickfileEventCodes.TickfileEventNoTickData, "No data in this tickfile"
+'End If
+'
+'repositionFile mTickfileSpec.Filename
 
 Initialise = True
 
@@ -187,7 +182,7 @@ On Error GoTo Err
 
 Dim lBuffer As String
 
-If mTicksIndex = -1 And Not mAtEnd Then
+If mTicksIndex = -1 And Not AtEnd Then
     MoveNext = getNextRecord(lBuffer)
     If MoveNext Then
         mTicks = parseRecord(lBuffer)
@@ -197,7 +192,7 @@ ElseIf mTicksIndex = -1 Then
     MoveNext = False
 ElseIf mTicksIndex < UBound(mTicks) Then
     mTicksIndex = mTicksIndex + 1
-ElseIf mAtEnd Then
+ElseIf AtEnd Then
     MoveNext = False
 Else
     MoveNext = getNextRecord(lBuffer)
@@ -235,12 +230,12 @@ End Function
 Private Function fileIsEmpty(ByVal pFilename As String) As Boolean
 If Not mTs.AtEndOfStream Then Exit Function
 
-mTs.Close
-Set mTs = Nothing
+'mTs.Close
+'Set mTs = Nothing
 mSizeBytes = 0
 mTickFileVersion = TickFileVersions.UnknownVersion
 mTickfileFormat = TickfileFormats.TickfileUnknown
-NotifyEvent TickfileEventCodes.TickfileEventFileIsInvalid, "Tickfile mTickfileFormat cannot be determined: " & pFilename
+setEventDetails TickfileEventCodes.TickfileEventFileIsInvalid, "Tickfile is empty: " & pFilename
 fileIsEmpty = True
 End Function
 
@@ -252,6 +247,7 @@ On Error Resume Next
 Set mContractSpecifier = CreateContractSpecifier( _
                                 , _
                                 pHeaderLineFields(TickfileFieldsV1.Symbol), _
+                                , _
                                 pHeaderLineFields(TickfileFieldsV1.Exchange), _
                                 SecTypeFuture, _
                                 , _
@@ -259,7 +255,7 @@ Set mContractSpecifier = CreateContractSpecifier( _
 
 If Err.Number <> 0 Then
     mTs.Close
-    NotifyEvent TickfileEventCodes.TickfileEventFileIsInvalid, "Tickfile format/version not determined: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileIsInvalid, "Tickfile format/version not determined: " & pFilename
     getCrescendoV1ContractInfo = False
     Exit Function
 End If
@@ -283,6 +279,7 @@ On Error GoTo Err
 Set mContractSpecifier = CreateContractSpecifier( _
                                 , _
                                 pHeaderLineFields(TickfileHeaderFieldsV2.Symbol), _
+                                , _
                                 pHeaderLineFields(TickfileHeaderFieldsV2.Exchange), _
                                 SecTypeFuture, _
                                 , _
@@ -345,7 +342,7 @@ End Function
 Private Function getHeaderLineFields(ByRef pAr() As String, ByVal pFilename As String) As Boolean
 Dim lBuffer As String
 If Not getNextRecord(lBuffer) Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileIsInvalid, "Tickfile mTickfileFormat cannot be determined: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileIsInvalid, "Tickfile format cannot be determined: " & pFilename
     getHeaderLineFields = False
     Exit Function
 End If
@@ -358,7 +355,7 @@ Private Function getNextRecord(ByRef pBuffer As String) As Boolean
 Const ProcName As String = "getNextLine"
 On Error GoTo Err
 
-If mAtEnd Then
+If mTs.AtEndOfStream Then
     pBuffer = ""
     getNextRecord = False
     Exit Function
@@ -372,12 +369,6 @@ Do While Not mTs.AtEndOfStream
         Exit Do
     End If
 Loop
-
-If mTs.AtEndOfStream Then
-    mTs.Close
-    Set mTs = Nothing
-    mAtEnd = True
-End If
 
 Exit Function
 
@@ -394,6 +385,7 @@ On Error GoTo Err
 Set mContractSpecifier = CreateContractSpecifier( _
                                 , _
                                 pHeaderLineFields(TickfileHeaderFieldsV3.Symbol), _
+                                , _
                                 pHeaderLineFields(TickfileHeaderFieldsV3.Exchange), _
                                 SecTypeFuture, _
                                 , _
@@ -406,13 +398,13 @@ Set mContractSpecifier = CreateContractSpecifier( _
 ' read the serialised contract details
 Dim lBuffer As String
 If Not getNextRecord(lBuffer) Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileIsInvalid, "Invalid tickfile - no contract details line: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileIsInvalid, "Invalid tickfile - no contract details line: " & pFilename
     getTradeBuildContractInfo = False
     Exit Function
 End If
 
 If Left$(lBuffer, Len(CONTRACT_DETAILS_MARKER)) <> CONTRACT_DETAILS_MARKER Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileIsInvalid, "Invalid tickfile - no contract details line: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileIsInvalid, "Invalid tickfile - no contract details line: " & pFilename
     getTradeBuildContractInfo = False
     Exit Function
 End If
@@ -466,11 +458,6 @@ Else
 End If
 End Function
 
-Private Sub NotifyEvent(ByVal pEventCode As TickfileEventCodes, pMessage As String)
-mEventCode = pEventCode
-mEventMessage = pMessage
-End Sub
-
 Private Function openFile(ByVal pFilename As String) As Boolean
 Const ProcName As String = "openFile"
 On Error GoTo Err
@@ -490,13 +477,13 @@ Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrFileNotFound Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileDoesNotExist, "Tickfile does not exist: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileDoesNotExist, "Tickfile does not exist: " & pFilename
 ElseIf Err.Number = VBErrorCodes.VbErrFileAlreadyOpen Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileDoesNotExist, "File is already open: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileDoesNotExist, "File is already open: " & pFilename
 ElseIf Err.Number = VBErrorCodes.VbErrPathNotFound Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileDoesNotExist, "Tickfile path not found: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileDoesNotExist, "Tickfile path not found: " & pFilename
 ElseIf Err.Number = VBErrorCodes.VbErrPermissionDenied Then
-    NotifyEvent TickfileEventCodes.TickfileEventFileDoesNotExist, "Tickfile access denied: " & pFilename
+    setEventDetails TickfileEventCodes.TickfileEventFileDoesNotExist, "Tickfile access denied: " & pFilename
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -516,14 +503,14 @@ With lFileTicks(0)
     Case FileTickTypes.Bid
         .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
     Case FileTickTypes.BidSize
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV1.TickSize))
     Case FileTickTypes.Ask
         .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
     Case FileTickTypes.AskSize
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV1.TickSize))
     Case FileTickTypes.Last
         .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV1.TickSize))
     Case FileTickTypes.LastSize
         ' shouldn't ever get this
     Case FileTickTypes.High
@@ -533,9 +520,9 @@ With lFileTicks(0)
     Case FileTickTypes.PrevClose
         .TickPrice = pDataFields(TickfileFieldsV1.TickPrice)
     Case FileTickTypes.Volume
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV1.TickSize))
     Case FileTickTypes.LastSizeCorrection
-        .TickSize = pDataFields(TickfileFieldsV1.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV1.TickSize))
     End Select
 End With
 
@@ -561,20 +548,20 @@ With lFileTicks(0)
     Case FileTickTypes.Bid
         .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
         If pDataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
-            .TickSize = pDataFields(TickfileFieldsV2.TickSize)
+            Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV2.TickSize))
         End If
     Case FileTickTypes.BidSize
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV2.TickSize))
     Case FileTickTypes.Ask
         .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
         If pDataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
-            .TickSize = pDataFields(TickfileFieldsV2.TickSize)
+            Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV2.TickSize))
         End If
     Case FileTickTypes.AskSize
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV2.TickSize))
     Case FileTickTypes.Last
         .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV2.TickSize))
     Case FileTickTypes.LastSize
         ' shouldn't ever get this
     Case FileTickTypes.High
@@ -584,9 +571,9 @@ With lFileTicks(0)
     Case FileTickTypes.PrevClose
         .TickPrice = pDataFields(TickfileFieldsV2.TickPrice)
     Case FileTickTypes.Volume
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV2.TickSize))
     Case FileTickTypes.LastSizeCorrection
-        .TickSize = pDataFields(TickfileFieldsV2.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV2.TickSize))
     End Select
 End With
 parseCrescendoV2Record = lFileTicks
@@ -623,7 +610,7 @@ Case ESIGNAL_TICK_TRADE
     With lFileTicks(0)
         .TickType = FileTickTypes.Last
         .TickPrice = pDataFields(ESignalTickFileFields.LastPrice)
-        .TickSize = pDataFields(ESignalTickFileFields.LastSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(ESignalTickFileFields.LastSize))
     End With
 Case ESIGNAL_TICK_QUOTE
     Static esPrevBid As Double
@@ -640,7 +627,7 @@ Case ESIGNAL_TICK_QUOTE
         With lFileTicks(0)
             .TickType = FileTickTypes.Bid
             .TickPrice = pDataFields(ESignalTickFileFields.BidPrice)
-            .TickSize = pDataFields(ESignalTickFileFields.BidSize)
+            Set .TickSize = CreateBoxedDecimal(pDataFields(ESignalTickFileFields.BidSize))
         End With
     End If
     
@@ -653,7 +640,7 @@ Case ESIGNAL_TICK_QUOTE
             .Timestamp = lTimestamp
             .TickType = FileTickTypes.Ask
             .TickPrice = pDataFields(ESignalTickFileFields.AskPrice)
-            .TickSize = pDataFields(ESignalTickFileFields.AskSize)
+            Set .TickSize = CreateBoxedDecimal(pDataFields(ESignalTickFileFields.AskSize))
         End With
     End If
     esPrevBid = pDataFields(ESignalTickFileFields.BidPrice)
@@ -719,19 +706,19 @@ With lFileTicks(0)
         .MDOperation = pDataFields(TickfileFieldsV3.MDOperation)
         .MDSide = pDataFields(TickfileFieldsV3.MDSide)
         .TickPrice = pDataFields(TickfileFieldsV3.MDPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.MDSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV3.MDSize))
     Case TICK_BID
         .TickType = FileTickTypes.Bid
         .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV3.TickSize))
     Case TICK_ASK
         .TickType = FileTickTypes.Ask
         .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV3.TickSize))
     Case TICK_TRADE
         .TickType = FileTickTypes.Last
         .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
-        .TickSize = pDataFields(TickfileFieldsV3.TickSize)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV3.TickSize))
     Case TICK_HIGH
         .TickType = FileTickTypes.High
         .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
@@ -743,15 +730,15 @@ With lFileTicks(0)
         .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
     Case TICK_VOLUME
         .TickType = FileTickTypes.Volume
-        .TickSize = pDataFields(TickfileFieldsV3.Volume)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV3.Volume))
         If .TickSize >= 1000000000 Then
             ' ignore spurious very large volumes returned by TWS for some
             ' futures between 15/06/2021 and 07/10/2021
-            .TickSize = 0
+            Set .TickSize = CreateBoxedDecimal(0)
         End If
     Case TICK_OPEN_INTEREST
         .TickType = FileTickTypes.OpenInterest
-        .TickSize = pDataFields(TickfileFieldsV3.OpenInterest)
+        Set .TickSize = CreateBoxedDecimal(pDataFields(TickfileFieldsV3.OpenInterest))
     Case TICK_OPEN
         .TickType = FileTickTypes.SessionOpen
         .TickPrice = pDataFields(TickfileFieldsV3.TickPrice)
@@ -850,4 +837,10 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Sub setEventDetails(ByVal pEventCode As TickfileEventCodes, pMessage As String)
+mEventCode = pEventCode
+mEventMessage = pMessage
+End Sub
+
 

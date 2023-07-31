@@ -151,7 +151,7 @@ End Sub
 
 Private Sub IAccountDataConsumer_NotifyPortfolioUpdate( _
                 ByVal pTwsContractSpec As TwsContractSpecifier, _
-                ByVal pPosition As Double, _
+                ByVal pPosition As BoxedDecimal, _
                 ByVal pMarketPrice As Double, _
                 ByVal pMarketValue As Double, _
                 ByVal pAverageCost As Double, _
@@ -179,7 +179,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IAccountDataConsumer_NotifyPosition(ByVal pAccount As String, ByVal pContractSpec As TwsContractSpecifier, ByVal pPosition As Double, ByVal pAverageCost As Double)
+Private Sub IAccountDataConsumer_NotifyPosition(ByVal pAccount As String, ByVal pContractSpec As TwsContractSpecifier, ByVal pPosition As BoxedDecimal, ByVal pAverageCost As Double)
 
 End Sub
 

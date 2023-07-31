@@ -144,7 +144,7 @@ End Property
 Public Property Get OrderContext() As OrderContext
 End Property
 
-Public Property Get PendingSize() As Long
+Public Property Get PendingSize() As BoxedDecimal
 End Property
 
 Public Property Let PreventUnprotectedPosition(ByVal Value As Boolean)
@@ -162,7 +162,7 @@ End Property
 Public Property Get RolloverSpecification() As RolloverSpecification
 End Property
 
-Public Property Get Size() As Long
+Public Property Get Size() As BoxedDecimal
 End Property
 
 Public Property Get StartTime() As Date
@@ -208,10 +208,10 @@ End Sub
 Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
 End Sub
 
-Public Sub AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1)
+Public Sub AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As BoxedDecimal)
 End Sub
 
-Public Sub AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1)
+Public Sub AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As BoxedDecimal)
 End Sub
 
 Public Function Cancel(Optional ByVal pEvenIfFilled As Boolean = False) As Boolean
@@ -268,14 +268,14 @@ Public Sub SetNewOrderTriggerPrice( _
                 ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
-Public Sub SetNewEntryQuantity(ByVal pNewQuantity As Long)
+Public Sub SetNewEntryQuantity(ByVal pNewQuantity As BoxedDecimal)
 End Sub
 
 Public Sub SetNewStopLossLimitPrice( _
                 ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
-Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As Long)
+Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As BoxedDecimal)
 End Sub
 
 Public Sub SetNewStopLossTriggerPrice( _
@@ -286,7 +286,7 @@ Public Sub SetNewTargetLimitPrice( _
                 ByVal pPriceSpec As PriceSpecifier)
 End Sub
 
-Public Sub SetNewTargetQuantity(ByVal pNewQuantity As Long)
+Public Sub SetNewTargetQuantity(ByVal pNewQuantity As BoxedDecimal)
 End Sub
 
 Public Sub SetNewTargetTriggerPrice( _

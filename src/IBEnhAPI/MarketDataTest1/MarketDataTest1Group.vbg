@@ -4,4 +4,5 @@ Project=..\IBEnhAPI.vbp
 Project=..\..\ContractUtils\ContractUtils.vbp
 Project=..\..\IBAPIV100\IBAPIV100.vbp
 Project=..\..\TickUtils\TickUtils.vbp
+Project=..\..\TradingUI\TradingUI.vbp
 Project=..\..\MarketDataUtils\MarketDataUtils.vbp

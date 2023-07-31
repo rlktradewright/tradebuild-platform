@@ -208,6 +208,7 @@ lReader.Initialise pReplayMonitor, _
                     Me, _
                     pDataConsumer
 
+gLogger.Log "Adding data reader " & GetObjectKey(lReader), ProcName, ModuleName
 mTickfileDataReaders.Add lReader
 
 Set CreateTickfileReader = lReader
@@ -256,6 +257,7 @@ Friend Sub DataReaderFinished( _
 Const ProcName As String = "DataReaderFinished"
 On Error GoTo Err
 
+gLogger.Log "Removing data reader " & GetObjectKey(dataReader), ProcName, ModuleName
 mTickfileDataReaders.Remove dataReader
 
 Exit Sub

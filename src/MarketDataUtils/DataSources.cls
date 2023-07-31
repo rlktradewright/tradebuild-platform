@@ -112,7 +112,7 @@ End Sub
 Friend Sub DOMSetCell( _
                 ByVal pSide As DOMSides, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "DOMSetCell"
 On Error GoTo Err
 

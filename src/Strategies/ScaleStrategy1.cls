@@ -195,7 +195,7 @@ Dim newStopOffsetTicks As Double
 newStopOffsetTicks = Int((S.InitialStopFactor * mInitialATR / mTickSize) + 0.9999)
 If mLongPosition Then
     Set mAdditionalBracketOrder = Buy( _
-                    Number:=mUnitSize, _
+                    Quantity:=CreateBoxedDecimal(mUnitSize), _
                     EntryOrder:=DeclareEntryOrder(EntryOrderTypeMarket), _
                     StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:="Entry[" & CStr(-newStopOffsetTicks) & "T]"), _
                     NotifyCompletion:=True)
@@ -205,7 +205,7 @@ If mLongPosition Then
     End If
 Else
     Set mAdditionalBracketOrder = Sell( _
-                    Number:=mUnitSize, _
+                    Quantity:=CreateBoxedDecimal(mUnitSize), _
                     EntryOrder:=DeclareEntryOrder(EntryOrderTypeMarket), _
                     StopLossOrder:=DeclareStopLossOrder(StopLossOrderTypeStop, TriggerPrice:="Entry[" & CStr(-newStopOffsetTicks) & "T]"), _
                     NotifyCompletion:=True)

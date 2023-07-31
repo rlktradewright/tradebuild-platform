@@ -73,17 +73,17 @@ Private Const ModuleName                    As String = "TickDataEncoderv1"
 ' Member variables
 '@================================================================================
 
-Private mTimestamp As Date          ' current timestamp
-Private mBasePrice As Double        ' first price encountered at start of encoding period
-Private mPeriodStartTime As Date   ' timestamp at start of encoding period
+Private mTimestamp                          As Date     ' current timestamp
+Private mBasePrice                          As Double   ' first price encountered at start of encoding period
+Private mPeriodStartTime                    As Date     ' timestamp at start of encoding period
 
-Private mData() As Byte
-Private mDataIndex As Long
-Private mDataIndexCheckpoint As Long
+Private mData()                             As Byte
+Private mDataIndex                          As Long
+Private mDataIndexCheckpoint                As Long
 
-Private mTickSize As Double
+Private mTickSize                           As Double
 
-Private mVersion As Long
+Private mVersion                            As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -104,13 +104,13 @@ End Property
 Private Sub ITickDataEncoder_encodeAsk( _
                 ByVal pTimestamp As Date, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "ITickDataEncoder_encodeAsk"
 On Error GoTo Err
 
 checkpoint
 
-If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
 WriteQuoteRecord TickTypes.TickTypeAsk, pTimestamp, pPrice, pSize
 
@@ -124,13 +124,13 @@ End Sub
 Private Sub ITickDataEncoder_encodeBid( _
                 ByVal pTimestamp As Date, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "ITickDataEncoder_encodeBid"
 On Error GoTo Err
 
 checkpoint
 
-If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
 WriteQuoteRecord TickTypes.TickTypeBid, pTimestamp, pPrice, pSize
 
@@ -224,7 +224,7 @@ Private Sub ITickDataEncoder_encodeMarketDepthData( _
                 ByVal pOperation As Long, _
                 ByVal pSide As Long, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "ITickDataEncoder_encodeMarketDepthData"
 On Error GoTo Err
 
@@ -234,7 +234,7 @@ Dim sideOperationPositionByte As Byte
 
 checkpoint
 
-If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
 lTypeByte = TickTypes.TickTypeMarketDepth
 
@@ -303,13 +303,13 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeOpenInterest( _
-                ByVal pTimestamp As Date, ByVal pSize As Long)
+                ByVal pTimestamp As Date, ByVal pSize As BoxedDecimal)
 Const ProcName As String = "ITickDataEncoder_encodeOpenInterest"
 On Error GoTo Err
 
 checkpoint
 
-If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
 WriteSizeRecord TickTypes.TickTypeOpenInterest, pTimestamp, pSize
 
@@ -323,13 +323,13 @@ End Sub
 Private Sub ITickDataEncoder_encodeTrade( _
                 ByVal pTimestamp As Date, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "ITickDataEncoder_encodeTrade"
 On Error GoTo Err
 
 checkpoint
 
-If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
 WriteQuoteRecord TickTypes.TickTypeTrade, pTimestamp, pPrice, pSize
 
@@ -342,13 +342,13 @@ End Sub
 
 Private Sub ITickDataEncoder_encodeVolume( _
                 ByVal pTimestamp As Date, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "ITickDataEncoder_encodeVolume"
 On Error GoTo Err
 
 checkpoint
 
-If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
 WriteSizeRecord TickTypes.TickTypeVolume, pTimestamp, pSize
 
@@ -413,13 +413,21 @@ mDataIndexCheckpoint = mDataIndex
 End Sub
 
 Private Function GetSizeType( _
-                ByVal pSize As Long) As SizeTypes
-If pSize < &H100 Then
-    GetSizeType = SizeTypes.ByteSize
-ElseIf pSize < &H10000 Then
-    GetSizeType = SizeTypes.UInt16Size
+                ByVal pSize As BoxedDecimal) As SizeTypes
+If pSize < 0 Then
+    GetSizeType = DecimalSize
+ElseIf pSize.IsInteger Then
+    If pSize < &H100 Then
+        GetSizeType = SizeTypes.ByteSize
+    ElseIf pSize < &H10000 Then
+        GetSizeType = SizeTypes.UInt16Size
+    ElseIf pSize >= &H8000000 Or pSize <= &H7FFFFFFF Then
+        GetSizeType = SizeTypes.UInt32Size
+    Else
+        GetSizeType = DecimalSize
+    End If
 Else
-    GetSizeType = SizeTypes.UInt32Size
+    GetSizeType = DecimalSize
 End If
 End Function
 
@@ -444,6 +452,34 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub WriteDecimal( _
+                ByVal pSize As BoxedDecimal)
+Dim lValue As String: lValue = DecimalToString(pSize)
+
+' First byte is number of bytes used. Then each digit consumes 1 nibble (up to 29
+' digits for decimal), plus one nibble for decimal point, plus extra nibble if
+' needed to make whole number of bytes. Therefore up to 16 bytes.
+Dim ar() As Byte
+ar = StrConv(lValue, vbFromUnicode)
+
+WriteByte Len(lValue)
+
+Dim lNibbleIndex As Long: lNibbleIndex = 2 * mDataIndex
+
+Dim i As Long
+For i = 0 To UBound(ar)
+    If ar(i) = Asc("-") Then
+        WriteNibble NegativeSignMarker, lNibbleIndex
+    ElseIf ar(i) = Asc(".") Then
+        WriteNibble DecimalPointMarker, lNibbleIndex
+    Else
+        ' NB 48 is Asc("0")
+        WriteNibble ar(i) - 48, lNibbleIndex
+    End If
+Next
+If lNibbleIndex Mod 2 <> 0 Then WriteNibble PaddingMarker, lNibbleIndex
+End Sub
+
 Private Sub WriteInt( _
                 ByVal theInt As Integer)
 Const ProcName As String = "WriteInt"
@@ -464,6 +500,22 @@ WriteByte CByte(theLong And &HFF)
 WriteByte CByte(Int(theLong / &H100) And &HFF)
 WriteByte CByte(Int(theLong / &H10000) And &HFF)
 WriteByte CByte(Int(theLong / &H1000000) And &HFF)
+End Sub
+
+Private Sub WriteNibble( _
+                ByVal theNibble As Byte, _
+                ByRef nibbleIndex As Long)
+If nibbleIndex > 2 * (UBound(mData) + 1) - 1 Then
+    ReDim Preserve mData(UBound(mData) + 8192) As Byte
+End If
+If nibbleIndex = 2 * mDataIndex Then
+    ' this is the left-hand nibble
+    mData(mDataIndex) = &H10 * theNibble
+Else
+    mData(mDataIndex) = mData(mDataIndex) Or theNibble
+    mDataIndex = mDataIndex + 1
+End If
+nibbleIndex = nibbleIndex + 1
 End Sub
 
 Private Sub WritePrice( _
@@ -526,7 +578,7 @@ Private Sub WriteQuoteRecord( _
                 ByVal pTickType As TickTypes, _
                 ByVal pTimestamp As Date, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "WriteQuoteRecord"
 On Error GoTo Err
 
@@ -558,7 +610,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteSize( _
-                ByVal pSize As Long, _
+                ByVal pSize As BoxedDecimal, _
                 ByVal pSizeType As SizeTypes)
 Const ProcName As String = "WriteSize"
 On Error GoTo Err
@@ -576,6 +628,8 @@ Case SizeTypes.UInt16Size
     End If
 Case SizeTypes.UInt32Size
     WriteLong pSize
+Case SizeTypes.DecimalSize
+    WriteDecimal pSize
 End Select
 
 Exit Sub
@@ -587,7 +641,7 @@ End Sub
 Private Sub WriteSizeRecord( _
                 ByVal TickType As TickTypes, _
                 ByVal pTimestamp As Date, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "WriteSizeRecord"
 On Error GoTo Err
 
@@ -612,7 +666,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteString( _
-                ByVal theString As String)
+                ByRef theString As String)
 Const ProcName As String = "WriteString"
 On Error GoTo Err
 
@@ -627,7 +681,7 @@ Else
     WriteByte CByte(UBound(ar) + 3)
 
     ' prepend a UTF-16 little-endian BOM
-    ' see RFC 2781 4.3 for details of interpeting the Byte Order Marker (BOM)
+    ' see RFC 2781 4.3 for details of interpreting the Byte Order Marker (BOM)
     WriteByte &HFF
     WriteByte &HFE
 End If

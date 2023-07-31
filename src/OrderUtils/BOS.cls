@@ -58,7 +58,7 @@ Private mEntryReason                                As String
 Private mTargetReason                               As String
 Private mStopReason                                 As String
 
-Private mSize                                       As Long
+Private mSize                                       As BoxedDecimal
 
 Private mLotSize                                    As Long
 Private mAutosizeValue                              As Double
@@ -350,15 +350,15 @@ Public Property Get RolloverSpecification() As RolloverSpecification
 Set RolloverSpecification = mRolloverSpecification
 End Property
 
-Public Property Let Size(ByVal Value As Long)
+Public Property Let Size(ByVal Value As BoxedDecimal)
 If mSize = Value Then Exit Property
 setDirty
-mSize = Value
+Set mSize = Value
 mDiff.SetProperty "Size", Value
 End Property
 
-Public Property Get Size() As Long
-Size = mSize
+Public Property Get Size() As BoxedDecimal
+Set Size = mSize
 End Property
 
 Public Property Let State(ByVal Value As BracketOrderStates)

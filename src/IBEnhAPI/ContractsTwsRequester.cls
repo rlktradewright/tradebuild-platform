@@ -237,7 +237,7 @@ Private Sub IContractDetailsConsumer_NotifyOptionParameter( _
                 ByVal pExchange As String, _
                 ByVal pUnderlyingContractId As Long, _
                 ByVal pTradingClass As String, _
-                ByVal pMultiplier As Long, _
+                ByVal pMultiplier As Double, _
                 pExpirations() As String, _
                 pStrikes() As Double)
 Const ProcName As String = "IContractDetailsConsumer_NotifyOptionParameter"

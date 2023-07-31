@@ -117,22 +117,10 @@ End Property
 Public Property Get ErrorMessage() As String
 End Property
 
-Public Property Let ETradeOnly(ByVal Value As Boolean)
-End Property
-
-Public Property Get ETradeOnly() As Boolean
-End Property
-
 Public Property Let FillTime(ByVal Value As Date)
 End Property
 
 Public Property Get FillTime() As Date
-End Property
-
-Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
-End Property
-
-Public Property Get FirmQuoteOnly() As Boolean
 End Property
 
 Public Property Let GoodAfterTime(ByVal Value As Date)
@@ -219,12 +207,6 @@ End Property
 Public Property Get MinimumQuantity() As Long
 End Property
 
-Public Property Let NbboPriceCap(ByVal Value As Double)
-End Property
-
-Public Property Get NbboPriceCap() As Double
-End Property
-
 Public Property Get OrderContext() As OrderContext
 End Property
 
@@ -261,22 +243,22 @@ End Property
 Public Property Get ProviderProperties() As Parameters
 End Property
 
-Public Property Let Quantity(ByVal Value As Long)
+Public Property Let Quantity(ByVal Value As BoxedDecimal)
 End Property
 
-Public Property Get Quantity() As Long
+Public Property Get Quantity() As BoxedDecimal
 End Property
 
-Public Property Let QuantityFilled(ByVal Value As Long)
+Public Property Let QuantityFilled(ByVal Value As BoxedDecimal)
 End Property
 
-Public Property Get QuantityFilled() As Long
+Public Property Get QuantityFilled() As BoxedDecimal
 End Property
 
-Public Property Let QuantityRemaining(ByVal Value As Long)
+Public Property Let QuantityRemaining(ByVal Value As BoxedDecimal)
 End Property
 
-Public Property Get QuantityRemaining() As Long
+Public Property Get QuantityRemaining() As BoxedDecimal
 End Property
 
 Public Property Let SettlingFirm(ByVal Value As String)

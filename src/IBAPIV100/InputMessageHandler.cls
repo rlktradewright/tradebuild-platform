@@ -187,14 +187,6 @@ Friend Property Get MarketDepthConsumer() As IMarketDepthConsumer
 Set MarketDepthConsumer = mMarketDepthConsumer
 End Property
 
-Friend Property Let NextOrderId(ByVal Value As Long)
-mInputMessageParser.NextOrderId = Value
-End Property
-
-Friend Property Get NextOrderId() As Long
-NextOrderId = mInputMessageParser.NextOrderId
-End Property
-
 Friend Property Let OrderInfoConsumer(ByVal Value As IOrderInfoConsumer)
 Set mOrderInfoConsumer = Value
 mInputMessageParser.OrderInfoConsumer = Value
@@ -389,6 +381,10 @@ Private Function messageHasVersion(ByVal pMessageId As TwsSocketInMsgTypes) As B
 If pMessageId = TwsSocketInMsgTypes.EXECUTION_DATA And mServerVersion >= ApiServerVersions.LAST_LIQUIDITY Then Exit Function
 If pMessageId = TwsSocketInMsgTypes.HISTORICAL_DATA And mServerVersion >= ApiServerVersions.SYNT_REALTIME_BARS Then Exit Function
 If pMessageId = TwsSocketInMsgTypes.ORDER_STATUS And mServerVersion >= ApiServerVersions.MARKET_CAP_PRICE Then Exit Function
+If pMessageId = TwsSocketInMsgTypes.OPEN_ORDER And mServerVersion >= ApiServerVersions.ORDER_CONTAINER Then Exit Function
+If pMessageId = TwsSocketInMsgTypes.TICK_OPTION_COMPUTATION And mServerVersion >= ApiServerVersions.PRICE_BASED_VOLATILITY Then Exit Function
+If pMessageId = TwsSocketInMsgTypes.BOND_CONTRACT_DATA And mServerVersion >= ApiServerVersions.SIZE_RULES Then Exit Function
+If pMessageId = TwsSocketInMsgTypes.CONTRACT_DATA And mServerVersion >= ApiServerVersions.SIZE_RULES Then Exit Function
 messageHasVersion = pMessageId <= TwsSocketInMsgTypes.MaxIdWithVersion
 End Function
 

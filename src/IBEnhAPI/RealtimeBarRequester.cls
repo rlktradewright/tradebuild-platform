@@ -82,7 +82,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub NotifyRealtimeBar(ByVal pRequesterId As Long, pBar As TwsRealtimeBar)
+Friend Sub NotifyRealtimeBar(ByVal pRequesterId As Long, pBar As TwsBar)
 Const ProcName As String = "NotifyRealtimeBar"
 On Error GoTo Err
 
@@ -122,7 +122,7 @@ If pPrice = sPrevNotifiedPrice Then Exit Sub
 
 sPrevNotifiedPrice = pPrice
 Dim t As TwsTickAttributes
-getRequester.NotifyTickPrice pRequesterId, TwsTickLast, pPrice, 0, t
+getRequester.NotifyTickPrice pRequesterId, TwsTickLast, pPrice, DecimalZero, t
 
 Exit Sub
 

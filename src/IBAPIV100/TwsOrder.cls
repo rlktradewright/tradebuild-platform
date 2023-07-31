@@ -62,7 +62,7 @@ Public OrderId                                      As Long
 Public ClientID                                     As Long
 Public PermId                                       As Long
 Public Action                                       As TwsOrderActions
-Public TotalQuantity                                As Double
+Public TotalQuantity                                As BoxedDecimal
 Public OrderType                                    As TwsOrderTypes
 Public LmtPrice                                     As Double
 Public AuxPrice                                     As Double
@@ -94,7 +94,6 @@ Public TrailingPercent                              As Double ' specify the perc
 
 ' Financial advisors only
 Public FaGroup                                      As String
-Public FaProfile                                    As String
 Public FaMethod                                     As String
 Public FaPercentage                                 As String
 
@@ -107,9 +106,7 @@ Public ExemptCode                                   As Long
 
 ' SMART routing only
 Public DiscretionaryAmt                             As Double
-Public ETradeOnly                                   As Boolean
-Public FirmQuoteOnly                                As Boolean
-Public NbboPriceCap                                 As Double
+
 Public OptOutSmartRouting                           As Boolean
 
 ' BOX or VOL ORDERS ONLY
@@ -205,6 +202,23 @@ Public Mifid2ExecutionAlgo As String
 Public DontUseAutoPriceForHedge As Boolean
 Public RandomizeSize As Boolean
 Public RandomizePrice As Boolean
+    
+Public AutoCancelDate As String
+Public FilledQuantity As BoxedDecimal
+
+Public ReferenceFutureContractId As Integer
+Public AutoCancelParent As Boolean
+Public Shareholder As String
+Public ImbalanceOnly As Boolean
+Public RouteMarketableToBbo As Boolean
+Public ParentPermanentId As BoxedDecimal
+Public AdvancedErrorOverride As String
+Public ManualOrderTime As String
+Public MinimumTradeQuantity As Integer
+Public MinimumCompeteSize As Integer
+Public CompeteAgainstBestOffset As Double
+Public MidOffsetAtWhole As Double
+Public MidOffsetAtHalf As Double
 
 ''' <summary>
 ''' For Pegged-to-benchmark orders, contains the Contract Id Of the contract against which the order will be pegged.
@@ -303,6 +317,16 @@ Public AdjustableTrailingUnit As Long
 ''' <returns></returns>
 Public Tier As New TwsSoftDollarTier
 
+Public IsOmsContainer As Boolean
+
+Public DiscretionaryUpToLimitPrice As Boolean
+
+Public UsePriceMgmtAlgo As Boolean
+
+Public Duration As Long
+
+Public PostToAts As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -310,18 +334,12 @@ Public Tier As New TwsSoftDollarTier
 Private Sub Class_Initialize()
 LmtPrice = MaxDouble
 AuxPrice = MaxDouble
-ActiveStartTime = ""
-ActiveStopTime = ""
 OutsideRth = False
-OpenClose = "O"
 Origin = CUSTOMER
 Transmit = True
-DesignatedLocation = ""
 ExemptCode = -1
 MinQty = MaxLong
 PercentOffset = MaxDouble
-NbboPriceCap = MaxDouble
-OptOutSmartRouting = False
 StartingPrice = MaxDouble
 StockRefPrice = MaxDouble
 Delta = MaxDouble
@@ -331,14 +349,6 @@ Volatility = MaxDouble
 VolatilityType = MaxLong
 DeltaNeutralOrderType = TwsOrderTypeNone
 DeltaNeutralAuxPrice = MaxDouble
-DeltaNeutralConId = 0
-DeltaNeutralSettlingFirm = ""
-DeltaNeutralClearingAccount = ""
-DeltaNeutralClearingIntent = ""
-DeltaNeutralOpenClose = ""
-DeltaNeutralShortSale = False
-DeltaNeutralShortSaleSlot = 0
-DeltaNeutralDesignatedLocation = ""
 ReferencePriceType = MaxLong
 TrailStopPrice = MaxDouble
 TrailingPercent = MaxDouble
@@ -350,25 +360,22 @@ ScalePriceIncrement = MaxDouble
 ScalePriceAdjustValue = MaxDouble
 ScalePriceAdjustInterval = MaxLong
 ScaleProfitOffset = MaxDouble
-ScaleAutoReset = False
 ScaleInitPosition = MaxLong
 ScaleInitFillQty = MaxLong
-ScaleRandomPercent = False
-ScaleTable = ""
-WhatIf = False
-NotHeld = False
 TriggerPrice = MaxDouble
 LmtPriceOffset = MaxDouble
 AdjustedStopPrice = MaxDouble
 AdjustedStopLimitPrice = MaxDouble
 AdjustedTrailingAmount = MaxDouble
-ExtOperator = ""
 CashQty = MaxDouble
-Mifid2DecisionMaker = ""
-Mifid2DecisionAlgo = ""
-Mifid2ExecutionTrader = ""
-Mifid2ExecutionAlgo = ""
-DontUseAutoPriceForHedge = False
+ReferenceFutureContractId = MaxLong
+Duration = MaxLong
+PostToAts = MaxLong
+MinimumTradeQuantity = MaxLong
+MinimumCompeteSize = MaxLong
+CompeteAgainstBestOffset = MaxDouble
+MidOffsetAtWhole = MaxDouble
+MidOffsetAtHalf = MaxDouble
 End Sub
 
 '@================================================================================

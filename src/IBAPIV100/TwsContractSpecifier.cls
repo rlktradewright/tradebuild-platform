@@ -50,7 +50,7 @@ Private mSecType                                    As TwsSecTypes
 Private mExpiry                                     As String
 Private mStrike                                     As Double
 Private mOptRight                                   As TwsOptionRights
-Private mMultiplier                                 As Long
+Private mMultiplier                                 As Double
 Private mExchange                                   As String
 
 Private mCurrencyCode                               As String
@@ -136,11 +136,11 @@ Public Property Get LocalSymbol() As String
 LocalSymbol = mLocalSymbol
 End Property
 
-Public Property Let Multiplier(ByVal Value As Long)
+Public Property Let Multiplier(ByVal Value As Double)
 mMultiplier = Value
 End Property
 
-Public Property Get Multiplier() As Long
+Public Property Get Multiplier() As Double
 Multiplier = mMultiplier
 End Property
 

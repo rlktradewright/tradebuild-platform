@@ -124,11 +124,12 @@ End Function
 Friend Sub Initialise( _
                 ByVal pStreamId As Long, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pClockFuture As IFuture)
+                ByVal pClockFuture As IFuture, _
+                ByVal pIsDelayed As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-mTickStream.Initialise Me, pStreamId, pContractFuture, pClockFuture
+mTickStream.Initialise Me, pStreamId, pContractFuture, pClockFuture, pIsDelayed
 mTickStream.State = TickStreamStateReady
 fireStateChange TickStreamStateReady
 

@@ -33,12 +33,14 @@ End Type
 
 Private Const ModuleName                            As String = "gMain"
 
-Public Const TickfilePath                           As String = "E:\projects\tradeBuild-platform\src\TickfileUtils\TickfileUtilsUnitTests\Tickfiles"
+Public Const TickfilePath                           As String = "D:\projects\tradeBuild-platform\src\TickfileUtils\TickfileUtilsUnitTests\Tickfiles"
 
 Public Const OneMillisec                            As Double = 1# / 86400000
 Public Const OneSecond                              As Double = 1# / 86400
 
-Private Const TickOffsetTolerance                   As Double = 5#
+' This should really have value 5, but I've set it to 15 because of the
+' problem with timer resolution
+Private Const TickOffsetTolerance                   As Double = 15#
 
 '@================================================================================
 ' Member variables
@@ -238,10 +240,10 @@ End Sub
 
 Public Function gCreateContract(ByVal pContractSpecifier As IContractSpecifier) As IContract
 Select Case pContractSpecifier.localSymbol
-Case "ZH3"
-    Set gCreateContract = gCreateContractFromLocalSymbol("ZH3")
-Case "ZM3"
-    Set gCreateContract = gCreateContractFromLocalSymbol("ZM3")
+Case "ZH13"
+    Set gCreateContract = gCreateContractFromLocalSymbol("ZH13")
+Case "ZM13"
+    Set gCreateContract = gCreateContractFromLocalSymbol("ZM13")
 Case "ESM3"
     Set gCreateContract = gCreateContractFromLocalSymbol("ESM3")
 Case Else
@@ -263,16 +265,16 @@ Case "ZM03"
     Set lContract = createZContract("ZM03", "20030620")
 Case "ZZ2"
     Set lContract = createZContract("ZZ2", "20121221")
-Case "ZH3"
-    Set lContract = createZContract("ZH3", "20130315")
-Case "ZM3"
-    Set lContract = createZContract("ZM3", "20130621")
+Case "ZH13"
+    Set lContract = createZContract("ZH13", "20130315")
+Case "ZM13"
+    Set lContract = createZContract("ZM13", "20130621")
 Case "ZU3"
-    Set lContract = createZContract("ZU3", "20130920")
-Case "ZZ3"
-    Set lContract = createZContract("ZZ3", "20131220")
-Case "ZU4"
-    Set lContract = createZContract("ZU4", "20140918")
+    Set lContract = createZContract("ZU13", "20130920")
+Case "ZZ13"
+    Set lContract = createZContract("ZZ13", "20131220")
+Case "ZU14"
+    Set lContract = createZContract("ZU14", "20140919")
 Case "IBM"
     Set lContract = createStockContract("IBM")
 Case "MSFT"
@@ -288,7 +290,7 @@ Public Function gCreateTick( _
                 ByVal pTimestamp As Date, _
                 ByVal pTickType As TickTypes, _
                 Optional ByVal pPrice As Double, _
-                Optional ByVal pSize As Long, _
+                Optional ByVal pSize As BoxedDecimal, _
                 Optional ByVal pSide As DOMSides, _
                 Optional ByVal pPosition As Long, _
                 Optional ByVal pOperation As DOMOperations, _
@@ -298,7 +300,7 @@ gCreateTick.Operation = pOperation
 gCreateTick.Position = pPosition
 gCreateTick.Price = pPrice
 gCreateTick.Side = pSide
-gCreateTick.Size = pSize
+Set gCreateTick.Size = pSize
 gCreateTick.TickType = pTickType
 gCreateTick.TimeStamp = pTimestamp
 End Function
@@ -315,7 +317,7 @@ End Sub
 
 Private Function createESContract(ByVal localSymbol As String, ByVal expiry As String) As IContract
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = CreateContractSpecifier(localSymbol, "ES", "GLOBEX", SecTypeFuture, "USD", expiry)
+Set lContractSpec = CreateContractSpecifier(localSymbol, "ES", , "CME", SecTypeFuture, "USD", expiry)
 
 Dim lContractBuilder As ContractBuilder
 Set lContractBuilder = CreateContractBuilder(lContractSpec)
@@ -330,7 +332,7 @@ End Function
 
 Private Function createStockContract(ByVal localSymbol As String) As IContract
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = CreateContractSpecifier(localSymbol, localSymbol, "SMART", SecTypeStock, "USD", "")
+Set lContractSpec = CreateContractSpecifier(localSymbol, localSymbol, , "SMART", SecTypeStock, "USD", "")
 
 Dim lContractBuilder As ContractBuilder
 Set lContractBuilder = CreateContractBuilder(lContractSpec)
@@ -343,7 +345,7 @@ End Function
 
 Private Function createZContract(ByVal localSymbol As String, ByVal expiry As String) As IContract
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = CreateContractSpecifier(localSymbol, "Z", "ICEEU", SecTypeFuture, "GBP", expiry)
+Set lContractSpec = CreateContractSpecifier(localSymbol, "Z", , "ICEEU", SecTypeFuture, "GBP", expiry)
 
 Dim lContractBuilder As ContractBuilder
 Set lContractBuilder = CreateContractBuilder(lContractSpec)
@@ -396,18 +398,18 @@ mMergedAandB(11).ReceivedOffset = 6000#
 End Sub
 
 Private Sub setupTicksA()
-TicksA(0) = gCreateTick(CDate("21/02/2013 08:14:25"), TickTypeAsk, 6720#, 3)
-TicksA(1) = gCreateTick(CDate("21/02/2013 08:14:26"), TickTypeBid, 6720.5, 5)
-TicksA(2) = gCreateTick(CDate("21/02/2013 08:14:27") + 120 * OneMillisec, TickTypeTrade, 6720#, 1)
-TicksA(3) = gCreateTick(CDate("21/02/2013 08:14:27") + 255 * OneMillisec, TickTypeVolume, , 7625)
+TicksA(0) = gCreateTick(CDate("21/02/2013 08:14:25"), TickTypeAsk, 6720#, CreateBoxedDecimal(3))
+TicksA(1) = gCreateTick(CDate("21/02/2013 08:14:26"), TickTypeBid, 6720.5, CreateBoxedDecimal(5))
+TicksA(2) = gCreateTick(CDate("21/02/2013 08:14:27") + 120 * OneMillisec, TickTypeTrade, 6720#, CreateBoxedDecimal(1))
+TicksA(3) = gCreateTick(CDate("21/02/2013 08:14:27") + 255 * OneMillisec, TickTypeVolume, , CreateBoxedDecimal(7625))
 TicksA(4) = gCreateTick(CDate("21/02/2013 08:14:29"), TickTypeClosePrice, 6708#)
 End Sub
 
 Private Sub setupTicksB()
-TicksB(0) = gCreateTick(CDate("21/02/2013 02:14:23"), TickTypeAsk, 1550.25, 5)
-TicksB(1) = gCreateTick(CDate("21/02/2013 02:14:26") + 7 * OneMillisec, TickTypeBid, 1550#, 12)
-TicksB(2) = gCreateTick(CDate("21/02/2013 02:14:27"), TickTypeTrade, 1550#, 1)
-TicksB(3) = gCreateTick(CDate("21/02/2013 02:14:27") + 1 * OneMillisec, TickTypeVolume, , 362455)
+TicksB(0) = gCreateTick(CDate("21/02/2013 02:14:23"), TickTypeAsk, 1550.25, CreateBoxedDecimal(5))
+TicksB(1) = gCreateTick(CDate("21/02/2013 02:14:26") + 7 * OneMillisec, TickTypeBid, 1550#, CreateBoxedDecimal(12))
+TicksB(2) = gCreateTick(CDate("21/02/2013 02:14:27"), TickTypeTrade, 1550#, CreateBoxedDecimal(1))
+TicksB(3) = gCreateTick(CDate("21/02/2013 02:14:27") + 1 * OneMillisec, TickTypeVolume, , CreateBoxedDecimal(362455))
 TicksB(4) = gCreateTick(CDate("21/02/2013 02:14:28"), TickTypeClosePrice, 1543.75)
 TicksB(5) = gCreateTick(CDate("21/02/2013 02:14:28") + 10 * OneMillisec, TickTypeHighPrice, 1560.5)
 TicksB(6) = gCreateTick(CDate("21/02/2013 02:14:28") + 11 * OneMillisec, TickTypeLowPrice, 1548#)

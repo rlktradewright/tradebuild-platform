@@ -148,7 +148,7 @@ End Function
 Private Function PrepareTickfile() As Boolean
 Select Case mTickfileSpec.FileName
 Case "Valid A"
-    mTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZM3")
+    mTickfileSpec.Contract = gCreateContractFromLocalSymbol("ZM13")
     mReplayMonitor.NotifyReady Me, mTickfileSpec
     PrepareTickfile = True
 Case "Valid B"
@@ -156,10 +156,11 @@ Case "Valid B"
     mReplayMonitor.NotifyReady Me, mTickfileSpec
     PrepareTickfile = True
 Case "Empty file"
-    mReplayMonitor.NotifyEvent getEventData(TickfileEventCodes.TickfileEventFileIsEmpty, "Specified tickfile is empty")
-    PrepareTickfile = False
+    mReplayMonitor.NotifyEvent getEventData(TickfileEventCodes.TickfileEventNoTickData, "Specified tickfile is empty")
+    PrepareTickfile = True
 Case "Invalid file"
     mReplayMonitor.NotifyEvent getEventData(TickfileEventCodes.TickfileEventFileIsInvalid, "Specified tickfile is invalid")
+    mReplayMonitor.NotifyReplayComplete Me, 0
     PrepareTickfile = False
 Case Else
     mReplayMonitor.NotifyEvent getEventData(TickfileEventCodes.TickfileEventFileDoesNotExist, "Specified tickfile doesn't exist")

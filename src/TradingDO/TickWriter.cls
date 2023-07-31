@@ -204,7 +204,7 @@ End Sub
 Public Sub WriteAsk( _
                 ByVal timestamp As Date, _
                 ByVal price As Double, _
-                ByVal size As Long)
+                ByVal size As BoxedDecimal)
 Const ProcName As String = "WriteAsk"
 
 
@@ -224,7 +224,7 @@ End Sub
 Public Sub WriteBid( _
                 ByVal timestamp As Date, _
                 ByVal price As Double, _
-                ByVal size As Long)
+                ByVal size As BoxedDecimal)
 Const ProcName As String = "WriteBid"
 
 
@@ -305,7 +305,7 @@ Public Sub WriteMarketDepthData( _
                 ByVal operation As Long, _
                 ByVal side As Long, _
                 ByVal price As Double, _
-                ByVal size As Long)
+                ByVal size As BoxedDecimal)
 Const ProcName As String = "WriteMarketDepthData"
 
 
@@ -359,7 +359,7 @@ End Sub
 
 Public Sub WriteOpenInterest( _
                 ByVal timestamp As Date, _
-                ByVal size As Long)
+                ByVal size As BoxedDecimal)
 Const ProcName As String = "WriteOpenInterest"
 
 
@@ -419,7 +419,7 @@ End Sub
 Public Sub WriteTrade( _
                 ByVal timestamp As Date, _
                 ByVal price As Double, _
-                ByVal size As Long)
+                ByVal size As BoxedDecimal)
 Const ProcName As String = "WriteTrade"
 
 
@@ -438,7 +438,7 @@ End Sub
 
 Public Sub WriteVolume( _
                 ByVal timestamp As Date, _
-                ByVal size As Long)
+                ByVal size As BoxedDecimal)
 Const ProcName As String = "WriteVolume"
 
 

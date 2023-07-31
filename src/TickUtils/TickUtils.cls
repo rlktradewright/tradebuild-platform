@@ -216,12 +216,16 @@ Option Explicit
 '
 ' The size field is encoded as follows:
 ' <p>
-' - if the value is less than 256, it is stored as an unsigned 8-bit value and SIZE_TYPE_BITS is set to BYTE_SIZE
+' - if the value is an integer less than 256, it is stored as an unsigned 8-bit value and SIZE_TYPE_BITS is set to SizeTypes.ByteSize
 ' <p>
-' - if the value is less than 65536, it is stored as an unsigned little-endian 16-bit value and SIZE_TYPE_BITS is
-' set to SHORT_SIZE
+' - if the value is an integer less than 65536, it is stored as an unsigned little-endian 16-bit value and SIZE_TYPE_BITS is
+' set to SizeTypes.UInt16Size
 ' <p>
-' - otherwise it is stored as an unsigned little-endian 32-bit value and SIZE_TYPE_BITS is set to INT_SIZE.
+' - if the value is an integer between &H80000000 and &H7FFFFFFF, it is stored as an unsigned little-endian 32-bit value
+' and SIZE_TYPE_BITS is set to SizeTypes.UInt32Size
+' <p>
+' - otherwise SIZE_TYPE_BITS is set to SizeTypes.DecimalSize. The value is stored as a byte array containing the
+' value's string representation.
 '
 ' <h3>Side/operation/position field format</h3>
 '
@@ -405,7 +409,7 @@ Public Type GenericTick
     Timestamp           As Date
     TickType            As TickTypes
     Price               As Double
-    Size                As Long
+    Size                As BoxedDecimal
     Position            As Long
     Operation           As DOMOperations
     Side                As DOMSides
@@ -422,7 +426,7 @@ Public Type MarketDepthEventData
     Source              As Object
     Type                As DOMSides
     Price               As Double
-    Size                As Long
+    Size                As BoxedDecimal
 End Type
 
 Public Type OptionComputation
@@ -458,7 +462,7 @@ End Type
 Public Type Quote
     Timestamp           As Date
     Price               As Double
-    Size                As Long
+    Size                As BoxedDecimal
     PriceChange         As ValueChanges
     SizeChange          As ValueChanges
     RecentPriceChange   As ValueChanges     ' if PriceChange = ValueChangeNone
@@ -477,7 +481,7 @@ Public Type RawMarketDepthEventData
     Operation           As DOMOperations
     Side                As DOMSides
     Price               As Double
-    Size                As Long
+    Size                As BoxedDecimal
 End Type
 
 '@================================================================================
@@ -584,7 +588,7 @@ End Function
 ' <p>
 ' Note that an encoder can only encode ticks for which the timestamp is not more than
 ' 65535 milliseconds from this start time.
-' @param PickSize The minimum tick size for the instrument whose data is to be encoded.
+' @param pTickSize The minimum tick size for the instrument whose data is to be encoded.
 ' @return An object that implements the <code>TickDataEncoder </code> interface.
 '@/
 Public Function CreateTickEncoder( _
@@ -626,12 +630,13 @@ End Function
 Public Function CreateTickStreamBuilder( _
                 ByVal pStreamId As Long, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pClockFuture As IFuture) As TickStreamBuilder
+                ByVal pClockFuture As IFuture, _
+                Optional ByVal pIsDelayed As Boolean = False) As TickStreamBuilder
 Const ProcName As String = "CreateTickStreamBuilder"
 On Error GoTo Err
 
 Set CreateTickStreamBuilder = New TickStreamBuilder
-CreateTickStreamBuilder.Initialise pStreamId, pContractFuture, pClockFuture
+CreateTickStreamBuilder.Initialise pStreamId, pContractFuture, pClockFuture, pIsDelayed
 
 Exit Function
 

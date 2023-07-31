@@ -586,15 +586,12 @@ With pOrder
     gOrderToTwsOrder.OrderId = .BrokerId
     gOrderToTwsOrder.DiscretionaryAmt = .DiscretionaryAmount
     gOrderToTwsOrder.DisplaySize = .DisplaySize
-    gOrderToTwsOrder.ETradeOnly = .ETradeOnly
-    gOrderToTwsOrder.FirmQuoteOnly = .FirmQuoteOnly
     If .GoodAfterTime <> 0 Then gOrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then gOrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & gStandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     gOrderToTwsOrder.Hidden = .Hidden
     gOrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
     gOrderToTwsOrder.LmtPrice = .LimitPrice
     gOrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, MaxLong, .MinimumQuantity)
-    gOrderToTwsOrder.NbboPriceCap = IIf(.NbboPriceCap = 0, MaxDouble, .NbboPriceCap)
     If Not .ProviderProperties Is Nothing Then
         gOrderToTwsOrder.OcaGroup = .ProviderProperties.GetParameterValue(ProviderPropertyOCAGroup)
     End If
@@ -602,7 +599,7 @@ With pOrder
     gOrderToTwsOrder.Origin = .Origin
     gOrderToTwsOrder.OrderRef = .OriginatorRef
     gOrderToTwsOrder.OverridePercentageConstraints = .OverrideConstraints
-    gOrderToTwsOrder.TotalQuantity = .Quantity
+    Set gOrderToTwsOrder.TotalQuantity = .Quantity
     gOrderToTwsOrder.SettlingFirm = .SettlingFirm
     gOrderToTwsOrder.TriggerMethod = gStopTriggerMethodToTwsTriggerMethod(.StopTriggerMethod)
     gOrderToTwsOrder.SweepToFill = .SweepToFill

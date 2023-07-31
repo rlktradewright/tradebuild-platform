@@ -107,9 +107,10 @@ Do
 Loop Until mTestCompleted
 
 Assert.IsTrue tfmev.NotifyEventCount = 1, "NotifyEvent should be invoked once"
-Assert.IsTrue tfmev.NotifyEventEv.EventCode = TickfileEventCodes.TickfileEventFileIsEmpty, "NotifyEvent has invalid event code"
+Assert.IsTrue tfmev.NotifyEventEv.EventCode = TickfileEventCodes.TickfileEventNoTickData, "NotifyEvent has invalid event code"
 Assert.IsTrue tfmev.ReplayProgressCount = 0, "ReplayProgress should not be invoked"
 Assert.IsTrue tfmev.TickfileCompletedCount = 1, "TickfileCompleted should not be invoked"
+Assert.AreEqual 0, tfmev.NumberOfReceivedTicks, "Incorrect number of ticks received"
 End Sub
 
 Public Sub ReplayWithValidFileTradeBuildv5()
@@ -265,7 +266,7 @@ End Function
 
 Private Function CreateTickfileSpecWithVeryLargeValidTradeBuildv5File() As TickfileSpecifier
 Dim tickfileSpec As New TickfileSpecifier
-tickfileSpec.FileName = TickfilePath & "\ZM3-Week-20130408.tck"
+tickfileSpec.FileName = TickfilePath & "\ZM13-Week-20130408.tck"
 Set CreateTickfileSpecWithVeryLargeValidTradeBuildv5File = tickfileSpec
 End Function
 

@@ -55,19 +55,19 @@ Private Type TickerTableEntry
     TickSizeHasBeenSet      As Boolean
     PrevBid                 As Double
     PrevBidValid            As Boolean
-    PrevBidSize             As Long
+    PrevBidSize             As BoxedDecimal
     PrevAsk                 As Double
     PrevAskValid            As Boolean
-    PrevAskSize             As Long
+    PrevAskSize             As BoxedDecimal
     PrevTrade               As Double
     PrevTradeValid          As Boolean
-    PrevTradeSize           As Long
+    PrevTradeSize           As BoxedDecimal
     PrevOpen                As Double
     PrevHigh                As Double
     PrevLow                 As Double
     PrevClose               As Double
-    PrevVolume              As Long
-    PrevOpenInterest        As Long
+    PrevVolume              As BoxedDecimal
+    PrevOpenInterest        As BoxedDecimal
     NumberOfRows            As Long
 End Type
 
@@ -249,7 +249,7 @@ Private Sub IMarketDataConsumer_NotifyTickPrice( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As TwsTickTypes, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long, _
+                ByVal pSize As BoxedDecimal, _
                 ByRef pAttributes As TwsTickAttributes)
 Const ProcName As String = "IMarketDataConsumer_NotifyTickPrice"
 On Error GoTo Err
@@ -261,7 +261,7 @@ lIndex = getIndexFromTickerId(pTickerId)
 
 Dim lTick As GenericTick
 lTick.Price = pPrice
-lTick.Size = pSize
+Set lTick.Size = pSize
 
 With mMarketDataTable(lIndex)
 
@@ -274,24 +274,25 @@ With mMarketDataTable(lIndex)
         .PrevBidValid = validPrice(lTick.Price, .PrevBid, "bid", .Contract)
         If Not .PrevBidValid Then Exit Sub
         lTick.TickType = TickTypeBid
-        If lTick.Size = 0 And .PrevBidSize <> MaxLong Then lTick.Size = .PrevBidSize
+        If lTick.Size = 0 And Not .PrevBidSize Is Nothing Then Set lTick.Size = .PrevBidSize
         .PrevBid = lTick.Price
-        If lTick.Size <> 0 Then .PrevBidSize = lTick.Size
+        If lTick.Size <> 0 Then Set .PrevBidSize = lTick.Size
         If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickAsk
         .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .Contract)
         If Not .PrevAskValid Then Exit Sub
         lTick.TickType = TickTypeAsk
-        If lTick.Size = 0 And .PrevAskSize <> MaxLong Then lTick.Size = .PrevAskSize
+        If lTick.Size = 0 And Not .PrevAskSize Is Nothing Then Set lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
+        If lTick.Size <> 0 Then Set .PrevAskSize = lTick.Size
         If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .Contract)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
-        If lTick.Size = 0 And .PrevTradeSize <> MaxLong Then lTick.Size = .PrevTradeSize
+        If lTick.Size = 0 And Not .PrevTradeSize Is Nothing Then Set lTick.Size = .PrevTradeSize
         .PrevTrade = lTick.Price
-        If lTick.Size <> 0 Then .PrevTradeSize = lTick.Size
+        If lTick.Size <> 0 Then Set .PrevTradeSize = lTick.Size
         If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
     Case TwsTickTypes.TwsTickHigh
         If Not validPrice(lTick.Price, .PrevHigh, "high", .Contract) Then Exit Sub
@@ -332,7 +333,7 @@ End Sub
 Private Sub IMarketDataConsumer_NotifyTickSize( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As Long, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "IMarketDataConsumer_NotifyTickSize"
 On Error GoTo Err
 
@@ -359,8 +360,8 @@ With mMarketDataTable(lIndex)
         If Not .PrevBidValid Then Exit Sub
         lTick.TickType = TickTypeBid
         lTick.Price = .PrevBid
-        lTick.Size = pSize
-        .PrevBidSize = pSize
+        Set lTick.Size = pSize
+        Set .PrevBidSize = pSize
     
     Case TwsTickTypes.TwsTickAskSize
         If pSize = .PrevAskSize Then
@@ -372,8 +373,8 @@ With mMarketDataTable(lIndex)
         If Not .PrevAskValid Then Exit Sub
         lTick.TickType = TickTypeAsk
         lTick.Price = .PrevAsk
-        lTick.Size = pSize
-        .PrevAskSize = pSize
+        Set lTick.Size = pSize
+        Set .PrevAskSize = pSize
     
     Case TwsTickTypes.TwsTickLastSize
         If pSize = .PrevTradeSize Then
@@ -385,20 +386,20 @@ With mMarketDataTable(lIndex)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
         lTick.Price = .PrevTrade
-        lTick.Size = pSize
-        .PrevTradeSize = pSize
+        Set lTick.Size = pSize
+        Set .PrevTradeSize = pSize
     
     Case TwsTickTypes.TwsTickVolume
         ' discard rogue sizes from IB
         If pSize > 1000000000 Then Exit Sub
         lTick.TickType = TickTypeVolume
-        lTick.Size = pSize
-        .PrevVolume = pSize
+        Set lTick.Size = pSize
+        Set .PrevVolume = pSize
     
     Case TwsTickTypes.TwsTickOpenInterest
         lTick.TickType = TickTypeOpenInterest
-        lTick.Size = pSize
-        .PrevOpenInterest = pSize
+        Set lTick.Size = pSize
+        Set .PrevOpenInterest = pSize
     
     End Select
 
@@ -497,7 +498,7 @@ Private Sub IMarketDepthConsumer_NotifyMarketDepth( _
                 ByVal pOperation As TwsDOMOperations, _
                 ByVal pSide As TwsDOMSides, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "IMarketDepthConsumer_NotifyMarketDepth"
 On Error GoTo Err
 
@@ -513,7 +514,7 @@ lTick.Operation = pOperation
 lTick.Position = pPosition
 lTick.Price = pPrice
 lTick.Side = pSide
-lTick.Size = pSize
+Set lTick.Size = pSize
 
 With mMarketDataTable(lIndex)
 
@@ -926,7 +927,7 @@ Const ProcName As String = "cancelMarketDepthEx"
 On Error GoTo Err
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mIsTwsConnectedToIBServers) Then Exit Sub
-mTwsAPI.CancelMarketDepth getMarketDepthIdFromIndex(pIndex)
+mTwsAPI.CancelMarketDepth getMarketDepthIdFromIndex(pIndex), False
 
 Exit Sub
 
@@ -941,17 +942,17 @@ On Error GoTo Err
 
 With mMarketDataTable(pIndex)
     .PrevAsk = MaxDouble
-    .PrevAskSize = MaxLong
+    Set .PrevAskSize = DecimalZero
     .PrevBid = MaxDouble
-    .PrevBidSize = MaxLong
+    Set .PrevBidSize = DecimalZero
     .PrevClose = MaxDouble
     .PrevHigh = MaxDouble
     .PrevLow = MaxDouble
     .PrevOpen = MaxDouble
     .PrevTrade = MaxDouble
-    .PrevTradeSize = MaxLong
-    .PrevVolume = MaxLong
-    .PrevOpenInterest = MaxLong
+    Set .PrevTradeSize = DecimalZero
+    Set .PrevVolume = DecimalZero
+    Set .PrevOpenInterest = DecimalZero
 End With
 
 Exit Sub
@@ -1219,7 +1220,7 @@ Private Function isFTSE100Index(ByVal pContract As TwsContractSpecifier) As Bool
 isFTSE100Index = pContract.CurrencyCode = "GBP" And _
                 pContract.Exchange = "ICEEU" And _
                 pContract.LocalSymbol = "Z" And _
-                pContract.SecType = TwsSecTypeIndex And _
+                pContract.Sectype = TwsSecTypeIndex And _
                 pContract.Symbol = "Z"
 End Function
 
@@ -1568,7 +1569,7 @@ Const ProcName As String = "validPrice"
 On Error GoTo Err
 
 If (pPrevPrice <> MaxDouble Or (pPrice <> 0# And pPrice <> -1# And pPrice <> -100#)) And _
-    IsValidPrice(pPrice, pPrevPrice, pContract.Specifier.SecType, pContract.TickSize) _
+    IsValidPrice(pPrice, pPrevPrice, pContract.Specifier.Sectype, pContract.TickSize) _
 Then
     validPrice = True
 ElseIf pPrice <> -1# Or pPrice <> -100# Then

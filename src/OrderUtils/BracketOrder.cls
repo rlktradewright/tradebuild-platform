@@ -112,9 +112,9 @@ Attribute mTargetOrderCopy.VB_VarHelpID = -1
 Private WithEvents mCloseoutOrder                   As Order
 Attribute mCloseoutOrder.VB_VarHelpID = -1
 
-Private mNewEntryQuantity                           As Long
-Private mNewStopLossQuantity                        As Long
-Private mNewTargetQuantity                          As Long
+Private mNewEntryQuantity                           As BoxedDecimal
+Private mNewStopLossQuantity                        As BoxedDecimal
+Private mNewTargetQuantity                          As BoxedDecimal
 
 Private mNewEntryLimitPriceSpec                     As PriceSpecifier
 Private mNewEntryTriggerPriceSpec                   As PriceSpecifier
@@ -160,9 +160,9 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-mNewEntryQuantity = -1
-mNewStopLossQuantity = -1
-mNewTargetQuantity = -1
+Set mNewEntryQuantity = Nothing
+Set mNewStopLossQuantity = Nothing
+Set mNewTargetQuantity = Nothing
 
 Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
 Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
@@ -256,7 +256,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_AdjustStop(ByVal pStopTriggerPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
+Private Sub IBracketOrder_AdjustStop( _
+                ByVal pStopTriggerPriceSpec As PriceSpecifier, _
+                Optional ByVal pQuantity As BoxedDecimal)
 Const ProcName As String = "IBracketOrder_AdjustStop"
 On Error GoTo Err
 
@@ -268,7 +270,9 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_AdjustTarget(ByVal pTargetPriceSpec As PriceSpecifier, Optional ByVal pQuantity As Long = -1&)
+Private Sub IBracketOrder_AdjustTarget( _
+                ByVal pTargetPriceSpec As PriceSpecifier, _
+                Optional ByVal pQuantity As BoxedDecimal)
 Const ProcName As String = "IBracketOrder_AdjustTarget"
 On Error GoTo Err
 
@@ -518,11 +522,11 @@ Private Property Get IBracketOrder_OrderContext() As OrderContext
 Set IBracketOrder_OrderContext = OrderContext
 End Property
 
-Private Property Get IBracketOrder_PendingSize() As Long
+Private Property Get IBracketOrder_PendingSize() As BoxedDecimal
 Const ProcName As String = "IBracketOrder_PendingSize"
 On Error GoTo Err
 
-IBracketOrder_PendingSize = PendingSize
+Set IBracketOrder_PendingSize = PendingSize
 
 Exit Property
 
@@ -657,7 +661,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_SetNewEntryQuantity(ByVal pNewQuantity As Long)
+Private Sub IBracketOrder_SetNewEntryQuantity(ByVal pNewQuantity As BoxedDecimal)
 Const ProcName As String = "IBracketOrder_SetNewEntryQuantity"
 On Error GoTo Err
 
@@ -682,7 +686,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_SetNewStopLossQuantity(ByVal pNewQuantity As Long)
+Private Sub IBracketOrder_SetNewStopLossQuantity(ByVal pNewQuantity As BoxedDecimal)
 Const ProcName As String = "IBracketOrder_SetNewStopLossQuantity"
 On Error GoTo Err
 
@@ -720,7 +724,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IBracketOrder_SetNewTargetQuantity(ByVal pNewQuantity As Long)
+Private Sub IBracketOrder_SetNewTargetQuantity(ByVal pNewQuantity As BoxedDecimal)
 Const ProcName As String = "IBracketOrder_SetNewTargetQuantity"
 On Error GoTo Err
 
@@ -745,8 +749,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get IBracketOrder_Size() As Long
-IBracketOrder_Size = Size
+Private Property Get IBracketOrder_Size() As BoxedDecimal
+Set IBracketOrder_Size = Size
 End Property
 
 Private Property Get IBracketOrder_StartTime() As Date
@@ -1187,13 +1191,13 @@ mSummary.CancelPrice = 0
 
 If Not mStopLossOrder Is Nothing Then
     If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustStopLoss mStopLossOrder.TriggerPriceSpec, Abs(Size)
+        AdjustStopLoss mStopLossOrder.TriggerPriceSpec, CreateBoxedDecimal(Abs(Size))
     End If
 End If
 
 If Not mTargetOrder Is Nothing Then
     If mTargetOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustTarget mTargetOrder.LimitPriceSpec, Abs(Size)
+        AdjustTarget mTargetOrder.LimitPriceSpec, CreateBoxedDecimal(Abs(Size))
     End If
 End If
 
@@ -1400,7 +1404,7 @@ processExecution pExec
 
 If Not mTargetOrder Is Nothing Then
     If mTargetOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustTarget mTargetOrder.LimitPriceSpec, Abs(Size)
+        AdjustTarget mTargetOrder.LimitPriceSpec, CreateBoxedDecimal(Abs(Size))
     End If
 End If
 
@@ -1528,7 +1532,7 @@ processExecution pExec
 
 If Not mStopLossOrder Is Nothing Then
     If mStopLossOrder.Quantity <> Abs(Size) And Abs(Size) <> 0 Then
-        AdjustStopLoss mStopLossOrder.TriggerPriceSpec, Abs(Size)
+        AdjustStopLoss mStopLossOrder.TriggerPriceSpec, CreateBoxedDecimal(Abs(Size))
     End If
 End If
 
@@ -1999,13 +2003,17 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSize() As Long
+Public Property Get PendingSize() As BoxedDecimal
 Const ProcName As String = "PendingSize"
 On Error GoTo Err
 
-If mEntryOrder Is Nothing Then PendingSize = 0: Exit Property
-If mStateEngine.State = BracketOrderStates.BracketOrderStateClosed Then PendingSize = 0: Exit Property
-PendingSize = IIf(LongPosition, mEntryOrder.QuantityRemaining, -mEntryOrder.QuantityRemaining)
+If mEntryOrder Is Nothing Then Set PendingSize = DecimalZero: Exit Property
+If mStateEngine.State = BracketOrderStates.BracketOrderStateClosed Then Set PendingSize = DecimalZero: Exit Property
+If LongPosition Then
+    Set PendingSize = mEntryOrder.QuantityRemaining
+Else
+    Set PendingSize = CreateBoxedDecimal(-mEntryOrder.QuantityRemaining)
+End If
 
 Exit Property
 
@@ -2160,8 +2168,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Size() As Long
-Size = mSummary.Size
+Public Property Get Size() As BoxedDecimal
+Set Size = mSummary.Size
 End Property
 
 Public Property Get StartTime() As Date
@@ -2213,8 +2221,8 @@ End Sub
 
 Private Sub setQuantity( _
                 ByVal pOrder As IOrder, _
-                ByRef pField As Long, _
-                ByVal pNewQuantity As Double)
+                ByRef pField As BoxedDecimal, _
+                ByVal pNewQuantity As BoxedDecimal)
 Const ProcName As String = "setQuantity"
 On Error GoTo Err
 
@@ -2231,10 +2239,10 @@ End Select
 
 Assert pOrder.Status <> OrderStatuses.OrderStatusFilled, Key & " Can't change quantity - order " & pOrder.Id & " already filled"
 
-If pNewQuantity <> pOrder.Quantity Then
-    gLogBracketOrderMessage "Set quantity=" & pNewQuantity, _
+If Not pNewQuantity.EQ(pOrder.Quantity) Then
+    gLogBracketOrderMessage "Set quantity=" & DecimalToString(pNewQuantity), _
                     mDataSource, mContract, Key, mIsSimulated, Me
-    pField = pNewQuantity
+    Set pField = pNewQuantity
     setDirty
 End If
 
@@ -2453,12 +2461,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AdjustStopLoss(ByVal stopTriggerPriceSpec As PriceSpecifier, _
-                    Optional ByVal Quantity As Long = -1)
+                    Optional ByVal Quantity As BoxedDecimal)
 Const ProcName As String = "AdjustStopLoss"
 On Error GoTo Err
 
 SetNewStopLossTriggerPrice stopTriggerPriceSpec
-If Quantity <> -1 Then SetNewStopLossQuantity Quantity
+If Not Quantity Is Nothing Then SetNewStopLossQuantity Quantity
 WriteRecoveryDataComment ProcName & "()"
 Update
 
@@ -2469,12 +2477,12 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AdjustTarget(ByVal targetPriceSpec As PriceSpecifier, _
-                    Optional ByVal Quantity As Long = -1)
+                    Optional ByVal Quantity As BoxedDecimal)
 Const ProcName As String = "AdjustTarget"
 On Error GoTo Err
 
 SetNewTargetLimitPrice targetPriceSpec
-If Quantity <> -1 Then SetNewTargetQuantity Quantity
+If Not Quantity Is Nothing Then SetNewTargetQuantity Quantity
 WriteRecoveryDataComment ProcName & "()"
 Update
 
@@ -2523,9 +2531,9 @@ Public Sub CancelChanges()
 Const ProcName As String = "CancelChanges"
 On Error GoTo Err
 
-mNewEntryQuantity = -1
-mNewStopLossQuantity = -1
-mNewTargetQuantity = -1
+Set mNewEntryQuantity = Nothing
+Set mNewStopLossQuantity = Nothing
+Set mNewTargetQuantity = Nothing
 
 Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
 Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
@@ -2959,7 +2967,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetNewEntryQuantity(ByVal pNewQuantity As Long)
+Public Sub SetNewEntryQuantity(ByVal pNewQuantity As BoxedDecimal)
 Const ProcName As String = "SetNewEntryQuantity"
 On Error GoTo Err
 
@@ -2993,7 +3001,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As Long)
+Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As BoxedDecimal)
 Const ProcName As String = "SetNewStopLossQuantity"
 On Error GoTo Err
 
@@ -3048,7 +3056,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetNewTargetQuantity(ByVal pNewQuantity As Long)
+Public Sub SetNewTargetQuantity(ByVal pNewQuantity As BoxedDecimal)
 Const ProcName As String = "SetNewTargetQuantity"
 On Error GoTo Err
 
@@ -3080,7 +3088,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub SetSize(ByVal Value As Long)
+Friend Sub SetSize(ByVal Value As BoxedDecimal)
 Const ProcName As String = "SetSize"
 On Error GoTo Err
 
@@ -3417,7 +3425,7 @@ Then
     mEntryOrder.Quantity = mNewEntryQuantity
     checkForPendingEntryUpdates = True
 End If
-mNewEntryQuantity = -1
+Set mNewEntryQuantity = Nothing
 
 If mNewEntryLimitPriceSpec.IsValid And _
     (Not mNewEntryLimitPriceSpec.Equals(mEntryOrder.LimitPriceSpec)) _
@@ -3479,7 +3487,7 @@ Then
     mStopLossOrder.Quantity = mNewStopLossQuantity
     checkForPendingStoplossUpdates = True
 End If
-mNewStopLossQuantity = -1
+Set mNewStopLossQuantity = Nothing
 
 If mNewStopLossTriggerPriceSpec.IsValid And _
     (Not mNewStopLossTriggerPriceSpec.Equals(mStopLossOrder.TriggerPriceSpec)) _
@@ -3529,7 +3537,7 @@ Then
     mTargetOrder.Quantity = mNewTargetQuantity
     checkForPendingTargetUpdates = True
 End If
-mNewTargetQuantity = -1
+Set mNewTargetQuantity = Nothing
 
 If mNewTargetTriggerPriceSpec.IsValid And _
     (Not mNewTargetTriggerPriceSpec.Equals(mTargetOrder.TriggerPriceSpec)) _
@@ -3590,7 +3598,7 @@ End If
 mOrderContext.FixupEntryOrder lOrder
 
 lOrder.Action = IIf(LongPosition, OrderActions.OrderActionSell, OrderActions.OrderActionBuy)
-lOrder.Quantity = Abs(Size)
+lOrder.Quantity = CreateBoxedDecimal(Abs(Size))
 lOrder.TimeInForce = OrderTIFs.OrderTIFGoodTillCancelled
 lOrder.DontCheckAttributeModificationPermitted = False
 

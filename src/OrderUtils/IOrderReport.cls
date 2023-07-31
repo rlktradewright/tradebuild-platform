@@ -96,18 +96,6 @@ End Property
 Public Property Get DisplaySize() As Long
 End Property
 
-Public Property Let ETradeOnly(ByVal Value As Boolean)
-End Property
-
-Public Property Get ETradeOnly() As Boolean
-End Property
-
-Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
-End Property
-
-Public Property Get FirmQuoteOnly() As Boolean
-End Property
-
 Public Property Let GoodAfterTime(ByVal Value As Date)
 End Property
 
@@ -174,12 +162,6 @@ End Property
 Public Property Get MinimumQuantity() As Long
 End Property
 
-Public Property Let NbboPriceCap(ByVal Value As Double)
-End Property
-
-Public Property Get NbboPriceCap() As Double
-End Property
-
 Public Property Let OrderType(ByVal Value As OrderTypes)
 End Property
 
@@ -207,10 +189,10 @@ End Property
 Public Property Get ProviderProperties() As Parameters
 End Property
 
-Public Property Let Quantity(ByVal Value As Long)
+Public Property Let Quantity(ByVal Value As BoxedDecimal)
 End Property
 
-Public Property Get Quantity() As Long
+Public Property Get Quantity() As BoxedDecimal
 End Property
 
 Public Property Let SettlingFirm(ByVal Value As String)

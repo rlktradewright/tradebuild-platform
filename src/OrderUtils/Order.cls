@@ -225,22 +225,6 @@ Private Property Get IOrder_ErrorMessage() As String
 IOrder_ErrorMessage = ErrorMessage
 End Property
 
-Private Property Let IOrder_ETradeOnly(ByVal Value As Boolean)
-Const ProcName As String = "IOrder_ETradeOnly"
-On Error GoTo Err
-
-ETradeOnly = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Private Property Get IOrder_ETradeOnly() As Boolean
-IOrder_ETradeOnly = ETradeOnly
-End Property
-
 Private Property Let IOrder_FillTime(ByVal Value As Date)
 Const ProcName As String = "IOrder_FillTime"
 On Error GoTo Err
@@ -255,22 +239,6 @@ End Property
 
 Private Property Get IOrder_FillTime() As Date
 IOrder_FillTime = FillTime
-End Property
-
-Private Property Let IOrder_FirmQuoteOnly(ByVal Value As Boolean)
-Const ProcName As String = "IOrder_FirmQuoteOnly"
-On Error GoTo Err
-
-FirmQuoteOnly = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Private Property Get IOrder_FirmQuoteOnly() As Boolean
-IOrder_FirmQuoteOnly = FirmQuoteOnly
 End Property
 
 Private Property Let IOrder_GoodAfterTime(ByVal Value As Date)
@@ -512,22 +480,6 @@ Private Property Get IOrder_MinimumQuantity() As Long
 IOrder_MinimumQuantity = MinimumQuantity
 End Property
 
-Private Property Let IOrder_NbboPriceCap(ByVal Value As Double)
-Const ProcName As String = "IOrder_NbboPriceCap"
-On Error GoTo Err
-
-NbboPriceCap = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Private Property Get IOrder_NbboPriceCap() As Double
-IOrder_NbboPriceCap = NbboPriceCap
-End Property
-
 Private Sub IOrder_NotifyError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 NotifyError pErrorCode, pErrorMsg
 End Sub
@@ -636,15 +588,15 @@ Private Property Get IOrder_ProviderProperties() As Parameters
 Set IOrder_ProviderProperties = ProviderProperties
 End Property
 
-Private Property Let IOrder_Quantity(ByVal Value As Long)
+Private Property Let IOrder_Quantity(ByVal Value As BoxedDecimal)
 Quantity = Value
 End Property
 
-Private Property Get IOrder_Quantity() As Long
+Private Property Get IOrder_Quantity() As BoxedDecimal
 Const ProcName As String = "IOrder_Quantity"
 On Error GoTo Err
 
-IOrder_Quantity = Quantity
+Set IOrder_Quantity = Quantity
 
 Exit Property
 
@@ -652,7 +604,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Let IOrder_QuantityFilled(ByVal Value As Long)
+Private Property Let IOrder_QuantityFilled(ByVal Value As BoxedDecimal)
 Const ProcName As String = "IOrder_QuantityFilled"
 On Error GoTo Err
 
@@ -664,11 +616,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get IOrder_QuantityFilled() As Long
-IOrder_QuantityFilled = QuantityFilled
+Private Property Get IOrder_QuantityFilled() As BoxedDecimal
+Set IOrder_QuantityFilled = QuantityFilled
 End Property
 
-Private Property Let IOrder_QuantityRemaining(ByVal Value As Long)
+Private Property Let IOrder_QuantityRemaining(ByVal Value As BoxedDecimal)
 Const ProcName As String = "IOrder_QuantityRemaining"
 On Error GoTo Err
 
@@ -680,8 +632,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get IOrder_QuantityRemaining() As Long
-IOrder_QuantityRemaining = QuantityRemaining
+Private Property Get IOrder_QuantityRemaining() As BoxedDecimal
+Set IOrder_QuantityRemaining = QuantityRemaining
 End Property
 
 Private Property Let IOrder_SettlingFirm(ByVal Value As String)
@@ -1009,50 +961,12 @@ Public Property Get ErrorMessage() As String
 ErrorMessage = mSummary.ErrorMessage
 End Property
 
-Public Property Let ETradeOnly(ByVal Value As Boolean)
-Const ProcName As String = "ETradeOnly"
-On Error GoTo Err
-
-If Value = mSummary.ETradeOnly Then Exit Property
-checkAttributeModificationPermitted OrderAttributes.OrderAttETradeOnly
-setDirty
-mSummary.ETradeOnly = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get ETradeOnly() As Boolean
-ETradeOnly = mSummary.ETradeOnly
-End Property
-
 Public Property Let FillTime(ByVal Value As Date)
 mSummary.FillTime = Value
 End Property
 
 Public Property Get FillTime() As Date
 FillTime = mSummary.FillTime
-End Property
-
-Public Property Let FirmQuoteOnly(ByVal Value As Boolean)
-Const ProcName As String = "FirmQuoteOnly"
-On Error GoTo Err
-
-If Value = mSummary.FirmQuoteOnly Then Exit Property
-checkAttributeModificationPermitted OrderAttributes.OrderAttFirmQuoteOnly
-setDirty
-mSummary.FirmQuoteOnly = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get FirmQuoteOnly() As Boolean
-FirmQuoteOnly = mSummary.FirmQuoteOnly
 End Property
 
 Public Property Let GoodAfterTime(ByVal Value As Date)
@@ -1281,25 +1195,6 @@ Public Property Get MinimumQuantity() As Long
 MinimumQuantity = mSummary.MinimumQuantity
 End Property
 
-Public Property Let NbboPriceCap(ByVal Value As Double)
-Const ProcName As String = "NbboPriceCap"
-On Error GoTo Err
-
-If Value = mSummary.NbboPriceCap Then Exit Property
-checkAttributeModificationPermitted OrderAttributes.OrderAttNBBOPriceCap
-setDirty
-mSummary.NbboPriceCap = Value
-
-Exit Property
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Property
-
-Public Property Get NbboPriceCap() As Double
-NbboPriceCap = mSummary.NbboPriceCap
-End Property
-
 Friend Property Get NeedsRecovery() As Boolean
 NeedsRecovery = mNeedsRecovery
 End Property
@@ -1416,15 +1311,15 @@ If mProviderProperties Is Nothing Then Exit Property
 Set ProviderProperties = mProviderProperties.Clone
 End Property
 
-Public Property Let Quantity(ByVal Value As Long)
+Public Property Let Quantity(ByVal Value As BoxedDecimal)
 Const ProcName As String = "Quantity"
 On Error GoTo Err
 
-If Value = mSummary.Quantity Then Exit Property
+If Value.EQ(mSummary.Quantity) Then Exit Property
 checkAttributeModificationPermitted OrderAttributes.OrderAttQuantity
 mSummary.Quantity = Value
 setDirty
-mSummary.QuantityRemaining = mSummary.Quantity - mSummary.QuantityFilled
+mSummary.QuantityRemaining = mSummary.Quantity.Subtr(mSummary.QuantityFilled)
 
 Exit Property
 
@@ -1432,24 +1327,24 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Quantity() As Long
-Quantity = mSummary.Quantity
+Public Property Get Quantity() As BoxedDecimal
+Set Quantity = mSummary.Quantity
 End Property
 
-Public Property Let QuantityFilled(ByVal Value As Long)
+Public Property Let QuantityFilled(ByVal Value As BoxedDecimal)
 mSummary.QuantityFilled = Value
 End Property
 
-Public Property Get QuantityFilled() As Long
-QuantityFilled = mSummary.QuantityFilled
+Public Property Get QuantityFilled() As BoxedDecimal
+Set QuantityFilled = mSummary.QuantityFilled
 End Property
 
-Public Property Let QuantityRemaining(ByVal Value As Long)
+Public Property Let QuantityRemaining(ByVal Value As BoxedDecimal)
 mSummary.QuantityRemaining = Value
 End Property
 
-Public Property Get QuantityRemaining() As Long
-QuantityRemaining = mSummary.QuantityRemaining
+Public Property Get QuantityRemaining() As BoxedDecimal
+Set QuantityRemaining = mSummary.QuantityRemaining
 End Property
 
 Friend Property Let RecoveryContextName(ByVal Value As String)
@@ -1780,8 +1675,6 @@ Case OrderStatusPendingSubmit
                             OrderAttributes.OrderAttBlockOrder Or _
                             OrderAttributes.OrderAttDiscretionaryAmount Or _
                             OrderAttributes.OrderAttDisplaySize Or _
-                            OrderAttributes.OrderAttETradeOnly Or _
-                            OrderAttributes.OrderAttFirmQuoteOnly Or _
                             OrderAttributes.OrderAttGoodAfterTime Or _
                             OrderAttributes.OrderAttGoodAfterTimeTZ Or _
                             OrderAttributes.OrderAttGoodTillDate Or _
@@ -1806,8 +1699,6 @@ Case OrderStatusPreSubmitted
                             OrderAttributes.OrderAttBlockOrder Or _
                             OrderAttributes.OrderAttDiscretionaryAmount Or _
                             OrderAttributes.OrderAttDisplaySize Or _
-                            OrderAttributes.OrderAttETradeOnly Or _
-                            OrderAttributes.OrderAttFirmQuoteOnly Or _
                             OrderAttributes.OrderAttGoodAfterTime Or _
                             OrderAttributes.OrderAttGoodAfterTimeTZ Or _
                             OrderAttributes.OrderAttGoodTillDate Or _
@@ -1929,8 +1820,6 @@ With pReport
     If .BlockOrder <> mSummary.BlockOrder Then mSummary.BlockOrder = .BlockOrder: changed = True
     If .DiscretionaryAmount <> mSummary.DiscretionaryAmount Then mSummary.DiscretionaryAmount = .DiscretionaryAmount: changed = True
     If .DisplaySize <> mSummary.DisplaySize Then mSummary.DisplaySize = .DisplaySize: changed = True
-    If .ETradeOnly <> mSummary.ETradeOnly Then mSummary.ETradeOnly = .ETradeOnly: changed = True
-    If .FirmQuoteOnly <> mSummary.FirmQuoteOnly Then mSummary.FirmQuoteOnly = .FirmQuoteOnly: changed = True
     If .GoodAfterTime <> mSummary.GoodAfterTime Then mSummary.GoodAfterTime = .GoodAfterTime: changed = True
     If .GoodAfterTimeTZ <> mSummary.GoodAfterTimeTZ Then mSummary.GoodAfterTimeTZ = .GoodAfterTimeTZ: changed = True
     If .GoodTillDate <> mSummary.GoodTillDate Then mSummary.GoodTillDate = .GoodTillDate: changed = True
@@ -1940,7 +1829,6 @@ With pReport
     If .LimitPrice <> mSummary.LimitPrice Then mSummary.LimitPrice = .LimitPrice: changed = True
     If .Message <> mSummary.Message Then mSummary.Message = .Message: changed = True
     If .MinimumQuantity <> mSummary.MinimumQuantity Then mSummary.MinimumQuantity = .MinimumQuantity: changed = True
-    If .NbboPriceCap <> mSummary.NbboPriceCap Then mSummary.NbboPriceCap = .NbboPriceCap: changed = True
     If .OrderType <> mSummary.OrderType Then mSummary.OrderType = .OrderType: changed = True
     If .Origin <> mSummary.Origin Then mSummary.Origin = .Origin: changed = True
     If .OriginatorRef <> mSummary.OriginatorRef Then mSummary.OriginatorRef = .OriginatorRef: changed = True

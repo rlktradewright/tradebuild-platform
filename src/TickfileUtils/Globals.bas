@@ -151,7 +151,7 @@ Public Type FileTick
     Timestamp As Date
     TickType As FileTickTypes
     TickPrice As Double
-    TickSize As Long
+    TickSize As BoxedDecimal
     MDposition As Long
     MDMarketMaker As String
     MDOperation As Long

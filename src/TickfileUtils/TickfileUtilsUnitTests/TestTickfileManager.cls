@@ -107,9 +107,10 @@ Do
 Loop Until mTestCompleted
 
 Assert.IsTrue tfmev.NotifyEventCount = 1, "NotifyEvent should be invoked once"
-Assert.IsTrue tfmev.NotifyEventEv.EventCode = TickfileEventCodes.TickfileEventFileIsEmpty, "NotifyEvent has invalid event code"
+Assert.IsTrue tfmev.NotifyEventEv.EventCode = TickfileEventCodes.TickfileEventNoTickData, "NotifyEvent has invalid event code"
 Assert.IsTrue tfmev.ReplayProgressCount = 0, "ReplayProgress should not be invoked"
-Assert.IsTrue tfmev.TickfileCompletedCount = 1, "TickfileCompleted should be invoked once"
+Assert.IsTrue tfmev.TickfileCompletedCount = 1, "TickfileCompleted should not be invoked"
+Assert.AreEqual 0, tfmev.NumberOfReceivedTicks, "Incorrect number of ticks received"
 End Sub
 
 Public Sub ReplayWithInvalidFile()

@@ -92,7 +92,7 @@ Attribute mOrderContexts.VB_VarHelpID = -1
 ' is ended when all OrderContexts have completed.
 Private mEndingSession As Boolean
 
-Private mQuantityOutstanding                    As Long
+Private mQuantityOutstanding                    As BoxedDecimal
 
 Private mSessionProfit                          As Currency
 Private mMaxSessionProfit                       As Currency
@@ -223,7 +223,7 @@ End Sub
 Private Function IOrderAuthoriser_AllowOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pTimestamp As Date, _
-                ByRef pNewOrderSize As Long, _
+                ByRef pNewOrderSize As BoxedDecimal, _
                 ByRef pMessage As String) As Boolean
 Const ProcName As String = "IOrderAuthoriser_AllowOrder"
 On Error GoTo Err
@@ -940,20 +940,21 @@ Public Property Get OrderSubmitter() As IOrderSubmitter
 Set OrderSubmitter = mOrderSubmitter
 End Property
 
-Public Property Get PendingBuyPositionSize() As Integer
+Public Property Get PendingBuyPositionSize() As BoxedDecimal
 Const ProcName As String = "PendingBuyPositionSize"
 On Error GoTo Err
 
 checkInitialised
 
-Dim Size As Long
+Dim Size As BoxedDecimal
+Set Size = DecimalZero
 
 Dim OrderContext As OrderContext
 For Each OrderContext In mOrderContexts
-    Size = Size + OrderContext.PendingBuySize
+    Set Size = Size.Add(OrderContext.PendingBuySize)
 Next
 
-PendingBuyPositionSize = Size
+Set PendingBuyPositionSize = Size
 
 Exit Property
 
@@ -961,20 +962,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingPositionSize() As Integer
+Public Property Get PendingPositionSize() As BoxedDecimal
 Const ProcName As String = "PendingPositionSize"
 On Error GoTo Err
 
 checkInitialised
 
-Dim Size As Long
+Dim Size As BoxedDecimal
+Set Size = DecimalZero
 
 Dim OrderContext As OrderContext
 For Each OrderContext In mOrderContexts
-    Size = Size + OrderContext.PendingSize
+    Set Size = Size.Add(OrderContext.PendingSize)
 Next
 
-PendingPositionSize = Size
+Set PendingPositionSize = Size
 
 Exit Property
 
@@ -982,20 +984,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get PendingSellPositionSize() As Integer
+Public Property Get PendingSellPositionSize() As BoxedDecimal
 Const ProcName As String = "PendingSellPositionSize"
 On Error GoTo Err
 
 checkInitialised
 
-Dim Size As Long
+Dim Size As BoxedDecimal
+Set Size = DecimalZero
 
 Dim OrderContext As OrderContext
 For Each OrderContext In mOrderContexts
-    Size = Size + OrderContext.PendingSellSize
+    Set Size = Size.Add(OrderContext.PendingSellSize)
 Next
 
-PendingSellPositionSize = Size
+Set PendingSellPositionSize = Size
 
 Exit Property
 
@@ -1007,12 +1010,12 @@ Public Property Get PositionCloseErrorMessage() As String
 PositionCloseErrorMessage = mPositionCloseErrorMessage
 End Property
 
-Public Property Get PositionSize() As Integer
+Public Property Get PositionSize() As BoxedDecimal
 Const ProcName As String = "PositionSize"
 On Error GoTo Err
 
 checkInitialised
-PositionSize = mQuantityOutstanding
+Set PositionSize = mQuantityOutstanding
 
 Exit Property
 
@@ -1936,7 +1939,7 @@ If mQuantityOutstanding = 0 Then
     mTradeStartTimezoneName = pExec.TimezoneName
 End If
 
-mQuantityOutstanding = mQuantityOutstanding + gGetSignedQuantity(pExec)
+mQuantityOutstanding.Add gGetSignedQuantity(pExec)
 
 If gGetSignedQuantity(pExec) > 0 Then
     mSummary.CumBuyPrice = mSummary.CumBuyPrice + (pExec.Price * gGetSignedQuantity(pExec))
@@ -2000,7 +2003,7 @@ mSummary.TradingSessionStartTime = mSession.CurrentSessionStartTime
 
 mSummary.CumBuyPrice = 0
 mSummary.CumSellPrice = 0
-mQuantityOutstanding = 0
+Set mQuantityOutstanding = DecimalZero
 
 mSummary.ProfitLastTrade = mProfitThisTrade
 mSummary.DrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade

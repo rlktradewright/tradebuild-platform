@@ -37,6 +37,7 @@ Option Explicit
 '@================================================================================
 
 Public Enum SizeTypes
+    DecimalSize = 0
     ByteSize = 1
     UInt16Size
     UInt32Size
@@ -68,6 +69,10 @@ Public Const SideShifter                    As Byte = &H80
 Public Const SizeTypeBits                   As Byte = &H30
 Public Const SizeTypeShifter                As Byte = &H10
 Public Const TickTypeBits                   As Byte = &HF
+
+Public Const DecimalPointMarker             As Byte = &HF
+Public Const PaddingMarker                  As Byte = &HE
+Public Const NegativeSignMarker             As Byte = &HD
 
 ' this is the encoding format identifier currently in use
 Public Const TickEncodingFormatV2           As String = "urn:uid:b61df8aa-d8cc-47b1-af18-de725dee0ff5"

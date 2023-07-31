@@ -1197,7 +1197,7 @@ If pTick.TickType = TickTypeMarketDepth Then
     ev.Position = pTick.Position
     ev.Price = pTick.Price
     ev.Side = pTick.Side
-    ev.Size = pTick.Size
+    Set ev.Size = pTick.Size
 End If
 
 updateRawMarketDepthListeners
@@ -1264,7 +1264,7 @@ End Sub
 Friend Sub FireSetMarketDepthCell( _
                 ByVal pSide As DOMSides, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 Const ProcName As String = "FireSetMarketDepthCell"
 On Error GoTo Err
 
@@ -1274,7 +1274,7 @@ Dim ev As MarketDepthEventData
 Set ev.Source = Me
 ev.Price = pPrice
 ev.Type = pSide
-ev.Size = pSize
+Set ev.Size = pSize
 
 updateCurrentMarketDepthListeners
 If mSomeCurrentMarketDepthListeners Then

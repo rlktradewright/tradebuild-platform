@@ -177,6 +177,31 @@ readByte = mData(mDataIndex)
 mDataIndex = mDataIndex + 1
 End Function
 
+Private Function readDecimal() As BoxedDecimal
+Dim lLength As Long: lLength = readByte
+
+ReDim ar(lLength - 1) As Byte
+
+Dim lNibbleIndex As Long: lNibbleIndex = 2 * mDataIndex
+
+Dim i As Long
+For i = 0 To UBound(ar)
+    Dim b As Byte: b = readNibble(lNibbleIndex)
+    If b = NegativeSignMarker Then
+        ar(i) = Asc("-")
+    ElseIf b = DecimalPointMarker Then
+        ar(i) = Asc(".")
+    ElseIf b = PaddingMarker Then
+        ' ignore padding nibble
+    Else
+        ' NB 48 is Asc("0")
+        ar(i) = b + 48
+    End If
+Next
+If lNibbleIndex Mod 2 <> 0 Then readNibble lNibbleIndex ' read padding nibble if need be
+Set readDecimal = CreateBoxedDecimal(StrConv(ar, vbUnicode))
+End Function
+
 Private Function readInt() As Long
 readInt = readByte + (readByte * &H100&)
 End Function
@@ -201,7 +226,7 @@ pTick.Position = sideOperationPositionByte And PositionBits
 pTick.Operation = (sideOperationPositionByte And OperationBits) / OperationShifter
 pTick.Side = (sideOperationPositionByte And SideBits) / SideShifter
 pTick.Price = readPrice(pTypeByte)
-pTick.Size = readSize(pSizeType)
+Set pTick.Size = readSize(pSizeType)
 pTick.MarketMaker = readString
 End Sub
 
@@ -210,6 +235,16 @@ Private Sub readMarketDepthResetRecord( _
                 ByRef pTick As GenericTick)
 ' nothing to do
 End Sub
+
+Private Function readNibble(ByRef nibbleIndex As Long) As Byte
+If nibbleIndex Mod 2 = 0 Then
+    readNibble = (mData(mDataIndex) And &HF0) / &H10
+Else
+    readNibble = mData(mDataIndex) And &HF
+    mDataIndex = mDataIndex + 1
+End If
+nibbleIndex = nibbleIndex + 1
+End Function
 
 Private Function readPrice( _
                 ByVal pTypeByte As Byte) As Double
@@ -244,18 +279,20 @@ Private Sub readQuoteRecord( _
                 ByVal pSizeType As SizeTypes, _
                 ByRef pTick As GenericTick)
 pTick.Price = readPrice(pTypeByte)
-pTick.Size = readSize(pSizeType)
+Set pTick.Size = readSize(pSizeType)
 End Sub
 
 Private Function readSize( _
-                ByVal pSizeType As SizeTypes) As Long
+                ByVal pSizeType As SizeTypes) As BoxedDecimal
 Select Case pSizeType
+Case DecimalSize
+    Set readSize = CreateBoxedDecimal(readDecimal)
 Case ByteSize
-    readSize = readByte
+    Set readSize = CreateBoxedDecimal(readByte)
 Case UInt16Size
-    readSize = readInt
+    Set readSize = CreateBoxedDecimal(readInt)
 Case UInt32Size
-    readSize = readLong
+    Set readSize = CreateBoxedDecimal(readLong)
 End Select
 End Function
 
@@ -263,7 +300,7 @@ Private Sub readSizeRecord( _
                 ByVal pTypeByte As Byte, _
                 ByVal pSizeType As SizeTypes, _
                 ByRef pTick As GenericTick)
-pTick.Size = readSize(pSizeType)
+Set pTick.Size = readSize(pSizeType)
 End Sub
 
 Private Function readString() As String
@@ -286,7 +323,7 @@ Else
     b0 = readByte
     b1 = readByte
     
-    ' see RFC 2781 4.3 for details of interpeting the Byte Order Marker (BOM)
+    ' see RFC 2781 4.3 for details of interpreting the Byte Order Marker (BOM)
     If b0 = &HFE And b1 = &HFF Then
         lIsBigEndian = True
         ReDim ar(lLength - 3) As Byte

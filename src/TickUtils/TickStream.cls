@@ -72,6 +72,8 @@ Private mSomeOptionComputationListeners             As Boolean
 
 Private mMinimumPriceVariation                      As Double
 
+Private mIsDelayed                                  As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -163,6 +165,10 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Property Get ITickStream_IsDelayed() As Boolean
+ITickStream_IsDelayed = mIsDelayed
+End Property
 
 Private Property Get ITickStream_MinimumPriceVariation() As Double
 ITickStream_MinimumPriceVariation = MinimumPriceVariation
@@ -365,7 +371,8 @@ Friend Sub Initialise( _
                 ByVal pBuilder As TickStreamBuilder, _
                 ByVal pStreamId As Long, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pClockFuture As IFuture)
+                ByVal pClockFuture As IFuture, _
+                ByVal pIsDelayed As Boolean)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -374,6 +381,7 @@ Set mBuilder = pBuilder
 mStreamId = pStreamId
 Set mContractFuture = pContractFuture
 Set mClockFuture = pClockFuture
+mIsDelayed = pIsDelayed
 
 Exit Sub
 

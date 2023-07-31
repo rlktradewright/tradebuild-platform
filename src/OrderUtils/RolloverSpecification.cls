@@ -60,7 +60,7 @@ Private mRolloverStrikeParameter                    As Double
 Private mRolloverStrikeOperator                     As OptionStrikeSelectionOperators
 
 Private mRolloverQuantityMode                       As RolloverQuantityModes
-Private mRolloverQuantityParameter                  As Double
+Private mRolloverQuantityParameter                  As BoxedDecimal
 Private mRolloverQuantityLotSize                    As Long
 
 Private mUnderlyingExchangeName                     As String
@@ -231,12 +231,12 @@ Public Property Let RolloverQuantityMode(ByVal Value As RolloverQuantityModes)
 mRolloverQuantityMode = Value
 End Property
 
-Public Property Get RolloverQuantityParameter() As Double
-RolloverQuantityParameter = mRolloverQuantityParameter
+Public Property Get RolloverQuantityParameter() As BoxedDecimal
+Set RolloverQuantityParameter = mRolloverQuantityParameter
 End Property
 
-Public Property Let RolloverQuantityParameter(ByVal Value As Double)
-mRolloverQuantityParameter = Value
+Public Property Let RolloverQuantityParameter(ByVal Value As BoxedDecimal)
+Set mRolloverQuantityParameter = Value
 End Property
 
 Public Property Get RolloverStrikeSelectionMode() As RolloverStrikeModes
@@ -433,8 +433,8 @@ mRolloverQuantityMode = Value
 Set setRolloverQuantityMode = Me
 End Function
 
-Public Function setRolloverQuantityParameter(ByVal Value As Double) As RolloverSpecification
-mRolloverQuantityParameter = Value
+Public Function setRolloverQuantityParameter(ByVal Value As BoxedDecimal) As RolloverSpecification
+Set mRolloverQuantityParameter = Value
 Set setRolloverQuantityParameter = Me
 End Function
 

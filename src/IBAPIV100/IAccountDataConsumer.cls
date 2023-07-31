@@ -95,13 +95,13 @@ End Sub
 Public Sub NotifyPosition( _
                 ByVal pAccount As String, _
                 ByVal pContractSpec As TwsContractSpecifier, _
-                ByVal pPosition As Double, _
+                ByVal pPosition As BoxedDecimal, _
                 ByVal pAverageCost As Double)
 End Sub
 
 Public Sub NotifyPortfolioUpdate( _
                 ByVal pContractSpec As TwsContractSpecifier, _
-                ByVal pPosition As Double, _
+                ByVal pPosition As BoxedDecimal, _
                 ByVal pMarketPrice As Double, _
                 ByVal pMarketValue As Double, _
                 ByVal pAverageCost As Double, _

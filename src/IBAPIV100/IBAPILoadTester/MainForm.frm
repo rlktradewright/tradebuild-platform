@@ -543,7 +543,7 @@ Next
 mNextTickerId = 0
 
 For i = 0 To mNextDepthTickerId - 1
-    mIBAPI.CancelMarketDepth i
+    mIBAPI.CancelMarketDepth i, False
     logMessage "Stopping market depth ticker " & i
 Next
 mNextDepthTickerId = 0
@@ -649,7 +649,7 @@ Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As L
 
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickPrice(ByVal pTickerId As Long, ByVal pTickType As IBAPIV100.TwsTickTypes, ByVal pPrice As Double, ByVal pSize As Long, ByRef pAttributes As TwsTickAttributes)
+Private Sub IMarketDataConsumer_NotifyTickPrice(ByVal pTickerId As Long, ByVal pTickType As IBAPIV100.TwsTickTypes, ByVal pPrice As Double, ByVal pSize As BoxedDecimal, ByRef pAttributes As TwsTickAttributes)
 incrementTotalTicks
 End Sub
 
@@ -657,7 +657,7 @@ Private Sub IMarketDataConsumer_NotifyTickRequestParams(ByVal pTickerId As Long,
 incrementTotalTicks
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickSize(ByVal pTickerId As Long, ByVal pTickType As Long, ByVal pSize As Long)
+Private Sub IMarketDataConsumer_NotifyTickSize(ByVal pTickerId As Long, ByVal pTickType As Long, ByVal pSize As BoxedDecimal)
 incrementTotalTicks
 End Sub
 
@@ -673,7 +673,7 @@ Private Sub IMarketDepthConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErr
 logMessage "Market depth error " & pErrorCode & "(" & pTickerId & "): " & pErrorMsg
 End Sub
 
-Private Sub IMarketDepthConsumer_NotifyMarketDepth(ByVal pTickerId As Long, ByVal pPosition As Long, ByVal pMarketMaker As String, ByVal pOperation As IBAPIV100.TwsDOMOperations, ByVal pSide As IBAPIV100.TwsDOMSides, ByVal pPrice As Double, ByVal pSize As Long)
+Private Sub IMarketDepthConsumer_NotifyMarketDepth(ByVal pTickerId As Long, ByVal pPosition As Long, ByVal pMarketMaker As String, ByVal pOperation As IBAPIV100.TwsDOMOperations, ByVal pSide As IBAPIV100.TwsDOMSides, ByVal pPrice As Double, ByVal pSize As BoxedDecimal)
 incrementTotalTicks
 End Sub
 

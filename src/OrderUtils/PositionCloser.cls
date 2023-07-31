@@ -152,7 +152,7 @@ Private Sub mBalancingBracketOrder_Completed()
 Const ProcName As String = "mBalancingBracketOrder_Completed"
 On Error GoTo Err
 
-mBalancingBracketOrder.SetSize 0
+mBalancingBracketOrder.SetSize DecimalZero
 
 ' adjust the other BracketOrders to take account of the settling Order
 
@@ -312,7 +312,7 @@ If Not mBalancingOrderContext.IsReadyForPriceSpecifier(pPriceSpec) Then Exit Fun
 
 Set lBo = mBalancingOrderContext.CreateBracketOrder( _
                     IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
-                    Abs(mPositionManager.PositionSize), _
+                    CreateBoxedDecimal(Abs(mPositionManager.PositionSize)), _
                     mBalancingOrderContext.CreateEntryOrder( _
                         OrderTypeLimit, _
                         pPriceSpec _
@@ -342,7 +342,7 @@ Dim lBo As BracketOrder
 
 Set lBo = mBalancingOrderContext.CreateBracketOrder( _
                         IIf(mPositionManager.PositionSize < 0, OrderActionBuy, OrderActionSell), _
-                        Abs(mPositionManager.PositionSize), _
+                        CreateBoxedDecimal(Abs(mPositionManager.PositionSize)), _
                         mBalancingOrderContext.CreateEntryOrder( _
                             OrderTypeMarket) _
                         )

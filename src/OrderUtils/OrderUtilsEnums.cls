@@ -157,9 +157,9 @@ Public Enum OrderAttributes
     OrderAttAllOrNone = &H4000&
     OrderAttMinimumQuantity = &H8000&
     OrderAttPercentOffset = &H10000
-    OrderAttETradeOnly = &H20000
-    OrderAttFirmQuoteOnly = &H40000
-    OrderAttNBBOPriceCap = &H80000
+    'OrderAttETradeOnly = &H20000
+    'OrderAttFirmQuoteOnly = &H40000
+    'OrderAttNBBOPriceCap = &H80000
     OrderAttOverrideConstraints = &H100000
     OrderAttAction = &H200000
     OrderAttLimitPrice = &H400000

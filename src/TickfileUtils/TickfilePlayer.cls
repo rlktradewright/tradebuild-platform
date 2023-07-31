@@ -153,10 +153,9 @@ Case TickfileEventCodes.TickfileEventFileDoesNotExist, _
         TickfileEventCodes.TickfileEventFileFormatNotSupported, _
         TickfileEventCodes.TickfileEventAmbiguousContractDetails, _
         TickfileEventCodes.TickfileEventNoContractDetails, _
-        TickfileEventCodes.TickfileEventDataSourceNotAvailable
+        TickfileEventCodes.TickfileEventDataSourceNotAvailable, _
+        TickfileEventCodes.TickfileEventFileIsEmpty
     mTickfileReplayController.NotifyCantPlay Me
-Case TickfileEventCodes.TickfileEventFileIsEmpty
-    mTickfileReplayController.NotifyReady Me, mTickfileSpec
 End Select
 
 Exit Sub
@@ -199,7 +198,6 @@ On Error GoTo Err
 
 mTickfileState = TickfileStateNotPlaying
 mTaskContext.Continue
-mReader.CloseInputFile
 
 mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
 
@@ -490,21 +488,21 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function PrepareTickfile( _
+Friend Sub PrepareTickfile( _
                 ByVal pTickfileReader As ITickfileReader, _
-                ByVal pTickfileSpec As TickfileSpecifier) As Boolean
+                ByVal pTickfileSpec As TickfileSpecifier)
 Const ProcName As String = "PrepareTickfile"
 On Error GoTo Err
 
 Set mReader = pTickfileReader
 Set mTickfileSpec = pTickfileSpec
-PrepareTickfile = mReader.PrepareTickfile(mTickfileSpec)
+mReader.PrepareTickfile mTickfileSpec
 
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Friend Sub ProcessTick(ByRef pTick As GenericTick)
 Const ProcName As String = "ProcessTick"

@@ -1404,8 +1404,6 @@ With lOrderReport
     .BrokerId = pOrder.BrokerId
     .DiscretionaryAmount = pOrder.DiscretionaryAmount
     .DisplaySize = pOrder.DisplaySize
-    .ETradeOnly = pOrder.ETradeOnly
-    .FirmQuoteOnly = pOrder.FirmQuoteOnly
     .GoodAfterTime = pOrder.GoodAfterTime
     .GoodAfterTimeTZ = pOrder.GoodAfterTimeTZ
     .GoodTillDate = pOrder.GoodTillDate
@@ -1415,7 +1413,6 @@ With lOrderReport
     .IgnoreRegularTradingHours = pOrder.IgnoreRegularTradingHours
     .LimitPrice = pOrder.LimitPrice
     .MinimumQuantity = pOrder.MinimumQuantity
-    .NbboPriceCap = pOrder.NbboPriceCap
     .OrderType = pOrder.OrderType
     .Origin = pOrder.Origin
     .OriginatorRef = pOrder.OriginatorRef

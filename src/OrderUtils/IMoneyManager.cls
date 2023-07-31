@@ -68,7 +68,7 @@ Public Function AllowOrder( _
                 ByVal pBracketOrder As IBracketOrder, _
                 ByVal pPositionManager As PositionManager, _
                 ByVal pTimestamp As Date, _
-                ByRef pNewOrderSize As Long, _
+                ByRef pNewOrderSize As BoxedDecimal, _
                 ByRef pMessage As String, _
                 ByRef pSessionMustBeEnded As Boolean) As Boolean
 End Function
