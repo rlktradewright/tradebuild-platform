@@ -708,6 +708,36 @@ Private Sub SymbolText_KeyPress(KeyAscii As Integer)
 KeyAscii = Asc(UCase$(Chr$(KeyAscii)))
 End Sub
 
+Private Sub TradingClassText_Change()
+Const ProcName As String = "TradingClassText_Change"
+On Error GoTo Err
+
+TradingClassText.Text = UCase$(TradingClassText.Text)
+checkIfValid
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub TradingClassText_GotFocus()
+Const ProcName As String = "TradingClassText_GotFocus"
+On Error GoTo Err
+
+TradingClassText.SelStart = 0
+TradingClassText.SelLength = Len(TradingClassText.Text)
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub TradingClassText_KeyPress(KeyAscii As Integer)
+KeyAscii = Asc(UCase$(Chr$(KeyAscii)))
+End Sub
+
 Private Sub TypeCombo_Change()
 Const ProcName As String = "TypeCombo_Change"
 On Error GoTo Err
@@ -802,7 +832,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ContractSpecifier() As IContractSpecifier
-Const ProcName As String = "contractSpecifier"
+Const ProcName As String = "ContractSpecifier"
 On Error GoTo Err
 
 If SymbolText.Text <> "" And _
@@ -827,8 +857,8 @@ Else
     
     Set ContractSpecifier = CreateContractSpecifier( _
                                 LocalSymbolText, _
-                                TradingClassText, _
                                 SymbolText, _
+                                TradingClassText, _
                                 ExchangeCombo, _
                                 SecTypeFromString(TypeCombo), _
                                 CurrencyCombo, _
