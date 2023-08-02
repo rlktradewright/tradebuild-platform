@@ -1,28 +1,28 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#34.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSearch 
-   ClientHeight    =   3870
+   ClientHeight    =   4605
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   4800
    DefaultCancel   =   -1  'True
-   ScaleHeight     =   3870
+   ScaleHeight     =   4605
    ScaleWidth      =   4800
    Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
-      Height          =   3150
+      Height          =   3870
       Left            =   0
       TabIndex        =   3
       Top             =   120
       Width           =   4815
       _ExtentX        =   8493
-      _ExtentY        =   6191
+      _ExtentY        =   6826
       ForeColor       =   -2147483640
    End
    Begin TWControls40.TWButton ClearButton 
       Height          =   330
       Left            =   1920
       TabIndex        =   2
-      Top             =   3480
+      Top             =   4080
       Visible         =   0   'False
       Width           =   1215
       _ExtentX        =   2143
@@ -43,7 +43,7 @@ Begin VB.UserControl ContractSearch
       Height          =   330
       Left            =   3240
       TabIndex        =   0
-      Top             =   3480
+      Top             =   4080
       Width           =   1215
       _ExtentX        =   2143
       _ExtentY        =   582
@@ -70,18 +70,19 @@ Begin VB.UserControl ContractSearch
       _ExtentY        =   5741
    End
    Begin VB.Label MessageLabel 
-      Height          =   375
+      Caption         =   "*** Error Message quite a long one really isn't it? ***"
+      Height          =   495
       Left            =   0
       TabIndex        =   1
-      Top             =   3480
+      Top             =   4080
       Width           =   3015
    End
    Begin VB.Line Line1 
       BorderColor     =   &H00E7D395&
       X1              =   0
       X2              =   4800
-      Y1              =   3360
-      Y2              =   3360
+      Y1              =   4050
+      Y2              =   4050
    End
 End
 Attribute VB_Name = "ContractSearch"
@@ -205,6 +206,7 @@ mSortKeys(5) = ContractSortKeyMultiplier
 mSortKeys(6) = ContractSortKeyStrike
 mSortKeys(7) = ContractSortKeyRight
 mSortKeys(8) = ContractSortKeyLocalSymbol
+MessageLabel.Caption = ""
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -245,14 +247,16 @@ If UserControl.Height <= ContractSelector1.Height Then UserControl.Height = Cont
 ActionButton.Left = UserControl.Width - ActionButton.Width
 ClearButton.Left = ActionButton.Left - ClearButton.Width - 120
 
-ActionButton.Top = UserControl.Height - ActionButton.Height
+MessageLabel.Top = UserControl.Height - MessageLabel.Height
+ActionButton.Top = MessageLabel.Top
 ClearButton.Top = ActionButton.Top
-MessageLabel.Top = ActionButton.Top
+MessageLabel.Width = ActionButton.Left - 5 * Screen.TwipsPerPixelX
 
 Line1.Y1 = ActionButton.Top - 120
 Line1.Y2 = Line1.Y1
 Line1.X2 = UserControl.Width
 
+ContractSpecBuilder1.Height = Line1.Y1 - 5 * Screen.TwipsPerPixelX
 ContractSpecBuilder1.Width = UserControl.Width
 ContractSelector1.Width = UserControl.Width
 
@@ -373,7 +377,11 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    MessageLabel.Caption = Err.Description
+Else
+    gNotifyUnhandledError ProcName, ModuleName
+End If
 End Sub
 
 Private Sub ClearButton_Click()
