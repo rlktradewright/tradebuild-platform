@@ -1223,9 +1223,11 @@ addExchangeCode "EUREXUS"
 addExchangeCode "FOXRIVER"
 addExchangeCode "FTA"
 addExchangeCode "FWB"
+addExchangeCode "FWB2"
 
 addExchangeCode "GEMINI"
 addExchangeCode "GLOBEX"
+addExchangeCode "GETTEX2"
 
 addExchangeCode "HKFE"
 
@@ -1304,6 +1306,7 @@ addExchangeCode "SMARTUS"
 addExchangeCode "SNFE"
 addExchangeCode "SOFFEX"
 addExchangeCode "SWB"
+addExchangeCode "SWB2"
 addExchangeCode "SWX"
 
 addExchangeCode "TPLUS1"
