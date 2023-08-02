@@ -128,6 +128,12 @@ If Not IsValidExchangeCode(pTwsContract.Specifier.Exchange) Then
     gLog "Unknown Exchange code received from Tws", pMsgQualifier:=pTwsContract.Specifier.Exchange, pModName:=ModuleName, pProcName:=ProcName
     Exit Sub
 End If
+
+If pTwsContract.Specifier.PrimaryExch = "" Then
+ElseIf Not IsValidExchangeCode(pTwsContract.Specifier.PrimaryExch) Then
+    gLog "Unknown Primary Exchange code received from Tws", pMsgQualifier:=pTwsContract.Specifier.Exchange, pModName:=ModuleName, pProcName:=ProcName
+    Exit Sub
+End If
     
 Dim lContract As IContract
 Set lContract = gTwsContractToContract(pTwsContract)
