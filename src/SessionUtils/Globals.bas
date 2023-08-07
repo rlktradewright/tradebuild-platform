@@ -159,6 +159,18 @@ referenceDate = DateValue(Timestamp)
 Dim referenceTime As Date
 referenceTime = TimeValue(Timestamp)
 
+If referenceDate = MinDate Then
+    gGetSessionTimesIgnoringWeekend.StartTime = MinDate
+    gGetSessionTimesIgnoringWeekend.EndTime = MinDate
+    Exit Function
+End If
+
+If referenceDate = MaxDate Then
+    gGetSessionTimesIgnoringWeekend.StartTime = MaxDate
+    gGetSessionTimesIgnoringWeekend.EndTime = MaxDate
+    Exit Function
+End If
+
 Dim sessionStartDate As Date
 
 If pSessionStartTime < pSessionEndTime Then

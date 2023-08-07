@@ -108,10 +108,10 @@ If mIsLive Then
     mPreviousTick = mTick
     
     mPrevPriceChange = mPriceChange
-    mPriceChange = gCalcValueChange(pTick.Price, mPreviousTick.Price)
+    mPriceChange = gCalcPriceValueChange(pTick.Price, mPreviousTick.Price)
     
     mPrevSizeChange = mSizeChange
-    mSizeChange = gCalcValueChange(pTick.Size, mPreviousTick.Size)
+    mSizeChange = gCalcSizeValueChange(pTick.Size, mPreviousTick.Size)
 End If
 
 mTick = pTick

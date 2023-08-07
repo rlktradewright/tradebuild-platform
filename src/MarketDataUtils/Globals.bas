@@ -67,20 +67,43 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function gCalcValueChange( _
-                ByVal newValue As Variant, _
-                ByVal oldValue As Variant) As ValueChanges
-Const ProcName As String = "gCalcValueChange"
+Public Function gCalcPriceValueChange( _
+                ByVal newValue As Double, _
+                ByVal oldValue As Double) As ValueChanges
+Const ProcName As String = "gCalcPriceValueChange"
 On Error GoTo Err
 
 If oldValue = 0 Or newValue = 0 Then
-    gCalcValueChange = ValueChangeNone
+    gCalcPriceValueChange = ValueChangeNone
 ElseIf newValue > oldValue Then
-    gCalcValueChange = ValueChangeUp
+    gCalcPriceValueChange = ValueChangeUp
 ElseIf newValue < oldValue Then
-    gCalcValueChange = ValueChangeDown
+    gCalcPriceValueChange = ValueChangeDown
 Else
-    gCalcValueChange = ValueChangeNone
+    gCalcPriceValueChange = ValueChangeNone
+End If
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function gCalcSizeValueChange( _
+                ByVal newValue As BoxedDecimal, _
+                ByVal oldValue As BoxedDecimal) As ValueChanges
+Const ProcName As String = "gCalcSizeValueChange"
+On Error GoTo Err
+
+If oldValue Is DecimalZero Or newValue Is DecimalZero Or _
+    oldValue Is Nothing Or newValue Is Nothing Then
+    gCalcSizeValueChange = ValueChangeNone
+ElseIf newValue.GT(oldValue) Then
+    gCalcSizeValueChange = ValueChangeUp
+ElseIf newValue.LT(oldValue) Then
+    gCalcSizeValueChange = ValueChangeDown
+Else
+    gCalcSizeValueChange = ValueChangeNone
 End If
 
 Exit Function
