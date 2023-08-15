@@ -88,6 +88,7 @@ Private mWorkingMaxNumberOfBars                     As Long
 
 Private mTargetContract                             As IContract
 Private mTargetTimezone                             As TimeZone
+Private mTwsTimezone                                As TimeZone
 
 Private mSessionStartTime                           As Date
 Private mSessionEndTime                             As Date
@@ -139,6 +140,9 @@ Private mContractCache                              As ContractCache
 Private mTotalTwsBarsProcessed                      As Long
 
 Private mElapsedTimer                               As New ElapsedTimer
+
+Private mClock                                      As Clock
+Private mClockExpected                              As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -302,53 +306,35 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
     doFail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    gLog "Contract is available", ModuleName, ProcName, , LogLevelDetail
+    gLog "Got caller-supplied contract", ModuleName, ProcName, , LogLevelDetail
 
-    failpoint = "Get contract"
     If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     Set mTargetContract = ev.Future.Value
     
     failpoint = "Set session times"
     setSessionTimes
     
-    failpoint = "Set contract and special times"
-    mTargetBarSpecifier.SetContract mTargetContract, mSpecialFromTime, mSpecialToTime
-    Set mTargetTimezone = GetTimeZone(mTargetContract.TimezoneName)
-    
-    failpoint = "Set target SessionBuilder"
-    Set mTargetSessionBuilder = createNewSessionBuilder
-    Set mTargetSession = mTargetSessionBuilder.Session
-    
-    failpoint = "Set missing dates and number of bars"
-    setDatesAndNumberOfBars
-        
-    failpoint = "Set timespan data"
-    setTimespanData
-    
-    failpoint = "Set max number of bars to fetch"
-    setMaxNumberOfBarsToFetch
-    
-    If Not isBarFixedDuration(mTargetBarSpecifier.BarTimePeriod) Then mNotifyAtEnd = True
-        
-    failpoint = "Create target BarsBuilder"
-    Set mTargetBarsBuilder = CreateBarsBuilder( _
-                                    mTargetBarSpecifier.BarTimePeriod, _
-                                    mTargetSession, _
-                                    mTargetContract.TickSize, _
-                                    IIf(mTargetBarSpecifier.MaxNumberOfBars = AllBars, _
-                                        0, _
-                                        mTargetBarSpecifier.MaxNumberOfBars), _
-                                    mTargetBarSpecifier.NormaliseDailyTimestamps, _
-                                    Not mDontReturnBars Or mNotifyAtEnd)
-    
     gLog "Getting TwsContract", ModuleName, ProcName, , LogLevelDetail
+    failpoint = "Get TWS contract"
     mFutureWaiter.Add gContractFutureToTwsContractFuture(mContractRequester, CreateFuture(mTargetContract), mContractCache)
+    
+    If mClockExpected And mClock Is Nothing Then Exit Sub
+
+    setContractAndSpecialTimes
+    If Not mTwsContract Is Nothing Then processTwsContract
+ElseIf TypeOf ev.Future.Value Is Clock Then
+    Set mClock = ev.Future.Value
+    gLog "Got clock" & IIf(mClock.IsSimulated, " - simulated", ""), ModuleName, ProcName, , LogLevelDetail
+    If mTargetContract Is Nothing Then Exit Sub
+    setContractAndSpecialTimes
+    If Not mTwsContract Is Nothing Then processTwsContract
 ElseIf TypeOf ev.Future.Value Is TwsContract Then
     gLog "Got TwsContract", ModuleName, ProcName, , LogLevelDetail
     Set mTwsContract = ev.Future.Value
-    Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
-    mState = RetrievingBars
-    mTaskContext.Continue
+    
+    If mClockExpected And mClock Is Nothing Then Exit Sub
+    If mTargetContract Is Nothing Then Exit Sub
+    processTwsContract
 ElseIf TypeOf ev.Future.Value Is Bars Or _
        TypeOf ev.Future.Value Is BoxedValue Then
     If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
@@ -443,7 +429,10 @@ gSetVariant mCookie, pCookie
 mFutureBuilder.Cookie = mCookie
 
 mFutureWaiter.Add pContractFuture
-If Not pClockFuture Is Nothing Then mFutureWaiter.Add pClockFuture
+If Not pClockFuture Is Nothing Then
+    mClockExpected = True
+    mFutureWaiter.Add pClockFuture
+End If
 
 mRequesterID = mHistDataRequester.RegisterHistoricalDataRequest(Me)
 
@@ -665,11 +654,21 @@ Case TimePeriodDay, _
     'lEndTime = Int(lEndTime)
 End Select
 
-generateRequestEndTime = Format(lEndTime, _
-                                "yyyymmdd hh\:nn\:ss") & _
-                                " " & _
-                                gStandardTimezoneNameToTwsTimeZoneName(mTargetTimezone.StandardName)
+If Not mTwsTimezone Is mTargetTimezone Then
+    ' adjust the request end time to comply with IB's timezone for the contract
+    lEndTime = ConvertDateUTCToTZ(ConvertDateTzToUTC(lEndTime, mTargetTimezone), mTwsTimezone)
+    generateRequestEndTime = Format(lEndTime, _
+                                    "yyyymmdd hh\:nn\:ss") & _
+                                    " " & _
+                                    gStandardTimezoneNameToTwsTimeZoneName(mTwsTimezone.StandardName)
+Else
+    generateRequestEndTime = Format(lEndTime, _
+                                    "yyyymmdd hh\:nn\:ss") & _
+                                    " " & _
+                                    gStandardTimezoneNameToTwsTimeZoneName(mTargetTimezone.StandardName)
+End If
 
+    
 Exit Function
 
 Err:
@@ -1457,6 +1456,22 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub processTwsContract()
+Const ProcName As String = "processTwsContract"
+On Error GoTo Err
+
+    Set mTwsTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(mTwsContract.TimeZoneId))
+    Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
+    mState = RetrievingBars
+    mTaskContext.Continue
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+
 Private Sub returnResults()
 Const ProcName As String = "returnResults"
 On Error GoTo Err
@@ -1481,6 +1496,59 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub setContractAndSpecialTimes()
+Const ProcName As String = "setContractAndSpecialTimes"
+On Error GoTo Err
+
+Dim failpoint As String
+
+If mClock Is Nothing Then
+    gLog "Setting clock for target contract", ModuleName, ProcName, , LogLevelDetail
+    Set mClock = GetClock(mTargetContract.TimezoneName)
+End If
+
+failpoint = "Set contract and special times"
+gLog "Set contract and special times", ModuleName, ProcName, , LogLevelDetail
+mTargetBarSpecifier.SetContract mTargetContract, mSpecialFromTime, mSpecialToTime, mClock
+Set mTargetTimezone = GetTimeZone(mTargetContract.TimezoneName)
+
+failpoint = "Set target SessionBuilder"
+gLog "Set target SessionBuilder", ModuleName, ProcName, , LogLevelDetail
+Set mTargetSessionBuilder = createNewSessionBuilder
+Set mTargetSession = mTargetSessionBuilder.Session
+
+failpoint = "Set missing dates and number of bars"
+gLog "Set missing dates and number of bars", ModuleName, ProcName, , LogLevelDetail
+setDatesAndNumberOfBars
+    
+failpoint = "Set timespan data"
+gLog "Set timespan data", ModuleName, ProcName, , LogLevelDetail
+setTimespanData
+
+failpoint = "Set max number of bars to fetch"
+gLog "Set max number of bars to fetch", ModuleName, ProcName, , LogLevelDetail
+setMaxNumberOfBarsToFetch
+
+If Not isBarFixedDuration(mTargetBarSpecifier.BarTimePeriod) Then mNotifyAtEnd = True
+    
+failpoint = "Create target BarsBuilder"
+gLog "Create target BarsBuilder", ModuleName, ProcName, , LogLevelDetail
+Set mTargetBarsBuilder = CreateBarsBuilder( _
+                                mTargetBarSpecifier.BarTimePeriod, _
+                                mTargetSession, _
+                                mTargetContract.TickSize, _
+                                IIf(mTargetBarSpecifier.MaxNumberOfBars = AllBars, _
+                                    0, _
+                                    mTargetBarSpecifier.MaxNumberOfBars), _
+                                mTargetBarSpecifier.NormaliseDailyTimestamps, _
+                                Not mDontReturnBars Or mNotifyAtEnd)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName, failpoint
+End Sub
+
 Private Sub setDatesAndNumberOfBars()
 Const ProcName As String = "setDatesAndNumberOfBars"
 On Error GoTo Err
@@ -1498,7 +1566,7 @@ With mTargetBarSpecifier
     If .ToDate = MaxDate Then
         .ToDate = getToDate( _
                         .BarTimePeriod, _
-                        Now, _
+                        mClock.Timestamp, _
                         1)
     End If
     
