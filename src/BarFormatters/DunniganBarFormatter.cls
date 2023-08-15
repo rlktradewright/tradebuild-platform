@@ -68,6 +68,7 @@ Private Sub IBarFormatter_FormatBar( _
 Const ProcName As String = "IBarFormatter_FormatBar"
 On Error GoTo Err
 
+If mBars Is Nothing Then Exit Sub
 If mBars.Count < 2 Then Exit Sub
 
 Dim lFirstBarNumber As Long
@@ -137,7 +138,11 @@ Friend Property Let BarsFuture(ByVal Value As IFuture)
 Const ProcName As String = "BarsFuture"
 On Error GoTo Err
 
-mFutureWaiter.Add Value
+If Value.IsAvailable Then
+    Set mBars = Value.Value
+Else
+    mFutureWaiter.Add Value
+End If
 
 Exit Property
 
