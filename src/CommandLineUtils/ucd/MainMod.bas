@@ -166,6 +166,7 @@ Do While inString <> gCon.EofString
             gCon.WriteErrorLine "No contract class defined"
             Exit Do
         End If
+        gCon.WriteLineToConsole "Input: " & inString
         processInput inString, lineNumber
     End If
     inString = getInputLineAndWait(False)
@@ -332,6 +333,7 @@ Dim expiryAdjusted As Boolean
 Dim lInstr As Instrument
 Set lInstr = gDb.InstrumentFactory.LoadByQuery("INSTRUMENTCLASSID=" & gInstrumentClass.Id & " AND " & _
                                             "SYMBOL='" & symbol & "' AND " & _
+                                            "SHORTNAME='" & shortname & "' AND " & _
                                             "(EXPIRYDATE IS NULL OR EXPIRYDATE='" & Format(expiryDate, "mm/dd/yyyy") & "') AND " & _
                                             "(STRIKEPRICE IS NULL OR STRIKEPRICE=" & strike & ") AND " & _
                                             "(OPTRIGHT IS NULL OR OPTRIGHT=" & optRight & ")")
