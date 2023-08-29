@@ -381,6 +381,6 @@ gCon.WriteErrorLine ""
 gCon.WriteErrorLine "StdIn Format:"
 gCon.WriteErrorLine "#comment"
 gCon.WriteErrorLine "$echo text"
-gCon.WriteErrorLine "sectype,exchange,shortname,symbol,currency,expiry,multiplier,strike,right"
+gCon.WriteErrorLine "sectype,exchange,shortname,symbol,tradingclass,currency,expiry,multiplier,strike,right"
 gCon.WriteErrorLine ",nametemplate"
 End Sub

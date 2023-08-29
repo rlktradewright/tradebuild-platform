@@ -231,6 +231,8 @@ Do While Not s.eos
             bldr.Append OptionRightToString(pContract.Specifier.Right)
         Case "n"          'supplied name"
             bldr.Append pContract.Description
+        Case "l"
+            bldr.Append pContract.Specifier.tradingclass
         Case Else
             bldr.Append "%" & curr
         End Select
