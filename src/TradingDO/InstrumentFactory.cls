@@ -842,6 +842,8 @@ End With
 
 conditionStringFromSpec = cond.conditionString
 
+gLogger.Log "Query condition = " & conditionStringFromSpec, ProcName, ModuleName, LogLevelDetail
+
 Exit Function
 
 Err:
