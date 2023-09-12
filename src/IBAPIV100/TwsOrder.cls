@@ -206,7 +206,7 @@ Public RandomizePrice As Boolean
 Public AutoCancelDate As String
 Public FilledQuantity As BoxedDecimal
 
-Public ReferenceFutureContractId As Integer
+Public ReferenceFutureContractId As Long
 Public AutoCancelParent As Boolean
 Public Shareholder As String
 Public ImbalanceOnly As Boolean
@@ -214,8 +214,8 @@ Public RouteMarketableToBbo As Boolean
 Public ParentPermanentId As BoxedDecimal
 Public AdvancedErrorOverride As String
 Public ManualOrderTime As String
-Public MinimumTradeQuantity As Integer
-Public MinimumCompeteSize As Integer
+Public MinimumTradeQuantity As Long
+Public MinimumCompeteSize As Long
 Public CompeteAgainstBestOffset As Double
 Public MidOffsetAtWhole As Double
 Public MidOffsetAtHalf As Double

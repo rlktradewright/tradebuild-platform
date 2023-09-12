@@ -162,7 +162,7 @@ On Error GoTo Err
 If data Is Nothing Then
     AddString "", fieldName
 Else
-    AddString DecimalToString(data.DecimalValue), fieldName
+    AddString DecimalToString(data), fieldName
 End If
 
 Exit Sub

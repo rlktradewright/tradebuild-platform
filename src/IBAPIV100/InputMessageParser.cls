@@ -1142,7 +1142,7 @@ End With
 ' read Order fields
 With lOrder
     .Action = gTwsOrderActionFromString(mReader.GetString("Action"))
-    .TotalQuantity = mReader.GetDecimal("Quantity")
+    Set .TotalQuantity = mReader.GetDecimal("Quantity")
     .OrderType = gTwsOrderTypeFromString(mReader.GetString("Order type"))
     If .OrderType = TwsOrderTypeNone Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid OrderType"
     .LmtPrice = mReader.GetDoubleMax("Limit price")
@@ -1225,7 +1225,7 @@ With lOrder
     .DeltaNeutralOrderType = gTwsOrderTypeFromString(lDeltaNeutralOrderType)
     .DeltaNeutralAuxPrice = mReader.GetDoubleMax("DeltaNeutralAuxPrice")
     
-    If .DeltaNeutralOrderType <> TwsOrderTypeNone Then
+    If lDeltaNeutralOrderType <> "" Then
         .DeltaNeutralConId = mReader.GetLong("DeltaNeutralConId")
         .DeltaNeutralSettlingFirm = mReader.GetString("DeltaNeutralSettlingFirm")
         .DeltaNeutralClearingAccount = mReader.GetString("DeltaNeutralClearingAccount")

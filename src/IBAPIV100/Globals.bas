@@ -525,7 +525,7 @@ gGetDate = CDate(Left$(lDatePart, 4) & "/" & _
 
 If Len(lTimePart) <> 0 Then gGetDate = gGetDate + CDate(lTimePart)
 
-If Not IsMissing(pTimezoneName) Then pTimezoneName = lTimezoneName
+If Not IsMissing(pTimezoneName) Then pTimezoneName = Trim$(lTimezoneName)
 
 Exit Function
 
