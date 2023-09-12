@@ -84,6 +84,10 @@ Private mIsSimulated As Boolean
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Set mQuantity = DecimalZero
+End Sub
+
 '@================================================================================
 ' IOrderReportIOrderReport Interface Members
 '@================================================================================

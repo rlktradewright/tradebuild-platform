@@ -869,7 +869,7 @@ End Sub
 
 Private Sub setFillOrder(ByVal pOrder As SimulatorOrder, _
                         ByVal pFillPrice As Double, _
-                        ByVal pFillSize As Long)
+                        ByVal pFillSize As BoxedDecimal)
 ' This needs enhancing to cater for the case
 ' where the quantity ordered is greater than the
 ' current Bid/offer Size
@@ -881,8 +881,8 @@ If pFillPrice = 0 Then Exit Sub ' can occur at start of Session before first Bid
 Dim lFillPrice As Double
 lFillPrice = pFillPrice
 
-Dim lFillSize As Long
-lFillSize = pFillSize
+Dim lFillSize As BoxedDecimal
+Set lFillSize = pFillSize
 
 Dim lContract As IContract
 Set lContract = mDataSource.ContractFuture.Value
@@ -907,8 +907,8 @@ Dim lClock As Clock
 Set lClock = mDataSource.ClockFuture.Value
 lExec.FillTime = lClock.Timestamp
 
-If lFillSize > pOrder.Order.QuantityRemaining Then lFillSize = pOrder.Order.QuantityRemaining
-If lFillSize < 1 Then lFillSize = pFillSize
+If lFillSize > pOrder.Order.QuantityRemaining Then Set lFillSize = pOrder.Order.QuantityRemaining
+If lFillSize < 1 Then Set lFillSize = pFillSize
 If lFillPrice = 0 Then lFillPrice = pFillPrice
 
 lExec.Price = lFillPrice

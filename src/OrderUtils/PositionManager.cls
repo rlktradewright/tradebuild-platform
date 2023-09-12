@@ -159,6 +159,8 @@ Set mExecutions = New Executions
 Set mProfitListeners = New Listeners
 Set mChangeListeners = New Listeners
 mContractName = "N/A"
+
+Set mQuantityOutstanding = DecimalZero
 End Sub
 
 Private Sub Class_Terminate()

@@ -87,6 +87,10 @@ Private mTargetTriggerPriceSpec                     As PriceSpecifier
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Set mRolloverQuantityParameter = DecimalZero
+End Sub
+
 '@================================================================================
 ' IJSONable Interface Members
 '@================================================================================
@@ -522,7 +526,7 @@ jb.EncodeNameAndValue "RolloverStrikeParameter", mRolloverStrikeParameter, 0
 jb.EncodeNameAndValue "RolloverStrikeOperator", mRolloverStrikeOperator, OptionStrikeSelectionOperatorNone
 
 jb.EncodeNameAndValue "RolloverQuantityMode", mRolloverQuantityMode, RolloverQuantityModes.RolloverQuantityModeNone
-jb.EncodeNameAndValue "RolloverQuantityParameter", mRolloverQuantityParameter, 0
+jb.EncodeNameAndValue "RolloverQuantityParameter", mRolloverQuantityParameter, DecimalZero
 jb.EncodeNameAndValue "RolloverQuantityLotSize", mRolloverQuantityLotSize, 0
 
 jb.EncodeNameAndValue "UnderlyingExchangeName", mUnderlyingExchangeName, ""

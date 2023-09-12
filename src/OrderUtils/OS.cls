@@ -104,6 +104,9 @@ mTriggerPrice = MaxDouble
 Set mTriggerPriceSpec = gNewPriceSpecifier
 mStopTriggerMethod = OrderStopTriggerDefault
 mTimeInForce = OrderTIFDay
+Set mQuantity = DecimalZero
+Set mQuantityFilled = DecimalZero
+Set mQuantityRemaining = DecimalZero
 End Sub
 
 '@================================================================================

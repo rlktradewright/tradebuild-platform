@@ -160,9 +160,9 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-Set mNewEntryQuantity = Nothing
-Set mNewStopLossQuantity = Nothing
-Set mNewTargetQuantity = Nothing
+Set mNewEntryQuantity = DecimalZero
+Set mNewStopLossQuantity = DecimalZero
+Set mNewTargetQuantity = DecimalZero
 
 Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
 Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
@@ -1272,7 +1272,7 @@ Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
     If Not IsContractExpired(mContract) Then
-        handleStimulus OpStimuli.StimCloseoutOrderCancelled
+        handleStimulus OpStimuli.StimEntryOrderCancelled
     End If
     checkAllOrdersComplete
 Case OrderStatuses.OrderStatusRejected
@@ -1475,11 +1475,11 @@ Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
     If Not IsContractExpired(mContract) Then
-        handleStimulus OpStimuli.StimCloseoutOrderCancelled
+        handleStimulus OpStimuli.StimStopLossOrderCancelled
     End If
     checkAllOrdersComplete
 Case OrderStatuses.OrderStatusRejected
-    handleStimulus OpStimuli.StimStopOrderCancelled
+    handleStimulus OpStimuli.StimStopLossOrderCancelled
     checkAllOrdersComplete
 End Select
 
@@ -1601,7 +1601,7 @@ Case OrderStatuses.OrderStatusPendingSubmit
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
     If Not IsContractExpired(mContract) Then
-        handleStimulus OpStimuli.StimCloseoutOrderCancelled
+        handleStimulus OpStimuli.StimTargetOrderCancelled
     End If
     checkAllOrdersComplete
 Case OrderStatuses.OrderStatusRejected
@@ -4157,10 +4157,10 @@ End If
 
 If pExec.Action = OrderActionBuy Then
     CumBuyPrice = mSummary.CumBuyPrice + pExec.Quantity * pExec.Price
-    SetSize Size + pExec.Quantity
+    SetSize Size.Add(pExec.Quantity)
 Else
     CumSellPrice = mSummary.CumSellPrice + pExec.Quantity * pExec.Price
-    SetSize Size - pExec.Quantity
+    SetSize Size.Subtr(pExec.Quantity)
 End If
     
 If Size = 0 Then

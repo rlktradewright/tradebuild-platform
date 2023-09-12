@@ -151,7 +151,7 @@ Public Enum OpStimuli
     StimEntryOrderCancelled
     
     ' This stimulus indicates that the stop-loss order has been cancelled.
-    StimStopOrderCancelled
+    StimStopLossOrderCancelled
     
     ' This stimulus indicates that the closeout order has been cancelled.
     ' Note that this is a very unpleasant situation, since it only occurs
@@ -324,7 +324,7 @@ Case StimAllOrdersComplete
     gOpStimuliToString = "All orders complete"
 Case StimEntryOrderCancelled
     gOpStimuliToString = "Entry order cancelled"
-Case StimStopOrderCancelled
+Case StimStopLossOrderCancelled
     gOpStimuliToString = "Stop-loss order cancelled"
 Case StimCloseoutOrderCancelled
     gOpStimuliToString = "Closeout order cancelled"
@@ -525,7 +525,7 @@ mTableBuilder.AddStateTableEntry _
 ' position.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateSubmitted, _
-            OpStimuli.StimStopOrderCancelled, _
+            OpStimuli.StimStopLossOrderCancelled, _
             OpConditions.CondProtected, _
             OpConditions.CondTargetOrderExists, _
             BracketOrderStates.BracketOrderStateClosingOut, _
@@ -538,7 +538,7 @@ mTableBuilder.AddStateTableEntry _
 ' bracket order, go into cancelling state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateSubmitted, _
-            OpStimuli.StimStopOrderCancelled, _
+            OpStimuli.StimStopLossOrderCancelled, _
             SpecialConditions.NoConditions, _
             OpConditions.CondTargetOrderExists Or OpConditions.CondProtected, _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -551,7 +551,7 @@ mTableBuilder.AddStateTableEntry _
 ' other order cancel' state and set a timeout.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateSubmitted, _
-            OpStimuli.StimStopOrderCancelled, _
+            OpStimuli.StimStopLossOrderCancelled, _
             OpConditions.CondTargetOrderExists Or OpConditions.CondProtected, _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
@@ -563,7 +563,7 @@ mTableBuilder.AddStateTableEntry _
 ' we do nothing and enter the cancelling state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateSubmitted, _
-            OpStimuli.StimStopOrderCancelled, _
+            OpStimuli.StimStopLossOrderCancelled, _
             SpecialConditions.NoConditions, _
             OpConditions.CondProtected, _
             BracketOrderStates.BracketOrderStateCancelling, _
@@ -671,7 +671,7 @@ mTableBuilder.AddStateTableEntry _
 ' to wait for any other orders to be cancelled.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateCancelling, _
-            OpStimuli.StimStopOrderCancelled, _
+            OpStimuli.StimStopLossOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateCancelling
@@ -889,7 +889,7 @@ mTableBuilder.AddStateTableEntry _
 ' A stop-loss order cancellation has occurred. Enter closing out state.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateAwaitingOtherOrderCancel, _
-            OpStimuli.StimStopOrderCancelled, _
+            OpStimuli.StimStopLossOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateClosingOut, _
@@ -947,7 +947,7 @@ mTableBuilder.AddStateTableEntry _
 ' The stop-loss order has been cancelled, nothing for us to do.
 mTableBuilder.AddStateTableEntry _
             BracketOrderStates.BracketOrderStateClosingOut, _
-            OpStimuli.StimStopOrderCancelled, _
+            OpStimuli.StimStopLossOrderCancelled, _
             SpecialConditions.NoConditions, _
             SpecialConditions.NoConditions, _
             BracketOrderStates.BracketOrderStateClosingOut

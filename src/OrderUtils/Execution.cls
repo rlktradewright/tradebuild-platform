@@ -74,6 +74,10 @@ Private mIsDirty                                    As Boolean
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+Set mQuantity = DecimalZero
+End Sub
+
 '@================================================================================
 ' IExecutionReport Interface Members
 '@================================================================================
@@ -331,12 +335,14 @@ Public Property Get Price() As Double
 Price = mPrice
 End Property
 
-Public Property Let Quantity(ByVal Value As Long)
-setFieldValue mQuantity, Value
+Public Property Let Quantity(ByVal Value As BoxedDecimal)
+If mQuantity.EQ(Value) Then Exit Property
+Set mQuantity = Value
+mIsDirty = True
 End Property
 
-Public Property Get Quantity() As Long
-Quantity = mQuantity
+Public Property Get Quantity() As BoxedDecimal
+Set Quantity = mQuantity
 End Property
 
 Public Property Let SecurityName(ByVal Value As String)

@@ -102,6 +102,7 @@ Private mCloseoutSpecifier                          As CloseoutSpecifier
 
 Private Sub Class_Initialize()
 mLotSize = 1
+Set mSize = DecimalZero
 End Sub
 
 '@================================================================================
@@ -351,7 +352,7 @@ Set RolloverSpecification = mRolloverSpecification
 End Property
 
 Public Property Let Size(ByVal Value As BoxedDecimal)
-If mSize = Value Then Exit Property
+If mSize.EQ(Value) Then Exit Property
 setDirty
 Set mSize = Value
 mDiff.SetProperty "Size", Value

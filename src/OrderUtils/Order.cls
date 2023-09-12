@@ -1589,8 +1589,8 @@ If pLog Then
 End If
 
 mSummary.AveragePrice = (mSummary.QuantityFilled * mSummary.AveragePrice + lExec.Quantity * lExec.Price) / (mSummary.QuantityFilled + lExec.Quantity)
-mSummary.QuantityFilled = mSummary.QuantityFilled + lExec.Quantity
-mSummary.QuantityRemaining = mSummary.QuantityRemaining - lExec.Quantity
+mSummary.QuantityFilled = mSummary.QuantityFilled.Add(lExec.Quantity)
+mSummary.QuantityRemaining = mSummary.QuantityRemaining.Subtr(lExec.Quantity)
 mSummary.LastFillPrice = lExec.Price
 mSummary.FillTime = lExec.FillTime
 If mSummary.QuantityRemaining = 0 Then
