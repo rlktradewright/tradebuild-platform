@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#34.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl OrderTicket 
    ClientHeight    =   6195
    ClientLeft      =   0
@@ -1289,7 +1289,7 @@ Dim op As IBracketOrder
 If SimpleOrderOption.Value Then
     Set op = mActiveOrderContext.CreateBracketOrder( _
                     comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)), _
-                    QuantityText(BracketIndexes.BracketEntryOrder), _
+                    CreateBoxedDecimal(QuantityText(BracketIndexes.BracketEntryOrder)), _
                     lEntryOrder _
                 )
     
@@ -1319,7 +1319,7 @@ ElseIf BracketOrderOption.Value Then
     
     Set op = mActiveOrderContext.CreateBracketOrder( _
                     comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)), _
-                    QuantityText(BracketIndexes.BracketEntryOrder), _
+                    CreateBoxedDecimal(QuantityText(BracketIndexes.BracketEntryOrder)), _
                     lEntryOrder, _
                     lStopLossOrder, _
                     lTargetOrder _
@@ -1386,14 +1386,14 @@ Case SecTypeIndex
     max = 0
 End Select
 
-If Not IsInteger(QuantityText(Index), min, max) Then
+Dim Quantity As BoxedDecimal
+Set Quantity = CreateBoxedDecimal(QuantityText(Index))
+
+If Not Quantity.IsInteger Or Quantity < min Or Quantity > max Then
     highlightText QuantityText(Index)
     Cancel = True
     Exit Sub
 End If
-
-Dim Quantity As BoxedDecimal
-Set Quantity = CreateBoxedDecimal(QuantityText(Index))
 
 If mBracketOrder Is Nothing Then
     If Quantity = 0 Then
@@ -2435,9 +2435,12 @@ If comboItemData(ActionCombo(pIndex)) = OrderActions.OrderActionNone Then
     Exit Function
 End If
 
+Dim lQuantity As BoxedDecimal
+Set lQuantity = CreateBoxedDecimal(QuantityText(pIndex))
+
 Select Case pIndex
 Case BracketEntryOrder
-    If Not IsInteger(QuantityText(pIndex), 0) Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
+    If Not lQuantity.IsInteger Or lQuantity <= 1 Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     If QuantityText(pIndex) = 0 And mBracketOrder Is Nothing Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     
     Select Case comboItemData(OrderTypeCombo(pIndex))
@@ -2482,7 +2485,7 @@ Case BracketStopLossOrder
         Exit Function
     End If
     
-    If Not IsInteger(QuantityText(pIndex), 1) Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
+    If Not lQuantity.IsInteger Or lQuantity < 1 Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     
     Select Case comboItemData(OrderTypeCombo(pIndex))
     Case OrderTypeStop, _
@@ -2511,7 +2514,7 @@ Case BracketTargetOrder
         Exit Function
     End If
     
-    If Not IsInteger(QuantityText(pIndex), 1) Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
+    If Not lQuantity.IsInteger Or lQuantity < 1 Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     
     Select Case comboItemData(OrderTypeCombo(pIndex))
     Case OrderTypeLimit
@@ -2939,7 +2942,7 @@ With pOrder
     If pOrder.IsAttributeModifiable(OrderAttMinimumQuantity) Then .MinimumQuantity = IIf(MinQuantityText(pIndex) = "", 0, MinQuantityText(pIndex))
     If pOrder.IsAttributeModifiable(OrderAttOriginatorRef) Then .OriginatorRef = OrderRefText(pIndex)
     If pOrder.IsAttributeModifiable(OrderAttOverrideConstraints) Then .OverrideConstraints = (OverrideCheck(pIndex) = vbChecked)
-    If pOrder.IsAttributeModifiable(OrderAttQuantity) Then .Quantity = QuantityText(pIndex)
+    If pOrder.IsAttributeModifiable(OrderAttQuantity) Then .Quantity = CreateBoxedDecimal(QuantityText(pIndex))
     If pOrder.IsAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = comboItemData(TriggerMethodCombo(pIndex))
     If pOrder.IsAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = (SweepToFillCheck(pIndex) = vbChecked)
     If pOrder.IsAttributeModifiable(OrderAttTimeInForce) Then .TimeInForce = comboItemData(TIFCombo(pIndex))
@@ -2968,7 +2971,7 @@ With pOrder
     setOrderId pIndex, .Id
     
     selectComboEntry ActionCombo(pIndex), .Action
-    QuantityText(pIndex) = .Quantity
+    QuantityText(pIndex) = .Quantity.ToString
     selectComboEntry OrderTypeCombo(pIndex), .OrderType
     LimitPriceText(pIndex) = IIf(.LimitPrice <> MaxDouble, .LimitPrice, "")
     TriggerPriceText(pIndex) = IIf(.TriggerPrice <> MaxDouble, .TriggerPrice, "")
