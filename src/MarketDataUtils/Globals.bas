@@ -95,8 +95,9 @@ Public Function gCalcSizeValueChange( _
 Const ProcName As String = "gCalcSizeValueChange"
 On Error GoTo Err
 
-If oldValue Is DecimalZero Or newValue Is DecimalZero Or _
-    oldValue Is Nothing Or newValue Is Nothing Then
+If oldValue Is Nothing Or newValue Is Nothing Then
+    gCalcSizeValueChange = ValueChangeNone
+ElseIf oldValue.EQ(DecimalZero) Or newValue.EQ(DecimalZero) Then
     gCalcSizeValueChange = ValueChangeNone
 ElseIf newValue.GT(oldValue) Then
     gCalcSizeValueChange = ValueChangeUp

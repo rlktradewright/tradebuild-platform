@@ -155,18 +155,19 @@ On Error GoTo Err
 
 Dim s As String
 
-Dim lTick As GenericTick
-
-If pDataSource.HasCurrentTick(pTickType) Then
+If Not pDataSource.HasCurrentTick(pTickType) Then
+    s = s & "n/a"
+Else
+    Dim lTick As GenericTick
     lTick = pDataSource.CurrentTick(pTickType)
     s = s & FormatPrice(lTick.Price, pSecType, pTickSize)
-    If lTick.Size <> 0 Then
+    If lTick.Size.EQ(DecimalZero) Then
+        s = s & "n/a"
+    Else
         s = s & "("
         s = s & formatBigInteger(lTick.Size)
         s = s & ")"
     End If
-Else
-    s = s & "n/a"
 End If
 
 formatPriceTick = s
