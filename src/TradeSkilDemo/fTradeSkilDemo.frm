@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#389.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -876,6 +876,16 @@ On Error GoTo Err
 
 If ev.Future.IsFaulted Then
     LogMessage "Order recovery failed"
+    gUnloadSplashScreen
+    gFinishConfigChangeMonitoring
+    
+    MsgBox "Order recovery has failed. The program will close when you click the OK button." & vbCrLf & _
+            "The order recovery file will need to be deleted before the program will run", _
+            vbCritical, _
+            "Fatal error"
+    
+    TerminateProcess GetCurrentProcess, 0
+    
 ElseIf ev.Future.IsAvailable Then
     
     If Not mPreviousMainForm Is Nothing Then
