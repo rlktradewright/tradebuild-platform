@@ -261,8 +261,10 @@ For i = 0 To UBound(lOrderTypesStr)
             "SNAPMKT", _
             "SNAPREL", _
             "SOI", _
+            "STPLMT", _
             "TIMEPRIO", _
             "TRAILLIT", _
+            "TRAILLMT", _
             "TRAILMIT", _
             "VOLAT", _
             "WHATIF"

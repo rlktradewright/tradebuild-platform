@@ -1220,7 +1220,7 @@ Private Function isFTSE100Index(ByVal pContract As TwsContractSpecifier) As Bool
 isFTSE100Index = pContract.CurrencyCode = "GBP" And _
                 pContract.Exchange = "ICEEU" And _
                 pContract.LocalSymbol = "Z" And _
-                pContract.Sectype = TwsSecTypeIndex And _
+                pContract.SecType = TwsSecTypeIndex And _
                 pContract.Symbol = "Z"
 End Function
 
@@ -1569,7 +1569,7 @@ Const ProcName As String = "validPrice"
 On Error GoTo Err
 
 If (pPrevPrice <> MaxDouble Or (pPrice <> 0# And pPrice <> -1# And pPrice <> -100#)) And _
-    IsValidPrice(pPrice, pPrevPrice, pContract.Specifier.Sectype, pContract.TickSize) _
+    IsValidPrice(pPrice, pPrevPrice, pContract.Specifier.SecType, pContract.TickSize) _
 Then
     validPrice = True
 ElseIf pPrice <> -1# Or pPrice <> -100# Then

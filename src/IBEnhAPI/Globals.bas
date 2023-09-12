@@ -1101,7 +1101,8 @@ Case "EST", _
         "EST (EASTERN STANDARD TIME)", _
         "US/EASTERN"
     gTwsTimezoneNameToStandardTimeZoneName = "EASTERN STANDARD TIME"
-Case "GB", _
+Case "EUROPE/LONDON", _
+        "GB", _
         "GB-EIRE", _
         "GMT", _
         "GMT (GREENWICH MEAN TIME)", _
