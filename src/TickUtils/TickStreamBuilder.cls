@@ -149,6 +149,8 @@ Assert mTickStream.State = TickStreamStateRunning, "Tick stream is not running"
 
 If pComputation.ComputationType = OptionComputationTypeModel Then
     Dim lTick As GenericTick
+    Set lTick.Size = DecimalZero
+    
     lTick.Timestamp = pComputation.Timestamp
     
     lTick.TickType = TickTypeOptionModelPrice
