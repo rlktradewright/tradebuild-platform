@@ -1167,19 +1167,19 @@ If lMatches.Count <> 1 Then Exit Function
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
 If lMatch.SubMatches(1) = AccountPercentSuffix Then
-    mBOSpec.Quantity = 1
+    Set mBOSpec.Quantity = CreateBoxedDecimal(1)
     mBOSpec.AutosizeType = BracketAutosizePercentOfAccount
     mBOSpec.AutosizeValue = lMatch.SubMatches(0)
 ElseIf lMatch.SubMatches(3) = AccountPercentSuffix Then
-    mBOSpec.Quantity = 1
+    Set mBOSpec.Quantity = CreateBoxedDecimal(1)
     mBOSpec.AutosizeType = BracketAutosizePercentOfAccount
     mBOSpec.AutosizeValue = lMatch.SubMatches(2)
 ElseIf lMatch.SubMatches(5) = MaxOrderCostSuffix Then
-    mBOSpec.Quantity = 1
+    Set mBOSpec.Quantity = CreateBoxedDecimal(1)
     mBOSpec.AutosizeType = BracketAutosizeMonetaryAmount
     mBOSpec.AutosizeValue = lMatch.SubMatches(4)
 Else
-    mBOSpec.Quantity = lMatch.SubMatches(4)
+    Set mBOSpec.Quantity = CreateBoxedDecimal(lMatch.SubMatches(4))
     mBOSpec.AutosizeType = BracketAutosizeNone
     mBOSpec.AutosizeValue = 0
 End If
