@@ -229,6 +229,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "LARGE", _
             "LTH", _
             "MIDPX", _
+            "MKTPROT", _
             "NGCOMB"
         Case "NODARK", _
             "NONALGO", _
@@ -250,6 +251,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "REL2MID"
         Case "RELPCTOFS", _
             "RELSTK", _
+            "RFQ", _
             "RPI", _
             "RTHIGNOPG", _
             "SCALE", _
@@ -262,6 +264,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "SNAPREL", _
             "SOI", _
             "STPLMT", _
+            "STPPROT", _
             "TIMEPRIO", _
             "TRAILLIT", _
             "TRAILLMT", _
