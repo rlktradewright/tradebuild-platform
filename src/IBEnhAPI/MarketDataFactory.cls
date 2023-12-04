@@ -277,7 +277,7 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And Not .PrevBidSize Is Nothing Then Set lTick.Size = .PrevBidSize
         .PrevBid = lTick.Price
         If lTick.Size <> 0 Then Set .PrevBidSize = lTick.Size
-        If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
+        If Not .TickSizeHasBeenSet Then setTickSize mMarketDataTable, lIndex, lTick.Price
     Case TwsTickTypes.TwsTickAsk
         .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .Contract)
         If Not .PrevAskValid Then Exit Sub
@@ -285,7 +285,7 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And Not .PrevAskSize Is Nothing Then Set lTick.Size = .PrevAskSize
         .PrevAsk = lTick.Price
         If lTick.Size <> 0 Then Set .PrevAskSize = lTick.Size
-        If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
+        If Not .TickSizeHasBeenSet Then setTickSize mMarketDataTable, lIndex, lTick.Price
     Case TwsTickTypes.TwsTickLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .Contract)
         If Not .PrevTradeValid Then Exit Sub
@@ -293,7 +293,7 @@ With mMarketDataTable(lIndex)
         If lTick.Size = 0 And Not .PrevTradeSize Is Nothing Then Set lTick.Size = .PrevTradeSize
         .PrevTrade = lTick.Price
         If lTick.Size <> 0 Then Set .PrevTradeSize = lTick.Size
-        If Not .TickSizeHasBeenSet Then setTickSize lIndex, lTick.Price
+        If Not .TickSizeHasBeenSet Then setTickSize mMarketDataTable, lIndex, lTick.Price
     Case TwsTickTypes.TwsTickHigh
         If Not validPrice(lTick.Price, .PrevHigh, "high", .Contract) Then Exit Sub
         lTick.TickType = TickTypeHighPrice
@@ -480,6 +480,9 @@ Case 316
 Case 317
     ResetMarketDepth pReEstablish:=False
     Exit Sub
+Case 2152
+    ' just a notification of the exchanges involved in providing this market depth
+    Exit Sub
 End Select
 
 mMarketDepthTable(lIndex).ErrorListener.NotifyMarketDepthError lIndex, pErrorCode, pErrorMsg
@@ -524,7 +527,7 @@ With mMarketDataTable(lIndex)
     
     If .TickSizeHasBeenSet Then
     ElseIf lTick.Position = 0 Then
-        setTickSize lIndex, lTick.Price
+        setTickSize mMarketDepthTable, lIndex, lTick.Price
     End If
 End With
 
@@ -1086,7 +1089,7 @@ If mContractCache.GetContract(pConsumerContract.Specifier, lContract, lTwsContra
     gLogger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
     Set pTickerTable(pStreamId).Contract = lContract
     Set pTickerTable(pStreamId).TwsContract = lTwsContract
-    setTickSize pStreamId, 0
+    setTickSize pTickerTable, pStreamId, 0
     getContractsFromCache = True
 End If
 
@@ -1190,7 +1193,7 @@ ElseIf TypeOf pFuture.Value Is TwsContract Then
     gLogger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
     Set pTickerTable(pStreamId).TwsContract = pFuture.Value
     Set pTickerTable(pStreamId).Contract = gTwsContractToContract(pFuture.Value)
-    setTickSize pStreamId, 0
+    setTickSize pTickerTable, pStreamId, 0
 ElseIf TypeOf pFuture.Value Is Clock Then
     gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelDetail
 End If
@@ -1499,16 +1502,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setTickSize( _
-                    ByVal pStreamId As Long, _
-                    ByVal pPrice As Double)
+                ByRef pTickers() As TickerTableEntry, _
+                ByVal pStreamId As Long, _
+                ByVal pPrice As Double)
 Const ProcName As String = "setTickSize"
 On Error GoTo Err
 
 Dim lRulesetID As Long
-lRulesetID = CLng(mMarketDataTable(pStreamId).Contract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
+lRulesetID = CLng(pTickers(pStreamId).Contract.ProviderProperties.GetParameterValue("MarketRuleID", "0"))
 
 Dim lPriceMagnifier As Long
-lPriceMagnifier = CLng(mMarketDataTable(pStreamId).Contract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
+lPriceMagnifier = CLng(pTickers(pStreamId).Contract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
 
 Dim lRulesetFuture As IFuture
 Set lRulesetFuture = mContractRequester.RequestPriceIncrementRuleset(lRulesetID, lPriceMagnifier)
@@ -1522,8 +1526,8 @@ If lIncrement <> 0 Then
     gLogger.Log "lRulesetID=" & lRulesetID, ProcName, ModuleName, LogLevelMediumDetail
     gLogger.Log "lPriceMagnifier=" & lPriceMagnifier, ProcName, ModuleName, LogLevelMediumDetail
     gLogger.Log "Tick size set to " & lIncrement, ProcName, ModuleName, LogLevelDetail
-    mMarketDataTable(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lIncrement
-    mMarketDataTable(pStreamId).TickSizeHasBeenSet = True
+    pTickers(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lIncrement
+    pTickers(pStreamId).TickSizeHasBeenSet = True
 End If
 
 Exit Sub

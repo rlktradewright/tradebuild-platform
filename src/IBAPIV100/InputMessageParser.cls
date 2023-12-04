@@ -1006,6 +1006,7 @@ Dim lOperation As TwsDOMOperations:  lOperation = mReader.GetLong("Operation")
 Dim lSide As TwsDOMSides: lSide = mReader.GetLong("Side")
 Dim lPrice As Double: lPrice = mReader.GetDouble("Price")
 Dim lSize As BoxedDecimal: Set lSize = mReader.GetDecimal("Size")
+Dim lIsSmartDepth As Boolean: lIsSmartDepth = mReader.GetBoolean("IsSmartDepth")
 
 mReader.EndLogMessage
 
