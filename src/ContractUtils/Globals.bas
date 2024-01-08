@@ -807,14 +807,14 @@ ElseIf Len(Value) = 8 Then
 End If
 
 If d <> 0 Then
-    If d >= CDate((year(Now) - 20) & "/01/01") And d <= CDate((year(Now) + 10) & "/12/31") Then
+    If d >= CDate("2000/01/01") And d <= CDate((year(Now) + 10) & "/12/31") Then
         gIsValidExpiry = True
         Exit Function
     End If
 End If
 
 If Len(Value) = 6 Then
-    If IsInteger(Value, (year(Now) - 20) * 100 + 1, (year(Now) + 10) * 100 + 12) Then
+    If IsInteger(Value, 200001, (year(Now) + 10) * 100 + 12) Then
         If Right$(Value, 2) <= 12 Then
             gIsValidExpiry = True
             Exit Function
@@ -1206,6 +1206,7 @@ addExchangeCode "CFE"
 addExchangeCode "CHIXUK"
 addExchangeCode "CHX"
 addExchangeCode "CME"
+addExchangeCode "COMEX"
 addExchangeCode "CSFBALGO"
 
 addExchangeCode "DRCTEDGE"
