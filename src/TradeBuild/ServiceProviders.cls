@@ -59,6 +59,7 @@ Private Type ServiceProviderTableEntry
     SPObject    As IServiceProvider
     SpConfig    As ConfigurationSection
     Params      As Parameters
+    Description As String
 End Type
 
 '@================================================================================
@@ -338,7 +339,7 @@ Assert Not mServiceProvidersStarted, "Service providers have already been set up
 Set Add = CreateObject(progId)
 Set Params = CreateParametersFromString(Replace(paramString, "\", "\\"))
 
-If Enabled Then spIndex = AddSP(Add, Params, Name)
+If Enabled Then spIndex = AddSP(Add, Params, Name, Description)
 
 Set mServiceProviders(spIndex).SpConfig = AddEntryToConfig(progId, _
                                                         Enabled, _
@@ -389,7 +390,9 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleRealtimeData Th
         ";Client Id=" & pTwsClientId & _
         ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & pTwsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel, _
+        "Default Realtime Data Service Provider"
+        
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataPrimary Then
     Add "IBTWSSP27.ContractInfoServiceProvider", _
@@ -399,7 +402,8 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataPri
         ";Client Id=" & pTwsClientId & _
         ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & pTwsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel, _
+        "Default Contract Info Service Provider"
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataSecondary Then
     ' not relevant in default scenario
@@ -412,7 +416,8 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataI
         ";Client Id=" & pTwsClientId & _
         ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & pTwsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel, _
+        "Default Historical Data Service Provider"
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataOutput Then
     ' no sensible default for this
@@ -420,7 +425,8 @@ End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderPersistence Then
     Add ProgIdTbOrderPersistence, _
         True, _
-        PropertyNameOrderPersistenceFilePath & pOrderPersistenceFilePath
+        PropertyNameOrderPersistenceFilePath & pOrderPersistenceFilePath, _
+        "Default Order Persistence Service Provider"
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionLive Then
     Add "IBTWSSP27.OrderSubmissionSrvcProvider", _
@@ -430,24 +436,28 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmission
         ";Client Id=" & pTwsClientId & _
         ";Connection Retry Interval Secs=" & pTwsConnectionRetryIntervalSecs & _
         ";Keep Connection=True" & _
-        ";TWS Log Level=" & pTwsLogLevel
+        ";TWS Log Level=" & pTwsLogLevel, _
+        "Default OrderSubmission Service Provider"
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionSimulated Then
     Dim lOrderSimulatorSP As New OrderSimulatorSP
-    AddSP lOrderSimulatorSP, Nothing, ""
+    AddSP lOrderSimulatorSP, Nothing, "", _
+        "Default Order Simulator Service Provider"
 
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileInput Then
     Add "TickfileSP27.TickfileServiceProvider", _
         True, _
         "Access Mode=Read only" & _
-        ";Tickfile Path=" & pTickfilesPath
+        ";Tickfile Path=" & pTickfilesPath, _
+        "Default Tickfile Data Input Service Provider"
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileOutput Then
     Add "TickfileSP27.TickfileServiceProvider", _
         True, _
         "Access Mode=Write only" & _
-        ";Tickfile Path=" & pTickfilesPath
+        ";Tickfile Path=" & pTickfilesPath, _
+        "Default Tickfile Data Output Service Provider"
 End If
 
 Exit Sub
@@ -511,7 +521,9 @@ Const ProcName As String = "NameFromHandle"
 On Error GoTo Err
 
 If Handle < 0 Then Exit Function
-NameFromHandle = mServiceProviders(Handle).Name
+With mServiceProviders(Handle)
+    NameFromHandle = .Name & "/" & .SPObject.Details.EXEName & "(" & .Description & ")"
+End With
 
 Exit Function
 
@@ -686,7 +698,8 @@ End Function
 Private Function AddSP( _
             ByVal serviceProvider As IServiceProvider, _
             ByVal Params As Parameters, _
-            ByVal Name As String) As Long
+            ByVal Name As String, _
+            ByVal Description As String) As Long
 Const ProcName As String = "AddSP"
 On Error GoTo Err
 
@@ -711,6 +724,7 @@ mMaxSPIndex = mMaxSPIndex + 1
 mServiceProviders(mMaxSPIndex).Name = serviceProvider.Name
 Set mServiceProviders(mMaxSPIndex).Params = Params
 Set mServiceProviders(mMaxSPIndex).SPObject = serviceProvider
+mServiceProviders(mMaxSPIndex).Description = Description
 
 AddSP = mMaxSPIndex
 
@@ -1104,7 +1118,7 @@ For Each sp In mServiceProviderConfig
         On Error GoTo Err
         AssertArgument Not spObj Is Nothing, "Can't create service provider with progId " & spProgId
         
-        spIndex = AddSP(spObj, Params, spName)
+        spIndex = AddSP(spObj, Params, spName, sp.Value)
         AssertArgument spIndex >= 0, "Can't Add service provider " & spName
             
         Set mServiceProviders(spIndex).SpConfig = sp
