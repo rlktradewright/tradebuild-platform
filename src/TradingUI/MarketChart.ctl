@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#320.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#337.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -904,6 +904,8 @@ setState ChartStateBlank
 Set mTimePeriod = pNewTimePeriod
 storeSettings
 
+initialiseChart mChartSpec.IncludeBarsOutsideSession
+
 Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
 
 baseStudyConfig.Study = mTimeframe.BarStudy
@@ -914,7 +916,6 @@ Dim lStudy As IStudy
 Set lStudy = mTimeframe.BarStudy
 baseStudyConfig.Parameters = lStudy.Parameters
 
-initialiseChart mChartSpec.IncludeBarsOutsideSession
 mManager.SetBaseStudyConfiguration baseStudyConfig
 
 LoadChart
