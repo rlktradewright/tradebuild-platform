@@ -2440,7 +2440,7 @@ Set lQuantity = CreateBoxedDecimal(QuantityText(pIndex))
 
 Select Case pIndex
 Case BracketEntryOrder
-    If Not lQuantity.IsInteger Or lQuantity <= 1 Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
+    If Not lQuantity.IsInteger Or lQuantity < 1 Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     If QuantityText(pIndex) = 0 And mBracketOrder Is Nothing Then setInvalidText QuantityText(pIndex), pIndex: Exit Function
     
     Select Case comboItemData(OrderTypeCombo(pIndex))
