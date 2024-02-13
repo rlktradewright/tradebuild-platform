@@ -116,6 +116,7 @@ Exit Sub
 
 Err:
 gNotifyUnhandledError ProcName, ModuleName
+ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -178,6 +179,7 @@ Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

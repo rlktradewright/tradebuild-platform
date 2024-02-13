@@ -86,7 +86,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFormatPriceAs32nds( _
@@ -104,7 +104,7 @@ gFormatPriceAs32nds = Int(pPrice) & gDefaultThirtySecondsSeparator & Format(nume
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFormatPriceAs32ndsAndFractions( _
@@ -135,7 +135,7 @@ gFormatPriceAs32ndsAndFractions = priceString & gDefaultThirtySecondsAndFraction
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFormatPriceAs64ths( _
@@ -153,7 +153,7 @@ gFormatPriceAs64ths = Int(pPrice) & gDefaultSixtyFourthsSeparator & Format(numer
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFormatPriceAs64thsAndFractions( _
@@ -180,7 +180,7 @@ gFormatPriceAs64thsAndFractions = priceString & gDefaultSixtyFourthsAndFractions
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gFormatPriceAsDecimals( _
@@ -195,7 +195,7 @@ gFormatPriceAsDecimals = Format(pPrice, getPriceFormatString(pTickSize))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gInit()
@@ -219,7 +219,7 @@ mPriceFormatStringsIndex = mPriceFormatStringsIndex + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function generatePriceFormatString(ByVal pTickSize As Double)
@@ -242,7 +242,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getPriceFormatString(ByVal pTickSize As Double) As String
@@ -266,7 +266,7 @@ getPriceFormatString = lPattern
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

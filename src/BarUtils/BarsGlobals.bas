@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "BarsGlobals"
 Option Explicit
 
 '@================================================================================
@@ -20,7 +20,7 @@ Option Explicit
 '@================================================================================
 
 Public Const ProjectName                        As String = "BarUtils27"
-Private Const ModuleName                        As String = "Globals"
+Private Const ModuleName                        As String = "BarsGlobals"
 
 Public Const OneDayCentiSecs                    As Currency = 8640000
 
@@ -124,7 +124,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gBarStartTime( _
@@ -215,7 +215,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gCalcBarLengthSeconds( _
@@ -241,7 +241,7 @@ gCalcBarLengthSeconds = gCalcBarLengthSeconds * 100 ' convert to centiseconds
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gCalcNumberOfBarsInSession( _
@@ -262,7 +262,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gCalcOffsetBarStartTime( _
@@ -394,7 +394,7 @@ gCalcOffsetBarStartTime = gCentiSecondsToDate(proposedStartSecs)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ' returns the date in units of 100th of a second. Expressed as a Currency data type,
@@ -451,7 +451,7 @@ pToTime = lEndTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gHandleUnexpectedError( _
@@ -548,7 +548,7 @@ gMaxNumberOfBarsInTimespanNormalized = lNumberOfBars
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gNormaliseSessionTime( _
@@ -626,7 +626,7 @@ calcNumberOfBarsInTimespan = Int((gDateToCentiSeconds(pEndTime - pStartTime) + l
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function calcOffsetDailyBarStartTime( _
@@ -643,7 +643,7 @@ calcOffsetDailyBarStartTime = GetOffsetSessionTimes(Timestamp, offset, SessionSt
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function calcOffsetMonthlyBarStartTime( _
@@ -663,7 +663,7 @@ calcOffsetMonthlyBarStartTime = DateAdd("m", offset * BarTimePeriod.Length, datu
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function calcOffsetWeeklyBarStartTime( _
@@ -689,7 +689,7 @@ calcOffsetWeeklyBarStartTime = WeekStartDateFromWeekNumber(proposedWeekNumber, d
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 
@@ -710,6 +710,6 @@ calcOffsetYearlyBarStartTime = DateAdd("yyyy", offset * barLength, datumBarStart
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 

@@ -122,7 +122,7 @@ IEnumerable_nextItem = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IEnumerable_remove(cookie As Variant)
@@ -134,7 +134,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Remove not sUpported"
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+BarsGlobals.gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Function IEnumerable_skip( _
@@ -161,7 +161,7 @@ IEnumerable_skip = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IEnumerable_UpdateSequence() As Long
@@ -185,7 +185,7 @@ Set Bar = mBarsCache.GetValue(ref)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BarTimePeriod() As TimePeriod
@@ -205,7 +205,7 @@ CloseValue = Bar(ref).CloseValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentBarNumber() As Long
@@ -221,7 +221,7 @@ Down = Bar(ref).IsDownBar
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 ''
@@ -244,7 +244,7 @@ Gain = Bar(ref).Gain
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HigherHighValue( _
@@ -274,7 +274,7 @@ HigherHighValue = currentHigh
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HighestCloseValue(ByVal periods As Long, _
@@ -318,7 +318,7 @@ sLastValue = HighestCloseValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HighestHighValue(ByVal periods As Long, _
@@ -363,7 +363,7 @@ sLastValue = HighestHighValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HighValue(Optional ByVal ref As Long) As Double
@@ -375,7 +375,7 @@ HighValue = Bar(ref).HighValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Inside(Optional ByVal ref As Long) As Boolean
@@ -387,7 +387,7 @@ Inside = (HighValue(ref) <= HighValue(ref - 1)) And (LowValue(ref) >= LowValue(r
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Loss(Optional ByVal ref As Long) As Double
@@ -399,7 +399,7 @@ Loss = Bar(ref).Loss
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowerLowValue( _
@@ -429,7 +429,7 @@ LowerLowValue = currentLow
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowestCloseValue(ByVal periods As Long, _
@@ -473,7 +473,7 @@ lastValue = LowestCloseValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowestLowValue(ByVal periods As Long, _
@@ -518,7 +518,7 @@ lastValue = LowestLowValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LowValue(Optional ByVal ref As Long) As Double
@@ -530,7 +530,7 @@ LowValue = Bar(ref).LowValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DailyTimestampsAreNormalised() As Boolean
@@ -546,7 +546,7 @@ OpenValue = Bar(ref).OpenValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Outside(Optional ByVal ref As Long) As Boolean
@@ -558,7 +558,7 @@ Outside = (HighValue(ref) > HighValue(ref - 1)) And (LowValue(ref) < LowValue(re
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Session() As Session
@@ -578,7 +578,7 @@ TickVolume = Bar(ref).TickVolume
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Up(Optional ByVal ref As Long) As Boolean
@@ -590,7 +590,7 @@ Up = Bar(ref).IsUpBar
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -626,7 +626,7 @@ fireChange CollItemAdded, pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AppendBars( _
@@ -648,7 +648,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function AppendBarsAsync( _
@@ -665,7 +665,7 @@ Set AppendBarsAsync = StartTask(abt, PriorityNormal)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -687,7 +687,7 @@ mChangeListeners.Add listener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -705,7 +705,7 @@ Count = mBarsCache.Count
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -727,7 +727,7 @@ mNormaliseDailyTimestamps = pNormaliseDailyTimestamps
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -752,7 +752,7 @@ mChangeListeners.Remove listener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -796,7 +796,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

@@ -210,7 +210,7 @@ Key = Specifier.Key
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get NumberOfDecimals() As Long
@@ -226,7 +226,7 @@ ProviderID = mProviderIDs.GetParameterValue(providerKey, mSpecifier.LocalSymbol)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ProviderIDs(ByVal Value As Parameters)
@@ -289,7 +289,7 @@ mNumberOfDecimals = Len(minTickString) - 2
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickValue() As Double
@@ -321,7 +321,7 @@ FormatPrice = gFormatPrice(pPrice, mSpecifier.SecType, mTickSize)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub FromXML(ByVal contractXML As String)
@@ -438,7 +438,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsValidPrice( _
@@ -452,7 +452,7 @@ IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, mSpecifier.SecType, mTickS
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub SaveToConfig(ByVal pConfig As ConfigurationSection)
@@ -464,7 +464,7 @@ gSaveContractToConfig Me, pConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ToJSON() As String
@@ -511,7 +511,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
@@ -523,7 +523,7 @@ ToString = gContractToString(Me)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToXML() As String
@@ -536,7 +536,7 @@ ToXML = gContractToXML(Me)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

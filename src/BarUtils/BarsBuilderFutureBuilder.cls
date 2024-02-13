@@ -98,7 +98,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+BarsGlobals.gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -114,7 +114,7 @@ Set Future = mFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -141,7 +141,7 @@ mFutureBuilder.Complete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub InitialiseWithInitialBars( _
@@ -160,7 +160,7 @@ Set mSelfRef = Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -104,7 +104,7 @@ mValues(mNewest).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AppendValues( _
@@ -122,7 +122,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function AppendValuesAsync( _
@@ -138,7 +138,7 @@ Set AppendValuesAsync = StartTask(avt, PriorityNormal)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSValue(Optional ByVal ref As Long) As SValue
@@ -150,7 +150,7 @@ GetSValue = mValues(refToIndex(ref))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetValue(Optional ByVal ref As Long) As Variant
@@ -162,7 +162,7 @@ gSetVariant GetValue, mValues(refToIndex(ref)).Value
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -185,7 +185,7 @@ mValueName = ValueName
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub UpdateValue( _
@@ -207,7 +207,7 @@ If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -241,7 +241,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

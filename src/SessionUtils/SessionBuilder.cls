@@ -85,7 +85,7 @@ mSession.SessionStartTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
                 
 Friend Property Let SessionEndTime( _
@@ -98,7 +98,7 @@ mSession.SessionEndTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TimeZone(ByVal Value As TimeZone)
@@ -123,7 +123,7 @@ mSession.TimeZone = pTimeZone
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -149,7 +149,7 @@ mLinkedSessions.Add pSessionToLink
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function SetSessionCurrentTime( _
@@ -170,7 +170,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -192,7 +192,7 @@ If Not mLinkedSessions Is Nothing Then mLinkedSessions.Remove objectToUnlink
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -97,7 +97,7 @@ CreateSessionBuilder.SetSessionCurrentTime pInitialSessionTime
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSessionBuilderFuture(ByVal pSessionFuture As IFuture) As IFuture
@@ -111,7 +111,7 @@ Set CreateSessionBuilderFuture = lBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSessionFuture(ByVal pSessionBuilderFuture As IFuture) As IFuture
@@ -125,7 +125,7 @@ Set CreateSessionFuture = lBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOffsetSessionTimes( _
@@ -145,7 +145,7 @@ GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOffsetSessionTimesIgnoringWeekend( _
@@ -165,7 +165,7 @@ GetOffsetSessionTimesIgnoringWeekend = gCalcOffsetSessionTimes(Timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSessionTimes( _
@@ -183,7 +183,7 @@ GetSessionTimes = gCalcSessionTimes(Timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSessionTimesIgnoringWeekend( _
@@ -198,7 +198,7 @@ GetSessionTimesIgnoringWeekend = gGetSessionTimesIgnoringWeekend(pTimestamp, pSe
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 

@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "SessionsGlobals"
 Option Explicit
 
 ''
@@ -27,7 +27,7 @@ Option Explicit
 '@================================================================================
 
 Private Const ProjectName                           As String = "SessionUtils27"
-Private Const ModuleName                            As String = "Globals"
+Private Const ModuleName                            As String = "SessionGlobals"
 
 Public Const OneSecond                              As Double = 1 / 86400
 Public Const OneMinute                              As Double = 1 / 1440
@@ -101,7 +101,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 ' !!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -143,7 +143,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gGetSessionTimesIgnoringWeekend( _
@@ -197,7 +197,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gHandleUnexpectedError( _

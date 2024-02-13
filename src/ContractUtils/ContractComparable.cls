@@ -75,7 +75,7 @@ IComparable_CompareTo = gContractSpecsCompare( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -108,7 +108,7 @@ mAscending = pAscending
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 '@================================================================================

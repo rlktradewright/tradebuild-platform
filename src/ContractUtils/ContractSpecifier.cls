@@ -202,7 +202,7 @@ mExpiry = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Expiry() As String
@@ -220,7 +220,7 @@ Key = sKey
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let zLocalSymbol(ByVal Value As String)
@@ -312,7 +312,7 @@ Equals = gContractSpecsEqual(Me, pContractSpecifier)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 'Public Function FuzzyEquals(ByVal pContractSpecifier As IContractSpecifier) As Boolean
@@ -328,7 +328,7 @@ End Function
 'Exit Function
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 'End Function
 
 Public Sub Initialise( _
@@ -386,7 +386,7 @@ mRight = Right
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ToJSON() As String
@@ -437,7 +437,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
@@ -474,7 +474,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

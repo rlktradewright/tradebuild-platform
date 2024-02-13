@@ -100,7 +100,7 @@ mTaskContext.suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -112,7 +112,7 @@ Set mTaskContext = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get ITask_TaskName() As String
@@ -124,7 +124,7 @@ ITask_TaskName = mTaskContext.Name
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -143,7 +143,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -167,7 +167,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -183,7 +183,7 @@ Set ExpiriesFuture = mExpiriesFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -210,7 +210,7 @@ gSetVariant mCallerCookie, pCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

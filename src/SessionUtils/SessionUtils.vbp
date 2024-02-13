@@ -1,7 +1,7 @@
 Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#0.0#0#STDOLE2.TLB#OLE AUTOMATION
 Reference=*\G{C7606F22-DB8A-44E5-91A9-799A54976F5C}#0.0#0#TWUTILITIES40.DLL#TRADEWRIGHT UTILITY SERVICES V4.0
-Module=Globals; Globals.bas
+Module=SessionsGlobals; SessionsGlobals.bas
 Class=Session; Session.cls
 Class=SessionFutureBuilder; SessionFutureBuilder.cls
 Class=SessionBuilder; SessionBuilder.cls

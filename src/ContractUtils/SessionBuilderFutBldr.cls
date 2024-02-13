@@ -6,7 +6,6 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "SessionBuilderFutBldr"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,7 +37,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "SessionBuilderFutBldr"
 
 '@================================================================================
 ' Member variables
@@ -83,7 +81,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -114,7 +112,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -130,7 +128,7 @@ Set Future = mFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -151,7 +149,7 @@ mUseFullSession = pUseFullSession
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

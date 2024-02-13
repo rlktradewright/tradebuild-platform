@@ -94,7 +94,7 @@ Set mCurrentBar = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+BarsGlobals.gNotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -132,7 +132,7 @@ setTickSize Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get VolumeParser() As VolumeParser
@@ -172,7 +172,7 @@ addABar lBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddThisBar( _
@@ -186,7 +186,7 @@ addABar pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addABar( _
@@ -213,7 +213,7 @@ FireBarAdded pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AppendBars( _
@@ -231,7 +231,7 @@ mBars.AppendBars pBars, pMaxNumberToAppend, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function AppendBarsAsync( _
@@ -249,7 +249,7 @@ Set AppendBarsAsync = mBars.AppendBarsAsync(pBars, maxNumberToAppend, Me)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub FireBarAdded(ByVal pBar As Bar)
@@ -282,7 +282,7 @@ mCurrentBar.IncrementTickVolume increment
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -314,7 +314,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub InitialiseWithInitialBars( _
@@ -356,7 +356,7 @@ checkLinkSessions
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyOpenInterest( _
@@ -388,7 +388,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyValue( _
@@ -460,7 +460,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyVolume( _
@@ -516,7 +516,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -535,7 +535,7 @@ mMainSession.LinkToSession mInitialBarsSession
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createNewBar( _
@@ -565,7 +565,7 @@ If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createNewCustomPeriodBar( _
@@ -596,7 +596,7 @@ If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createVolumeAndOpenInterestParsers(ByVal pSession As Session)
@@ -612,7 +612,7 @@ mOpenInterestParser.Initialise pSession
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function newBar(ByVal BarNumber As Long) As Boolean
@@ -629,7 +629,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setTickSize(ByVal pTickSize As Double)
@@ -651,7 +651,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

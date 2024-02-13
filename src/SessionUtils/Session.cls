@@ -99,7 +99,7 @@ CurrentSessionEndTime = mCurrentSessionTimes.EndTime
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentSessionStartTime() As Date
@@ -111,7 +111,7 @@ CurrentSessionStartTime = mCurrentSessionTimes.StartTime
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get SessionBuilder() As SessionBuilder
@@ -127,7 +127,7 @@ SessionCurrentTime = mTimestamp
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let SessionEndTime( _
@@ -140,7 +140,7 @@ mSessionEndTime = gNormaliseSessionEndTime(Value)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionEndTime() As Date
@@ -157,7 +157,7 @@ mSessionStartTime = gNormaliseSessionStartTime(Value)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
                 
 Public Property Get SessionStartTime() As Date
@@ -178,7 +178,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeZone() As TimeZone
@@ -199,7 +199,7 @@ GetSessionTimes = gCalcSessionTimes(Timestamp, mSessionStartTime, mSessionEndTim
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOffsetSessionTimes( _
@@ -213,7 +213,7 @@ GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, offset, mSessionStart
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Initialise(ByVal pSessionBuilder As SessionBuilder)
@@ -235,7 +235,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
@@ -259,7 +259,7 @@ pSessionToLinkTo.SessionBuilder.LinkSession Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function SetSessionCurrentTime( _
@@ -319,7 +319,7 @@ sPrevTimeNotified = pTimestamp
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

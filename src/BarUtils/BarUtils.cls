@@ -104,7 +104,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function BarStartTime( _
@@ -131,7 +131,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBar( _
@@ -159,7 +159,7 @@ CreateBar.Initialise Timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilder( _
@@ -182,7 +182,7 @@ Set CreateBarsBuilder = lBarsBuilder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilderFuture( _
@@ -205,7 +205,7 @@ Set CreateBarsBuilderFuture = lFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilderWithInitialBars( _
@@ -225,7 +225,7 @@ Set CreateBarsBuilderWithInitialBars = lBarsBuilder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilderWithInitialBarsFuture( _
@@ -245,7 +245,7 @@ Set CreateBarsBuilderWithInitialBarsFuture = lFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateValueCache( _
@@ -260,7 +260,7 @@ CreateValueCache.Initialise CyclicSize, ValueName
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateVolumeParser( _
@@ -274,7 +274,7 @@ CreateVolumeParser.Initialise pSession
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub GetTimespanData( _
@@ -299,7 +299,7 @@ gGetTimespanData pBarTimePeriod, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -332,7 +332,7 @@ MaxNumberOfBarsInTimespan = gMaxNumberOfBarsInTimespanNormalized( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function MaxNumberOfBarsInTimespanNormalized( _
@@ -354,7 +354,7 @@ MaxNumberOfBarsInTimespanNormalized = gMaxNumberOfBarsInTimespanNormalized( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 
@@ -392,7 +392,7 @@ NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OffsetBarStartTime( _
@@ -416,7 +416,7 @@ OffsetBarStartTime = gCalcOffsetBarStartTime( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

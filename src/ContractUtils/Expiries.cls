@@ -90,7 +90,7 @@ mExpiriesNextIndex = mExpiriesNextIndex + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Item(ByVal pIndex As Long) As Date
@@ -106,7 +106,7 @@ Item = mExpiries(pIndex)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
