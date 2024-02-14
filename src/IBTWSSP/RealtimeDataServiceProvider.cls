@@ -119,6 +119,7 @@ If mClient Is Nothing Then
                             , _
                             Me)
     mClient.SetTwsLogLevel mTwsLogLevel
+    mClient.AddTwsConnectionStateListener Me
 End If
 
 Set IRealtimeDataSP_GetMarketDataFactory = mClient.GetMarketDataFactory

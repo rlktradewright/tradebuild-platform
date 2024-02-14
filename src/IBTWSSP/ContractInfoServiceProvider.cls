@@ -219,6 +219,7 @@ If mClient Is Nothing Then
                             , _
                             Me)
     Set mContractStore = mClient.GetContractStore
+    mClient.AddTwsConnectionStateListener Me
 End If
 
 Set IContractSP_GetContractStore = mContractStore

@@ -198,6 +198,7 @@ If mClient Is Nothing Then
                             , _
                             Me)
     mClient.SetTwsLogLevel mTwsLogLevel
+    mClient.AddTwsConnectionStateListener Me
 End If
 
 Set IOrderSubmissionSP_GetOrderRecoveryAgent = mClient
@@ -224,6 +225,7 @@ If mClient Is Nothing Then
                             , _
                             Me)
     mClient.SetTwsLogLevel mTwsLogLevel
+    mClient.AddTwsConnectionStateListener Me
 End If
 
 Set IOrderSubmissionSP_GetOrderSubmitterFactory = mClient
