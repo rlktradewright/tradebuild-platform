@@ -273,16 +273,16 @@ If mToDate = MaxDate Then
     
     Dim lTimestamp As Date: lTimestamp = lClock.Timestamp
         
-    If IsContractExpired(mContract) Then
+    If IsContractExpired(mContract, lClock) Then
         Dim lExpiryTimestamp As Date
-        lExpiryTimestamp = getsessiontimes( _
+        lExpiryTimestamp = GetSessionTimes( _
                                     mContract.ExpiryDate + mContract.SessionEndTime, _
                                     mContract.SessionStartTime, _
                                     mContract.SessionEndTime).EndTime
         If lExpiryTimestamp < lTimestamp Then lTimestamp = lExpiryTimestamp
     End If
     
-    If mExcludeLatestBar And Not IsContractExpired(mContract) Then
+    If mExcludeLatestBar And Not IsContractExpired(mContract, lClock) Then
         mToDate = BarStartTime(lTimestamp, _
                                 mBarTimePeriod, _
                                 lSessionStartTime, _

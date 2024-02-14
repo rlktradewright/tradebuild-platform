@@ -209,7 +209,7 @@ If mBarSpecifier.ToDate = MaxDate Then
     Dim lTimestamp As Date
     lTimestamp = lClock.Timestamp
         
-    If IsContractExpired(lContract) Then
+    If IsContractExpired(lContract, lClock) Then
         Dim lExpiryTimestamp As Date
         lExpiryTimestamp = GetSessionTimes(lContract.ExpiryDate + lContract.SessionEndTime, lContract.SessionStartTime, lContract.SessionEndTime).EndTime
         If lExpiryTimestamp < lTimestamp Then lTimestamp = lExpiryTimestamp
@@ -221,7 +221,7 @@ If mBarSpecifier.ToDate = MaxDate Then
     Dim lSessionEndTime As Date
     lSessionEndTime = IIf(mBarSpecifier.CustomSessionEndTime <> 0, mBarSpecifier.CustomSessionEndTime, mBarSpecifier.Contract.SessionEndTime)
     
-    If mExcludeCurrentBar And Not IsContractExpired(lContract) Then
+    If mExcludeCurrentBar And Not IsContractExpired(lContract, lClock) Then
         mBarSpecifier.ToDate = BarStartTime(lTimestamp, _
                                     mBarSpecifier.BarTimePeriod, _
                                     lSessionStartTime, _

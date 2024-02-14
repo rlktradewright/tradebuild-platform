@@ -56,6 +56,8 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mFutureBuilder                              As FutureBuilder
 
+Private mClock                                      As Clock
+
 Private mSelfRef                                    As Object
 
 '@================================================================================
@@ -84,7 +86,7 @@ Else
     Dim lContract As IContract
     Dim lIndex As Long: lIndex = -1
     For Each lContract In lContracts
-        If gIsContractExpired(lContract) Then
+        If gIsContractExpired(lContract, mClock) Then
             lIndex = -1
         Else
             lIndex = lIndex + 1
@@ -115,7 +117,6 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
 ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
@@ -131,7 +132,8 @@ Friend Function Resolve( _
                 ByVal pSampleContract As IContract, _
                 ByVal pExpiryOffset As Long, _
                 ByVal pDaysBeforeExpiryToSwitch As Long, _
-                ByVal pContractStore As IContractStore) As IFuture
+                ByVal pContractStore As IContractStore, _
+                Optional ByVal pClock As Clock) As IFuture
 Const ProcName As String = "Resolve"
 On Error GoTo Err
 
@@ -139,6 +141,7 @@ Set mSelfRef = Me
 
 mExpiryOffset = pExpiryOffset
 mDaysBeforeExpiryToSwitch = pDaysBeforeExpiryToSwitch
+Set mClock = pClock
 
 ' we've got a contract that has all the characteristics of the
 ' desired contract, except the expiry date may not be correct.
@@ -178,7 +181,6 @@ Set Resolve = mFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
 ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
 End Function
 
