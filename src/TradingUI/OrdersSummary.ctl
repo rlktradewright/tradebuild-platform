@@ -1641,7 +1641,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub displayProfitValue( _
-                ByVal pProfit As Currency, _
+                ByVal pProfit As BoxedDecimal, _
                 ByVal pRowIndex As Long, _
                 ByVal pColIndex As Long)
 Const ProcName As String = "displayProfitValue"
