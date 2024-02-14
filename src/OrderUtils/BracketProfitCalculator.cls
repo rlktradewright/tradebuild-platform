@@ -61,20 +61,20 @@ Private mLastBid                                    As Double
 Private mLastAsk                                    As Double
 Private mLastTrade                                  As Double
 
-Private mCumBuyPrice                                As Double
-Private mCumSellPrice                               As Double
+Private mCumBuyPrice                                As BoxedDecimal
+Private mCumSellPrice                               As BoxedDecimal
 
-Private mProfit                                     As Currency
-Private mMaxProfit                                  As Currency
-Private mMaxLoss                                    As Currency
-Private mDrawdown                                   As Currency
+Private mProfit                                     As BoxedDecimal
+Private mMaxProfit                                  As BoxedDecimal
+Private mMaxLoss                                    As BoxedDecimal
+Private mDrawdown                                   As BoxedDecimal
 
 Private mProfitListeners                            As New Listeners
 Private mChangeListeners                            As New Listeners
 
-Private mProfitNotificationThreshold                As Currency
-Private mLossNotificationThreshold                  As Currency
-Private mDrawdownNotificationThreshold              As Currency
+Private mProfitNotificationThreshold                As BoxedDecimal
+Private mLossNotificationThreshold                  As BoxedDecimal
+Private mDrawdownNotificationThreshold              As BoxedDecimal
 
 Private mAnExecutionHasOccurred                     As Boolean
 
@@ -83,6 +83,20 @@ Private mCurrentTick                                As GenericTick
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mCumBuyPrice = DecimalZero
+Set mCumSellPrice = DecimalZero
+
+Set mProfit = DecimalZero
+Set mMaxProfit = DecimalZero
+Set mMaxLoss = DecimalZero
+Set mDrawdown = DecimalZero
+
+Set mProfitNotificationThreshold = DecimalZero
+Set mLossNotificationThreshold = DecimalZero
+Set mDrawdownNotificationThreshold = DecimalZero
+End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
@@ -148,9 +162,9 @@ If Not mAnExecutionHasOccurred Then
 End If
 
 If ev.ExecutionReport.Action = OrderActionBuy Then
-    mCumBuyPrice = mCumBuyPrice + ev.ExecutionReport.Quantity * ev.ExecutionReport.Price
+    Set mCumBuyPrice = mCumBuyPrice.Add(ev.ExecutionReport.Quantity.Mult(CreateBoxedDecimal(ev.ExecutionReport.Price)))
 Else
-    mCumSellPrice = mCumSellPrice + ev.ExecutionReport.Quantity * ev.ExecutionReport.Price
+    Set mCumSellPrice = mCumSellPrice.Add(ev.ExecutionReport.Quantity.Mult(CreateBoxedDecimal(ev.ExecutionReport.Price)))
 End If
 
 calcProfitUsingLastReceivedPrices
@@ -203,32 +217,32 @@ Public Property Get BracketOrder() As IBracketOrder
 Set BracketOrder = mBracketOrder
 End Property
 
-Public Property Get Drawdown() As Currency
-Drawdown = mDrawdown
+Public Property Get Drawdown() As BoxedDecimal
+Set Drawdown = mDrawdown
 End Property
 
-Public Property Let DrawdownNotificationThreshold(ByVal Value As Currency)
-mDrawdownNotificationThreshold = Value
+Public Property Let DrawdownNotificationThreshold(ByVal Value As BoxedDecimal)
+Set mDrawdownNotificationThreshold = Value
 End Property
 
-Public Property Let LossNotificationThreshold(ByVal Value As Currency)
-mLossNotificationThreshold = Value
+Public Property Let LossNotificationThreshold(ByVal Value As BoxedDecimal)
+Set mLossNotificationThreshold = Value
 End Property
 
-Public Property Get MaxLoss() As Currency
-MaxLoss = mMaxLoss
+Public Property Get MaxLoss() As BoxedDecimal
+Set MaxLoss = mMaxLoss
 End Property
 
-Public Property Get MaxProfit() As Currency
-MaxProfit = mMaxProfit
+Public Property Get MaxProfit() As BoxedDecimal
+Set MaxProfit = mMaxProfit
 End Property
 
-Public Property Get Profit() As Currency
-Profit = mProfit
+Public Property Get Profit() As BoxedDecimal
+Set Profit = mProfit
 End Property
 
-Public Property Let ProfitNotificationThreshold(ByVal Value As Currency)
-mProfitNotificationThreshold = Value
+Public Property Let ProfitNotificationThreshold(ByVal Value As BoxedDecimal)
+Set mProfitNotificationThreshold = Value
 End Property
 
 '@================================================================================
@@ -280,8 +294,8 @@ Set mContractFuture = pDataSource.ContractFuture
 Set mDataSource = pDataSource
 
 'If mBracketOrder.Size <> 0 Then
-    mCumBuyPrice = pBracketOrder.CumBuyPrice
-    mCumSellPrice = pBracketOrder.CumSellPrice
+    Set mCumBuyPrice = pBracketOrder.CumBuyPrice
+    Set mCumSellPrice = pBracketOrder.CumSellPrice
     If mCumBuyPrice <> 0 Or mCumSellPrice <> 0 Then mAnExecutionHasOccurred = True
 
     listenToData
@@ -366,51 +380,51 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub calcProfitLoss(ByVal Value As Double)
+Private Sub calcProfitLoss(ByVal pPrice As Double)
 Const ProcName As String = "calcProfitLoss"
 On Error GoTo Err
 
-Static sValueFactor As Double
+Static sValueFactor As BoxedDecimal
 
-If sValueFactor = 0 Then
+If sValueFactor Is Nothing Then
     Assert mContractFuture.IsAvailable
     
     Dim lContract As IContract
     Set lContract = mContractFuture.Value
-    sValueFactor = lContract.Specifier.Multiplier
-    If sValueFactor = 0 Then sValueFactor = 1
+    Set sValueFactor = CreateBoxedDecimal(lContract.Specifier.Multiplier)
+    If sValueFactor Is DecimalZero Then Set sValueFactor = DecimalOne
 End If
 
-If Value = 0 Then Exit Sub
+If pPrice = 0 Then Exit Sub
 
-Dim lProfit As Currency
-lProfit = (mCumSellPrice + mBracketOrder.Size * Value - mCumBuyPrice) * sValueFactor
+Dim lProfit As BoxedDecimal
+Set lProfit = mCumSellPrice.Add(mBracketOrder.Size.Mult(CreateBoxedDecimal(pPrice)).Subtr(mCumBuyPrice)).Mult(sValueFactor)
 
 Dim lNotifyProfit As Boolean
-If lProfit <> mProfit Then
-    mProfit = lProfit
+If lProfit.NE(mProfit) Then
+    Set mProfit = lProfit
     lNotifyProfit = True
 End If
 
 Dim lNotifyMaxProfit As Boolean
-If lProfit > mMaxProfit Then
-    mMaxProfit = lProfit
+If lProfit.GT(mMaxProfit) Then
+    Set mMaxProfit = lProfit
     lNotifyMaxProfit = True
-    gLog mBracketOrder.Key & ": Max profit increased: " & mMaxProfit & "; Tick=" & GenericTickToString(mCurrentTick), ProcName, ModuleName, , LogLevels.LogLevelDetail
+    gLog mBracketOrder.Key & ": Max profit increased: " & mMaxProfit.ToString & "; Tick=" & GenericTickToString(mCurrentTick), ProcName, ModuleName, , LogLevels.LogLevelDetail
 End If
 
 Dim lNotifyMaxLoss As Boolean
-If lProfit < mMaxLoss Then
-    mMaxLoss = lProfit
+If lProfit.LT(mMaxLoss) Then
+    Set mMaxLoss = lProfit
     lNotifyMaxLoss = True
 End If
 
 Dim lNotifyDrawdown As Boolean
-If lProfit < mMaxProfit Then
-    mDrawdown = mMaxProfit - lProfit
+If lProfit.LT(mMaxProfit) Then
+    Set mDrawdown = mMaxProfit.Subtr(lProfit)
     lNotifyDrawdown = True
 ElseIf mDrawdown <> 0 Then
-    mDrawdown = 0
+    Set mDrawdown = DecimalZero
     lNotifyDrawdown = True
 End If
 
@@ -422,25 +436,25 @@ If lNotifyDrawdown Then lProfitTypes = lProfitTypes Or ProfitTypes.ProfitTypeDra
 fireProfit lProfitTypes
 
 If lNotifyProfit Then
-    If mProfitNotificationThreshold <> 0 And _
-        mProfit >= mProfitNotificationThreshold _
+    If Not mProfitNotificationThreshold Is DecimalZero And _
+        mProfit.GE(mProfitNotificationThreshold) _
     Then
         fireChange ProfitChangeProfitThresholdExceeded
-        mProfitNotificationThreshold = 0
+        Set mProfitNotificationThreshold = DecimalZero
     End If
     
-    If mLossNotificationThreshold <> 0 And _
-        mProfit <= mLossNotificationThreshold _
+    If Not mLossNotificationThreshold Is DecimalZero And _
+        mProfit.LE(mLossNotificationThreshold) _
     Then
         fireChange ProfitChangeLossThresholdExceeded
-        mLossNotificationThreshold = 0
+        Set mLossNotificationThreshold = DecimalZero
     End If
 
-    If mDrawdownNotificationThreshold <> 0 And _
-        (mMaxProfit - lProfit >= mDrawdownNotificationThreshold) _
+    If Not mDrawdownNotificationThreshold Is DecimalZero And _
+        (mMaxProfit.Subtr(lProfit).GE(mDrawdownNotificationThreshold)) _
     Then
         fireChange ProfitChangeDrawdownThresholdExceeded
-        mDrawdownNotificationThreshold = 0
+        Set mDrawdownNotificationThreshold = DecimalZero
     End If
 End If
 

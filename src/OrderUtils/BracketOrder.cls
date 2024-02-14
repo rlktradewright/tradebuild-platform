@@ -83,6 +83,7 @@ Private mContract                                   As IContract
 Private mDataSource                                 As IMarketDataSource
 Private mOrderSubmitter                             As IOrderSubmitter
 Private mTimerList                                  As TimerList
+Private mClock                                      As Clock
 
 Private mStateEngine                                As StateEngine
 
@@ -160,9 +161,9 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-Set mNewEntryQuantity = DecimalZero
-Set mNewStopLossQuantity = DecimalZero
-Set mNewTargetQuantity = DecimalZero
+Set mNewEntryQuantity = Nothing
+Set mNewStopLossQuantity = Nothing
+Set mNewTargetQuantity = Nothing
 
 Set mNewEntryLimitPriceSpec = gNewPriceSpecifier
 Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
@@ -409,12 +410,12 @@ Private Property Get IBracketOrder_CreationTime() As Date
 IBracketOrder_CreationTime = CreationTime
 End Property
 
-Private Property Get IBracketOrder_CumBuyPrice() As Double
-IBracketOrder_CumBuyPrice = CumBuyPrice
+Private Property Get IBracketOrder_CumBuyPrice() As BoxedDecimal
+Set IBracketOrder_CumBuyPrice = CumBuyPrice
 End Property
 
-Private Property Get IBracketOrder_CumSellPrice() As Double
-IBracketOrder_CumSellPrice = CumSellPrice
+Private Property Get IBracketOrder_CumSellPrice() As BoxedDecimal
+Set IBracketOrder_CumSellPrice = CumSellPrice
 End Property
 
 Private Property Let IBracketOrder_Description(ByVal RHS As String)
@@ -1105,7 +1106,7 @@ Case OrderStatuses.OrderStatusRejected
     End If
     handleStimulus OpStimuli.StimCloseoutOrderRejected
 Case OrderStatuses.OrderStatusCancelled
-    If Not IsContractExpired(mContract) Then
+    If Not IsContractExpired(mContract, mClock) Then
         handleStimulus OpStimuli.StimCloseoutOrderCancelled
     End If
     checkAllOrdersComplete
@@ -1271,7 +1272,7 @@ Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
-    If Not IsContractExpired(mContract) Then
+    If Not IsContractExpired(mContract, mClock) Then
         handleStimulus OpStimuli.StimEntryOrderCancelled
     End If
     checkAllOrdersComplete
@@ -1474,7 +1475,7 @@ Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
-    If Not IsContractExpired(mContract) Then
+    If Not IsContractExpired(mContract, mClock) Then
         handleStimulus OpStimuli.StimStopLossOrderCancelled
     End If
     checkAllOrdersComplete
@@ -1600,7 +1601,7 @@ Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPendingSubmit
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
-    If Not IsContractExpired(mContract) Then
+    If Not IsContractExpired(mContract, mClock) Then
         handleStimulus OpStimuli.StimTargetOrderCancelled
     End If
     checkAllOrdersComplete
@@ -1775,15 +1776,15 @@ Public Property Get CreationTime() As Date
 CreationTime = mSummary.CreationTime
 End Property
 
-Friend Property Let CumBuyPrice(ByVal Value As Double)
+Friend Property Let CumBuyPrice(ByVal Value As BoxedDecimal)
 mSummary.CumBuyPrice = Value
 End Property
 
-Public Property Get CumBuyPrice() As Double
-CumBuyPrice = mSummary.CumBuyPrice
+Public Property Get CumBuyPrice() As BoxedDecimal
+Set CumBuyPrice = mSummary.CumBuyPrice
 End Property
 
-Friend Property Let CumSellPrice(ByVal Value As Double)
+Friend Property Let CumSellPrice(ByVal Value As BoxedDecimal)
 Const ProcName As String = "CumSellPrice"
 On Error GoTo Err
 
@@ -1795,8 +1796,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get CumSellPrice() As Double
-CumSellPrice = mSummary.CumSellPrice
+Public Property Get CumSellPrice() As BoxedDecimal
+Set CumSellPrice = mSummary.CumSellPrice
 End Property
 
 Public Property Let Description(ByVal Value As String)
@@ -1825,9 +1826,9 @@ Const ProcName As String = "EntryPrice"
 On Error GoTo Err
 
 If LongPosition Then
-    EntryPrice = mSummary.CumBuyPrice / mEntryOrder.Quantity
+    EntryPrice = mSummary.CumBuyPrice.Div(mEntryOrder.Quantity)
 Else
-    EntryPrice = mSummary.CumSellPrice / mEntryOrder.Quantity
+    EntryPrice = mSummary.CumSellPrice.Div(mEntryOrder.Quantity)
 End If
 
 Exit Property
@@ -2746,6 +2747,7 @@ Set mOrderSubmitter = pOrderSubmitter
 mIsSimulated = pIsSimulated
 
 Set mTimerList = mOrderContext.TimerList
+Set mClock = mTimerList.Clock
 
 Exit Sub
 
@@ -3418,9 +3420,9 @@ On Error GoTo Err
 If mEntryOrder Is Nothing Then Exit Function
 
 If mEntryOrder.IsDirty Then checkForPendingEntryUpdates = True
-If mNewEntryQuantity >= 0 And _
-    mNewEntryQuantity <> mEntryOrder.Quantity _
-Then
+
+If mNewEntryQuantity Is Nothing Then
+ElseIf mNewEntryQuantity <> mEntryOrder.Quantity Then
     Assert mEntryOrder.Status <> OrderStatuses.OrderStatusFilled, Key & " Can't change Size - order " & EntryOrder.Id & " already filled"
     mEntryOrder.Quantity = mNewEntryQuantity
     checkForPendingEntryUpdates = True
@@ -3480,9 +3482,8 @@ Then
 End If
 Set mNewStopLossLimitPriceSpec = gNewPriceSpecifier
 
-If mNewStopLossQuantity >= 0 And _
-    mNewStopLossQuantity <> mStopLossOrder.Quantity _
-Then
+If mNewStopLossQuantity Is Nothing Then
+ElseIf mNewStopLossQuantity <> mStopLossOrder.Quantity Then
     Assert mStopLossOrder.Status <> OrderStatuses.OrderStatusFilled, Key & " Can't change stop-loss quantity - order " & mStopLossOrder.Id & " already filled"
     mStopLossOrder.Quantity = mNewStopLossQuantity
     checkForPendingStoplossUpdates = True
@@ -3530,9 +3531,8 @@ Then
 End If
 Set mNewTargetLimitPriceSpec = gNewPriceSpecifier
 
-If mNewTargetQuantity >= 0 And _
-    mNewTargetQuantity <> mTargetOrder.Quantity _
-Then
+If mNewTargetQuantity Is Nothing Then
+ElseIf mNewTargetQuantity <> mTargetOrder.Quantity Then
     Assert mTargetOrder.Status <> OrderStatuses.OrderStatusFilled, Key & " Can't change target quantity - order " & mTargetOrder.Id & " already filled"
     mTargetOrder.Quantity = mNewTargetQuantity
     checkForPendingTargetUpdates = True
@@ -4051,7 +4051,7 @@ End If
 If pRole = BracketOrderRoleStopLoss Then
     gLog "Updating pegged StopLoss order for " & mSummary.Key, ProcName, ModuleName
     
-    If mSummary.Size <> pOrder.Quantity Then SetNewStopLossQuantity mSummary.Size
+    If Abs(mSummary.Size) <> pOrder.Quantity Then SetNewStopLossQuantity CreateBoxedDecimal(Abs(mSummary.Size))
     
     If pOrder.LimitPriceSpec Is Nothing Then
     ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
@@ -4072,7 +4072,7 @@ If pRole = BracketOrderRoleStopLoss Then
 Else
     gLog "Updating pegged Target order for " & mSummary.Key, ProcName, ModuleName
     
-    If mSummary.Size <> pOrder.Quantity Then SetNewTargetQuantity mSummary.Size
+    If Abs(mSummary.Size) <> pOrder.Quantity Then SetNewTargetQuantity CreateBoxedDecimal(Abs(mSummary.Size))
     
     If pOrder.LimitPriceSpec Is Nothing Then
     ElseIf pOrder.LimitPriceSpec.PriceType = PriceValueTypeEntry Then
@@ -4130,6 +4130,7 @@ If lUpdated Then
     Update
     SaveRecoveryInfo
     placePeggedOrders = True
+    Exit Function
 End If
 
 placePeggedOrders = False
@@ -4155,11 +4156,14 @@ If mSummary.Size = 0 Then
                                             GetTimeZone(mContract.TimezoneName))
 End If
 
+Dim lIncrement As BoxedDecimal
+Set lIncrement = pExec.Quantity.Mult(CreateBoxedDecimal(pExec.Price))
+
 If pExec.Action = OrderActionBuy Then
-    CumBuyPrice = mSummary.CumBuyPrice + pExec.Quantity * pExec.Price
+    CumBuyPrice = mSummary.CumBuyPrice.Add(lIncrement)
     SetSize Size.Add(pExec.Quantity)
 Else
-    CumSellPrice = mSummary.CumSellPrice + pExec.Quantity * pExec.Price
+    CumSellPrice = mSummary.CumSellPrice.Add(lIncrement)
     SetSize Size.Subtr(pExec.Quantity)
 End If
     

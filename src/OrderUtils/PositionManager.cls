@@ -94,20 +94,19 @@ Private mEndingSession As Boolean
 
 Private mQuantityOutstanding                    As BoxedDecimal
 
-Private mSessionProfit                          As Currency
-Private mMaxSessionProfit                       As Currency
-Private mMaxSessionLoss                         As Currency
-Private mSessionDrawdown                        As Currency
+Private mSessionProfit                          As BoxedDecimal
+Private mMaxSessionProfit                       As BoxedDecimal
+Private mMaxSessionLoss                         As BoxedDecimal
+Private mSessionDrawdown                        As BoxedDecimal
 
-Private mProfitThisTrade                        As Currency
-Private mMaxProfitThisTrade                     As Currency
-Private mMaxLossThisTrade                       As Currency
-Private mDrawdownThisTrade                      As Currency
+Private mProfitThisTrade                        As BoxedDecimal
+Private mMaxProfitThisTrade                     As BoxedDecimal
+Private mMaxLossThisTrade                       As BoxedDecimal
+Private mDrawdownThisTrade                      As BoxedDecimal
 Private mTradeStartTime                         As Date
 Private mTradeStartTimezoneName                 As String
 
-Private mTickValue                              As Currency
-Private mTickSize                               As Double
+Private mMultiplier                             As BoxedDecimal
 Private mCurrencyCode                           As String
 Private mContractName                           As String
 
@@ -161,6 +160,22 @@ Set mChangeListeners = New Listeners
 mContractName = "N/A"
 
 Set mQuantityOutstanding = DecimalZero
+
+Set mProfitThisTrade = DecimalZero
+Set mMaxProfitThisTrade = DecimalZero
+Set mMaxLossThisTrade = DecimalZero
+Set mSessionProfit = DecimalZero
+Set mMaxSessionProfit = DecimalZero
+Set mMaxSessionLoss = DecimalZero
+Set mSessionDrawdown = DecimalZero
+Set mDrawdownThisTrade = DecimalZero
+
+mSummary.CumBuyPrice = DecimalZero
+mSummary.CumSellPrice = DecimalZero
+mSummary.ProfitLastTrade = DecimalZero
+mSummary.DrawdownLastTrade = DecimalZero
+mSummary.ProfitLastFlat = DecimalZero
+
 End Sub
 
 Private Sub Class_Terminate()
@@ -706,13 +721,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Drawdown() As Currency
+Public Property Get Drawdown() As BoxedDecimal
 Const ProcName As String = "Drawdown"
 On Error GoTo Err
 
 checkInitialised
 
-Drawdown = mSessionDrawdown
+Set Drawdown = mSessionDrawdown
 
 Exit Property
 
@@ -720,12 +735,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get DrawdownLastTrade() As Currency
+Public Property Get DrawdownLastTrade() As BoxedDecimal
 Const ProcName As String = "DrawdownLastTrade"
 On Error GoTo Err
 
 checkInitialised
-DrawdownLastTrade = mSummary.DrawdownLastTrade
+Set DrawdownLastTrade = mSummary.DrawdownLastTrade
 
 Exit Property
 
@@ -733,11 +748,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get DrawdownThisTrade() As Currency
+Public Property Get DrawdownThisTrade() As BoxedDecimal
 Const ProcName As String = "DrawdownThisTrade"
 On Error GoTo Err
 
-DrawdownThisTrade = mMaxProfitThisTrade - mProfitThisTrade
+Set DrawdownThisTrade = mMaxProfitThisTrade.Subtr(mProfitThisTrade)
 
 Exit Property
 
@@ -858,12 +873,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get MaxLoss() As Currency
+Public Property Get MaxLoss() As BoxedDecimal
 Const ProcName As String = "MaxLoss"
 On Error GoTo Err
 
 checkInitialised
-MaxLoss = mMaxSessionLoss
+Set MaxLoss = mMaxSessionLoss
 
 Exit Property
 
@@ -871,11 +886,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get MaxLossThisTrade() As Currency
+Public Property Get MaxLossThisTrade() As BoxedDecimal
 Const ProcName As String = "MaxLossThisTrade"
 On Error GoTo Err
 
-MaxLossThisTrade = mMaxLossThisTrade
+Set MaxLossThisTrade = mMaxLossThisTrade
 
 Exit Property
 
@@ -883,12 +898,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get MaxProfit() As Currency
+Public Property Get MaxProfit() As BoxedDecimal
 Const ProcName As String = "MaxProfit"
 On Error GoTo Err
 
 checkInitialised
-MaxProfit = mMaxSessionProfit
+Set MaxProfit = mMaxSessionProfit
 
 Exit Property
 
@@ -896,11 +911,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get MaxProfitThisTrade() As Currency
+Public Property Get MaxProfitThisTrade() As BoxedDecimal
 Const ProcName As String = "MaxProfitThisTrade"
 On Error GoTo Err
 
-MaxProfitThisTrade = mMaxProfitThisTrade
+Set MaxProfitThisTrade = mMaxProfitThisTrade
 
 Exit Property
 
@@ -1025,12 +1040,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Profit() As Currency
+Public Property Get Profit() As BoxedDecimal
 Const ProcName As String = "Profit"
 On Error GoTo Err
 
 checkInitialised
-Profit = mSessionProfit
+Set Profit = mSessionProfit
 
 Exit Property
 
@@ -1038,12 +1053,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ProfitLastTrade() As Currency
+Public Property Get ProfitLastTrade() As BoxedDecimal
 Const ProcName As String = "ProfitLastTrade"
 On Error GoTo Err
 
 checkInitialised
-ProfitLastTrade = mSummary.ProfitLastTrade
+Set ProfitLastTrade = mSummary.ProfitLastTrade
 
 Exit Property
 
@@ -1051,12 +1066,12 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get ProfitThisTrade() As Currency
+Public Property Get ProfitThisTrade() As BoxedDecimal
 Const ProcName As String = "ProfitThisTrade"
 On Error GoTo Err
 
 checkInitialised
-ProfitThisTrade = mProfitThisTrade
+Set ProfitThisTrade = mProfitThisTrade
 
 Exit Property
 
@@ -1464,52 +1479,52 @@ Private Sub calcProfits(Optional ByVal Price As Double)
 Const ProcName As String = "calcProfits"
 On Error GoTo Err
 
-If mTickSize = 0 Then Exit Sub
+If mMultiplier = 0 Then Exit Sub
 If mSummary.CumSellPrice = 0 And mSummary.CumBuyPrice = 0 And mQuantityOutstanding = 0 Then Exit Sub
 
-Dim lProfit As Currency
-lProfit = mTickValue * (mSummary.CumSellPrice + mQuantityOutstanding * Price - mSummary.CumBuyPrice) / mTickSize
+Dim lProfit As BoxedDecimal
+Set lProfit = mMultiplier.Mult(mSummary.CumSellPrice.Add(CreateBoxedDecimal(mQuantityOutstanding * Price)).Subtr(mSummary.CumBuyPrice))
 
-If lProfit = mSessionProfit Then Exit Sub
+If lProfit.EQ(mSessionProfit) Then Exit Sub
     
 Dim lProfitTypes As ProfitTypes
-mSessionProfit = lProfit
+Set mSessionProfit = lProfit
 lProfitTypes = ProfitTypes.ProfitTypeSessionProfit
 
-If mSessionProfit > mMaxSessionProfit Then
-    mMaxSessionProfit = mSessionProfit
+If mSessionProfit.GT(mMaxSessionProfit) Then
+    Set mMaxSessionProfit = mSessionProfit
     lProfitTypes = lProfitTypes Or ProfitTypeSessionMaxProfit
     If mSessionDrawdown <> 0 Then
-        mSessionDrawdown = 0
+        Set mSessionDrawdown = DecimalZero
         lProfitTypes = lProfitTypes Or ProfitTypeSessionDrawdown
     End If
 End If
-If mSessionProfit < mMaxSessionLoss Then
-    mMaxSessionLoss = mSessionProfit
+If mSessionProfit.LT(mMaxSessionLoss) Then
+    Set mMaxSessionLoss = mSessionProfit
     lProfitTypes = lProfitTypes Or ProfitTypeSessionMaxLoss
 End If
-If mSessionProfit < mMaxSessionProfit Then
-    mSessionDrawdown = mMaxSessionProfit - mSessionProfit
+If mSessionProfit.LT(mMaxSessionProfit) Then
+    Set mSessionDrawdown = mMaxSessionProfit.Subtr(mSessionProfit)
     lProfitTypes = lProfitTypes Or ProfitTypeSessionDrawdown
 End If
 
-mProfitThisTrade = mSessionProfit - mSummary.ProfitLastFlat
+Set mProfitThisTrade = mSessionProfit.Subtr(mSummary.ProfitLastFlat)
 lProfitTypes = lProfitTypes Or ProfitTypeTradeProfit
 
-If mProfitThisTrade > mMaxProfitThisTrade Then
-    mMaxProfitThisTrade = mProfitThisTrade
+If mProfitThisTrade.GT(mMaxProfitThisTrade) Then
+    Set mMaxProfitThisTrade = mProfitThisTrade
     lProfitTypes = lProfitTypes Or ProfitTypeTradeMaxProfit
     If mDrawdownThisTrade <> 0 Then
-        mDrawdownThisTrade = 0
+        Set mDrawdownThisTrade = DecimalZero
         lProfitTypes = lProfitTypes Or ProfitTypeTradeDrawdown
     End If
 End If
-If mProfitThisTrade < mMaxLossThisTrade Then
-    mMaxLossThisTrade = mProfitThisTrade
+If mProfitThisTrade.LT(mMaxLossThisTrade) Then
+    Set mMaxLossThisTrade = mProfitThisTrade
     lProfitTypes = lProfitTypes Or ProfitTypeTradeMaxLoss
 End If
-If mProfitThisTrade < mMaxProfitThisTrade Then
-    mDrawdownThisTrade = mMaxProfitThisTrade - mProfitThisTrade
+If mProfitThisTrade.LT(mMaxProfitThisTrade) Then
+    Set mDrawdownThisTrade = mMaxProfitThisTrade.Subtr(mProfitThisTrade)
     lProfitTypes = lProfitTypes Or ProfitTypeTradeDrawdown
 End If
 
@@ -1875,12 +1890,12 @@ Else
             mSummary.IsSimulated, _
             Me
     mSummary.ProfitLastTrade = mProfitThisTrade
-    mSummary.DrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
-    mProfitThisTrade = 0
-    mMaxProfitThisTrade = 0
-    mMaxLossThisTrade = 0
+    mSummary.DrawdownLastTrade = mMaxProfitThisTrade.Subtr(mProfitThisTrade)
+    Set mProfitThisTrade = DecimalZero
+    Set mMaxProfitThisTrade = DecimalZero
+    Set mMaxLossThisTrade = DecimalZero
     mSummary.ProfitLastFlat = mSessionProfit
-    mDrawdownThisTrade = 0
+    Set mDrawdownThisTrade = DecimalZero
     
     If Not mMoneyManager Is Nothing Then mMoneyManager.NotifyPositionFlat
     
@@ -1941,12 +1956,15 @@ If mQuantityOutstanding = 0 Then
     mTradeStartTimezoneName = pExec.TimezoneName
 End If
 
-mQuantityOutstanding.Add gGetSignedQuantity(pExec)
+Dim lIncrement As BoxedDecimal
+Set lIncrement = pExec.Quantity.Mult(CreateBoxedDecimal(pExec.Price))
 
-If gGetSignedQuantity(pExec) > 0 Then
-    mSummary.CumBuyPrice = mSummary.CumBuyPrice + (pExec.Price * gGetSignedQuantity(pExec))
+If pExec.Action = OrderActionBuy Then
+    Set mQuantityOutstanding = mQuantityOutstanding.Add(pExec.Quantity)
+    mSummary.CumBuyPrice = mSummary.CumBuyPrice.Add(lIncrement)
 Else
-    mSummary.CumSellPrice = mSummary.CumSellPrice + (pExec.Price * pExec.Quantity)
+    Set mQuantityOutstanding = mQuantityOutstanding.Subtr(pExec.Quantity)
+    mSummary.CumSellPrice = mSummary.CumSellPrice.Add(lIncrement)
 End If
 
 Exit Sub
@@ -1982,8 +2000,7 @@ Dim lContract As IContract
 Set lContract = mContractFuture.Value
 
 If mSummary.Contract Is Nothing Then mSummary.Contract = lContract
-mTickValue = lContract.TickValue
-mTickSize = lContract.TickSize
+Set mMultiplier = CreateBoxedDecimal(lContract.Specifier.Multiplier)
 mCurrencyCode = lContract.Specifier.CurrencyCode
 mContractName = gGetContractName(lContract.Specifier)
 
@@ -2003,23 +2020,23 @@ mExecutions.Clear
 
 mSummary.TradingSessionStartTime = mSession.CurrentSessionStartTime
 
-mSummary.CumBuyPrice = 0
-mSummary.CumSellPrice = 0
+mSummary.CumBuyPrice = DecimalZero
+mSummary.CumSellPrice = DecimalZero
 Set mQuantityOutstanding = DecimalZero
 
 mSummary.ProfitLastTrade = mProfitThisTrade
-mSummary.DrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
-mProfitThisTrade = 0
-mMaxProfitThisTrade = 0
-mMaxLossThisTrade = 0
+mSummary.DrawdownLastTrade = mMaxProfitThisTrade.Subtr(mProfitThisTrade)
+Set mProfitThisTrade = DecimalZero
+Set mMaxProfitThisTrade = DecimalZero
+Set mMaxLossThisTrade = DecimalZero
 mSummary.ProfitLastFlat = mSessionProfit
 
-mSessionProfit = 0
-mMaxSessionProfit = 0
-mMaxSessionLoss = 0
-mSessionDrawdown = 0
+Set mSessionProfit = DecimalZero
+Set mMaxSessionProfit = DecimalZero
+Set mMaxSessionLoss = DecimalZero
+Set mSessionDrawdown = DecimalZero
 
-mDrawdownThisTrade = 0
+Set mDrawdownThisTrade = DecimalZero
 mTradeStartTime = mSummary.TradingSessionStartTime
 
 If mInitialRecoveryDataSaved Then SaveRecoveryInfo

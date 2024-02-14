@@ -916,7 +916,7 @@ lExec.Quantity = lFillSize
 lExec.SecurityName = lContractSpecifier.LocalSymbol
 lExec.TimezoneName = lClock.TimeZone.StandardName
 
-pOrder.Order.QuantityRemaining = pOrder.Order.QuantityRemaining - lFillSize
+pOrder.Order.QuantityRemaining = pOrder.Order.QuantityRemaining.Subtr(lFillSize)
 If pOrder.Order.QuantityRemaining = 0 Then pOrder.Order.Status = OrderStatuses.OrderStatusFilled
 
 pOrder.Listener.NotifyExecutionReport lExec

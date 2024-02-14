@@ -46,13 +46,13 @@ Private Const ModuleName                            As String = "PMS"
 ' Member variables
 '@================================================================================
 
-Private mCumBuyPrice                                As Double
-Private mCumSellPrice                               As Double
+Private mCumBuyPrice                                As BoxedDecimal
+Private mCumSellPrice                               As BoxedDecimal
                 
-Private mProfitLastFlat                             As Currency
+Private mProfitLastFlat                             As BoxedDecimal
 
-Private mProfitLastTrade                            As Currency
-Private mDrawdownLastTrade                          As Currency
+Private mProfitLastTrade                            As BoxedDecimal
+Private mDrawdownLastTrade                          As BoxedDecimal
 
 Private mTradingSessionStartTime                    As Date
 
@@ -72,6 +72,16 @@ Private mDiff                                       As New ROD
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mCumBuyPrice = DecimalZero
+Set mCumSellPrice = DecimalZero
+                
+Set mProfitLastFlat = DecimalZero
+
+Set mProfitLastTrade = DecimalZero
+Set mDrawdownLastTrade = DecimalZero
+End Sub
 
 '@================================================================================
 ' IJSONAble Interface Members
@@ -96,26 +106,26 @@ Public Property Get Contract() As IContract
 Set Contract = mContract
 End Property
 
-Public Property Let CumBuyPrice(ByVal Value As Double)
-If mCumBuyPrice = Value Then Exit Property
+Public Property Let CumBuyPrice(ByVal Value As BoxedDecimal)
+If mCumBuyPrice.EQ(Value) Then Exit Property
 mIsDirty = True
-mCumBuyPrice = Value
+Set mCumBuyPrice = Value
 mDiff.SetProperty "CumBuyPrice", Value
 End Property
 
-Public Property Get CumBuyPrice() As Double
-CumBuyPrice = mCumBuyPrice
+Public Property Get CumBuyPrice() As BoxedDecimal
+Set CumBuyPrice = mCumBuyPrice
 End Property
 
-Public Property Let CumSellPrice(ByVal Value As Double)
-If mCumSellPrice = Value Then Exit Property
+Public Property Let CumSellPrice(ByVal Value As BoxedDecimal)
+If mCumSellPrice.EQ(Value) Then Exit Property
 mIsDirty = True
-mCumSellPrice = Value
+Set mCumSellPrice = Value
 mDiff.SetProperty "CumSellPrice", Value
 End Property
 
-Public Property Get CumSellPrice() As Double
-CumSellPrice = mCumSellPrice
+Public Property Get CumSellPrice() As BoxedDecimal
+Set CumSellPrice = mCumSellPrice
 End Property
 
 Public Property Let Diff(ByVal Value As ROD)
@@ -126,15 +136,15 @@ Public Property Get Diff() As ROD
 Set Diff = mDiff
 End Property
 
-Public Property Let DrawdownLastTrade(ByVal Value As Currency)
-If mDrawdownLastTrade = Value Then Exit Property
+Public Property Let DrawdownLastTrade(ByVal Value As BoxedDecimal)
+If mDrawdownLastTrade.EQ(Value) Then Exit Property
 mIsDirty = True
-mDrawdownLastTrade = Value
+Set mDrawdownLastTrade = Value
 mDiff.SetProperty "DrawdownLastTrade", Value
 End Property
 
-Public Property Get DrawdownLastTrade() As Currency
-DrawdownLastTrade = mDrawdownLastTrade
+Public Property Get DrawdownLastTrade() As BoxedDecimal
+Set DrawdownLastTrade = mDrawdownLastTrade
 End Property
 
 Public Property Let FixedAccountBalance(ByVal Value As Double)
@@ -184,26 +194,26 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-Public Property Let ProfitLastFlat(ByVal Value As Currency)
-If mProfitLastFlat = Value Then Exit Property
+Public Property Let ProfitLastFlat(ByVal Value As BoxedDecimal)
+If mProfitLastFlat.EQ(Value) Then Exit Property
 mIsDirty = True
-mProfitLastFlat = Value
+Set mProfitLastFlat = Value
 mDiff.SetProperty "ProfitLastFlat", Value
 End Property
 
-Public Property Get ProfitLastFlat() As Currency
-ProfitLastFlat = mProfitLastFlat
+Public Property Get ProfitLastFlat() As BoxedDecimal
+Set ProfitLastFlat = mProfitLastFlat
 End Property
 
-Public Property Let ProfitLastTrade(ByVal Value As Currency)
-If mProfitLastTrade = Value Then Exit Property
+Public Property Let ProfitLastTrade(ByVal Value As BoxedDecimal)
+If mProfitLastTrade.EQ(Value) Then Exit Property
 mIsDirty = True
-mProfitLastTrade = Value
+Set mProfitLastTrade = Value
 mDiff.SetProperty "ProfitLastTrade", Value
 End Property
 
-Public Property Get ProfitLastTrade() As Currency
-ProfitLastTrade = mProfitLastTrade
+Public Property Get ProfitLastTrade() As BoxedDecimal
+Set ProfitLastTrade = mProfitLastTrade
 End Property
 
 Public Property Let TradingSessionStartTime(ByVal Value As Date)
@@ -235,9 +245,9 @@ Dim lContract As IContract: Set lContract = mContract
 Set mContract = Nothing
 Contract = lContract
 
-CumBuyPrice = 0#
-CumSellPrice = 0#
-DrawdownLastTrade = 0#
+CumBuyPrice = DecimalZero
+CumSellPrice = DecimalZero
+DrawdownLastTrade = DecimalZero
 
 Dim lGroupName As String: lGroupName = mGroupName
 mGroupName = ""
@@ -249,8 +259,8 @@ Dim lName As String: lName = mName
 mName = ""
 Name = lName
 
-ProfitLastFlat = 0#
-ProfitLastTrade = 0#
+ProfitLastFlat = DecimalZero
+ProfitLastTrade = DecimalZero
 
 Dim lTradingSessionStartTime As Date: lTradingSessionStartTime = mTradingSessionStartTime
 mTradingSessionStartTime = 0#

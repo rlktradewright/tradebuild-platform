@@ -529,14 +529,6 @@ gHandleUnexpectedError ProcName, ModuleName
 
 End Function
 
-Public Function gGetSignedQuantity(ByVal pExec As IExecutionReport) As BoxedDecimal
-If pExec.Action = OrderActionBuy Then
-    Set gGetSignedQuantity = pExec.Quantity
-Else
-    Set gGetSignedQuantity = CreateBoxedDecimal(-pExec.Quantity)
-End If
-End Function
-
 Public Function gGetSourceDesignator( _
                 ByRef pModuleName As String, _
                 ByRef pProcedureName As String) As String
@@ -936,7 +928,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gLogPosition( _
-                ByVal pPosition As Long, _
+                ByVal pPosition As BoxedDecimal, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)

@@ -90,10 +90,10 @@ End Property
 Public Property Get CreationTime() As Date
 End Property
 
-Public Property Get CumBuyPrice() As Double
+Public Property Get CumBuyPrice() As BoxedDecimal
 End Property
 
-Public Property Get CumSellPrice() As Double
+Public Property Get CumSellPrice() As BoxedDecimal
 End Property
 
 Public Property Let Description(ByVal Value As String)

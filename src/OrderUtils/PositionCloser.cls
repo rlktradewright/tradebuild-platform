@@ -388,7 +388,7 @@ On Error GoTo Err
 Dim lExec As Execution: Set lExec = pOrderContext.NewExecution(True)
 lExec.GroupName = pOrderContext.GroupName
 lExec.RecoveryContextName = pOrderContext.RecoveryContextName
-lExec.Quantity = Abs(pBracketOrder.Size)
+lExec.Quantity = CreateBoxedDecimal(Abs(pBracketOrder.Size))
 If pBracketOrder.Size > 0 Then
     lExec.Action = OrderActionSell
 Else
@@ -433,7 +433,7 @@ Static i As Long
 i = i + 1
 lExec.Id = lExec.Id & "{" & i & "}"
 
-lExec.Quantity = Abs(pBracketOrder.Size)
+lExec.Quantity = CreateBoxedDecimal(Abs(pBracketOrder.Size))
 If pBracketOrder.Size > 0 Then
     lExec.Action = OrderActionSell
 Else

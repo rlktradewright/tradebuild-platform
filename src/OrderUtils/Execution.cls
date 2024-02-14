@@ -402,7 +402,12 @@ With pExecReport
     setFieldValue mSecurityName, .SecurityName
     setFieldValue mFillingExchange, .FillingExchange
     setFieldValue mAction, .Action
-    setFieldValue mQuantity, .Quantity
+    
+    If mQuantity.NE(.Quantity) Then
+        Set mQuantity = .Quantity
+        mIsDirty = True
+    End If
+    
     setFieldValue mPrice, .Price
     setFieldValue mBrokerId, .BrokerId
     setFieldValue mOrderId, .OrderId

@@ -188,14 +188,12 @@ Public Property Get ActiveSize() As BoxedDecimal
 Const ProcName As String = "ActiveSize"
 On Error GoTo Err
 
-Dim lSize As Variant
+Set ActiveSize = DecimalZero
 
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    lSize = lSize + lBracketOrder.Size
+    Set ActiveSize = ActiveSize.Add(lBracketOrder.Size)
 Next
-
-Set ActiveSize = CreateBoxedDecimal(lSize)
 
 Exit Property
 
@@ -369,7 +367,7 @@ Public Property Get IsSimulated() As Boolean
 IsSimulated = mIsSimulated
 End Property
 
-Friend Property Get Name() As String
+Public Property Get Name() As String
 Name = mName
 End Property
 
@@ -389,14 +387,15 @@ Public Property Get PendingBuySize() As BoxedDecimal
 Const ProcName As String = "PendingBuySize"
 On Error GoTo Err
 
-Dim lSize As Variant
+Dim lSize As BoxedDecimal
+Set lSize = DecimalZero
 
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    If lBracketOrder.LongPosition Then lSize = lSize + lBracketOrder.PendingSize
+    If lBracketOrder.LongPosition Then Set lSize = lSize.Add(lBracketOrder.PendingSize)
 Next
 
-Set PendingBuySize = CreateBoxedDecimal(lSize)
+Set PendingBuySize = lSize
 
 Exit Property
 
@@ -1028,6 +1027,7 @@ gLogBracketOrderMessage "Execute bracket order: " & vbCrLf & _
 If pAddToActiveBracketOrders Then
     If Not mActiveBracketOrders.Contains(pBracketOrder) Then
         mActiveBracketOrders.Add pBracketOrder
+        gLog "Order context " & mName & ": active orders count: " & mActiveBracketOrders.Count, ProcName, ModuleName, , LogLevelDetail
     End If
 End If
 
@@ -1544,7 +1544,10 @@ Friend Function NotifyBracketOrderClosed( _
 Const ProcName As String = "NotifyBracketOrderClosed"
 On Error GoTo Err
 
-If mActiveBracketOrders.Contains(pBracketOrder) Then mActiveBracketOrders.Remove pBracketOrder
+If mActiveBracketOrders.Contains(pBracketOrder) Then
+    mActiveBracketOrders.Remove pBracketOrder
+    gLog "Order context " & mName & ": active orders count: " & mActiveBracketOrders.Count, ProcName, ModuleName, , LogLevelDetail
+End If
 
 If Not mClosedBracketOrders.Contains(pBracketOrder.Key) Then
     mClosedBracketOrders.Add pBracketOrder

@@ -82,8 +82,8 @@ Private mEndTime                                    As Date
 
 Private mPreventUnprotectedPosition                 As Boolean
 
-Private mCumBuyPrice                                As Double
-Private mCumSellPrice                               As Double
+Private mCumBuyPrice                                As BoxedDecimal
+Private mCumSellPrice                               As BoxedDecimal
 
 Private mPeggedOrdersProcessed                      As Boolean
 
@@ -102,6 +102,8 @@ Private mCloseoutSpecifier                          As CloseoutSpecifier
 
 Private Sub Class_Initialize()
 mLotSize = 1
+Set mCumBuyPrice = DecimalZero
+Set mCumSellPrice = DecimalZero
 Set mSize = DecimalZero
 End Sub
 
@@ -208,26 +210,26 @@ Public Property Get CreationTime() As Date
 CreationTime = mCreationTime
 End Property
 
-Public Property Let CumBuyPrice(ByVal Value As Double)
-If mCumBuyPrice = Value Then Exit Property
+Public Property Let CumBuyPrice(ByVal Value As BoxedDecimal)
+If mCumBuyPrice.EQ(Value) Then Exit Property
 setDirty
-mCumBuyPrice = Value
+Set mCumBuyPrice = Value
 mDiff.SetProperty "CumBuyPrice", Value
 End Property
 
-Public Property Get CumBuyPrice() As Double
-CumBuyPrice = mCumBuyPrice
+Public Property Get CumBuyPrice() As BoxedDecimal
+Set CumBuyPrice = mCumBuyPrice
 End Property
 
-Public Property Let CumSellPrice(ByVal Value As Double)
-If mCumSellPrice = Value Then Exit Property
+Public Property Let CumSellPrice(ByVal Value As BoxedDecimal)
+If mCumSellPrice.EQ(Value) Then Exit Property
 setDirty
-mCumSellPrice = Value
+Set mCumSellPrice = Value
 mDiff.SetProperty "CumSellPrice", Value
 End Property
 
-Public Property Get CumSellPrice() As Double
-CumSellPrice = mCumSellPrice
+Public Property Get CumSellPrice() As BoxedDecimal
+Set CumSellPrice = mCumSellPrice
 End Property
 
 Public Property Let Description(ByVal Value As String)
