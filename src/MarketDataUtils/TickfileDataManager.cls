@@ -77,6 +77,8 @@ Private Function IMarketDataFactory_CreateMarketDataStream(ByVal pContractFuture
 Const ProcName As String = "IMarketDataFactory_CreateMarketDataStream"
 On Error GoTo Err
 
+gLogger.Log "Retrieving tick stream for contract future: " & GetObjectKey(pContractFuture), ProcName, ModuleName
+
 Dim lStream As ITickStream
 Set lStream = mTickStreams.Item(GetObjectKey(pContractFuture))
 
@@ -372,12 +374,14 @@ If pPlaySequentially Then
     mReplayController.SequentialTickFileSpecifiers = pTickfileSpecifiers
     Set lTickStream = mReplayController.TickStream(0)
     lTickStream.AddStateChangeListener Me
+    gLogger.Log "Add tick stream for contract future: " & GetObjectKey(lTickStream.ContractFuture), ProcName, ModuleName
     mTickStreams.Add lTickStream, GetObjectKey(lTickStream.ContractFuture)
 Else
     mReplayController.TickFileSpecifiers = pTickfileSpecifiers
     Dim i As Long
     For i = 1 To pTickfileSpecifiers.Count
         Set lTickStream = mReplayController.TickStream(i - 1)
+        gLogger.Log "Add tick stream for contract future: " & GetObjectKey(lTickStream.ContractFuture), ProcName, ModuleName
         mTickStreams.Add lTickStream, GetObjectKey(lTickStream.ContractFuture)
     Next
 End If

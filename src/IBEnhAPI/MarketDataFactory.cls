@@ -185,7 +185,15 @@ Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTi
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pValue As Double)
+Const ProcName As String = "IMarketDataConsumer_NotifyTickGeneric"
+On Error GoTo Err
 
+mMarketDataTable(getIndexFromTickerId(pTickerId)).DataHasBeenReceived = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickOptionComputation( _
@@ -414,7 +422,15 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickString(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pValue As String)
+Const ProcName As String = "IMarketDataConsumer_NotifyTickString"
+On Error GoTo Err
 
+mMarketDataTable(getIndexFromTickerId(pTickerId)).DataHasBeenReceived = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

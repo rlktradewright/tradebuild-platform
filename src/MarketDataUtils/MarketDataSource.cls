@@ -1393,7 +1393,7 @@ If mContractFuture.IsAvailable And pClockFuture.IsAvailable Then
     gLogger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mClockFutureBuilder.Value = pClockFuture.Value
     mClockFutureBuilder.Complete
-    If Not processContractAvailable Then Exit Sub
+    processContractAvailable
     If pStudyManagerFuture Is Nothing Then
         setReady
     Else
@@ -1821,7 +1821,12 @@ If mNeedClock And Not mGotClock Then Exit Function
 If mNeedContract And Not mGotContract Then Exit Function
 If mNeedStudyManager And Not mGotStudyManager Then Exit Function
 If State = MarketDataSourceStateError Then Exit Function
-checkReady = True
+If IsContractExpired(mContractFuture.Value, mClockFutureBuilder.Future.Value) Then
+    SetError ErrorCodes.ErrIllegalStateException, "Contract has expired"
+    checkReady = False
+Else
+    checkReady = True
+End If
 End Function
 
 Private Function DataSourceBase() As DataSourceBase
@@ -1857,7 +1862,7 @@ Private Function getMarketDataManager() As MarketDataManager
 Set getMarketDataManager = mMarketDataManagerRef.Target
 End Function
 
-Private Function processContractAvailable() As Boolean
+Private Sub processContractAvailable()
 Const ProcName As String = "processContractAvailable"
 On Error GoTo Err
 
@@ -1879,18 +1884,11 @@ mStreamId = DataSourceBase.StreamId
 mSessionFutureBuilder.Value = DataSourceBase.Session
 mSessionFutureBuilder.Complete
 
-If IsContractExpired(lContract) And Not IsTickReplay Then
-    SetError ErrorCodes.ErrIllegalStateException, "Contract has expired"
-    processContractAvailable = False
-Else
-    processContractAvailable = True
-End If
-
-Exit Function
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Private Sub setReady()
 Const ProcName As String = "setReady"
