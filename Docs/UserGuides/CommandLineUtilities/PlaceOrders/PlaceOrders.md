@@ -2,9 +2,9 @@
 
 ## 1. Introduction
 
-The PlaceOrders program is a Windows command-line utility that provides a means
-for submitting orders to Interactive Brokers' Trader Workstation (TWS) or
-Gateway via IBKR's API, without the need for programming.
+The PlaceOrders program (plord27.exe) is a Windows command-line utility that
+provides a means for submitting orders to Interactive Brokers' Trader
+Workstation (TWS) or Gateway via IBKR's API, without the need for programming.
 
 It can be used interactively, where the user manually types in the order
 specifications. Alternatively, order specifications can be written to files
@@ -44,23 +44,39 @@ the task of getting it started. This file can be found in the folder at:
 
 `C:\TradeBuild Platform 2.7\PlaceOrders`
 
-blah blah blah
+This command file contains notes that describe how the various settings should
+be configured.
 
 #### Interactive Usage
 
-blah blah blah
+In this mode, you must type commands directly into the program window.
 
-#### FileAutoReader Program Usage
+To use the program interactively, run the `RunPlaceOrders.bat` command file
+with a parameter of /I.
 
-blah blah blah
+#### Non-Interactive Usage
+
+In this mode, commands are read from text files placed in a folder nominated
+in the `RunPlaceOrders.bat` command file. A separate program called
+FileAutoReader.exe monitors this folder, and whenever a new file is moved,
+copied or saved into it, FileAutoReader.exe detects it and pipes the contents
+through to plord27.exe, which executes them.
+
+These order files can be created by any program that needs to submit orders to
+TWS/Gateway and can generate the required syntax.
+
+To use the program non-interactively, run the `RunPlaceOrders.bat` command file
+with no parameters.
 
 #### Excel Usage
 
-blah blah blah
+There is a sample Excel worksheet that shows how order files can be created for
+submission to plord.exe. This worksheet is currently out-of-date with regard
+to order file syntax, and therefore doesn't currently work reliably.
 
 #### API Usage
 
-blah blah blah
+To be supplied.
 
 ## 2. Commands
 
@@ -107,7 +123,7 @@ BUY 1 STPLMT 3114.25 3114.00 /TIF:DAY /IGNORERTH
 
 BUY 1 STPLMT /TIF:DAY /IGNORERTH 3114.25 3114.00
 
-BUY /TIF:DAY 1 STPLMT 3114.25 /IGNORERTH 3114.00
+BUY /IGNORERTH 1 STPLMT 3114.25 /TIF:DAY 3114.00
 
 ###  List of commands
 
@@ -121,6 +137,7 @@ The following is a summary of all the commands currently defined:
 |  BRACKET      | Starts a bracket order specification                         |
 |  BUY          | Specifies a single buy order                                 |
 |  B            | Repeats the previous BUY command                             |
+|  CANCEL       | Cancels a command                                            |
 |  CLOSEOUT     | Closes all positions in one or all groups                    |
 |  CONTRACT     | Specifies a contract, which becomes the current contract in the current group |
 |  ENDBRACKET   | Ends a bracket order specification                           |
@@ -129,7 +146,8 @@ The following is a summary of all the commands currently defined:
 |  EXIT         | Ends the session and terminates the program                  |
 |  GROUP        | Defines a new group or switches to an existing group         |
 |  HELP         | Outputs the syntax summary                                   |
-|  LIST         | List current groups, positions or trades                     |
+|  LIST         | List current groups, position, trades, or orders             |
+|  MODIFY or M  | Modifies an order specifcation                               |
 |  PURGE        | Removes all knowledge of a group, without affecting any orders that have been defined and submitted in that group |
 |  QUIT         | Aborts the current bracket order definition                  |
 |  QUOTE        | Displays bid, ask and last prices and sizes for the current or a specified contract |
@@ -137,82 +155,194 @@ The following is a summary of all the commands currently defined:
 |  ROLLOVER     | Specifies that a futures, option or futures option position established by a bracket order is to be automatically rolled over to the next contract expiry |
 |  SELL         | Specifies a single sell order                                |
 |  S            | Repeats the previous SELL command                            |
+|  SETBALANCE   | Specifies the IBKR account value that is to be taken as the fixed account value |
+|  SETFUNDS     | Specifies the currency amount to be used for all groups as the basis for order sizing by percentage |
+|  SETGROUPFUNDS | Specifies the currency amount to be used in the current group as the basis for order sizing by percentage |
+|  SETGROUPROLLOVER | Defines the default rollover parameters per group       |
+|  SETROLLOVER  | Defines the default rollover parameters for all groups      |
+|  SHOWBALANCE  | Displays the current account balance                        |
 |  STAGEORDERS  | Specifies that orders are to be sent to TWS but not transmitted to the broker for execution (manual intervention in TWS is required) |
 |  STOPLOSS     | Specifies the stop-loss order of a bracket order             |
-|  TARGET       | Specifies the target order of a bracket order                |
+|  TARGET       | Specifies the target order (often called a take-profit order) of a bracket order                |
 
 ## 3. Contracts
 
-A contract specification defines a specific security for which you can place
+A contract specification identifies a specific security for which you can place
 orders.
 
 You use the CONTRACT command to specify a contract. This can take two forms:
 
 * Full contract specification: this contains a number of tagged arguments that
-  define various characteristics of the desired contract
+  define various characteristics of the desired contract.
 
-* Abbreviated contract specification: this uses just the 'local symbol' of the
-  contract and (if need be) the relevant exchange
+* Abbreviated contract specification: this is a more compact form of contract
+  specification where the CONTRACT command has a single argument consisting of
+  multiple parts separated by special syntax. This is generally the preferred
+  form because it is less to type and more readable: however for some contract
+  specifications the tagged form may be preferable because it makes the various
+  parts easier to identify.
+
+In both full and abbreviated cases, the same aspects of the contract
+specification can be defined, but the representation differs. For a full
+contract specification, each part is idenfied by a tag and its value. For an
+abbreviated contract specification, special syntax is used to delimit the
+various parts within the overall specification string.
+
+The following two examples specify the same contract:
+
+```
+  FULL FORM
+  contract /sectype:fut /symbol:es /expiry:202403 /exchange:cme
+
+  ABBREVIATED FORM
+  contract fut:es(202403)@cme
+```
 
 When a contract is specified in an interactive session, its local name and
-exchange are subsequently included in the command prompt.
+exchange are subsequently included in the command prompt. This helps remind the
+user of the current contract. This contract then remains current until a
+different contract is specified for the current group.
 
-A CONTRACT command only applies to the current group (see [Groups](Groups)).
-If the same contract is to be used in another group, another CONTRACT command
-must be issued after switching to that group (or in the GROUP command itself).
+A CONTRACT command applies to the current group (see [Groups](#Groups)). If the
+same contract is to be used in another group, another CONTRACT command must be
+issued after switching to that group (or in the GROUP command itself).Switching
+to another group that has a current contract specified makes that contract
+current.
+
+### Contract Specification Parts
+
+A contract specification consists of multiple parts which together uniquely
+identify the required contract.  Depending on the contract, it may not be
+necessary to provide all the parts to determine the contract, and this means
+that there may be a number of different ways to specify a particular contract.
+Which to use depends on the information available.
+
+In a full contract specification, each part has a different tag, and the parts
+may be in any order. For more details on full contract specifications see [Full Contract Specification](#full-contract-specification).
+
+In an abbreviated contract specification, the parts each have some additional
+syntax, which delimits the relevant value. The parts must be in a defined
+order, though unneeded parts must be omitted. For more details on abbreviated
+contract specifications see [Abbreviated Contract Specification](#abbreviated-contract-specification).
+
+In both cases, these parts are as follows:
+
+* Local symbol: a broker's identifier for a contract. In most cases this is
+  sufficient to uniquely identify the contract, but there are exceptions to
+  this, and the actual values are not always well-known. Note that a local
+  symbol does not imply any particular exchange, so it is normally necessary
+  to include an exchange when specifying a contract for an order.
+
+* Security type: must be one of  
+
+  STK  (stock)  
+  FUT  (future)  
+  OPT  (option)  
+  FOP  (future option)  
+  CASH  (forex)  
+  IND  (index - not tradeable)  
+  WAR (warrant - not supported for trading)
+
+* Symbol: the official underlying symbol at the relevant exchange
+
+* Trading class: a qualifier that distinnguishes between contracts that have
+  the same symbol but different characteristics(for example weekly expiration
+  rather than monthly). It is rare to need to use this property
+
+* Option right: CALL or PUT for options
+
+* Option strike: strike price
+
+* Expiry: expiry date for a future or option. The syntax permits both explicit
+  expiry dates and implicit expiries relative to the front expiry (in the
+  latter case the actual expiry date need not be known, and the system will
+  determine it)
+
+* Exchange: the name of the exchange where the contract is to be traded. Note
+  many contracts are traded at more than one exchange, so that it is almost
+  always necessary to specify the required one
+
+* Currency: the currency in which the contract is to be traded. This is usually
+  only useful when the exchange has been specified as SMART, and the contract
+  can be  traded via more than one SMART venue (eg US, Europe, Canada): the
+  currency then indicates which SMART venue the order is to be routed to
+
+* Multiplier: a value used to convert the traded price into a monetary value.
+  This may be used to distinguish between contracts that have the same symbol
+  but different values per tick. For example the DAX futures have multipliers
+  of 25, 5 or 1: note however that these particular contracts can also be 
+  distinguished by their different trading classes.
+
+Notes:
+
+1. For futures and futures options contracts, the local symbol alone is
+  often (but by no means always) sufficient to identify the contract, so the
+  exchange need not be supplied. Examples include the FTSE 100 futures on
+  ICEEU and the DAX futures on Eurex.
+
+2. For stocks that are traded on multiple exchanges, the exchange is always
+  required.
+
+3. For options, the exchange is always required.
+
+4. Local symbols can be found from the Symbol column in TWS ticker pages.
+ Alternatively use the
+[Contract Inspector](https://github.com/tradewright/ibapi-tools/blob/master/ContractInspector/readme.md).
+
 
 ###  Full Contract Specification
 
-The full contract specification can contain the tagged arguments listed in
-the [CONTRACT command specification](contract-command). Note that it is only
+The full contract specification uses a set of tagged values to specify the
+required contract's attributes. It can  the tagged arguments listed in the
+[CONTRACT command specification](#contract-command). Note that it is only
 necessary to specify sufficient attributes to uniquely identify the contract.
+
+The examples below include the SECTYPE tag. In fact this is rarely needed
+because there are enough contextual clues in the rest of the specification for
+the program to work out the sectype for itself. However specifying the sectype
+can significantly improve the speed of determining the required contract.
 
 Examples:
 
-CONTRACT /SYMBOL:ES /SECTYPE:FUT /EXPIRY:201912 /EXCHANGE:GLOBEX
+CONTRACT /SYMBOL:ES /SECTYPE:FUT /EXPIRY:202406 /EXCHANGE:GLOBEX
 
-CONTRACT /SYMBOL:ES /SECTYPE:FOP /EXPIRY:20191220 /STRIKE:3100 /RIGHT:C
+CONTRACT /SYMBOL:ES /SECTYPE:FOP /EXPIRY:20240311 /STRIKE:5100 /RIGHT:C
 
 CONTRACT /SYMBOL:MSFT /EXCHANGE:SMARTUS
 
-CONTRACT /SYMBOL:DAX /SECTYPE:FUT /EXPIRY:201912 /MULTIPLIER:5
+CONTRACT /SYMBOL:DAX /SECTYPE:FUT /EXPIRY:202403 /MULTIPLIER:5
 
-CONTRACT /SYMBOL:DAX /SECTYPE:FUT /EXPIRY:201912 /MULTIPLIER:25
+CONTRACT /SYMBOL:DAX /SECTYPE:FUT /EXPIRY:202403 /MULTIPLIER:25
 
-CONTRACT /SYMBOL:MSFT /SECTYPE:OPT /EXCHANGE:CBOE /EXPIRY:1 /STRIKE:160 /RIGHT:C
+CONTRACT /SYMBOL:DAX /SECTYPE:FUT /EXPIRY:202403 /MULTIPLIER:1
+
+CONTRACT /SYMBOL:MSFT /SECTYPE:OPT /EXCHANGE:CBOE /EXPIRY:1 /STRIKE:395 /RIGHT:C
 
 ###  Abbreviated Contract Specification
 
-The abbreviated contract specification uses IBKR's local symbol for the
-contract, and where necessary the exchange. The two items are separated by an
-'@' character, which is omitted if the exchange is not supplied.
+The abbreviated contract specification uses special syntax to encapsulate the
+required contract's attributes into a single string.
 
-* For futures and futures options contracts, the local symbol alone is
-  sufficient to identify the contract, so the exchange need not be supplied.
+#### Syntax Specification
 
-* For stocks that are traded on multiple exchanges, the exchange is always
-  required.
-
-* For options, the exchange is always required.
-
-Note that local symbols can be found from the Symbol column in TWS ticker
-pages. Alternatively use the
-[Contract Inspector](https://github.com/tradewright/ibapi-tools/blob/master/ContractInspector/readme.md).
+???To be supplied???
 
 Examples (these are equivalent to the corresponding full contract
 specification examples above):
 
-CONTRACT ESZ9
+CONTRACT FUR:ESM4@CME
 
-CONTRACT "ESZ9 C3100"
+CONTRACT E2AH4C5100
 
-CONTRACT MSFT@SMARTUS
+CONTRACT STK:MSFT@SMARTUS
 
-CONTRACT "FDXM DEC 19"
+CONTRACT "FDXM MAR 24"
 
-CONTRACT "FDAX DEC 19"
+CONTRACT "FDAX MAR 24"
 
-CONTRACT "MSFT  191213C00150000@CBOE"
+CONTRACT "FDXS 20240315 M"
+
+CONTRACT "OPT:MSFT 240301C00395000@CBOE"
 
 ## 4. Groups
 
@@ -273,6 +403,10 @@ a particular group relating to actual executions for a particular contract. Note
 that within a group you can place any number of orders for the same contract at
 different times: the position at any time is the total number taking account of
 all fills so far for all those orders.
+
+It is perfectly allowable to have positions in the same contract in different
+groups at the same time; also to have simultaneous positions in different
+contracts in the same group.
 
 A pending position is the overall number of shares, options, futures or currency
 within a particular group relating to orders for a particular contract that have
@@ -518,11 +652,10 @@ Tagged arguments: None
 
 Starts a bracket order specification.
 
-The bracket order specification is terminated with an [ENDBRACKET](ENDBRACKET) command, and
-there must be at least an [ENTRY](ENTRY) command before the ENDBRACKET command.
+The bracket order specification is terminated with an [ENDBRACKET](#endbracket-command) command, and there must be at least an [ENTRY](#entry-command) command before the
+ENDBRACKET command.
 
-The bracket order specification may also include [STOPLOSS](STOPLOSS) and/or [TARGET](TARGET)
-commands.
+The bracket order specification may also include [STOPLOSS](#stoploss-command) and/or [TARGET](#target-command) commands.
 
 Syntax summary:
 
@@ -554,7 +687,7 @@ Tagged arguments:
 <br/><br/>
 ### BUY Command
 
-Specifies a single buy order. The order specification is processed immediately, regardless of whether bracket order batching has been set ON with the [BATCHORDERS](BATCHORDERS]) command.
+Specifies a single buy order. The order specification is processed immediately, regardless of whether bracket order batching has been set ON with the [BATCHORDERS](#batchorders-command]) command.
 
 This command has two forms:
 
@@ -577,7 +710,7 @@ Positional aruments (form 1):
 
 | Position | Permitted&nbsp;values | Meaning                                      |
 | -------- | ---------------- | -------------------------------------------- |
-| 0        | \<contractspec\> | The contract to be bought or sold. This must be an [abbreviated contract specification](abbreviated-contract-specification). This contract becomes the current contract for the current group
+| 0        | \<contractspec\> | The contract to be bought or sold. This must be an [abbreviated contract specification](#abbreviated-contract-specification). This contract becomes the current contract for the current group
 | 1        | integer > 0      | The quantity to be bought or sold            |
 | 2        | LMT              | The type of order to use.                    |
 |          | LIT              |                                              |
@@ -764,12 +897,11 @@ Specifies a contract, which becomes the current contract in the current group.
 
 This command has two forms:
 
-* full contract specification: this form explicitly specifies the
-  characteristics of the desired contract
+* full contract specification: this form specifies the characteristics of the
+ desired contract as a set of tagged values
 
-* abbreviated contract specification: this form makes use of broker-dependent
-  contract names, where necessary together with an exchange name, that
-  uniquely identify a contract
+* abbreviated contract specification: this uses a compact syntax to specify the
+  characteristics of the desired contract as a single string
 
 Syntax summary:
 
@@ -779,8 +911,9 @@ CONTRACT \<attribute\> [\<attribute\>...]
 
 Form 2:
 
-CONTRACT \<contractspec\>]
+CONTRACT \<contractspec\>
 
+<br/><br/>
 Positional aruments (form 1): None
 
 Tagged arguments (form 1):
@@ -789,12 +922,12 @@ Tagged arguments (form 1):
 | ------------- | ---------------- | -------------------------------------------- |
 | /curr[ency]   | \<currency\>     | The currency in which the contract is traded |
 | /exch[ange]   | \<exchange\>     | The exchange at which the contract is traded |
-| /exp[iry]     | yyyymm           | The expiry date for the contract: see [Contract Expiry](Contract-Expiry) |
+| /exp[iry]     | yyyymm           | The expiry date for the contract: see [Contract Expiry Format](#contract-expiry-format) below |
 |               | yymmdd           |                                              |
 |               | INTEGER[0..10]   |                                              |
 | /local[symbol]| IDENTIFIER       | The broker's name for the contract           |
-| /mult[iplier] | INTEGER[0..1000] | The factor used to convert prices into monetary values The factor used to convert prices into monetary values |
-| /right        | C \| P           | Call or put                                  |
+| /mult[iplier] | INTEGER[0..1000] | The factor used to convert prices into monetary values |
+| /right        | C[ALL] \| P[UT]  | Call or put                                  |
 | /sec[type]    | CASH             | The security type                            |
 |               | FOP              |                                              |
 |               | FUT              |                                              |
@@ -802,15 +935,21 @@ Tagged arguments (form 1):
 |               | STK              |                                              |
 | /str[ike]     | DOUBLE           | Strike price                                 |
 | /symb[ol]     | IDENTIFIER       | The underlying symbol for the contract       |
+| /tradingclass | IDENTIFIER       | The trading class for the contract           |
 
+<br/><br/>
 Positional arguments (form 2):
 
 | Position | Permitted&nbsp;values | Meaning                                 |
 | -------- | ---------------- | -------------------------------------------- |
-| 0        | \<contractspec\> | Specifies the contract by means of the broker's local symbol and, if need be, the exchange where it is traded |
+| 0        | \<contractspec\> | Specifies the contract using the [abbreviated contract specifcation syntax](#abbreviated-contract-specification)  |
 
 Tagged arguments (form 2): None
 
+<br/><br/>
+#### Contract Expiry Format
+
+A contract expiry date can be specified either as an actual date, or as an expiry relative
 <br/><br/>
 ### ENDBRACKET Command
 
