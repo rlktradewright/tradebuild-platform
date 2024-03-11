@@ -148,7 +148,7 @@ set PIPELINE=
 ::   the output to the GBD27 program to download historical bars for the
 ::   contracts returned by the scan(s).
 ::
-::   Note that the ECHO command in GSD72 can be used to run commands in the
+::   Note that the ECHO command in GSD27 can be used to run commands in the
 ::   target program: in the case of the target program being GBD27, the ECHO
 ::   command could be used to set the required timefrae, start and end times,
 ::   number of bars, and so on.

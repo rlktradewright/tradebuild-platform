@@ -208,7 +208,7 @@ Private Sub mSocketHandler_Connected()
 Const ProcName As String = "mSocketHandler_Connected"
 On Error GoTo Err
 
-Set mConnectionEstablishedTLI = GetGlobalTimerList.add(Nothing, 30, ExpiryTimeUnitSeconds)
+Set mConnectionEstablishedTLI = GetGlobalTimerList.Add(Nothing, 30, ExpiryTimeUnitSeconds)
 mInMessageHandler.Reset
 
 mConnectionNegotiator.NegotiateApiConnection
@@ -1053,7 +1053,7 @@ With pOrder
     mWriter.AddBoolean .Hidden, "Hidden"
 
     ' send contract combo legs for BAG requests
-    If pContractSpec.Sectype = TwsSecTypeCombo Then
+    If pContractSpec.SecType = TwsSecTypeCombo Then
         With pContractSpec
             If .ComboLegs.Count = 0 Then
                 mWriter.AddLong 0, "Combo legs count"
@@ -1456,7 +1456,7 @@ On Error GoTo Err
 Const VERSION = 8
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument pContractSpec.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument pContractSpec.SecType <> TwsSecTypeCombo, "Combo contracts are not supported"
 
 Dim lApiId As Long
 lApiId = GIdManager.GetTwsId(pRequestId, IdTypeContractData)
@@ -1537,7 +1537,7 @@ With theFilter
         mWriter.AddString IIf(.Time <> MaxDate, Format(lFromTime, "yyyymmdd hh\:nn\:ss") & .Timezone, ""), "Fill Time"
     End If
     mWriter.AddString .Symbol, UCase$("Symbol")
-    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString gTwsSecTypeToShortString(.SecType), "Sec type"
     mWriter.AddString .Exchange, "Exchange"
     mWriter.AddString gTwsOrderActionToString(.Action), "Action"
 End With
@@ -1589,7 +1589,7 @@ mWriter.AddLong pReqId, "ReqId"
 
 mWriter.AddString pContractSpec.ConId, "ConId"
 mWriter.AddString pContractSpec.Symbol, "Symbol"
-mWriter.AddString gTwsSecTypeToShortString(pContractSpec.Sectype), "SecType"
+mWriter.AddString gTwsSecTypeToShortString(pContractSpec.SecType), "SecType"
 mWriter.AddString pContractSpec.Exchange, "Exchange"
 mWriter.AddString pContractSpec.PrimaryExch, "PrimaryExch"
 mWriter.AddString pContractSpec.CurrencyCode, "Currency"
@@ -1664,7 +1664,7 @@ mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
-If pRequest.ContractSpec.Sectype = TwsSecTypeCombo Then
+If pRequest.ContractSpec.SecType = TwsSecTypeCombo Then
     mWriter.AddLong pRequest.ContractSpec.ComboLegs.Count, "Combo legs count"
     Dim lComboLeg As TwsComboLeg
     Dim i As Long
@@ -1737,7 +1737,7 @@ mWriter.AddLong lApiId, "Ticker id"
 mWriter.AddContract pContractSpec
 With pContractSpec
     ' Add combo legs for BAG requests
-    If .Sectype = TwsSecTypes.TwsSecTypeCombo Then
+    If .SecType = TwsSecTypes.TwsSecTypeCombo Then
         mWriter.AddString .ComboLegs.Count, "Combolegs count"
         Dim comboLeg As TwsComboLeg
         Dim i As Long
@@ -2121,7 +2121,7 @@ Private Sub startPerformanceTLIPeriod()
 Const ProcName As String = "startPerformanceTLIPeriod"
 On Error GoTo Err
 
-Set mPerformanceTLIPeriod = GetGlobalTimerList.add(Nothing, _
+Set mPerformanceTLIPeriod = GetGlobalTimerList.Add(Nothing, _
                                         CDate(Int((GetTimestamp + OneMinute + OneSecond) / OneMinute) * OneMinute), _
                                         ExpiryTimeUnitDateTime)
 Exit Sub
@@ -2134,7 +2134,7 @@ Private Sub startPerformanceTLISecond()
 Const ProcName As String = "startPerformanceTLISecond"
 On Error GoTo Err
 
-Set mPerformanceTLISecond = GetGlobalTimerList.add(Nothing, _
+Set mPerformanceTLISecond = GetGlobalTimerList.Add(Nothing, _
                                         CDate(Int((GetTimestamp + 2 * OneSecond) / OneSecond) * OneSecond), _
                                         ExpiryTimeUnitDateTime)
     
