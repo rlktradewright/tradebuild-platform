@@ -79,12 +79,15 @@ Dim lMapEntry As OrderIdMapEntry
 Set lMapEntry.Order = pOrder
 Set lMapEntry.OrderSubmitter = pOrderSubmitter
 lMapEntry.ParentId = pParentId
-mOrders.Add lMapEntry, generateTwsOrderKey(pOrder.BrokerId, pClientId)
+Dim lKey As String: lKey = generateTwsOrderKey(pOrder.BrokerId, pClientId)
+
+If Not mOrders.Contains(lKey) Then
+    mOrders.Add lMapEntry, lKey
+End If
 
 Exit Sub
 
 Err:
-If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
