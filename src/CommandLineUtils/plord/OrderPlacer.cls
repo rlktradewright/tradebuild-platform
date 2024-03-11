@@ -84,7 +84,7 @@ Case OrderContextChangeTypes.OrderContextReadyStateChanged
     If Not isReadyForOrder Then
         If Not sPendingMessageLogged Then
             sPendingMessageLogged = True
-            gWriteLineToConsole mBracketOrderSpec.ID & ": Order is pending: " & mOrderContextEv.NotReadyMessage, True
+            LogMessage mBracketOrderSpec.ID & ": Order is pending: " & mOrderContextEv.NotReadyMessage
         End If
         Exit Sub
     End If
@@ -113,9 +113,12 @@ End Sub
 
 Friend Sub Cancel( _
                 ByVal pReason As String)
-mGroupResources.OrderPlacers.Remove Me
+If mGroupResources.OrderPlacers.Contains(Me) Then mGroupResources.OrderPlacers.Remove Me
 Set mGroupResources = Nothing
 gPlaceOrdersTask.RemoveOrderPlacer Me
+Set mOrderContext = Nothing
+Set mOrderContextEv = Nothing
+
 gWriteLineToConsole mBracketOrderSpec.ID & ": Order cancelled: " & pReason
 End Sub
 
@@ -147,36 +150,228 @@ On Error GoTo Err
 
 Static sAttempts As Long
 
-Dim lPrefix As String: lPrefix = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " " & _
-                                mBracketOrderSpec.ID & ": "
-
+Dim s As String
 If sAttempts = 0 Then
-    LogMessage _
-                lPrefix & "TIME " & _
-                FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), _
-                                TimestampDateAndTimeISO8601)
-    LogMessage lPrefix & contractSpecToString
-    LogMessage lPrefix & mBracketOrderSpec.ToString
+    s = contractSpecToString & vbCrLf & mBracketOrderSpec.ToString
+    LogMessage s
 End If
 sAttempts = sAttempts + 1
 
 If Not isReadyForOrder Then
     Set mOrderContextEv = mOrderContext
-    gWriteLineToConsole lPrefix & "Order is pending: " & mOrderContext.NotReadyMessage
+    LogMessage mBracketOrderSpec.ID & ": Order is pending: " & mOrderContext.NotReadyMessage
     Exit Function
 End If
 
-If sAttempts > 1 Then
-    gWriteLineToConsole lPrefix & "Provider is now ready"
-    LogMessage _
-                lPrefix & "TIME " & _
-                FormatTimestamp(mTimezone.ConvertDateLocalToTz(GetTimestamp), _
-                                TimestampDateAndTimeISO8601)
-    LogMessage lPrefix & contractSpecToString
-    LogMessage lPrefix & mBracketOrderSpec.ToString
+If sAttempts > 1 Then LogMessage mBracketOrderSpec.ID & ": Provider is now ready"
+    
+mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
+
+Dim lBO As BracketOrder
+
+If mBracketOrderSpec.Modify Then
+    Dim lMsg As String
+    Set lBO = modifyOrder(lMsg)
+    If lBO Is Nothing Then
+        gWriteLineToConsole mBracketOrderSpec.ID & ": " & lMsg
+        PlaceOrder = False
+        Exit Function
+    End If
+Else
+    Set lBO = placeNewOrder
 End If
 
-mOrderContext.OrderSubmitter.OrdersAreStaged = mStageOrders
+If lBO.State = BracketOrderStateSubmitted Then CreateBracketProfitCalculator lBO, mOrderContext.DataSource
+gLiveOrders.Item(lBO.Key).Order = lBO
+
+PlaceOrder = True
+
+mGroupResources.OrderPlacers.Remove mBracketOrderSpec.ID
+Set mGroupResources = Nothing
+gPlaceOrdersTask.RemoveOrderPlacer Me
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    gWriteErrorLine Err.Description, ErrorCountIncrementNo
+Else
+    gHandleUnexpectedError ProcName, ModuleName
+End If
+End Function
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Function isReadyForOrder() As Boolean
+isReadyForOrder = False
+With mOrderContext
+    If Not .IsReady Then
+    ElseIf Not .IsReadyTickSize() Then
+    ElseIf Not .IsReadyForAutoSize(mBracketOrderSpec.AutosizeType, _
+                                    mBracketOrderSpec.Contract.Specifier.CurrencyCode) Then
+    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.EntryType) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then
+    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.StopLossType) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossLimitPriceSpec) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossTriggerPriceSpec) Then
+    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.TargetType) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetLimitPriceSpec) Then
+    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetTriggerPriceSpec) Then
+    Else
+        isReadyForOrder = True
+    End If
+End With
+End Function
+
+Private Function contractSpecToString() As String
+Const ProcName As String = "contractSpecToString"
+On Error GoTo Err
+
+Dim s As String
+s = gCommands.ContractCommand.Name & " "
+s = s & mContract.Specifier.ToString
+contractSpecToString = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function modifyOrder(ByRef pMessage As String) As BracketOrder
+Const ProcName As String = "modifyOrder"
+On Error GoTo Err
+
+Dim s As String
+s = mBracketOrderSpec.ID & ": Modifying existing order"
+gWriteLineToConsole s, True, True
+
+Dim lBO As BracketOrder
+Dim lEntry As LiveOrderEntry
+If Not gLiveOrders.TryItem(mBracketOrderSpec.ID, lEntry) Then
+    pMessage = "Order " & mBracketOrderSpec.ID & " not found"
+    Exit Function
+End If
+
+Set lBO = lEntry.Order
+
+With mBracketOrderSpec
+    If lBO.EntryOrder.Status <> OrderStatusFilled And _
+        lBO.EntryOrder.Status <> OrderStatusCancelling And _
+        lBO.EntryOrder.Status <> OrderStatusCancelled _
+    Then
+        If lBO.EntryOrder.OrderType <> .EntryType Then
+            pMessage = "Can't change the entry order type"
+            Exit Function
+        End If
+        lBO.SetNewEntryQuantity .Quantity
+        If .EntryLimitPriceSpec.IsValid Then lBO.SetNewEntryLimitPrice .EntryLimitPriceSpec
+        If .EntryTriggerPriceSpec.IsValid Then lBO.SetNewEntryTriggerPrice .EntryTriggerPriceSpec
+    End If
+    
+    If lBO.StopLossOrder Is Nothing Then
+        If .StopLossType <> OrderTypeNone Or _
+            .StopLossLimitPriceSpec.IsValid Or _
+            .StopLossTriggerPriceSpec.IsValid _
+        Then
+            pMessage = "Can't add a stop-loss order"
+            Exit Function
+        End If
+    ElseIf lBO.StopLossOrder.Status <> OrderStatusCreated And _
+            lBO.StopLossOrder.Status <> OrderStatusSubmitted And _
+            lBO.StopLossOrder.Status <> OrderStatusCancelling _
+    Then
+        ' ignore if not suitable state
+    ElseIf .StopLossType <> lBO.StopLossOrder.OrderType Then
+        pMessage = "Can't change stop-loss order type"
+        Exit Function
+    Else
+        lBO.SetNewStopLossQuantity .Quantity
+        If .StopLossLimitPriceSpec.IsValid Then lBO.SetNewStopLossLimitPrice .StopLossLimitPriceSpec
+        If .StopLossTriggerPriceSpec.IsValid Then lBO.SetNewStopLossTriggerPrice .StopLossTriggerPriceSpec
+    End If
+        
+    If lBO.TargetOrder Is Nothing Then
+        If .TargetType <> OrderTypeNone Or _
+            .TargetLimitPriceSpec.IsValid Or _
+            .TargetTriggerPriceSpec.IsValid _
+        Then
+            pMessage = "Can't add a target order"
+            Exit Function
+        End If
+    ElseIf lBO.TargetOrder.Status <> OrderStatusCreated And _
+            lBO.TargetOrder.Status <> OrderStatusSubmitted And _
+            lBO.TargetOrder.Status <> OrderStatusCancelling _
+    Then
+        ' ignore if not suitable state
+    ElseIf .TargetType <> lBO.TargetOrder.OrderType Then
+        pMessage = "Can't change stop-loss order type"
+        Exit Function
+    Else
+        lBO.SetNewTargetQuantity .Quantity
+        If .TargetLimitPriceSpec.IsValid Then lBO.SetNewTargetLimitPrice .TargetLimitPriceSpec
+        If .TargetTriggerPriceSpec.IsValid Then lBO.SetNewTargetTriggerPrice .TargetTriggerPriceSpec
+    End If
+
+    On Error Resume Next
+    lBO.CancelAfter = .CancelAfter
+    lBO.CancelPrice = .CancelPrice
+    lBO.Description = .Description
+    lBO.EntryOrder.TimeInForce = .EntryTIF
+    lBO.EntryReason = .EntryReason
+    If Not lBO.StopLossOrder Is Nothing Then
+        lBO.StopLossOrder.TimeInForce = .StopLossTIF
+        lBO.StopReason = .StopLossReason
+    End If
+    If Not lBO.TargetOrder Is Nothing Then
+        lBO.TargetOrder.TimeInForce = .TargetTIF
+        lBO.TargetReason = .TargetReason
+    End If
+    If .GoodAfterTime <> 0 Then
+        lBO.EntryOrder.GoodAfterTime = .GoodAfterTime
+        lBO.EntryOrder.GoodAfterTimeTZ = .TimezoneName
+    End If
+    If .GoodTillDate <> 0 Then
+        lBO.EntryOrder.GoodTillDate = .GoodTillDate
+        lBO.EntryOrder.GoodTillDateTZ = .TimezoneName
+    End If
+    
+    If Not .RolloverSpec Is Nothing Then lBO.RolloverSpecification = .RolloverSpec
+    
+    If .AutosizeType <> BracketAutosizeNone Then
+        lBO.AutosizeType = .AutosizeType
+        lBO.AutosizeValue = .AutosizeValue
+        lBO.LotSize = .LotSize
+    End If
+    
+    On Error GoTo Err
+End With
+
+LogMessage mBracketOrderSpec.ID & ": order ready to be updated"
+
+Set modifyOrder = lBO
+lBO.Update
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    pMessage = Err.Description
+    Exit Function
+End If
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function placeNewOrder() As BracketOrder
+Const ProcName As String = "placeNewOrder"
+On Error GoTo Err
+
+Dim s As String
+s = mBracketOrderSpec.ID & ": Placing new order"
+gWriteLineToConsole s, True, True
 
 Dim lBO As BracketOrder
 
@@ -239,85 +434,26 @@ With mBracketOrderSpec
         lBO.EntryOrder.GoodTillDate = .GoodTillDate
         lBO.EntryOrder.GoodTillDateTZ = .TimezoneName
     End If
+    
     If Not .RolloverSpec Is Nothing Then lBO.RolloverSpecification = .RolloverSpec
-End With
-
-gWriteLineToConsole lPrefix & "bracket order ready to be placed"
-
-If mBracketOrderSpec.AutosizeType <> BracketAutosizeNone Then
-    lBO.AutosizeType = mBracketOrderSpec.AutosizeType
-    lBO.AutosizeValue = mBracketOrderSpec.AutosizeValue
-    lBO.LotSize = mBracketOrderSpec.LotSize
-End If
-mOrderContext.ExecuteBracketOrder lBO, True
-If lBO.State = BracketOrderStateSubmitted Then CreateBracketProfitCalculator lBO, mOrderContext.DataSource
-
-PlaceOrder = True
-
-mGroupResources.OrderPlacers.Remove Me
-Set mGroupResources = Nothing
-gPlaceOrdersTask.RemoveOrderPlacer Me
-Exit Function
-
-Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description
-Else
-    gHandleUnexpectedError ProcName, ModuleName
-End If
-End Function
-
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Function isReadyForOrder() As Boolean
-isReadyForOrder = False
-With mOrderContext
-    If Not .IsReady Then
-    ElseIf Not .IsReadyTickSize() Then
-    ElseIf Not .IsReadyForAutoSize(mBracketOrderSpec.AutosizeType, _
-                                    mBracketOrderSpec.Contract.Specifier.CurrencyCode) Then
-    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.EntryType) Then
-    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryLimitPriceSpec) Then
-    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.EntryTriggerPriceSpec) Then
-    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.StopLossType) Then
-    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossLimitPriceSpec) Then
-    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.StopLossTriggerPriceSpec) Then
-    ElseIf Not .IsReadyForOrderType(mBracketOrderSpec.TargetType) Then
-    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetLimitPriceSpec) Then
-    ElseIf Not .IsReadyForPriceSpecifier(mBracketOrderSpec.TargetTriggerPriceSpec) Then
-    Else
-        isReadyForOrder = True
+    
+    If .AutosizeType <> BracketAutosizeNone Then
+        lBO.AutosizeType = .AutosizeType
+        lBO.AutosizeValue = .AutosizeValue
+        lBO.LotSize = .LotSize
     End If
 End With
-End Function
 
-Private Function contractSpecToString() As String
-Const ProcName As String = "contractSpecToString"
-On Error GoTo Err
+LogMessage mBracketOrderSpec.ID & ": order ready to be placed"
 
-Dim s As String
-s = gCommands.ContractCommand.Name & " "
-s = s & gGenerateSwitch(SymbolSwitch, mContract.Specifier.Symbol)
-s = s & gGenerateSwitch(LocalSymbolSwitch, mContract.Specifier.LocalSymbol)
-s = s & gGenerateSwitch(SecTypeSwitch, SecTypeToShortString(mContract.Specifier.SecType))
-s = s & gGenerateSwitch(ExchangeSwitch, mContract.Specifier.Exchange)
-If mContract.Specifier.Expiry <> "" Then s = s & gGenerateSwitch(ExpirySwitch, mContract.Specifier.Expiry)
-s = s & gGenerateSwitch(CurrencySwitch, mContract.Specifier.CurrencyCode)
-If mContract.Specifier.Multiplier <> 1 Then s = s & gGenerateSwitch(MultiplierSwitch, mContract.Specifier.Multiplier)
-If mContract.Specifier.Right <> OptNone Then
-    s = s & gGenerateSwitch(RightSwitch, OptionRightToString(mContract.Specifier.Right))
-    s = s & gGenerateSwitch(StrikeSwitch, mContract.Specifier.Strike)
-End If
-contractSpecToString = s
+mOrderContext.ExecuteBracketOrder lBO, True
+
+Set placeNewOrder = lBO
 
 Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-
 
 

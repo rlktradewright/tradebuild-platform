@@ -158,7 +158,9 @@ Next
 
 mTaskContext.Continue
 
-gWriteLineToConsole gCommands.StageOrdersCommand.Name & " " & IIf(pStageOrders, "YES", "NO")
+If pStageOrders Then
+    gWriteLineToConsole gCommands.StageOrdersCommand.Name & " YES"
+End If
 
 Exit Sub
 
@@ -210,11 +212,17 @@ Private Sub addContractProc( _
 Const ProcName As String = "addContractProc"
 On Error GoTo Err
 
+pContractProcessor.CanSubmitPendingOrders = True
+
+If Not pContractProcessor.IsReady Then Exit Sub
+
 Dim lBOS As BracketOrderSpecification
 For Each lBOS In pContractProcessor.BracketOrders
-    Dim lOrderPlacer As OrderPlacer
-    Set lOrderPlacer = New OrderPlacer
-    mGroups.Item(pContractProcessor.GroupName).OrderPlacers.Add lOrderPlacer
+    If mGroups.Item(pContractProcessor.GroupName).OrderPlacers.Contains(lBOS.ID) Then
+        mGroups.Item(pContractProcessor.GroupName).OrderPlacers.Remove (lBOS.ID)
+    End If
+    Dim lOrderPlacer As OrderPlacer: Set lOrderPlacer = New OrderPlacer
+    mGroups.Item(pContractProcessor.GroupName).OrderPlacers.Add lOrderPlacer, lBOS.ID
     lOrderPlacer.Initialise _
                     lBOS, _
                     pContractProcessor.Contract, _
@@ -224,6 +232,14 @@ For Each lBOS In pContractProcessor.BracketOrders
                     mGroups.Item(pContractProcessor.GroupName)
 
     Set mOrderPlacers(allocateEntry).OrderPlacer = lOrderPlacer
+    
+    Dim lEntry As New LiveOrderEntry
+    If Not gLiveOrders.TryItem(lBOS.ID, lEntry) Then
+        lEntry.Key = lBOS.ID
+        gLiveOrders.Add lEntry
+    End If
+    lEntry.BracketOrderSpec = lBOS
+    lEntry.GroupName = pContractProcessor.GroupName
 Next
 pContractProcessor.ClearOrders
 

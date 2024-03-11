@@ -47,6 +47,7 @@ Private Const ModuleName                            As String = "BracketOrderSpe
 '@================================================================================
 
 Public ID                                           As String
+Public Modify                                       As Boolean
 Public Contract                                     As IContract
 Public Action                                       As OrderActions
 Public Quantity                                     As BoxedDecimal
@@ -120,19 +121,53 @@ End Function
 ' Methods
 '@================================================================================
 
+Friend Function ToSummaryString()
+Const ProcName As String = "ToSummaryString"
+On Error GoTo Err
+
+Dim s As String
+s = gGetContractName(Contract) & " " & _
+        IIf(Action = OrderActionBuy, "B ", "S ") & _
+        Quantity.DecimalValue & " " & _
+        OrderTypeToShortString(EntryType) & " " & _
+        EntryLimitPriceSpec.PriceString
+If EntryTriggerPriceSpec.IsValid Then s = s & ";" & EntryTriggerPriceSpec.PriceString
+
+If StopLossType <> OrderTypeNone Then
+    s = s & " (SL: " & OrderTypeToShortString(StopLossType) & " "
+    If StopLossLimitPriceSpec.IsValid Then _
+        s = s & StopLossLimitPriceSpec.PriceString
+    If StopLossTriggerPriceSpec.IsValid Then _
+        s = s & ";" & StopLossTriggerPriceSpec.PriceString
+    s = s & ")"
+End If
+
+If TargetType <> OrderTypeNone Then
+    s = s & " (T: " & OrderTypeToShortString(TargetType) & " "
+    If TargetLimitPriceSpec.IsValid Then _
+        s = s & TargetLimitPriceSpec.PriceString
+    If TargetTriggerPriceSpec.IsValid Then _
+        s = s & ";" & TargetTriggerPriceSpec.PriceString
+    s = s & ")"
+End If
+
+ToSummaryString = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Friend Function ToString() As String
 Const ProcName As String = "ToString"
 On Error GoTo Err
 
-Dim s As String
-s = generateBracket
-
-s = s & generateEntry
-s = s & generateStopLoss
-s = s & generateTarget
-s = s & generateRollover
-s = s & gCommands.EndBracketCommand.Name
-ToString = s
+If isSingleLine Then
+    ToString = generateSingleLineOrder
+Else
+    ToString = generateBracketOrder
+End If
 
 Exit Function
 
@@ -148,11 +183,8 @@ Private Function formatPriceSpec(ByVal pPriceSpec As PriceSpecifier) As String
 formatPriceSpec = PriceSpecifierToString(pPriceSpec, Contract)
 End Function
 
-Private Function generateBracket() As String
+Private Function generateActionAndQuantity()
 Dim s As String
-s = gCommands.BracketCommand.Name
-s = s & " "
-
 s = s & OrderActionToString(Action)
 s = s & " "
 If AutosizeType = BracketAutosizeNone Then
@@ -163,6 +195,15 @@ Else
     s = s & CStr(AutosizeValue) & AccountPercentSuffix
 End If
 If LotSize <> 0 Then s = s & "(" & LotSize & ")"
+generateActionAndQuantity = s
+End Function
+
+Private Function generateBracket() As String
+Dim s As String
+s = gCommands.BracketCommand.Name
+s = s & " "
+
+s = s & generateActionAndQuantity
 s = s & " "
 
 If CancelAfter <> 0 Then s = s & gGenerateSwitch(CancelAfterSwitch, CStr(CancelAfter))
@@ -174,6 +215,25 @@ If GoodAfterTime <> 0 Then s = s & gGenerateSwitch(GoodAfterTimeSwitch, Format(G
 If TimezoneName <> "" Then s = s & gGenerateSwitch(TimezoneSwitch, TimezoneName)
 
 generateBracket = s & vbCrLf
+End Function
+
+Private Function generateBracketOrder() As String
+Const ProcName As String = "generateBracketOrder"
+On Error GoTo Err
+
+Dim s As String
+s = generateBracket
+s = s & generateEntry
+s = s & generateStopLoss
+s = s & generateTarget
+s = s & generateRollover
+s = s & gCommands.EndBracketCommand.Name
+generateBracketOrder = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateEntry() As String
@@ -303,6 +363,55 @@ Loop
 generateRolloverEntry = s
 End Function
 
+Private Function generateSingleLineOrder() As String
+Const ProcName As String = "generateSingleLineOrder"
+On Error GoTo Err
+
+Dim s As String
+s = generateActionAndQuantity
+s = s & " "
+s = s & OrderTypeToShortString(EntryType) & " "
+s = s & generateEntryAttributes
+
+generateSingleLineOrder = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function generateSingleLineParameters() As String
+Dim s As String
+Select Case EntryType
+Case OrderTypeMarket
+Case OrderTypeMarketOnOpen
+Case OrderTypeMarketOnClose
+Case OrderTypeMarketToLimit
+Case OrderTypeStop, _
+        OrderTypeMarketIfTouched
+    s = formatPriceSpec(EntryTriggerPriceSpec)
+Case OrderTypeStopLimit, _
+        OrderTypeLimitIfTouched
+    s = formatPriceSpec(EntryTriggerPriceSpec) & _
+            formatPriceSpec(EntryLimitPriceSpec)
+Case OrderTypeLimit, _
+        OrderTypeLimitOnOpen, _
+        OrderTypeLimitOnClose
+    s = formatPriceSpec(EntryLimitPriceSpec)
+Case OrderTypeTrail
+    s = formatPriceSpec(EntryTriggerPriceSpec)
+Case OrderTypeTrailLimit
+    s = formatPriceSpec(EntryTriggerPriceSpec) & _
+            formatPriceSpec(EntryLimitPriceSpec)
+End Select
+
+If EntryTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(EntryTIF))
+If EntryIgnoreRTH Then s = s & gGenerateSwitch(IgnoreRTHSwitch, "")
+
+generateSingleLineParameters = s
+End Function
+
 Private Function generateStopLoss() As String
 If StopLossType = OrderTypeNone Then Exit Function
 
@@ -355,6 +464,10 @@ End Select
 If TargetTIF <> OrderTIFNone Then s = s & gGenerateSwitch(TIFSwitch, OrderTIFToString(TargetTIF))
 If TargetIgnoreRTH Then s = s & gGenerateSwitch(IgnoreRTHSwitch, "")
 generateTargetAttributes = s
+End Function
+
+Private Function isSingleLine() As Boolean
+isSingleLine = (StopLossType = OrderTypeNone And TargetType = OrderTypeNone)
 End Function
 
 

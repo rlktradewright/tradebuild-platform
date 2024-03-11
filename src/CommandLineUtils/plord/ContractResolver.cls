@@ -77,16 +77,22 @@ With mContractSpec
         lStrikeStr = mParameter & gStrikeSelectionModeToString(mSelectionMode) & _
                     IIf(mUnderlyingExchangeName <> "", "," & mUnderlyingExchangeName, "")
     End If
-
-    ContractName = IIf(.LocalSymbol <> "", "[" & .LocalSymbol & "]", "") & _
-                    IIf(.SecType <> 0, SecTypeToShortString(.SecType) & ":", "") & _
-                    .Symbol & _
-                    IIf(.Right <> OptNone, "=" & Left$(OptionRightToString(.Right), 1), "") & _
-                    lStrikeStr & _
-                    IIf(.Expiry <> "", "(" & .Expiry & ")", "") & _
-                    IIf(.Exchange <> "", "@" & .Exchange, "") & _
-                    IIf(.CurrencyCode <> "", "$" & .CurrencyCode, "") & _
-                    IIf(.Multiplier <> 0, "'" & .Multiplier, "")
+    
+    Dim s As String
+    If .LocalSymbol <> "" Then
+        s = .LocalSymbol & _
+            IIf(.Exchange <> "", "@" & .Exchange, "")
+    Else
+        s = IIf(.SecType <> 0, SecTypeToShortString(.SecType) & ":", "") & _
+            .Symbol & _
+            IIf(.Right <> OptNone, "=" & Left$(OptionRightToString(.Right), 1), "") & _
+            lStrikeStr & _
+            IIf(.Expiry <> "", "(" & .Expiry & ")", "") & _
+            IIf(.Exchange <> "", "@" & .Exchange, "") & _
+            IIf(.CurrencyCode <> "", "$" & .CurrencyCode, "") & _
+            IIf(.Multiplier <> 1 And .Multiplier <> 0, "'" & .Multiplier, "")
+    End If
+    ContractName = UCase$(s)
 End With
 End Property
 

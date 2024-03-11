@@ -18,6 +18,12 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum ErrorCountIncrementCriterion
+    ErrorCountIncrementNo
+    ErrorCountIncrementYes
+    ErrorCountIncrementIfNotInteractive
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -82,6 +88,7 @@ Public Const TimezoneSwitch                         As String = "TIMEZONE"
 Public Const TradingClassSwitch                     As String = "TRADINGCLASS"
 
 Public Const GroupsSubcommand                       As String = "GROUPS"
+Public Const OrdersSubcommand                       As String = "ORDERS"
 Public Const PositionsSubcommand                    As String = "POSITIONS"
 Public Const TradesSubcommand                       As String = "TRADES"
 
@@ -110,7 +117,7 @@ Private Const DefaultClientId                       As Long = 906564398
 Private Const DefaultGroupName                      As String = "$"
 Private Const AllGroups                             As String = "ALL"
 
-Private Const DefaultPrompt                         As String = ":"
+Private Const DefaultPrompt                         As String = ">"
 
 Private Const CloseoutMarket                        As String = "MKT"
 Private Const CloseoutLimit                         As String = "LMT"
@@ -151,8 +158,11 @@ Public gCommandListGeneral                          As New CommandList
 
 Public gDefaultBalanceAccountValueName              As String
 
+Public gLiveOrders                                  As New LiveOrdersCache
 
 
+
+Private mBlockingErrorCount                         As Long
 Private mErrorCount                                 As Long
 
 Private mFatalErrorHandler                          As FatalErrorHandler
@@ -216,6 +226,10 @@ Private mTerminateRequested                         As Boolean
 ' Properties
 '@================================================================================
 
+Public Property Get gBlockingErrorCount() As Long
+gBlockingErrorCount = mBlockingErrorCount
+End Property
+
 Public Property Get gErrorCount() As Long
 gErrorCount = mErrorCount
 End Property
@@ -232,6 +246,42 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub gCompleteOrderRecovery()
+Const ProcName As String = "gCompleteOrderRecovery"
+On Error GoTo Err
+
+Dim lPM As PositionManager
+For Each lPM In mOrderManager.PositionManagersLive
+    If lPM.IsActive Then processGroupCommand lPM.GroupName, Nothing
+    Dim lBO As IBracketOrder
+    For Each lBO In lPM.BracketOrders
+        If lBO.State = BracketOrderStateSubmitted Then
+            If lBO.Size <> 0 Then CreateBracketProfitCalculator lBO, lPM.DataSource
+            Dim lEntry As LiveOrderEntry: Set lEntry = New LiveOrderEntry
+            lEntry.Key = lBO.Key
+            lEntry.GroupName = lBO.GroupName
+            lEntry.Order = lBO
+            'lEntry.Timestamp = lBO.CreationTime
+            gLiveOrders.Add lEntry
+        End If
+        If Not lBO.RolloverSpecification Is Nothing And _
+            (lBO.CumBuyPrice <> 0 Or _
+            lBO.CumSellPrice <> 0) _
+        Then
+            gBracketOrderListener.Add lBO
+        End If
+    Next
+Next
+
+Set mCurrentGroup = mGroups.Add(DefaultGroupName)
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 
 Public Function gGenerateContractProcessorName( _
                 ByVal pGroupName As String, _
@@ -291,6 +341,10 @@ Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
+Public Function gIsInteractive() As Boolean
+gIsInteractive = (gCon.StdInType = FileTypeChar)
+End Function
+
 Public Sub gNotifyUnhandledError( _
                 ByRef pProcedureName As String, _
                 ByRef pModuleName As String, _
@@ -345,28 +399,50 @@ End Sub
 
 Public Sub gWriteErrorLine( _
                 ByVal pMessage As String, _
-                Optional ByVal pDontIncrementErrorCount As Boolean = False)
-Const ProcName As String = "gWriteErrorLine"
-
+                Optional ByVal pIncrementCriterion As ErrorCountIncrementCriterion = ErrorCountIncrementYes)
 Dim s As String
 s = "Error: " & pMessage
 gCon.WriteErrorLine s
 LogMessage "StdErr: " & s
-If Not pDontIncrementErrorCount Then mErrorCount = mErrorCount + 1
+Select Case pIncrementCriterion
+Case ErrorCountIncrementNo
+
+Case ErrorCountIncrementYes
+    mBlockingErrorCount = mBlockingErrorCount + 1
+    mErrorCount = mErrorCount + 1
+Case ErrorCountIncrementIfNotInteractive
+    If gIsInteractive Then
+        mErrorCount = mErrorCount + 1
+    Else
+        mBlockingErrorCount = mBlockingErrorCount + 1
+    End If
+End Select
 End Sub
 
 Public Sub gWriteLineToConsole( _
                 ByVal pMessage As String, _
                 Optional ByVal pIncludeTimestamp As Boolean, _
-                Optional ByVal pDontLogit As Boolean)
+                Optional ByVal pDontLogit As Boolean = False)
 Const ProcName As String = "gWriteLineToConsole"
 
 If Not pDontLogit Then LogMessage "Con: " & pMessage
-Dim lTime As String
 If pIncludeTimestamp Then
-    gCon.WriteStringToConsole FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
+    Dim s As String
+    s = FormatTimestamp(GetTimestamp, TimestampTimeOnlyISO8601) & " "
+    gCon.WriteStringToConsole s
 End If
-gCon.WriteLineToConsole pMessage
+    
+Dim lIndent As Long: lIndent = Len(s)
+If InStr(1, pMessage, vbCrLf) = 0 Then
+    gCon.WriteLineToConsole pMessage
+Else
+    Dim ar() As String: ar = Split(pMessage, vbCrLf)
+    gCon.WriteLineToConsole ar(0)
+    Dim i As Long
+    For i = 1 To UBound(ar)
+        gCon.WriteLineToConsole Space(lIndent) & ar(i)
+    Next
+End If
 End Sub
 
 Public Sub gWriteLineToStdOut(ByVal pMessage As String)
@@ -381,6 +457,7 @@ Const ProcName As String = "Main"
 On Error GoTo Err
 
 Set gCon = GetConsole
+Debug.Print "Console StdInType = " & gCon.StdInType
 
 If Trim$(Command) = "/?" Or Trim$(Command) = "-?" Then
     showUsage
@@ -476,7 +553,7 @@ getFundsAmount = False
 
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 If lClp.NumberOfArgs > 2 Then
-    gWriteErrorLine "Too many parameters"
+    gWriteErrorLine "Too many parameters", ErrorCountIncrementIfNotInteractive
     Exit Function
 End If
 
@@ -498,7 +575,7 @@ If lMatches.Count <> 1 Then
         "than 0 followed by $ (an amount of currency), or a number (decimal" & vbCrLf & _
         "places allowed) greater than 0 followed by % (a percentage of the" & vbCrLf & _
         "account balance). " & vbCrLf & _
-        "Note that the funds are in the account's base currency.", True
+        "Note that the funds are in the account's base currency.", ErrorCountIncrementIfNotInteractive
     Exit Function
 End If
 
@@ -565,6 +642,48 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Function getOrderSummary(ByVal pOrder As IBracketOrder) As String
+Const ProcName As String = "getOrderSummary"
+On Error GoTo Err
+
+Dim s As String
+With pOrder
+    s = gGetContractName(.Contract) & " " & _
+            IIf(.EntryOrder.Action = OrderActionBuy, "B ", "S ") & _
+            .EntryOrder.Quantity.DecimalValue & " " & _
+            OrderTypeToShortString(.EntryOrder.OrderType) & " " & _
+            .EntryOrder.LimitPriceSpec.PriceString
+    If .EntryOrder.TriggerPriceSpec.IsValid Then _
+        s = s & ":" & .EntryOrder.TriggerPriceSpec.PriceString
+    
+    If .StopLossOrder Is Nothing Then
+    Else
+        s = s & " (SL: " & OrderTypeToShortString(.StopLossOrder.OrderType) & " "
+        If .StopLossOrder.LimitPriceSpec.IsValid Then _
+            s = s & .StopLossOrder.LimitPriceSpec.PriceString
+        If .StopLossOrder.TriggerPriceSpec.IsValid Then _
+            s = s & ";" & .StopLossOrder.TriggerPriceSpec.PriceString
+        s = s & ")"
+    End If
+    
+    If .TargetOrder Is Nothing Then
+    Else
+        s = s & " (T: " & OrderTypeToShortString(.TargetOrder.OrderType) & " "
+        If .TargetOrder.LimitPriceSpec.IsValid Then _
+            s = s & .TargetOrder.LimitPriceSpec.PriceString
+        If .TargetOrder.TriggerPriceSpec.IsValid Then _
+            s = s & ";" & .TargetOrder.TriggerPriceSpec.PriceString
+        s = s & ")"
+    End If
+End With
+getOrderSummary = s
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function getPrompt() As String
 If mCurrentGroup Is Nothing Then
 ElseIf mCurrentGroup.CurrentContractProcessor Is Nothing Then
@@ -609,7 +728,6 @@ isProhibitedGroupName = False
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then Resume Next
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
@@ -634,7 +752,7 @@ Case Else
                     "    EquityWithLoan" & vbCrLf & _
                     "    ExcessLiquidity" & vbCrLf & _
                     "    NetLiquidation", _
-                    True
+                    ErrorCountIncrementIfNotInteractive
     isValidAccountValueName = False
 End Select
 End Function
@@ -650,18 +768,102 @@ gWriteLineToConsole "Groups at " & _
 Dim lRes As GroupResources
 For Each lRes In mGroups
     Dim lGroupName As String: lGroupName = lRes.GroupName
-    Dim lContractProcessor As ContractProcessor
-    Set lContractProcessor = lRes.CurrentContractProcessor
-    
-    Dim lContractName As String
-    If lContractProcessor Is Nothing Then
-        lContractName = ""
-    Else
-        lContractName = lContractProcessor.ContractName
-    End If
     gWriteLineToConsole IIf(lRes Is mCurrentGroup, "* ", "  ") & _
-                        gPadStringRight(lGroupName, 20) & _
-                        gPadStringRight(lContractName, 25)
+                        gPadStringRight(lGroupName, 20)
+    
+    
+    Dim lContractProcessor As ContractProcessor
+    
+    For Each lContractProcessor In lRes.ContractProcessors
+        gWriteLineToConsole "    " & _
+                            IIf(lContractProcessor Is lRes.CurrentContractProcessor, "* ", "  ") & _
+                            gPadStringRight(lContractProcessor.ContractName, 25)
+    Next
+Next
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub listOrders(ByVal pParams As String)
+Const ProcName As String = "listOrders"
+On Error GoTo Err
+
+Const OrdersAll = "ALL"
+Const OrdersPending = "PENDING"
+Const OrdersSubmitted = "SUBMITTED"
+Const OrdersCompleted = "COMPLETED"
+Const OrdersCancelled = "CANCELLED"
+
+
+Dim lSelector As String: lSelector = UCase$(pParams)
+
+Select Case lSelector
+Case ""
+Case OrdersAll
+Case OrdersPending
+Case OrdersSubmitted
+Case OrdersCompleted
+Case OrdersCancelled
+Case Else
+    gWriteErrorLine "parameter must be omitted or one of: " & _
+                        OrdersAll & ", " & _
+                        OrdersPending & ", " & _
+                        OrdersSubmitted & " or " & _
+                        OrdersCompleted & " or " & _
+                        OrdersCancelled, _
+                        ErrorCountIncrementNo
+    Exit Sub
+End Select
+
+Dim lEntry As LiveOrderEntry
+Dim lStatus As String
+Dim lAllow As Boolean
+For Each lEntry In gLiveOrders
+    If lEntry.Order Is Nothing Then
+        If lEntry.Cancelled Then
+            lStatus = OrdersCancelled
+        Else
+            lStatus = OrdersPending
+        End If
+    Else
+        lStatus = BracketOrderStateToString(lEntry.Order.State)
+    End If
+    
+    Select Case lSelector
+    Case "", OrdersAll
+        lAllow = True
+    Case OrdersPending
+        lAllow = (lStatus = OrdersPending Or lStatus = BracketOrderStateToString(BracketOrderStateCreated))
+    Case OrdersSubmitted
+        lAllow = (lStatus = BracketOrderStateToString(BracketOrderStateSubmitted))
+    Case OrdersCompleted
+        lAllow = (lStatus = BracketOrderStateToString(BracketOrderStateCancelling) Or _
+                    lStatus = BracketOrderStateToString(BracketOrderStateClosingOut) Or _
+                    lStatus = BracketOrderStateToString(BracketOrderStateClosed) Or _
+                    lStatus = BracketOrderStateToString(BracketOrderStateAwaitingOtherOrderCancel))
+    Case OrdersCancelled
+        lAllow = (lStatus = OrdersCancelled)
+    Case Else
+        lAllow = False
+    End Select
+    
+    If lAllow Then
+        Dim lOrderSummary As String
+        If lEntry.BracketOrderSpec Is Nothing Then
+            lOrderSummary = getOrderSummary(lEntry.Order)
+        Else
+            lOrderSummary = lEntry.BracketOrderSpec.ToSummaryString
+        End If
+        
+        gWriteLineToConsole FormatTimestamp(lEntry.Timestamp, TimestampTimeOnlyISO8601 + TimestampNoMillisecs) & _
+                            " " & lEntry.Key & _
+                            " (" & lStatus & "): " & _
+                            lOrderSummary, _
+                        False, True
+    End If
 Next
 
 Exit Sub
@@ -689,7 +891,8 @@ For Each lPM In mOrderManager.PositionManagersLive
                                                 "(" & lPM.PendingBuyPositionSize & _
                                                 "/" & _
                                                 lPM.PendingSellPositionSize & ")", 10) & _
-                        " Profit=" & gPadStringleft(Format(lPM.Profit, "0.00"), 9)
+                        " Profit=" & gPadStringleft(Format(lPM.Profit, "0.00"), 9) & _
+                        IIf(lPM.IsActive, "", " (inactive)")
 Next
 
 Exit Sub
@@ -808,7 +1011,7 @@ Dim lRight As String: lRight = pClp.SwitchValue(RightSwitch)
 Dim lSectype As SecurityTypes
 lSectype = SecTypeFromString(lSectypeStr)
 If lSectypeStr <> "" And lSectype = SecTypeNone Then
-    gWriteErrorLine "Invalid Sectype '" & lSectypeStr & "'"
+    gWriteErrorLine "Invalid Sectype '" & lSectypeStr & "'", ErrorCountIncrementIfNotInteractive
     validParams = False
 End If
 
@@ -818,16 +1021,16 @@ If lExpiry <> "" Then
         lExpiry = Format(CDate(lExpiry), "yyyymmdd")
     ElseIf Len(lExpiry) = 6 Then
         If Not IsDate(Left$(lExpiry, 4) & "/" & Right$(lExpiry, 2) & "/01") Then
-            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
+            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'", ErrorCountIncrementIfNotInteractive
             validParams = False
         End If
     ElseIf Len(lExpiry) = 8 Then
         If Not IsDate(Left$(lExpiry, 4) & "/" & Mid$(lExpiry, 5, 2) & "/" & Right$(lExpiry, 2)) Then
-            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
+            gWriteErrorLine "Invalid Expiry '" & lExpiry & "'", ErrorCountIncrementIfNotInteractive
             validParams = False
         End If
     Else
-        gWriteErrorLine "Invalid Expiry '" & lExpiry & "'"
+        gWriteErrorLine "Invalid Expiry '" & lExpiry & "'", ErrorCountIncrementIfNotInteractive
         validParams = False
     End If
 End If
@@ -838,14 +1041,14 @@ If lMultiplier = "" Then
 ElseIf IsNumeric(lMultiplier) Then
     Multiplier = CDbl(lMultiplier)
 Else
-    gWriteErrorLine "Invalid multiplier '" & lMultiplier & "'"
+    gWriteErrorLine "Invalid multiplier '" & lMultiplier & "'", ErrorCountIncrementIfNotInteractive
     validParams = False
 End If
             
 Dim optRight As OptionRights
 optRight = OptionRightFromString(lRight)
 If lRight <> "" And optRight = OptNone Then
-    gWriteErrorLine "Invalid right '" & lRight & "'"
+    gWriteErrorLine "Invalid right '" & lRight & "'", ErrorCountIncrementIfNotInteractive
     validParams = False
 End If
 
@@ -854,12 +1057,12 @@ If lStrike <> "" Then
     If IsNumeric(lStrike) Then
         Strike = CDbl(lStrike)
     ElseIf optRight = OptNone Then
-        gWriteErrorLine "Right not specified"
+        gWriteErrorLine "Right not specified", ErrorCountIncrementIfNotInteractive
         validParams = False
     ElseIf parseStrikeExtension(lStrike, optRight, pStrikeSelectionMode, pParameter, pOperator, pUnderlyingExchange) Then
         Strike = 0#
     Else
-        gWriteErrorLine "Invalid strike '" & lStrike & "'"
+        gWriteErrorLine "Invalid strike '" & lStrike & "'", ErrorCountIncrementIfNotInteractive
         validParams = False
     End If
 End If
@@ -882,7 +1085,7 @@ Exit Function
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description
+    gWriteErrorLine Err.Description, ErrorCountIncrementIfNotInteractive
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -982,7 +1185,7 @@ Exit Function
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
+    gWriteErrorLine Err.Description, ErrorCountIncrementIfNotInteractive
     Exit Function
 End If
 gHandleUnexpectedError ProcName, ModuleName
@@ -1087,12 +1290,41 @@ Do While inString <> gCon.EofString
         ' ignore blank lines - and don't write to the log because
         ' the FileAutoReader program sends blank lines very frequently
     ElseIf Left$(inString, 1) = "#" Then
-        ' ignore comments except log and write to console
+        ' ignore comments except log
         LogMessage "StdIn: " & inString
-        gWriteLineToConsole inString, , False
     Else
-        LogMessage "StdIn: " & inString
-        If Not processCommand(inString) Then Exit Do
+        If gIsInteractive Then
+            LogMessage "StdIn: " & inString
+        Else
+            LogMessage "StdIn: " & inString
+            gWriteLineToConsole ">" & inString
+        End If
+        
+        If Left$(inString, 1) = ":" Then
+            gRegExp.Global = True
+            gRegExp.IgnoreCase = True
+            gRegExp.Pattern = "^:([a-zA-Z][0-9a-zA-Z]*(?:[.|\-|:|_][0-9a-zA-Z]+)*) *((?:BUY|B|SELL|S|BRACKET) *(?:.*))$"
+            Dim lMatches As MatchCollection
+            Set lMatches = gRegExp.Execute(inString)
+            
+            If lMatches.Count <> 1 Then
+                gWriteErrorLine _
+                    "Invalid labelled command", ErrorCountIncrementIfNotInteractive
+            Else
+                Dim lMatch As Match: Set lMatch = lMatches(0)
+                Dim lLabel As String: lLabel = lMatch.SubMatches(0)
+                Dim lCommand As String: lCommand = lMatch.SubMatches(1)
+                If Not processCommand(lCommand, lLabel) Then
+                    gWriteLineToConsole "Exiting due to unprocessed input"
+                    Exit Do
+                End If
+            End If
+        Else
+            If Not processCommand(inString) Then
+                gWriteLineToConsole "Exiting due to unprocessed input"
+                Exit Do
+            End If
+        End If
     End If
     
     inString = getInputLineAndWait(gInputPaused)
@@ -1118,9 +1350,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Function processCommand(ByVal pInstring As String) As Boolean
+Private Function processCommand( _
+                ByVal pInstring As String, _
+                Optional ByVal pLabel As String) As Boolean
 Const ProcName As String = "processCommand"
 On Error GoTo Err
+
+Dim lID As String: lID = pLabel
 
 Dim lCommandName As String
 lCommandName = UCase$(Split(pInstring, " ")(0))
@@ -1137,14 +1373,14 @@ If lCommand Is gCommands.ExitCommand Then
 End If
 
 Dim lContractProcessor As ContractProcessor: Set lContractProcessor = mCurrentGroup.CurrentContractProcessor
-Dim lID As String
 
 If lCommand Is gCommands.Help1Command Then
     gCon.WriteLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames
 ElseIf lCommand Is gCommands.HelpCommand Then
     showStdInHelp
 ElseIf Not mNextCommands.IsCommandValid(lCommand) Then
-    gWriteErrorLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames, Not mBracketOrderDefinitionInProgress
+    gWriteErrorLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames, _
+                    IIf(mBracketOrderDefinitionInProgress, ErrorCountIncrementIfNotInteractive, ErrorCountIncrementNo)
 ElseIf lCommand Is gCommands.ContractCommand Then
     processContractCommand Params, lContractProcessor
 ElseIf lCommand Is gCommands.BatchOrdersCommand Then
@@ -1166,26 +1402,32 @@ ElseIf lCommand Is gCommands.SetRolloverCommand Then
 ElseIf lCommand Is gCommands.SetGroupRolloverCommand Then
     processSetGroupRolloverCommand Params
 ElseIf lCommand Is gCommands.BuyCommand Then
-    lID = GenerateBracketOrderId
+    If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
+    mErrorCount = 0
+    If Not mBatchOrders Then mBlockingErrorCount = 0
     ProcessBuyCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.BuyAgainCommand Then
-    lID = GenerateBracketOrderId
+    If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
     ProcessBuyAgainCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.SellCommand Then
-    lID = GenerateBracketOrderId
+    If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
+    mErrorCount = 0
+    If Not mBatchOrders Then mBlockingErrorCount = 0
     ProcessSellCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.SellAgainCommand Then
-    lID = GenerateBracketOrderId
+    If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
     ProcessSellAgainCommand Params, lContractProcessor, lID
 ElseIf lCommand Is gCommands.BracketCommand Then
     mBracketOrderDefinitionInProgress = True
-    lID = GenerateBracketOrderId
+    If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
-    lContractProcessor.ProcessBracketCommand Params, lID
+    mErrorCount = 0
+    If Not mBatchOrders Then mBlockingErrorCount = 0
+    ProcessBracketCommand Params, lContractProcessor, lID, False
 ElseIf lCommand Is gCommands.EntryCommand Then
     lContractProcessor.ProcessEntryCommand Params
 ElseIf lCommand Is gCommands.StopLossCommand Then
@@ -1196,18 +1438,27 @@ ElseIf lCommand Is gCommands.RolloverCommand Then
     lContractProcessor.ProcessRolloverCommand Params
 ElseIf lCommand Is gCommands.QuitCommand Then
     lContractProcessor.ProcessQuitCommand
+    mBlockingErrorCount = 0
     mErrorCount = 0
 ElseIf lCommand Is gCommands.EndBracketCommand Then
     mBracketOrderDefinitionInProgress = False
     lContractProcessor.ProcessEndBracketCommand
-    If mErrorCount = 0 And Not mBatchOrders Then
-        processOrders
+    
+    If mBlockingErrorCount <> 0 Or mErrorCount <> 0 Then
+        gWriteLineToConsole gErrorCount & " errors have been found - order will not be placed"
     Else
-        gWriteLineToConsole mErrorCount & " errors have been found - order will not be placed"
-        mErrorCount = 0
+        processOrders
     End If
 ElseIf lCommand Is gCommands.EndOrdersCommand Then
     processEndOrdersCommand
+ElseIf lCommand Is gCommands.ModifyCommand Then
+    processModifyCommand Params
+ElseIf lCommand Is gCommands.Modify1Command Then
+    processModifyCommand Params
+ElseIf lCommand Is gCommands.Modify2Command Then
+    processModifyCommand Params
+ElseIf lCommand Is gCommands.CancelCommand Then
+    processCancelCommand Params
 ElseIf lCommand Is gCommands.ResetCommand Then
     processResetCommand
 ElseIf lCommand Is gCommands.ListCommand Then
@@ -1219,7 +1470,7 @@ ElseIf lCommand Is gCommands.QuoteCommand Then
 ElseIf lCommand Is gCommands.PurgeCommand Then
     processPurgeCommand Params
 Else
-    gWriteErrorLine "Invalid command '" & Command & "'"
+    gWriteErrorLine "Invalid command '" & Command & "'", ErrorCountIncrementIfNotInteractive
 End If
 
 processCommand = True
@@ -1240,8 +1491,48 @@ Case Yes
 Case No
     mBatchOrders = False
 Case Else
-    gWriteErrorLine gCommands.BatchOrdersCommand.Name & " parameter must be either YES or NO or DEFAULT", True
+    gWriteErrorLine gCommands.BatchOrdersCommand.Name & " parameter must be either YES or NO or DEFAULT", ErrorCountIncrementNo
 End Select
+End Sub
+
+Private Sub ProcessBracketCommand( _
+                ByVal pParams As String, _
+                ByVal pContractProcessor As ContractProcessor, _
+                ByVal pID As String, _
+                ByVal pModify As Boolean)
+Const ProcName As String = "ProcessBracketCommand"
+On Error GoTo Err
+
+Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
+Dim lArg0 As String: lArg0 = lClp.Arg(0)
+
+If lClp.NumberOfArgs = 3 Then
+    ' the first arg is a contract spec
+    Dim lContractSpec As IContractSpecifier
+    Set lContractSpec = CreateContractSpecifierFromString(lArg0)
+
+    If lContractSpec Is Nothing Then Exit Sub
+    
+    Set pContractProcessor = mCurrentGroup.AddContractProcessor(lContractSpec, _
+                                        mBatchOrders, _
+                                        mStageOrders, _
+                                        OptionStrikeSelectionModeNone, _
+                                        0, _
+                                        OptionStrikeSelectionOperatorNone, _
+                                        "")
+    pParams = Right$(pParams, Len(pParams) - Len(lArg0))
+End If
+
+If Not pContractProcessor Is Nothing Then
+    pContractProcessor.ProcessBracketCommand pParams, pID, pModify
+Else
+    gWriteErrorLine "No contract has been specified in this group", ErrorCountIncrementIfNotInteractive
+End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessBuyCommand( _
@@ -1251,7 +1542,7 @@ Private Sub ProcessBuyCommand( _
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionBuy, pParams, pContractProcessor, pID
+processBuyOrSellCommand OrderActionBuy, pParams, pContractProcessor, pID, False
 
 Exit Sub
 
@@ -1267,9 +1558,9 @@ Const ProcName As String = "ProcessBuyAgainCommand"
 On Error GoTo Err
 
 If pContractProcessor Is Nothing Then
-    gWriteErrorLine "No Buy command to repeat", True
+    gWriteErrorLine "No Buy command to repeat", ErrorCountIncrementNo
 ElseIf pContractProcessor.LatestBuyCommandParams = "" Then
-    gWriteErrorLine "No Buy command to repeat", True
+    gWriteErrorLine "No Buy command to repeat", ErrorCountIncrementNo
 Else
     ProcessBuyCommand pContractProcessor.LatestBuyCommandParams, pContractProcessor, pID
 End If
@@ -1284,7 +1575,8 @@ Private Sub processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
                 ByVal pParams As String, _
                 ByVal pContractProcessor As ContractProcessor, _
-                ByVal pID As String)
+                ByVal pID As String, _
+                ByVal pModify As Boolean)
 Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
 
@@ -1310,19 +1602,27 @@ End If
 
 If Not pContractProcessor Is Nothing Then
     If pAction = OrderActionBuy Then
-        If pContractProcessor.ProcessBuyCommand(pParams, pID) And Not mBatchOrders Then processOrders
+        pContractProcessor.ProcessBuyCommand pParams, pID, pModify
     Else
-        If pContractProcessor.ProcessSellCommand(pParams, pID) And Not mBatchOrders Then processOrders
+        pContractProcessor.ProcessSellCommand pParams, pID, pModify
     End If
+    If mBlockingErrorCount <> 0 Or mErrorCount <> 0 Then
+        gWriteLineToConsole gErrorCount & " errors have been found - order will not be placed"
+    Else
+        processOrders
+    End If
+    
+    mBlockingErrorCount = 0
+    mErrorCount = 0
 Else
-    gWriteErrorLine "No contract has been specified in this group", True
+    gWriteErrorLine "No contract has been specified in this group", ErrorCountIncrementNo
 End If
 
 Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
+    gWriteErrorLine Err.Description, ErrorCountIncrementNo
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -1335,7 +1635,7 @@ Private Sub ProcessSellCommand( _
 Const ProcName As String = "processBuyCommand"
 On Error GoTo Err
 
-processBuyOrSellCommand OrderActionSell, pParams, pContractProcessor, pID
+processBuyOrSellCommand OrderActionSell, pParams, pContractProcessor, pID, False
 
 Exit Sub
 
@@ -1350,7 +1650,7 @@ On Error GoTo Err
 
 Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 If lClp.NumberOfArgs > 1 Then
-    gWriteErrorLine "Too many parameters"
+    gWriteErrorLine "Too many parameters", ErrorCountIncrementNo
     Exit Sub
 End If
 
@@ -1426,14 +1726,14 @@ If ar(0) = "OPTION" Then
 ElseIf ar(0) = "FUTURE" Then
     mCurrentGroup.SetDefaultRollover SecTypeFuture, pParams
 Else
-    gWriteErrorLine "First parameter must be 'OPTION' or 'FUTURE'", True
+    gWriteErrorLine "First parameter must be 'OPTION' or 'FUTURE'", ErrorCountIncrementIfNotInteractive
 End If
 
 Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
+    gWriteErrorLine Err.Description, ErrorCountIncrementIfNotInteractive
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -1457,7 +1757,7 @@ For Each lGroup In mGroups
     ElseIf ar(0) = "FUTURE" Then
         lGroup.SetDefaultRollover SecTypeFuture, pParams
     Else
-        gWriteErrorLine "First parameter must be 'OPTION' or 'FUTURE'", True
+        gWriteErrorLine "First parameter must be 'OPTION' or 'FUTURE'", ErrorCountIncrementIfNotInteractive
     End If
 Next
 
@@ -1465,7 +1765,7 @@ Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
+    gWriteErrorLine Err.Description, ErrorCountIncrementIfNotInteractive
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -1479,9 +1779,9 @@ Const ProcName As String = "ProcessSellAgainCommand"
 On Error GoTo Err
 
 If pContractProcessor Is Nothing Then
-    gWriteErrorLine "No Sell command to repeat", True
+    gWriteErrorLine "No Sell command to repeat", ErrorCountIncrementNo
 ElseIf pContractProcessor.LatestSellCommandParams = "" Then
-    gWriteErrorLine "No Sell command to repeat", True
+    gWriteErrorLine "No Sell command to repeat", ErrorCountIncrementNo
 Else
     ProcessSellCommand pContractProcessor.LatestSellCommandParams, pContractProcessor, pID
 End If
@@ -1503,6 +1803,71 @@ gWriteLineToConsole "Balance is " & _
                                         lBaseCurrency).Value & _
                      " " & lBaseCurrency & _
                      " (" & gDefaultBalanceAccountValueName & ")"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processCancelCommand( _
+                ByVal pParams As String)
+Const ProcName As String = "processCancelCommand"
+On Error GoTo Err
+
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(pParams, " ")
+
+Dim lKey As String
+lKey = lClp.Arg(0)
+
+If lKey = "" Then
+    gWriteErrorLine "The order key is missing", ErrorCountIncrementNo
+    Exit Sub
+End If
+
+Dim lEntry As LiveOrderEntry
+If IsNumeric(lKey) Then
+    If gLiveOrders.TryItemAtIndex(lKey, lEntry) Then
+        lKey = lEntry.Key
+    End If
+Else
+    gLiveOrders.TryItem lKey, lEntry
+End If
+
+If lEntry Is Nothing Then
+    gWriteErrorLine "Order " & lKey & " cannot be cancelled", ErrorCountIncrementNo
+    Exit Sub
+End If
+
+If lEntry.Cancelled Then
+    gWriteErrorLine "Order " & lKey & " has already been cancelled", ErrorCountIncrementNo
+    Exit Sub
+End If
+
+lEntry.Cancelled = True
+
+Dim lBracketOrder As IBracketOrder
+Set lBracketOrder = lEntry.Order
+
+If lBracketOrder Is Nothing Then
+    Dim lOrderPlacer As OrderPlacer
+    Set lOrderPlacer = mGroups.Item(lEntry.GroupName).OrderPlacers.Item(lKey)
+    lOrderPlacer.Cancel "By user"
+End If
+
+Dim lEvenIfFilled As Boolean
+If lClp.Arg(1) = "" Then
+ElseIf lClp.Arg(1) = "!" Then
+    lEvenIfFilled = True
+Else
+    gWriteErrorLine lClp.Arg(1) & " second parameter must be blank or '!' (cancel even if filled)", ErrorCountIncrementNo
+End If
+
+If Not lBracketOrder Is Nothing Then
+    gWriteLineToConsole "Cancelling " & lKey
+    lBracketOrder.Cancel lEvenIfFilled
+End If
 
 Exit Sub
 
@@ -1541,7 +1906,7 @@ ElseIf lClp.NumberOfArgs = 3 Then
         lCloseoutMode = CloseoutModeLimit
     Else
         lError = True
-        gWriteErrorLine "Second argument must be either 'MKT' or 'LMT'", True
+        gWriteErrorLine "Second argument must be either 'MKT' or 'LMT'", ErrorCountIncrementNo
     End If
 ElseIf lClp.NumberOfArgs = 2 Then
     lOrderTypeName = UCase$(lClp.Arg(0))
@@ -1569,7 +1934,7 @@ ElseIf lClp.NumberOfArgs = 0 Then
     lCloseoutMode = CloseoutModeMarket
 Else
     lError = True
-    gWriteErrorLine "Too many arguments", True
+    gWriteErrorLine "Too many arguments", ErrorCountIncrementNo
 End If
 
 If lGroupName = "" Then
@@ -1579,7 +1944,7 @@ ElseIf UCase$(lGroupName) = AllGroups Then
 ElseIf lGroupName = DefaultGroupName Then
 ElseIf Not isGroupValid(lGroupName) Then
     lError = True
-    gWriteErrorLine lGroupName & " is not a valid group name", True
+    gWriteErrorLine lGroupName & " is not a valid group name", ErrorCountIncrementNo
 ElseIf Not mGroups.Contains(lGroupName) Then
     lError = True
     gWriteErrorLine "No such group", True
@@ -1588,15 +1953,15 @@ End If
 If lCloseoutMode = CloseoutModeMarket Then
     If lPriceStr <> "" Then
         lError = True
-        gWriteErrorLine "A price specification cannot be supplied for closeout at market"
+        gWriteErrorLine "A price specification cannot be supplied for closeout at market", ErrorCountIncrementNo
     End If
 ElseIf lPriceStr = "" And lPriceSpec Is Nothing Then
     lError = True
-    gWriteErrorLine "Closeout price specification is missing", True
+    gWriteErrorLine "Closeout price specification is missing", ErrorCountIncrementNo
 ElseIf Not lPriceSpec Is Nothing Then
 ElseIf Not ParsePriceAndOffset(lPriceSpec, lPriceStr, SecTypeNone, 0#, True) Then
     lError = True
-    gWriteErrorLine "Invalid price specification", True
+    gWriteErrorLine "Invalid price specification", ErrorCountIncrementNo
 End If
 
 If lError Then Exit Sub
@@ -1607,7 +1972,7 @@ lCloseoutProcessor.Initialise mOrderManager, mGroups, lCloseoutMode, lPriceSpec
 If lGroupName = AllGroups Then
     lCloseoutProcessor.CloseoutAll
 ElseIf Not mGroups.Contains(lGroupName) Then
-    gWriteErrorLine "No such group", True
+    gWriteErrorLine "No such group", ErrorCountIncrementNo
 Else
     lCloseoutProcessor.CloseoutGroup lGroupName
 End If
@@ -1616,7 +1981,7 @@ Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
+    gWriteErrorLine Err.Description, ErrorCountIncrementNo
     Exit Sub
 End If
 gHandleUnexpectedError ProcName, ModuleName
@@ -1680,7 +2045,8 @@ Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
+    gWriteErrorLine Err.Description, ErrorCountIncrementNo
+    Resume Next
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -1690,8 +2056,9 @@ Private Sub processEndOrdersCommand()
 Const ProcName As String = "processEndOrdersCommand"
 On Error GoTo Err
 
-If mErrorCount <> 0 Then
-    gWriteLineToConsole mErrorCount & " errors have been found - no orders will be placed"
+If mBlockingErrorCount <> 0 Then
+    gWriteLineToConsole gErrorCount & " errors have been found - no orders will be placed"
+    mBlockingErrorCount = 0
     mErrorCount = 0
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
     Exit Sub
@@ -1717,14 +2084,14 @@ Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams)
 
 Dim lGroupName As String: lGroupName = lClp.Arg(0)
 If isProhibitedGroupName(lGroupName) Then
-    gWriteErrorLine "Invalid group name: you can't create a group called '" & lGroupName & "'", True
+    gWriteErrorLine "Invalid group name: you can't create a group called '" & lGroupName & "'", ErrorCountIncrementNo
     Exit Sub
 ElseIf Not isGroupValid(lGroupName) Then
-    gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", True
+    gWriteErrorLine "Invalid group name: first character must be letter or digit; remaining characters must be letter, digit, hyphen or underscore", ErrorCountIncrementNo
     Exit Sub
 End If
 
-If Not mGroups.TryItem(UCase$(lGroupName), mCurrentGroup) Then
+If Not mGroups.TryItem(lGroupName, mCurrentGroup) Then
     Dim lPMs As PositionManagers: Set lPMs = mOrderManager.GetPositionManagersForGroup(lGroupName)
     
     ' get the 'canonical' group name spelling
@@ -1770,13 +2137,109 @@ On Error GoTo Err
 
 If UCase$(pParams) = GroupsSubcommand Then
     listGroups
+ElseIf UCase$(Left$(pParams, Len(OrdersSubcommand))) = OrdersSubcommand Then
+    listOrders Trim$(Right$(pParams, Len(pParams) - Len(OrdersSubcommand)))
 ElseIf UCase$(pParams) = PositionsSubcommand Then
     listPositions
 ElseIf UCase$(pParams) = TradesSubcommand Then
     listTrades
 Else
-    gWriteErrorLine gCommands.ListCommand.Name & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand, True
+    gWriteErrorLine gCommands.ListCommand.Name & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand, ErrorCountIncrementNo
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub processModifyCommand(ByVal pParams As String)
+Const ProcName As String = "processModifyCommand"
+On Error GoTo Err
+
+Dim lClp As CommandLineParser
+Set lClp = CreateCommandLineParser(pParams, " ")
+
+Dim lKey As String
+lKey = lClp.Arg(0)
+
+If lKey = "" Then
+    gWriteErrorLine "The order key is missing", ErrorCountIncrementNo
+    Exit Sub
+End If
+
+Dim lCommandIndex As Long
+lCommandIndex = InStr(1, pParams, lKey) + Len(lKey)
+
+Dim lEntry As LiveOrderEntry
+If IsNumeric(lKey) Then
+    If gLiveOrders.TryItemAtIndex(lKey, lEntry) Then
+        lKey = lEntry.Key
+    End If
+Else
+    gLiveOrders.TryItem lKey, lEntry
+End If
+
+If lEntry Is Nothing Then
+    gWriteErrorLine "Order " & lKey & " cannot be modified", ErrorCountIncrementNo
+    Exit Sub
+End If
+
+processGroupCommand lEntry.GroupName, mCurrentGroup.CurrentContractProcessor
+
+Dim lCommand As String
+lCommand = Trim$(Right$(pParams, Len(pParams) - lCommandIndex))
+
+Set lClp = CreateCommandLineParser(lCommand, " ")
+
+Dim lVerb As String: lVerb = UCase$(lClp.Arg(0))
+Dim lArg1 As String: lArg1 = lClp.Arg(1)
+
+Dim lContractSpec As IContractSpecifier
+Dim lFirstArgIsContractSpec As Boolean
+If (lVerb = gCommands.BuyCommand.Name Or _
+        lVerb = gCommands.SellCommand.Name) And _
+    Not IsNumeric(Left$(lArg1, 1)) _
+Then
+    lFirstArgIsContractSpec = True
+ElseIf lVerb = gCommands.BracketCommand.Name And _
+    lClp.NumberOfArgs = 4 _
+Then
+    lFirstArgIsContractSpec = True
+End If
+    
+If lFirstArgIsContractSpec Then
+    Set lContractSpec = CreateContractSpecifierFromString(lArg1)
+    pParams = Trim$(Right$(lCommand, Len(lCommand) - InStr(Len(lVerb), lCommand, lArg1) - Len(lArg1)))
+Else
+    pParams = Trim$(Right$(lCommand, Len(lCommand) - Len(lVerb)))
+End If
+
+If Not lContractSpec Is Nothing Then
+ElseIf lEntry.Order Is Nothing Then
+    Set lContractSpec = lEntry.BracketOrderSpec.Contract.Specifier
+Else
+    Set lContractSpec = lEntry.Order.Contract.Specifier
+End If
+
+Dim lContractProcessor As ContractProcessor
+Set lContractProcessor = mCurrentGroup.AddContractProcessor(lContractSpec, _
+                                    mBatchOrders, _
+                                    mStageOrders, _
+                                    OptionStrikeSelectionModeNone, _
+                                    0, _
+                                    OptionStrikeSelectionOperatorNone, _
+                                    "")
+Select Case UCase$(lVerb)
+Case gCommands.BracketCommand.Name
+    lContractProcessor.ProcessBracketCommand pParams, lKey, True
+Case gCommands.BuyCommand.Name
+    processBuyOrSellCommand OrderActionBuy, pParams, lContractProcessor, lKey, True
+Case gCommands.SellCommand.Name
+    processBuyOrSellCommand OrderActionSell, pParams, lContractProcessor, lKey, True
+Case Else
+    gWriteErrorLine "Invalid command '" & lVerb & "'", ErrorCountIncrementNo
+End Select
 
 Exit Sub
 
@@ -1805,7 +2268,7 @@ ElseIf UCase$(pParams) = AllGroups Then
     Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 ElseIf isGroupValid(pParams) Then
     If Not mGroups.TryItem(pParams, lRes) Then
-        gWriteErrorLine "No such group"
+        gWriteErrorLine "No such group", ErrorCountIncrementNo
         Exit Sub
     End If
     gWriteLineToConsole "Purging " & lRes.GroupName
@@ -1813,7 +2276,7 @@ ElseIf isGroupValid(pParams) Then
     mGroups.Remove pParams
     Set mCurrentGroup = mGroups.Add(DefaultGroupName)
 Else
-    gWriteErrorLine "Invalid group name"
+    gWriteErrorLine "Invalid group name", ErrorCountIncrementNo
     Exit Sub
 End If
 
@@ -1867,7 +2330,7 @@ Exit Sub
 
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
+    gWriteErrorLine Err.Description, ErrorCountIncrementNo
 Else
     gHandleUnexpectedError ProcName, ModuleName
 End If
@@ -1876,6 +2339,7 @@ End Sub
 Private Sub processResetCommand()
 mStageOrders = mStageOrdersDefault
 mBatchOrders = mBatchOrdersDefault
+mBlockingErrorCount = 0
 mErrorCount = 0
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 End Sub
@@ -1887,14 +2351,14 @@ Case Default
     mStageOrders = mStageOrdersDefault
 Case Yes
     If Not (mOrderSubmitterFactory.Capabilities And OrderSubmitterCapabilityCanStageOrders) = OrderSubmitterCapabilityCanStageOrders Then
-        gWriteErrorLine gCommands.StageOrdersCommand.Name & " parameter cannot be YES with current configuration", True
+        gWriteErrorLine gCommands.StageOrdersCommand.Name & " parameter cannot be YES with current configuration", ErrorCountIncrementNo
         Exit Sub
     End If
     mStageOrders = True
 Case No
     mStageOrders = False
 Case Else
-    gWriteErrorLine gCommands.StageOrdersCommand.Name & " parameter must be either YES or NO or DEFAULT", True
+    gWriteErrorLine gCommands.StageOrdersCommand.Name & " parameter must be either YES or NO or DEFAULT", ErrorCountIncrementNo
 End Select
 
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
@@ -1909,7 +2373,7 @@ ElseIf UCase$(mClp.SwitchValue(BatchOrdersSwitch)) = Yes Then
 ElseIf UCase$(mClp.SwitchValue(BatchOrdersSwitch)) = No Then
     mBatchOrdersDefault = False
 Else
-    gWriteErrorLine "The /" & BatchOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)", True
+    gWriteErrorLine "The /" & BatchOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)", ErrorCountIncrementNo
     setBatchOrders = False
 End If
 End Function
@@ -1925,7 +2389,7 @@ ElseIf UCase$(mClp.SwitchValue(MonitorSwitch)) = Yes Then
 ElseIf UCase$(mClp.SwitchValue(MonitorSwitch)) = No Then
     mMonitor = False
 Else
-    gWriteErrorLine "The /" & MonitorSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive, default is YES)", True
+    gWriteErrorLine "The /" & MonitorSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive, default is YES)", ErrorCountIncrementNo
     setMonitor = False
 End If
 End Function
@@ -1965,7 +2429,7 @@ If mClp.SwitchValue(StageOrdersSwitch) = "" Then
     mStageOrdersDefault = False
 ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = Yes Then
     If Not (mOrderSubmitterFactory.Capabilities And OrderSubmitterCapabilityCanStageOrders) = OrderSubmitterCapabilityCanStageOrders Then
-        gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it cannot be YES with the current configuration", True
+        gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it cannot be YES with the current configuration", ErrorCountIncrementNo
         setStageOrders = False
         Exit Function
     End If
@@ -1973,7 +2437,7 @@ ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = Yes Then
 ElseIf UCase$(mClp.SwitchValue(StageOrdersSwitch)) = No Then
     mStageOrdersDefault = False
 Else
-    gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)", True
+    gWriteErrorLine "The /" & StageOrdersSwitch & " switch has an invalid value: it must be either YES or NO (not case-sensitive)", ErrorCountIncrementNo
     setStageOrders = False
 End If
 End Function
@@ -1993,7 +2457,11 @@ gCommandListOrderCreation.Initialise _
                 gCommands.BracketCommand, _
                 gCommands.BuyAgainCommand, _
                 gCommands.BuyCommand, _
+                gCommands.CancelCommand, _
                 gCommands.EndOrdersCommand, _
+                gCommands.ModifyCommand, _
+                gCommands.Modify1Command, _
+                gCommands.Modify2Command, _
                 gCommands.SellAgainCommand, _
                 gCommands.SellCommand
 
@@ -2124,7 +2592,7 @@ port = lClp.Arg(1)
 If port = "" Then
     port = 7496
 ElseIf Not IsInteger(port, 1024) Then
-    gWriteErrorLine "port must be an integer > 1024 and <= 65535", True
+    gWriteErrorLine "port must be an integer > 1024 and <= 65535", ErrorCountIncrementNo
     setupTwsApi = False
 End If
     
@@ -2133,7 +2601,7 @@ clientId = lClp.Arg(2)
 If clientId = "" Then
     clientId = DefaultClientId
 ElseIf Not IsInteger(clientId, 0, 999999999) Then
-    gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999", True
+    gWriteErrorLine "clientId must be an integer >= 0 and <= 999999999", ErrorCountIncrementNo
     setupTwsApi = False
 End If
 pClientId = CLng(clientId)
@@ -2142,7 +2610,7 @@ Dim connectionRetryInterval As String
 connectionRetryInterval = lClp.Arg(3)
 If connectionRetryInterval = "" Then
 ElseIf Not IsInteger(connectionRetryInterval, 0, 3600) Then
-    gWriteErrorLine "Error: connection retry interval must be an integer >= 0 and <= 3600", True
+    gWriteErrorLine "Error: connection retry interval must be an integer >= 0 and <= 3600", ErrorCountIncrementNo
     setupTwsApi = False
 End If
 

@@ -102,10 +102,10 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If ev.Future.IsFaulted Then
-    gWriteErrorLine ev.Future.ErrorMessage, True
+    gWriteErrorLine ev.Future.ErrorMessage, ErrorCountIncrementNo
     Set mSelfRef = Nothing
 ElseIf ev.Future.IsCancelled Then
-    gWriteErrorLine "Contract fetch cancelled", True
+    gWriteErrorLine "Contract fetch cancelled", ErrorCountIncrementNo
     Set mSelfRef = Nothing
 ElseIf ev.Future.IsAvailable Then
     Set mContract = ev.Future.Value

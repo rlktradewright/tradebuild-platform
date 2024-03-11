@@ -91,21 +91,7 @@ End If
 
 LogMessage "Order recovery completed"
 
-Dim lPM As PositionManager
-For Each lPM In mOrderManager.PositionManagersLive
-    Dim lBO As IBracketOrder
-    For Each lBO In lPM.BracketOrders
-        If lBO.State = BracketOrderStateSubmitted Or lBO.Size <> 0 Then
-            CreateBracketProfitCalculator lBO, lPM.DataSource
-        End If
-        If Not lBO.RolloverSpecification Is Nothing And _
-            (lBO.CumBuyPrice <> 0 Or _
-            lBO.CumSellPrice <> 0) _
-        Then
-            gBracketOrderListener.Add lBO
-        End If
-    Next
-Next
+gCompleteOrderRecovery
 
 Set mSelfRef = Nothing
 

@@ -42,7 +42,8 @@ Implements IErrorListener
 
 Private Const ModuleName                            As String = "ContractProcessor"
 
-Private Const OrderPendingMessage                   As String = "Order is pending contract resolution"
+Private Const OrderPendingContractMessage           As String = "Order is pending contract resolution"
+Private Const OrderPendingProviderReady             As String = "Order is pending provider readiness"
 
 '@================================================================================
 ' Member variables
@@ -91,6 +92,8 @@ Private mPendingCommands                            As SortedDictionary
 Private mStageOrders                                As Boolean
 
 Private mDefaultRolloverSpec                        As RolloverSpecification
+
+Private mCanSubmitPendingOrders    As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -147,6 +150,22 @@ Friend Property Get BracketOrders() As EnumerableCollection
 Set BracketOrders = mBracketOrders
 End Property
 
+Friend Property Let CanSubmitPendingOrders(ByVal Value As Boolean)
+Const ProcName As String = "CanSubmitPendingOrders"
+On Error GoTo Err
+
+mCanSubmitPendingOrders = True
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Friend Property Get CanSubmitPendingOrders() As Boolean
+CanSubmitPendingOrders = mCanSubmitPendingOrders
+End Property
+
 Friend Property Get Contract() As IContract
 Set Contract = mContract
 End Property
@@ -172,6 +191,10 @@ mFixedAccountBalance = Value
 If Not mPositionManager Is Nothing Then mPositionManager.FixedAccountBalance = mFixedAccountBalance
 End Property
 
+Friend Property Get HasPendingCommands()
+HasPendingCommands = (mPendingCommands.Count <> 0)
+End Property
+
 Friend Property Get ID() As String
 ID = mIdent
 End Property
@@ -181,7 +204,11 @@ Set InitialContractSpec = mInitialContractSpec
 End Property
 
 Friend Property Get IsReady()
-IsReady = mOrderContext.IsReady
+If mOrderContext Is Nothing Then
+    IsReady = False
+Else
+    IsReady = mOrderContext.IsReady
+End If
 End Property
 
 Friend Property Get LatestBuyCommandParams() As String
@@ -260,6 +287,8 @@ End If
 If mFixedAccountBalance <> 0 Then mPositionManager.FixedAccountBalance = mFixedAccountBalance
 Set mOrderContext = mPositionManager.OrderContexts.DefaultOrderContext
 
+If mOrderContext.IsReady And mPendingCommands.Count <> 0 Then processPendingCommands
+
 Exit Sub
 
 Err:
@@ -294,10 +323,11 @@ Do While en.MoveNext
     Dim lEntry As DictionaryEntry: Set lEntry = en.Current
     Dim lTimestamp As Date: lTimestamp = lEntry.Key
     Dim lPendingCommand As PendingCommand: Set lPendingCommand = lEntry.Data
-    addPendingCommand lTimestamp, _
-                        lPendingCommand.Command, _
+    addPendingCommand lPendingCommand.Command, _
                         lPendingCommand.Params, _
-                        lPendingCommand.OrderID
+                        lPendingCommand.OrderID, _
+                        , _
+                        lPendingCommand.Modify
 Loop
 
 If IsReady Then processPendingCommands
@@ -324,7 +354,9 @@ If Not mContractResolver Is Nothing Then
 End If
 
 mBracketOrders.Clear
-If Not mPositionManager Is Nothing Then
+If mPositionManager Is Nothing Then
+ElseIf mPositionManager.IsActive Then
+Else
     mPositionManager.Finish
     If Not mDataSource Is Nothing Then mDataSource.Finish
 End If
@@ -367,53 +399,51 @@ End Sub
 
 Friend Sub ProcessBracketCommand( _
                 ByVal pParams As String, _
-                ByVal pID As String)
+                ByVal pID As String, _
+                ByVal pModify As Boolean)
 Const ProcName As String = "ProcessBracketCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
-    addPendingCommand GetTimestamp, gCommands.BracketCommand, pParams, pID
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
-    Exit Sub
+If Not deferProcessing(gCommands.BracketCommand, pParams, pID, pModify) Then
+    Set mBOSpec = New BracketOrderSpecification
+    mBOSpec.Modify = pModify
+    Set mBOSpec.Contract = mContract
+    mBOSpec.ID = pID
+    mBOSpec.EntryTIF = OrderTIFDay
+    mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
+    mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
+    
+    Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams, " ")
+    
+    If lClp.NumberOfArgs <> 2 Then gWriteErrorLine "There must be only two arguments, action (BUY or SELL) and size. Additionally there can be several attributes beginnig with ""/"""
+    
+    mBOSpec.Action = getOrderAction(lClp.Arg(0))
+    If mBOSpec.Action = OrderActionNone Then gWriteErrorLine "Order action must be BUY or SELL"
+    
+    If Not setQuantity(lClp.Arg(1)) Then
+        gWriteErrorLine "Invalid quantity", ErrorCountIncrementNo
+    End If
+    
+    Dim lSwitchName As String
+    lSwitchName = CancelAfterSwitch
+    If lClp.Switch(lSwitchName) Then mBOSpec.CancelAfter = CInt(lClp.SwitchValue(lSwitchName))
+    If mBOSpec.CancelAfter < 0 Then gWriteErrorLine "CancelAfter must be an integer >= 0"
+    
+    lSwitchName = CancelPriceSwitch
+    If lClp.Switch(lSwitchName) Then mBOSpec.CancelPrice = CDbl(lClp.SwitchValue(lSwitchName))
+    
+    lSwitchName = DescriptionSwitch
+    If lClp.Switch(lSwitchName) Then mBOSpec.Description = lClp.SwitchValue(lSwitchName)
+    
+    lSwitchName = GoodAfterTimeSwitch
+    If lClp.Switch(lSwitchName) Then mBOSpec.GoodAfterTime = CDate(lClp.SwitchValue(lSwitchName))
+    
+    lSwitchName = GoodTillDateSwitch
+    If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(lSwitchName))
+    
+    lSwitchName = TimezoneSwitch
+    If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 End If
-
-Set mBOSpec = New BracketOrderSpecification
-Set mBOSpec.Contract = mContract
-mBOSpec.ID = pID
-mBOSpec.EntryTIF = OrderTIFDay
-mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
-mBOSpec.TargetTIF = OrderTIFGoodTillCancelled
-
-Dim lClp As CommandLineParser: Set lClp = CreateCommandLineParser(pParams, " ")
-
-If lClp.NumberOfArgs <> 2 Then gWriteErrorLine "There must be only two arguments, action (BUY or SELL) and size. Additionally there can be several attributes beginnig with ""/"""
-
-mBOSpec.Action = getOrderAction(lClp.Arg(0))
-If mBOSpec.Action = OrderActionNone Then gWriteErrorLine "Order action must be BUY or SELL"
-
-If Not setQuantity(lClp.Arg(1)) Then
-    gWriteErrorLine "Invalid quantity", True
-End If
-
-Dim lSwitchName As String
-lSwitchName = CancelAfterSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.CancelAfter = CInt(lClp.SwitchValue(lSwitchName))
-If mBOSpec.CancelAfter < 0 Then gWriteErrorLine "CancelAfter must be an integer >= 0"
-
-lSwitchName = CancelPriceSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.CancelPrice = CDbl(lClp.SwitchValue(lSwitchName))
-
-lSwitchName = DescriptionSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.Description = lClp.SwitchValue(lSwitchName)
-
-lSwitchName = GoodAfterTimeSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.GoodAfterTime = CDate(lClp.SwitchValue(lSwitchName))
-
-lSwitchName = GoodTillDateSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.GoodTillDate = CDate(lClp.SwitchValue(lSwitchName))
-
-lSwitchName = TimezoneSwitch
-If lClp.Switch(lSwitchName) Then mBOSpec.TimezoneName = lClp.SwitchValue(lSwitchName)
 
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
 
@@ -430,76 +460,69 @@ End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function ProcessBuyCommand( _
+Friend Sub ProcessBuyCommand( _
                 ByVal pParams As String, _
-                ByVal pID As String) As Boolean
+                ByVal pID As String, _
+                ByVal pModify As Boolean)
 Const ProcName As String = "ProcessBuyCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    addPendingCommand GetTimestamp, _
-                            gCommands.BuyCommand, _
-                            pParams, _
-                            pID, _
-                            OrderPendingMessage
-Else
-    ProcessBuyCommand = processBuyOrSellCommand(OrderActionBuy, pParams, pID)
+If Not deferProcessing(gCommands.BuyCommand, _
+                        pParams, _
+                        pID, _
+                        pModify) _
+Then
+    processBuyOrSellCommand OrderActionBuy, pParams, pID, pModify
 End If
 
-Exit Function
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
+
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
-Friend Function ProcessSellCommand( _
+Friend Sub ProcessSellCommand( _
                 ByVal pParams As String, _
-                ByVal pID As String) As Boolean
+                ByVal pID As String, _
+                ByVal pModify As Boolean)
 Const ProcName As String = "ProcessSellCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    addPendingCommand GetTimestamp, _
-                            gCommands.SellCommand, _
-                            pParams, _
-                            pID, _
-                            OrderPendingMessage
-Else
-    ProcessSellCommand = processBuyOrSellCommand(OrderActionSell, pParams, pID)
+If Not deferProcessing(gCommands.SellCommand, _
+                        pParams, _
+                        pID, _
+                        pModify) _
+Then
+    processBuyOrSellCommand OrderActionSell, pParams, pID, pModify
 End If
 
-Exit Function
+gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
+
+Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Friend Sub ProcessEndBracketCommand()
 Const ProcName As String = "ProcessEndBracketCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    addPendingCommand GetTimestamp, _
-                            gCommands.EndBracketCommand, _
-                            "", _
-                            "", _
-                            OrderPendingMessage
-    Exit Sub
-End If
+If Not deferProcessing(gCommands.EndBracketCommand, "") Then
 
-If Not mBOSpec.RolloverSpec Is Nothing Then
-    mBOSpec.RolloverSpec.setStopLossOrderType(mBOSpec.StopLossType). _
-                    setStopLossLimitPriceSpec(mBOSpec.StopLossLimitPriceSpec). _
-                    setStopLossTriggerPriceSpec(mBOSpec.StopLossTriggerPriceSpec). _
-                    setTargetOrderType(mBOSpec.TargetType). _
-                    setTargetLimitPriceSpec(mBOSpec.TargetLimitPriceSpec). _
-                    setTargetTriggerPriceSpec mBOSpec.TargetTriggerPriceSpec
+    If Not mBOSpec.RolloverSpec Is Nothing Then
+        mBOSpec.RolloverSpec.setStopLossOrderType(mBOSpec.StopLossType). _
+                        setStopLossLimitPriceSpec(mBOSpec.StopLossLimitPriceSpec). _
+                        setStopLossTriggerPriceSpec(mBOSpec.StopLossTriggerPriceSpec). _
+                        setTargetOrderType(mBOSpec.TargetType). _
+                        setTargetLimitPriceSpec(mBOSpec.TargetLimitPriceSpec). _
+                        setTargetTriggerPriceSpec mBOSpec.TargetTriggerPriceSpec
+    End If
+    
+    If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 End If
-
-If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
 
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
@@ -514,16 +537,16 @@ Friend Sub ProcessEntryCommand( _
 Const ProcName As String = "ProcessEntryCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    addPendingCommand GetTimestamp, gCommands.EntryCommand, pParams
+If deferProcessing(gCommands.EntryCommand, pParams) _
+Then
+    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification
     Exit Sub
 End If
 
 Dim lClp As CommandLineParser
 Set lClp = CreateCommandLineParser(pParams, " ")
 
-If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the entry order type. Additionally there can be several attributes beginnig with ""/"""
+If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument, the entry order type. Additionally there can be several attributes beginnig with ""/""", ErrorCountIncrementIfNotInteractive
 
 Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(0)
 If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
@@ -531,7 +554,7 @@ If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
 
     If Not IsEntryOrderType(mBOSpec.EntryType) Then
         mBOSpec.EntryType = OrderTypeNone
-        gWriteErrorLine "Invalid entry order type", True
+        gWriteErrorLine "Invalid entry order type", ErrorCountIncrementIfNotInteractive
     Else
         Dim lPriceStr As String: lPriceStr = getPriceString(lClp)
         Dim lTriggerPriceStr As String: lTriggerPriceStr = getTriggerPriceString(lClp)
@@ -546,14 +569,14 @@ If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
                         lTriggerPriceSpec, _
                         lMessage) _
         Then
-            gWriteErrorLine lMessage
+            gWriteErrorLine lMessage, ErrorCountIncrementIfNotInteractive
         End If
         Set mBOSpec.EntryLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.EntryTriggerPriceSpec = lTriggerPriceSpec
         
         If mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeEntry Or _
             mBOSpec.EntryTriggerPriceSpec.PriceType = PriceValueTypeEntry Then
-            gWriteErrorLine "Invalid use of 'ENTRY'", True
+            gWriteErrorLine "Invalid use of 'ENTRY'", ErrorCountIncrementIfNotInteractive
         End If
     End If
 End If
@@ -592,9 +615,8 @@ Friend Sub ProcessRolloverCommand( _
 Const ProcName As String = "ProcessRolloverCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
+If deferProcessing(gCommands.RolloverCommand, pParams) Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    addPendingCommand GetTimestamp, gCommands.RolloverCommand, pParams
     Exit Sub
 End If
 
@@ -628,19 +650,17 @@ Friend Sub ProcessQuitCommand()
 Const ProcName As String = "ProcessQuitCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
-    gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-    addPendingCommand GetTimestamp, _
-                            gCommands.QuitCommand, _
+If Not deferProcessing(gCommands.QuitCommand, _
                             "", _
                             "", _
-                            "Bracket order definition terminated"
-    Exit Sub
+                            "Bracket order definition terminated") _
+Then
+
+    Set mBOSpec = Nothing
+    gWriteLineToConsole "Command definition terminated"
 End If
 
-Set mBOSpec = Nothing
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
-gWriteLineToConsole "Command definition terminated"
 
 Exit Sub
 
@@ -653,9 +673,8 @@ Friend Sub ProcessStopLossCommand( _
 Const ProcName As String = "ProcessStopLossCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
+If deferProcessing(gCommands.StopLossCommand, pParams) Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    addPendingCommand GetTimestamp, gCommands.StopLossCommand, pParams
     Exit Sub
 End If
 
@@ -666,7 +685,7 @@ If lClp.NumberOfArgs <> 1 Then gWriteErrorLine "There must be only one argument,
 
 Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(0)
 If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
-    mBOSpec.StopLossType = getStopLossOrderType(lClp.Arg(0))
+    mBOSpec.StopLossType = getStopLossOrderType(lOrderTypeStr)
 
     If Not IsStopLossOrderType(mBOSpec.StopLossType) Then
         mBOSpec.StopLossType = OrderTypeNone
@@ -685,7 +704,7 @@ If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
                         lTriggerPriceSpec, _
                         lMessage) _
         Then
-            gWriteErrorLine lMessage
+            gWriteErrorLine lMessage, ErrorCountIncrementIfNotInteractive
         End If
         Set mBOSpec.StopLossLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.StopLossTriggerPriceSpec = lTriggerPriceSpec
@@ -726,9 +745,8 @@ Friend Sub ProcessTargetCommand( _
 Const ProcName As String = "ProcessTargetCommand"
 On Error GoTo Err
 
-If mOrderContext Is Nothing Then
+If deferProcessing(gCommands.TargetCommand, pParams) Then
     gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderSpecification, gCommandListOrderCompletion
-    addPendingCommand GetTimestamp, gCommands.TargetCommand, pParams
     Exit Sub
 End If
 
@@ -758,7 +776,7 @@ If Not parsePseudoOrder(lOrderTypeStr, lClp.SwitchValue(OffsetSwitch)) Then
                         lTriggerPriceSpec, _
                         lMessage) _
         Then
-            gWriteErrorLine lMessage
+            gWriteErrorLine lMessage, ErrorCountIncrementIfNotInteractive
         End If
         Set mBOSpec.TargetLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.TargetTriggerPriceSpec = lTriggerPriceSpec
@@ -818,26 +836,63 @@ End Sub
 '@================================================================================
 
 Private Sub addPendingCommand( _
-                ByVal pTimestamp As Date, _
                 ByVal pCommand As Command, _
                 ByVal pParams As String, _
                 Optional ByVal pOrderId As String, _
-                Optional ByVal pMessage As String)
+                Optional ByVal pMessage As String, _
+                Optional ByVal pModify As Boolean)
 Const ProcName As String = "addPendingCommand"
 On Error GoTo Err
+
+LogMessage "Add pending command: " & pCommand.Name & " " & pParams & IIf(pModify, " (Modify)", "")
 
 Dim lPendingCommand As New PendingCommand
 Set lPendingCommand.Command = pCommand
 lPendingCommand.Params = pParams
 lPendingCommand.OrderID = pOrderId
-mPendingCommands.Add lPendingCommand, pTimestamp
-If pMessage <> "" Then gWriteLineToConsole pMessage
+lPendingCommand.Modify = pModify
+mPendingCommands.Add lPendingCommand, GetTimestamp
+If pMessage <> "" Then
+    If pOrderId <> "" Then
+        LogMessage pOrderId & ": " & pMessage
+    Else
+        LogMessage pMessage
+    End If
+End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function deferProcessing( _
+                ByVal pCommand As Command, _
+                ByVal pParams As String, _
+                Optional ByVal pOrderId As String, _
+                Optional ByVal pModify As Boolean) As Boolean
+Const ProcName As String = "deferProcessing"
+On Error GoTo Err
+
+Dim lMessage As String
+
+If mContract Is Nothing Then
+    lMessage = OrderPendingContractMessage
+    deferProcessing = True
+ElseIf Not mOrderContext.IsReady Then
+    lMessage = OrderPendingProviderReady
+    deferProcessing = True
+Else
+    deferProcessing = False
+End If
+
+If deferProcessing Then addPendingCommand pCommand, pParams, pOrderId, lMessage, pModify
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function getEntryOrderType(ByVal pInput As String) As OrderTypes
 Const ProcName As String = "getEntryOrderType"
@@ -847,19 +902,24 @@ If pInput = "" Then
     getEntryOrderType = OrderTypeNone
 Else
     getEntryOrderType = OrderTypeFromString(pInput)
+'    If getEntryOrderType = OrderTypeNone Then
+'        gWriteErrorLine "Invalid entry order type: " & pInput
+'        Exit Function
+'    End If
 End If
-AssertArgument IsEntryOrderType(getEntryOrderType)
-If Not mOrderContext Is Nothing Then AssertArgument (mOrderContext.PermittedOrderTypes And getEntryOrderType) <> 0
+'AssertArgument IsEntryOrderType(getEntryOrderType)
+
+If getEntryOrderType = OrderTypeNone Then Exit Function
+
+If Not mOrderContext Is Nothing Then
+    AssertArgument (mOrderContext.PermittedOrderTypes And getEntryOrderType) <> 0, _
+                    "unsupported entry order type"
+End If
 
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine "Invalid entry order type: " & pInput
-    getEntryOrderType = OrderTypeNone
-Else
-    gHandleUnexpectedError ProcName, ModuleName
-End If
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getOrderAction(ByVal pInput As String) As OrderActions
@@ -894,6 +954,10 @@ ElseIf pInput = AutoPseudoOrderType Then
     getStopLossOrderType = OrderTypeStop
 Else
     getStopLossOrderType = OrderTypeFromString(pInput)
+    If getStopLossOrderType = OrderTypeNone Then
+        gWriteErrorLine "Invalid stop-loss order type: " & pInput
+        Exit Function
+    End If
 End If
 If (mOrderContext.PermittedOrderTypes And getStopLossOrderType) = 0 Then
     gWriteErrorLine "Stop-loss order type not supported: " & pInput
@@ -902,12 +966,7 @@ End If
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine "Invalid stop-loss order type: " & pInput
-    getStopLossOrderType = OrderTypeNone
-Else
-    gHandleUnexpectedError ProcName, ModuleName
-End If
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getTargetOrderType(ByVal pInput As String) As OrderTypes
@@ -920,6 +979,10 @@ ElseIf pInput = AutoPseudoOrderType Then
     getTargetOrderType = OrderTypeLimit
 Else
     getTargetOrderType = OrderTypeFromString(pInput)
+    If getTargetOrderType = OrderTypeNone Then
+        gWriteErrorLine "Invalid target order type: " & pInput
+        Exit Function
+    End If
 End If
 If (mOrderContext.PermittedOrderTypes And getTargetOrderType) = 0 Then
     gWriteErrorLine "Target order type not supported: " & pInput
@@ -928,12 +991,7 @@ End If
 Exit Function
 
 Err:
-If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine "Invalid target order type: " & pInput
-    getTargetOrderType = OrderTypeNone
-Else
-    gHandleUnexpectedError ProcName, ModuleName
-End If
+gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getTriggerPriceString(ByVal pClp As CommandLineParser) As String
@@ -1013,18 +1071,18 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function processBuyOrSellCommand( _
+Private Sub processBuyOrSellCommand( _
                 ByVal pAction As OrderActions, _
                 ByVal pParams As String, _
-                ByVal pID As String) As Boolean
+                ByVal pID As String, _
+                ByVal pModify As Boolean)
 Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
-
-processBuyOrSellCommand = True
 
 Set mBOSpec = New BracketOrderSpecification
 Set mBOSpec.Contract = mContract
 mBOSpec.ID = pID
+mBOSpec.Modify = pModify
 mBOSpec.Action = pAction
 mBOSpec.EntryTIF = OrderTIFDay
 mBOSpec.StopLossTIF = OrderTIFGoodTillCancelled
@@ -1039,7 +1097,7 @@ If UCase$(lClp.Arg(lClp.NumberOfArgs - 1)) = "ROLLOVER" Then
 End If
 
 If Not setQuantity(lClp.Arg(0)) Then
-    gWriteErrorLine "Invalid quantity", True
+    gWriteErrorLine "Invalid quantity", ErrorCountIncrementIfNotInteractive
 End If
 
 Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(1)
@@ -1051,29 +1109,26 @@ If Not parsePseudoOrder(lOrderTypeStr, lPriceOrOffset) Then
     
     If Not IsEntryOrderType(mBOSpec.EntryType) Then
         mBOSpec.EntryType = OrderTypeNone
-        gWriteErrorLine "Invalid entry order type", True
-        processBuyOrSellCommand = False
+        gWriteErrorLine "Invalid entry order type", ErrorCountIncrementIfNotInteractive
     Else
         Dim lLimitPriceSpec As PriceSpecifier
         Dim lTriggerPriceSpec As PriceSpecifier
         Dim lMessage As String
-        processBuyOrSellCommand = gParseOrderPrices( _
-                                        lPriceOrOffset, _
-                                        lTriggerPrice, _
-                                        mBOSpec.EntryType, _
-                                        lLimitPriceSpec, _
-                                        lTriggerPriceSpec, _
-                                        lMessage)
-        If Not processBuyOrSellCommand Then
-            gWriteErrorLine lMessage
+        If Not gParseOrderPrices(lPriceOrOffset, _
+                                lTriggerPrice, _
+                                mBOSpec.EntryType, _
+                                lLimitPriceSpec, _
+                                lTriggerPriceSpec, _
+                                lMessage) _
+        Then
+            gWriteErrorLine lMessage, ErrorCountIncrementIfNotInteractive
         End If
         Set mBOSpec.EntryLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.EntryTriggerPriceSpec = lTriggerPriceSpec
         
         If mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeEntry Or _
             mBOSpec.EntryTriggerPriceSpec.PriceType = PriceValueTypeEntry Then
-            processBuyOrSellCommand = False
-            gWriteErrorLine "Invalid use of 'ENTRY'", True
+            gWriteErrorLine "Invalid use of 'ENTRY'", ErrorCountIncrementNo
         End If
     End If
 End If
@@ -1085,7 +1140,7 @@ If lClp.Switch(lSwitchName) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.Swit
 lSwitchName = IgnoreRTHSwitch
 mBOSpec.EntryIgnoreRTH = lClp.Switch(lSwitchName)
 
-If processBuyOrSellCommand Then
+If gErrorCount = 0 Then
     mBracketOrders.Add mBOSpec
     
     If pAction = OrderActionBuy Then
@@ -1095,24 +1150,20 @@ If processBuyOrSellCommand Then
     End If
 End If
 
-
-
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
-Exit Function
+Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
-    gWriteErrorLine lSwitchName & ": invalid value", True
-    processBuyOrSellCommand = False
+    gWriteErrorLine lSwitchName & ": invalid value", ErrorCountIncrementNo
     Resume Next
 ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    gWriteErrorLine Err.Description, True
-    processBuyOrSellCommand = False
+    gWriteErrorLine Err.Description, ErrorCountIncrementNo
     Resume Next
 End If
 gHandleUnexpectedError ProcName, ModuleName
-End Function
+End Sub
 
 Private Sub processPendingCommands()
 Const ProcName As String = "processPendingCommands"
@@ -1120,10 +1171,11 @@ On Error GoTo Err
 
 Dim c As PendingCommand
 For Each c In mPendingCommands
+    LogMessage "Process pending command: " & c.Command.Name & " " & c.Params & IIf(c.Modify, " (Modify)", "")
     If c.Command Is gCommands.BracketCommand Then
-        ProcessBracketCommand c.Params, c.OrderID
+        ProcessBracketCommand c.Params, c.OrderID, c.Modify
     ElseIf c.Command Is gCommands.BuyCommand Then
-        ProcessBuyCommand c.Params, c.OrderID
+        ProcessBuyCommand c.Params, c.OrderID, c.Modify
     ElseIf c.Command Is gCommands.EndBracketCommand Then
         ProcessEndBracketCommand
     ElseIf c.Command Is gCommands.EntryCommand Then
@@ -1133,7 +1185,7 @@ For Each c In mPendingCommands
     ElseIf c.Command Is gCommands.RolloverCommand Then
         ProcessRolloverCommand c.Params
     ElseIf c.Command Is gCommands.SellCommand Then
-        ProcessSellCommand c.Params, c.OrderID
+        ProcessSellCommand c.Params, c.OrderID, c.Modify
     ElseIf c.Command Is gCommands.StopLossCommand Then
         ProcessStopLossCommand c.Params
     ElseIf c.Command Is gCommands.TargetCommand Then
@@ -1141,8 +1193,9 @@ For Each c In mPendingCommands
     End If
 Next
 
-gPlaceOrdersTask.AddContractProcessor Me, mStageOrders
 mPendingCommands.Clear
+
+If mCanSubmitPendingOrders Then gPlaceOrdersTask.AddContractProcessor Me, mStageOrders
 
 Exit Sub
 

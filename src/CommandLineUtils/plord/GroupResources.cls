@@ -118,7 +118,7 @@ ElseIf ev.Future.Value Is Nothing Then
     Set mCurrentContractProcessor = Nothing
 Else
     Dim lContract As IContract: Set lContract = ev.Future.Value
-    gWriteLineToConsole "Contract is: " & gGetContractName(lContract)
+    'gWriteLineToConsole "Contract is: " & gGetContractName(lContract)
     
     Dim lExistingContractProcessor As ContractProcessor
     
@@ -128,6 +128,7 @@ Else
         ' we've already got a ContractProcessor for this contract, so move any
         ' pending orders and commands from this new one to that one, and delete
         ' the new one
+        lExistingContractProcessor.CanSubmitPendingOrders = lNewContractProcessor.CanSubmitPendingOrders
         lExistingContractProcessor.AddBracketOrderSpecs lNewContractProcessor
         lExistingContractProcessor.AddPendingCommands lNewContractProcessor
         If lNewContractProcessor Is mCurrentContractProcessor Then

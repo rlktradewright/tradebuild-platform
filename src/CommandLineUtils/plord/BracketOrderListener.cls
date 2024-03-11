@@ -82,12 +82,11 @@ Const ProcName As String = "mBracketOrderListener_BracketOrderAdded"
 On Error GoTo Err
 
 Dim lBO As IBracketOrder: Set lBO = ev.Source
-gWriteLineToConsole lBO.Key & ": " & _
+LogMessage lBO.Key & ": " & _
                     gGetContractName(lBO.Contract) & _
                     ": state=" & _
                     BracketOrderStateToString(lBO.State) & _
-                    generateRolloverClause(lBO), _
-                    True
+                    generateRolloverClause(lBO)
 
 Exit Sub
 
@@ -136,9 +135,11 @@ Dim s As String: s = lBO.Key & ": " & _
                     gGetContractName(lBO.Contract) & ": "
 
 Dim s1 As String
+Dim lToConsole As Boolean
 
 Select Case lChangeType
 Case BracketOrderCompleted
+    lToConsole = True
     s1 = "bracket order completed"
     If Not lBO.HasRolloverSpecification Then
         ' defer removing from the listener for a while to
@@ -148,28 +149,34 @@ Case BracketOrderCompleted
         DeferAction Me, lBO, 2, ExpiryTimeUnitSeconds
     End If
 Case BracketOrderSelfCancelled
+    lToConsole = True
     s1 = "bracket order cancelled"
     mBracketOrderListener.Remove lBO
 Case BracketOrderEntryOrderChanged
 
 Case BracketOrderEntryOrderFilled
+    lToConsole = True
     s1 = "entry order filled " & _
         filledString(lBO.EntryOrder, lBO.Contract)
 Case BracketOrderStopLossOrderChanged
 
 Case BracketOrderStopLossOrderFilled
+    lToConsole = True
     s1 = "stop-loss order filled " & _
         filledString(lBO.StopLossOrder, lBO.Contract)
 Case BracketOrderTargetOrderChanged
 
 Case BracketOrderTargetOrderFilled
+    lToConsole = True
     s1 = "target order filled " & _
         filledString(lBO.TargetOrder, lBO.Contract)
 Case BracketOrderCloseoutOrderCreated
+    lToConsole = True
     s = s & "closeout order created"
 Case BracketOrderCloseoutOrderChanged
 
 Case BracketOrderCloseoutOrderFilled
+    lToConsole = True
     s1 = "closeout order filled " & _
         filledString(lBO.CloseoutOrder, lBO.Contract)
 Case BracketOrderSizeChanged
@@ -185,16 +192,21 @@ Case BracketOrderChangesApplied
 Case BracketOrderChangesCancelled
 
 Case BracketOrderPositionCloseoutNotified
+    lToConsole = True
     s1 = "closed out"
 Case BracketOrderChangeTypes.BracketOrderRolloverPending
+    lToConsole = True
     s1 = "bracket order rollover pending" & _
         lRolloverClause
 Case BracketOrderRolloverInitiated
+    lToConsole = True
     s1 = "bracket order rollover initiated"
 Case BracketOrderRolloverGotContract
+    lToConsole = True
     s1 = "bracket order rolling over to next contract: " & _
         gGetContractName(lBO.NextContract)
 Case BracketOrderRolloverCompleted
+    lToConsole = True
     Dim lNewBo As IBracketOrder: Set lNewBo = lBO.NextBracketOrder
     s1 = "rollover completed: new bracket order is: " & _
         lNewBo.Key
@@ -203,8 +215,13 @@ Case BracketOrderRolloverCompleted
     mBracketOrderListener.Remove lBO
 End Select
 
-If s1 <> "" Then gWriteLineToConsole s & s1, True
-
+If s1 <> "" Then
+    If lToConsole Then
+        gWriteLineToConsole s & s1, True
+    Else
+        LogMessage s & s1
+    End If
+End If
 Exit Sub
 
 Err:
@@ -258,7 +275,7 @@ Private Function generateMessage( _
                 ByVal pBo As IBracketOrder, _
                 ByVal pOrder As IOrder, _
                 ByVal pMessage As String, _
-                ByVal pIseError As Boolean) As String
+                ByVal pIsError As Boolean) As String
 Const ProcName As String = "generateMessage"
 On Error GoTo Err
 
@@ -267,7 +284,7 @@ s = pBo.Key & _
     ": " & OrderActionToString(pOrder.Action) & _
     " " & pOrder.Quantity & _
     " " & OrderTypeToShortString(pOrder.OrderType) & _
-    IIf(pIseError, ": error", "") & _
+    IIf(pIsError, ": error", "") & _
     ": " & pMessage
 
 generateMessage = s

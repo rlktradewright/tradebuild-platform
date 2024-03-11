@@ -44,6 +44,7 @@ Private Const BatchOrdersCommandName                As String = "BATCHORDERS"
 Private Const BracketCommandName                    As String = "BRACKET"
 Private Const BuyCommandName                        As String = "BUY"
 Private Const BuyAgainCommandName                   As String = "B"
+Private Const CancelCommandName                     As String = "CANCEL"
 Private Const CloseoutCommandName                   As String = "CLOSEOUT"
 Private Const ContractCommandName                   As String = "CONTRACT"
 Private Const EndBracketCommandName                 As String = "ENDBRACKET"
@@ -54,6 +55,9 @@ Private Const GroupCommandName                      As String = "GROUP"
 Private Const HelpCommandName                       As String = "HELP"
 Private Const Help1CommandName                      As String = "?"
 Private Const ListCommandName                       As String = "LIST"
+Private Const ModifyCommandName                     As String = "M"
+Private Const Modify1CommandName                    As String = "MOD"
+Private Const Modify2CommandName                    As String = "MODIFY"
 Private Const PurgeCommandName                      As String = "PURGE"
 Private Const QuitCommandName                       As String = "QUIT"
 Private Const QuoteCommandName                      As String = "QUOTE"
@@ -79,6 +83,7 @@ Private mBatchOrdersCommand                         As New Command
 Private mBracketCommand                             As New Command
 Private mBuyCommand                                 As New Command
 Private mBuyAgainCommand                            As New Command
+Private mCancelCommand                              As New Command
 Private mCloseoutCommand                            As New Command
 Private mContractCommand                            As New Command
 Private mEndBracketCommand                          As New Command
@@ -89,6 +94,9 @@ Private mGroupCommand                               As New Command
 Private mHelpCommand                                As New Command
 Private mHelp1Command                               As New Command
 Private mListCommand                                As New Command
+Private mModifyCommand                              As New Command
+Private mModify1Command                             As New Command
+Private mModify2Command                             As New Command
 Private mPurgeCommand                               As New Command
 Private mQuitCommand                                As New Command
 Private mQuoteCommand                               As New Command
@@ -114,12 +122,13 @@ Private mCommandsNextIndex                          As Long
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mCommands(31) As Command
+ReDim mCommands(32) As Command
 
 addCommand mBatchOrdersCommand, BatchOrdersCommandName
 addCommand mBracketCommand, BracketCommandName
 addCommand mBuyCommand, BuyCommandName
 addCommand mBuyAgainCommand, BuyAgainCommandName
+addCommand mCancelCommand, CancelCommandName
 addCommand mCloseoutCommand, CloseoutCommandName
 addCommand mContractCommand, ContractCommandName
 addCommand mEndBracketCommand, EndBracketCommandName
@@ -130,6 +139,9 @@ addCommand mGroupCommand, GroupCommandName
 addCommand mHelpCommand, HelpCommandName
 addCommand mHelp1Command, Help1CommandName
 addCommand mListCommand, ListCommandName
+addCommand mModifyCommand, ModifyCommandName
+addCommand mModify1Command, Modify1CommandName
+addCommand mModify2Command, Modify2CommandName
 addCommand mPurgeCommand, PurgeCommandName
 addCommand mQuitCommand, QuitCommandName
 addCommand mQuoteCommand, QuoteCommandName
@@ -178,6 +190,10 @@ Friend Property Get BuyAgainCommand() As Command
 Set BuyAgainCommand = mBuyAgainCommand
 End Property
 
+Friend Property Get CancelCommand() As Command
+Set CancelCommand = mCancelCommand
+End Property
+
 Friend Property Get CloseoutCommand() As Command
 Set CloseoutCommand = mCloseoutCommand
 End Property
@@ -216,6 +232,18 @@ End Property
 
 Friend Property Get ListCommand() As Command
 Set ListCommand = mListCommand
+End Property
+
+Friend Property Get ModifyCommand() As Command
+Set ModifyCommand = mModifyCommand
+End Property
+
+Friend Property Get Modify1Command() As Command
+Set Modify1Command = mModify1Command
+End Property
+
+Friend Property Get Modify2Command() As Command
+Set Modify2Command = mModify2Command
 End Property
 
 Friend Property Get PurgeCommand() As Command
