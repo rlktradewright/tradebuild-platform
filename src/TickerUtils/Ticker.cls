@@ -1129,12 +1129,16 @@ If Not mTimeframes Is Nothing Then
     Set mTimeframes = Nothing
 End If
 
-If Not mPositionManager Is Nothing Then
+If mPositionManager Is Nothing Then
+ElseIf mPositionManager.IsActive Then
+Else
     gLogger.Log "Finishing position manager (live)", ProcName, ModuleName
     mPositionManager.Finish
     Set mPositionManager = Nothing
 End If
-If Not mPositionManagerSimulated Is Nothing Then
+If mPositionManagerSimulated Is Nothing Then
+ElseIf mPositionManagerSimulated.IsActive Then
+Else
     gLogger.Log "Finishing position manager (simulated)", ProcName, ModuleName
     mPositionManagerSimulated.Finish
     Set mPositionManagerSimulated = Nothing
