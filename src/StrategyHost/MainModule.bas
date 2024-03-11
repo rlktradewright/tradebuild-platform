@@ -96,7 +96,11 @@ If lSymbol = "" And lNoUI Then
     Exit Sub
 ElseIf lSymbol <> "" Then
     Dim lContractSpec As IContractSpecifier
-    Set lContractSpec = parseSymbol(lSymbol)
+    If Left$(lSymbol, 1) = "(" Then
+        Set lContractSpec = parseSymbol(lSymbol)
+    Else
+        Set lContractSpec = CreateContractSpecifierFromString(lSymbol)
+    End If
     If lContractSpec Is Nothing Then
         LogMessage "Invalid symbol"
         If Not lNoUI And lRun Then MsgBox "Error - invalid symbol string supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
@@ -340,7 +344,7 @@ If lExpiry = "" Then lExpiry = lClp.switchValue(ExpirySwitch1)
 
 Dim lMultiplier As String: lMultiplier = lClp.switchValue(MultiplierSwitch)
 If lMultiplier = "" Then lMultiplier = lClp.switchValue(MultiplierSwitch1)
-If lMultiplier = "" Then lMultiplier = "1.0"
+If lMultiplier = "" Then lMultiplier = "0.0"
 
 Dim lStrike As String: lStrike = lClp.switchValue(StrikeSwitch)
 If lStrike = "" Then lStrike = lClp.switchValue(StrikeSwitch1)
@@ -389,8 +393,17 @@ If Not (pClp.Switch("tws") Or pClp.Switch("db")) Then
     Exit Function
 End If
 
+Dim lOrdersViaPaperTWS As Boolean
+If pClp.Switch("papertws") Then
+    lOrdersViaPaperTWS = True
+    If Not setupPaperTwsServiceProviders(pClp.switchValue("papertws")) Then
+        MsgBox "Error setting up papertws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
+        Exit Function
+    End If
+End If
+
 If pClp.Switch("tws") Then
-    If Not setupTwsServiceProviders(pClp.switchValue("tws"), Not pClp.Switch("db"), pLiveTrades) Then
+    If Not setupTwsServiceProviders(pClp.switchValue("tws"), Not pClp.Switch("db"), Not lOrdersViaPaperTWS And pLiveTrades) Then
         MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Function
     End If
@@ -435,30 +448,28 @@ End Function
 Private Function setupDbServiceProviders( _
                 ByVal switchValue As String, _
                 ByVal pAllowTickfiles As Boolean) As Boolean
-Dim clp As CommandLineParser
-Dim Server As String
-Dim dbtypeStr As String
-Dim dbtype As DatabaseTypes
-Dim database As String
-Dim username As String
-Dim password As String
 
 Dim failpoint As Long
 On Error GoTo Err
 
+Dim clp As CommandLineParser
 Set clp = CreateCommandLineParser(switchValue, ",")
 
 setupDbServiceProviders = True
 
 On Error Resume Next
-Server = clp.Arg(0)
-dbtypeStr = clp.Arg(1)
-database = clp.Arg(2)
-username = clp.Arg(3)
-password = clp.Arg(4)
+Dim Server As String: Server = clp.Arg(0)
+
+Dim dbtypeStr As String: dbtypeStr = clp.Arg(1)
+
+Dim database As String: database = clp.Arg(2)
+
+Dim username As String: username = clp.Arg(3)
+
+Dim password As String: password = clp.Arg(4)
 On Error GoTo Err
 
-dbtype = DatabaseTypeFromString(dbtypeStr)
+Dim dbtype As DatabaseTypes: dbtype = DatabaseTypeFromString(dbtypeStr)
 If dbtype = DbNone Then
     LogMessage "Error: invalid dbtype"
     setupDbServiceProviders = False
@@ -541,6 +552,54 @@ Exit Function
 Err:
 LogMessage Err.Description, LogLevelSevere
 setupSimulateOrderServiceProviders = False
+End Function
+
+Private Function setupPaperTwsServiceProviders( _
+                ByVal switchValue As String) As Boolean
+On Error GoTo Err
+
+Dim clp As CommandLineParser
+Set clp = CreateCommandLineParser(switchValue, ",")
+
+setupPaperTwsServiceProviders = True
+
+Dim Server As String
+Server = clp.Arg(0)
+
+Dim Port As String
+Port = clp.Arg(1)
+If Port = "" Then
+    Port = "7497"
+ElseIf Not IsInteger(Port, 1) Then
+        LogMessage "Error: Port must be a positive integer > 0"
+        setupPaperTwsServiceProviders = False
+End If
+    
+Dim ClientId As String
+ClientId = clp.Arg(2)
+If ClientId = "" Then
+    ClientId = "322255712"
+ElseIf Not IsInteger(ClientId, 0) Then
+        LogMessage "Error: ClientId must be an integer >= 0 and <= 999999999"
+        setupPaperTwsServiceProviders = False
+End If
+    
+If setupPaperTwsServiceProviders Then
+    mTB.ServiceProviders.Add _
+                        ProgId:="IBTWSSP27.OrderSubmissionSrvcProvider", _
+                        Enabled:=True, _
+                        ParamString:="Server=" & Server & _
+                                    ";Port=" & Port & _
+                                    ";Client Id=" & ClientId & _
+                                    ";Provider Key=IB;Keep Connection=True", _
+                        Description:="Paper-trading order submission"
+End If
+
+Exit Function
+
+Err:
+LogMessage Err.Description, LogLevelSevere
+setupPaperTwsServiceProviders = False
 End Function
 
 Private Function setupTwsServiceProviders( _

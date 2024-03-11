@@ -205,7 +205,7 @@ lXAxisStyle.BackGradientFillColors = gCreateColorArray(0, 0)
 lXAxisStyle.XCursorTextStyle.BoxFillWithBackgroundColor = True
 lXAxisStyle.XCursorTextStyle.BoxStyle = LineInvisible
 lXAxisStyle.XCursorTextStyle.BoxThickness = 0
-lXAxisStyle.XCursorTextStyle.Color = 255
+lXAxisStyle.XCursorTextStyle.Color = vbYellow
 
 Dim lFont As New StdFont
 lFont.Name = "Courier New"
@@ -228,7 +228,7 @@ lYAxisStyle.YGridTextStyle.Color = 13684944
 lYAxisStyle.YCursorTextStyle.BoxFillWithBackgroundColor = True
 lYAxisStyle.YCursorTextStyle.BoxStyle = LineInvisible
 lYAxisStyle.YCursorTextStyle.BoxThickness = 0
-lYAxisStyle.YCursorTextStyle.Color = 255
+lYAxisStyle.YCursorTextStyle.Color = vbYellow
 
 Set gCreateChartStyle = ChartStylesManager.Add("Black", _
                         ChartStylesManager.DefaultStyle, _

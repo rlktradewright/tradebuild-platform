@@ -2,9 +2,9 @@ VERSION 5.00
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#373.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
    ClientHeight    =   9225
@@ -1210,7 +1210,7 @@ Private Sub IStrategyHostView_DisableProfitDrawing()
 Const ProcName As String = "IStrategyHostView_DisableProfitDrawing"
 On Error GoTo Err
 
-gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
+gLog "DisableProfitDrawing", ProcName, ModuleName, , LogLevelHighDetail
 ProfitChart.DisableDrawing
 
 Exit Sub
@@ -1263,7 +1263,7 @@ Private Sub IStrategyHostView_EnableProfitDrawing()
 Const ProcName As String = "IStrategyHostView_EnableProfitDrawing"
 On Error GoTo Err
 
-gLog "EnableDrawing", ProcName, ModuleName, , LogLevelHighDetail
+gLog "EnableProfitDrawing", ProcName, ModuleName, , LogLevelHighDetail
 ProfitChart.EnableDrawing
 
 Exit Sub
@@ -1335,6 +1335,7 @@ End Sub
 
 Private Sub IStrategyHostView_NotifyEventsPerSecond(ByVal Value As Long)
 EventsPerSecondLabel.Caption = Value
+Me.Refresh
 End Sub
 
 Private Sub IStrategyHostView_NotifyEventsPlayed(ByVal Value As Long)
