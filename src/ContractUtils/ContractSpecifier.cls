@@ -430,6 +430,8 @@ jb.EncodeValue mSymbol
 jb.EncodeName "zTradingClass"
 jb.EncodeValue mTradingClass
 
+jb.EncodeNameAndValue "ProviderProperties", mProviderProperties, Nothing
+
 jb.EndObject
 
 ToJSON = jb.JSONString
