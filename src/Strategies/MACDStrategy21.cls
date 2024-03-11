@@ -353,14 +353,6 @@ On Error GoTo Err
 
 IsBuySignal = False
 
-If ActiveBuySize <> 0 Or _
-    ActiveSimulatedBuySize <> 0 Or _
-    PendingBuySize <> 0 Or _
-    PendingSimulatedBuySize <> 0 _
-Then
-    Exit Function
-End If
-
 Dim lMessage As String
 If Not IsPotentialBuy(lMessage) Then Exit Function
 
@@ -544,14 +536,6 @@ Const ProcName As String = "IsSellSignal"
 On Error GoTo Err
 
 IsSellSignal = False
-
-If ActiveSellSize <> 0 Or _
-    ActiveSimulatedSellSize <> 0 Or _
-    PendingSellSize <> 0 Or _
-    PendingSimulatedSellSize <> 0 _
-Then
-    Exit Function
-End If
 
 Dim lMessage As String
 
@@ -879,8 +863,8 @@ On Error GoTo Err
 If IsEndOfSession Then Exit Sub
 If IsInEstablishedPosition Then Exit Sub
 
-If PendingBuySize <> 0 Or PendingSimulatedBuySize <> 0 Then Exit Sub
-If PendingSellSize <> 0 Or PendingSimulatedSellSize <> 0 Then Exit Sub
+If ActiveBuySize <> 0 Or ActiveSimulatedBuySize <> 0 Then Exit Sub
+If ActiveSellSize <> 0 Or ActiveSimulatedSellSize <> 0 Then Exit Sub
 
 InitialiseTickProcessing
 
