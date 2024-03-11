@@ -217,7 +217,6 @@ If TypeOf ev.Source Is IOrderSubmitter Then
     End Select
     
     checkGotPermittedOrderProperties
-    
     For Each lOrderContext In mOrderContexts
         lOrderContext.IsProviderReady = IsProviderReady
     Next
@@ -682,11 +681,13 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub checkGotPermittedOrderProperties()
+Private Function checkGotPermittedOrderProperties() As Boolean
 Const ProcName As String = "checkGotPermittedOrderProperties"
 On Error GoTo Err
 
-If mProviderIsReady And mPermittedOrderProperties Is Nothing Then
+If Not mProviderIsReady Then
+    checkGotPermittedOrderProperties = False
+ElseIf mPermittedOrderProperties Is Nothing Then
     Dim lContractString As String
     lContractString = "(contract details not yet available)"
     If mContractFuture.IsAvailable Then
@@ -696,13 +697,16 @@ If mProviderIsReady And mPermittedOrderProperties Is Nothing Then
     End If
     gLog "Fetching permitted order properties for", ProcName, ModuleName, lContractString, LogLevelDetail
     mFutureWaiter.Add mOrderSubmitter.FetchPermittedOrderProperties(mContractFuture)
+    checkGotPermittedOrderProperties = False
+Else
+    checkGotPermittedOrderProperties = True
 End If
 
-Exit Sub
+Exit Function
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
-End Sub
+End Function
 
 Private Function dataSourceHasPrice() As Boolean
 If mDataSource.State <> MarketDataSourceStateRunning Then

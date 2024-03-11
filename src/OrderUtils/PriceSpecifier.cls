@@ -88,6 +88,10 @@ Assert Not mInitialised, "Already set via initialiser"
 mPrice = Value
 End Property
 
+Public Property Get PriceString() As String
+PriceString = mPriceString
+End Property
+
 Public Property Let PriceString(ByVal Value As String)
 Assert Not mInitialised, "Already set via initialiser"
 mPriceString = Value

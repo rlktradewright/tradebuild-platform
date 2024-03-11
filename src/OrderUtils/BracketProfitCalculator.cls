@@ -96,6 +96,8 @@ Set mDrawdown = DecimalZero
 Set mProfitNotificationThreshold = DecimalZero
 Set mLossNotificationThreshold = DecimalZero
 Set mDrawdownNotificationThreshold = DecimalZero
+
+Set mCurrentTick.Size = DecimalZero
 End Sub
 
 Private Sub Class_Terminate()

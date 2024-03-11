@@ -1251,9 +1251,9 @@ Public Function gOrderTypeFromString(ByVal Value As String) As OrderTypes
 Const ProcName As String = "gOrderTypeFromString"
 On Error GoTo Err
 
-Static sTypes As Collection
+Static sTypes As SortedDictionary
 If sTypes Is Nothing Then
-    Set sTypes = New Collection
+    Set sTypes = CreateSortedDictionary(KeyTypeString)
     
     sTypes.Add OrderTypeNone, UCase$(StrOrderTypeNone)
     sTypes.Add OrderTypeMarket, UCase$(StrOrderTypeMarket)
@@ -1264,6 +1264,7 @@ If sTypes Is Nothing Then
     sTypes.Add OrderTypeStop, UCase$(StrOrderTypeStop)
     sTypes.Add OrderTypeStopLimit, UCase$(StrOrderTypeStopLimit)
     sTypes.Add OrderTypeTrail, UCase$(StrOrderTypeTrail)
+    sTypes.Add OrderTypeRelative, UCase$(StrOrderTypeRelative)
     sTypes.Add OrderTypeMarketToLimit, UCase$(StrOrderTypeMarketToLimit)
     sTypes.Add OrderTypeLimitIfTouched, UCase$(StrOrderTypeLimitIfTouched)
     sTypes.Add OrderTypeMarketIfTouched, UCase$(StrOrderTypeMarketIfTouched)
@@ -1292,12 +1293,13 @@ If sTypes Is Nothing Then
     sTypes.Add OrderTypes.OrderTypePeggedToPrimary, "PEGPRI"
 End If
 
-gOrderTypeFromString = sTypes(UCase$(Value))
+Dim lOrderType As OrderTypes: lOrderType = OrderTypeNone
+sTypes.TryItem UCase$(Value), lOrderType
+gOrderTypeFromString = lOrderType
 
 Exit Function
 
 Err:
-If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Order Type"
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 

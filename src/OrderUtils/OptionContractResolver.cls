@@ -617,7 +617,7 @@ Case OptionStrikeSelectionModeExpenditure, _
     With mContractSpec
         Set lUnderlyingContractSpec = CreateContractSpecifier("", _
                                                     .Symbol, _
-                                                    .TradingClass, _
+                                                    "", _
                                                     mUnderlyingExchangeName, _
                                                     SecTypeStock, _
                                                     .CurrencyCode, _

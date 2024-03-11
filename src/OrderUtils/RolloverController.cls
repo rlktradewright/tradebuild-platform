@@ -79,6 +79,7 @@ Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mTimerList                                  As TimerList
+Private mClock                                      As Clock
 
 Private WithEvents mNextBracketFillTLI              As TimerListItem
 Attribute mNextBracketFillTLI.VB_VarHelpID = -1
@@ -154,7 +155,7 @@ Select Case mState
 Case RolloverControllerStateInitial
     failpoint = "RolloverControllerStateInitial"
     
-    If IsContractExpired(mBracketOrder.Contract) Then
+    If IsContractExpired(mBracketOrder.Contract, mClock) Then
         gLog mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
         setState RolloverControllerStateFailed
         mTaskContext.Finish Empty, False
@@ -475,6 +476,7 @@ Set mOrderContext = mBracketOrder.OrderContext
 Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 Set mTimerList = pTimerList
+Set mClock = mTimerList.Clock
 
 Exit Sub
 
