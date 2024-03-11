@@ -122,6 +122,7 @@ If mModel.ShowChart Then
 End If
 
 If mNumberOfTimeframesLoading = 0 Then
+    gLogger.Log "Strategy: " & mStrategyRunner.Strategy.Name & ": all timeframes loaded", ProcName, ModuleName
     mView.EnablePriceDrawing
     If mModel.IsTickReplay Then mView.DisablePriceDrawing
     

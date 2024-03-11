@@ -85,6 +85,8 @@ lState = ev.State
 If lState <> TimeframeStateLoaded Then Exit Sub
 
 mBarsOutstanding = mBarsOutstanding - 1
+gLogger.Log "Strategy: " & mStrategyRunner.Strategy.Name & ": Bar fetches outstanding: " & mBarsOutstanding, ProcName, ModuleName
+gLogger.Log "Strategy: " & mStrategyRunner.Strategy.Name & ": Study completions outstanding: " & mStudiesOutstanding, ProcName, ModuleName
 If mBarsOutstanding = 0 And mStudiesOutstanding = 0 Then
     mStrategyRunner.InitialisationCompleted
     Set mStrategyRunner = Nothing
@@ -109,6 +111,8 @@ Const ProcName As String = "ITaskCompletionListener_TaskCompleted"
 On Error GoTo Err
 
 mStudiesOutstanding = mStudiesOutstanding - 1
+gLogger.Log "Strategy: " & mStrategyRunner.Strategy.Name & ": Bar fetches outstanding: " & mBarsOutstanding, ProcName, ModuleName
+gLogger.Log "Strategy: " & mStrategyRunner.Strategy.Name & ": Study completions outstanding: " & mStudiesOutstanding, ProcName, ModuleName
 If mBarsOutstanding = 0 And mStudiesOutstanding = 0 Then
     mStrategyRunner.InitialisationCompleted
     Set mStrategyRunner = Nothing
@@ -233,6 +237,7 @@ Set lTC = mStudyManager.StartStudy(AddStudy, 0)
 If Not lTC Is Nothing Then
     lTC.AddTaskCompletionListener Me
     mStudiesOutstanding = mStudiesOutstanding + 1
+    gLogger.Log "Strategy: " & mStrategyRunner.Strategy.Name & ": Study completions outstanding: " & mStudiesOutstanding, ProcName, ModuleName
 End If
 
 Exit Function
@@ -306,6 +311,7 @@ If Not sTimeframes.Contains(lTimeframe) Then
     sTimeframes.Add lTimeframe
     lTimeframe.AddStateChangeListener Me
     mBarsOutstanding = mBarsOutstanding + 1
+    gLogger.Log "Strategy: " & mStrategyRunner.Strategy.Name & ": Bar fetches outstanding: " & mBarsOutstanding, ProcName, ModuleName
     
     If pShowInChart Then getStrategyHost.AddTimeframe lTimeframe
 End If
@@ -376,7 +382,7 @@ Set mClock = mTicker.ClockFuture.Value
 
 If mTicker.IsTickReplay Then mInitialTimestamp = mClock.Timestamp
 
-mTicker.StopMarketData
+'mTicker.StopMarketData
 
 Exit Sub
 

@@ -107,14 +107,26 @@ End Sub
 '@================================================================================
 
 Private Sub IChangeListener_Change(ev As ChangeEventData)
+Const ProcName As String = "IChangeListener_Change"
+On Error GoTo Err
+
 If ev.ChangeType = OrderContextChangeTypes.OrderContextReadyStateChanged Then
     Dim lOrderContext As OrderContext
     Set lOrderContext = ev.Source
     If lOrderContext.IsReadyTickSize Then
         lOrderContext.RemoveChangeListener Me
         setReady
+    Else
+        gLogger.Log "order context " & lOrderContext.Name & _
+                        " not ready: " & lOrderContext.NotReadyMessage, _
+                    ProcName, ModuleName, LogLevelDetail
     End If
 End If
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -477,6 +489,8 @@ Set mBracketOrders = mPositionManager.BracketOrders
 Set mPositionManagerSimulated = mTicker.PositionManagerSimulated
 
 Set mOrderContextBuy = mPositionManager.OrderContexts.Add("BUY")
+gLogger.Log "mOrderContextBuy: id=" & GetObjectKey(mOrderContextBuy), ProcName, ModuleName, LogLevelDetail
+
 If Not mOrderContextBuy.IsReadyTickSize Then
     mOrderContextBuy.AddChangeListener Me
 Else
@@ -484,9 +498,13 @@ Else
 End If
 
 Set mOrderContextSell = mPositionManager.OrderContexts.Add("SELL")
+gLogger.Log "mOrderContextSell: id=" & GetObjectKey(mOrderContextSell), ProcName, ModuleName, LogLevelDetail
 
-Set mOrderContextBuySimulated = mPositionManagerSimulated.OrderContexts.Add("BUY")
-Set mOrderContextSellSimulated = mPositionManagerSimulated.OrderContexts.Add("SELL")
+Set mOrderContextBuySimulated = mPositionManagerSimulated.OrderContexts.Add("BUY-Simulated")
+gLogger.Log "mOrderContextBuySimulated: id=" & GetObjectKey(mOrderContextBuySimulated), ProcName, ModuleName, LogLevelDetail
+
+Set mOrderContextSellSimulated = mPositionManagerSimulated.OrderContexts.Add("SELL-Simulated")
+gLogger.Log "mOrderContextSellSimulated: id=" & GetObjectKey(mOrderContextSellSimulated), ProcName, ModuleName, LogLevelDetail
 
 Set Initialise = mFutureBuilder.Future
 

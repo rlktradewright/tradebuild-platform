@@ -358,6 +358,10 @@ Friend Property Get PositionManagementStrategyFactories() As EnumerableCollectio
 Set PositionManagementStrategyFactories = mPositionManagementStrategyFactories
 End Property
 
+Friend Property Get Strategy() As IStrategy
+Set Strategy = mStrategy
+End Property
+
 Friend Property Get Timestamp() As Date
 Const ProcName As String = "Timestamp"
 On Error GoTo Err
@@ -443,6 +447,8 @@ Friend Sub InitialisationCompleted()
 Const ProcName As String = "InitialisationCompleted"
 On Error GoTo Err
 
+gLogger.Log "Strategy: " & mStrategy.Name & ": Initialisation completed", ProcName, ModuleName
+
 mInitialisationCompleted = True
 mTradingContext.AllowUnprotectedPositions = mInitialisationContext.AllowUnprotectedPositions
 
@@ -453,6 +459,8 @@ mTicker.PositionManager.OrderContexts.AddCollectionChangeListener Me
 
 mTicker.PositionManagerSimulated.AddChangeListener Me
 mTicker.PositionManagerSimulated.OrderContexts.AddCollectionChangeListener Me
+
+startReplayIfReady
 
 Exit Sub
 
@@ -830,9 +838,17 @@ Private Sub startReplayIfReady()
 Const ProcName As String = "startReplayIfReady"
 On Error GoTo Err
 
-If mReplayController Is Nothing Then Exit Sub
-If Not mInitialisationCompleted Then Exit Sub
 If Not mStartReplayWhenReady Then Exit Sub
+
+If mReplayController Is Nothing Then
+    gLogger.Log "Not ready to start: " & mStrategy.Name & ": not got ReplayController", ProcName, ModuleName
+    Exit Sub
+End If
+
+If Not mInitialisationCompleted Then
+    gLogger.Log "Not ready to start: " & mStrategy.Name & ": initialisation not completed", ProcName, ModuleName
+    Exit Sub
+End If
 
 mStartReplayWhenReady = False
 
