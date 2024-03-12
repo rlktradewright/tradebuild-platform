@@ -58,6 +58,7 @@ Private Const StrOrderTypeMarketWithProtection      As String = "Market with Pro
 Private Const StrOrderTypeMarketOnOpen              As String = "Market on Open"
 Private Const StrOrderTypeLimitOnOpen               As String = "Limit on Open"
 Private Const StrOrderTypePeggedToPrimary           As String = "Pegged to Primary"
+Private Const StrOrderTypeMidprice                  As String = "Mid-Price"
 
 Public Const BalancingOrderContextName              As String = "$balancing"
 Public Const RecoveryOrderContextName               As String = "$recovery"
@@ -101,7 +102,7 @@ Static sInitialised As Boolean
 
 If Not sInitialised Then
     sInitialised = True
-    ReDim s(12) As OrderTypes
+    ReDim s(13) As OrderTypes
     s(0) = OrderTypeLimit
     s(1) = OrderTypeLimitIfTouched
     s(2) = OrderTypeLimitOnClose
@@ -115,6 +116,7 @@ If Not sInitialised Then
     s(10) = OrderTypeStopLimit
     s(11) = OrderTypeTrail
     s(12) = OrderTypeTrailLimit
+    s(13) = OrderTypeMidprice
 End If
 gEntryOrderTypes = s
 End Property
@@ -567,7 +569,8 @@ Case OrderTypeLimit, _
         OrderTypeStop, _
         OrderTypeStopLimit, _
         OrderTypeTrail, _
-        OrderTypeTrailLimit
+        OrderTypeTrailLimit, _
+        OrderTypeMidprice
     gIsEntryOrderType = True
 End Select
 End Function
@@ -1273,6 +1276,7 @@ If sTypes Is Nothing Then
     sTypes.Add OrderTypeMarketOnOpen, UCase$(StrOrderTypeMarketOnOpen)
     sTypes.Add OrderTypeLimitOnOpen, UCase$(StrOrderTypeLimitOnOpen)
     sTypes.Add OrderTypePeggedToPrimary, UCase$(StrOrderTypePeggedToPrimary)
+    sTypes.Add OrderTypeMidprice, UCase$(StrOrderTypeMidprice)
 
     sTypes.Add OrderTypes.OrderTypeMarket, "MKT"
     sTypes.Add OrderTypes.OrderTypeMarketOnClose, "MKTCLS"
@@ -1291,6 +1295,7 @@ If sTypes Is Nothing Then
     sTypes.Add OrderTypes.OrderTypeMarketOnOpen, "MOO"
     sTypes.Add OrderTypes.OrderTypeLimitOnOpen, "LOO"
     sTypes.Add OrderTypes.OrderTypePeggedToPrimary, "PEGPRI"
+    sTypes.Add OrderTypes.OrderTypeMidprice, "MIDPRICE"
 End If
 
 Dim lOrderType As OrderTypes: lOrderType = OrderTypeNone
@@ -1344,6 +1349,8 @@ Case OrderTypeLimitOnOpen
     gOrderTypeToString = StrOrderTypeLimitOnOpen
 Case OrderTypePeggedToPrimary
     gOrderTypeToString = StrOrderTypePeggedToPrimary
+Case OrderTypeMidprice
+    gOrderTypeToString = StrOrderTypeMidprice
 Case Else
     AssertArgument False, "Invalid order type"
 End Select
@@ -1395,6 +1402,8 @@ Case OrderTypes.OrderTypeLimitOnOpen
     gOrderTypeToShortString = "LOO"
 Case OrderTypes.OrderTypePeggedToPrimary
     gOrderTypeToShortString = "PEGPRI"
+Case OrderTypes.OrderTypeMidprice
+    gOrderTypeToShortString = "MIDPRICE"
 Case Else
     AssertArgument False, "Value is not a valid Order Type"
 End Select

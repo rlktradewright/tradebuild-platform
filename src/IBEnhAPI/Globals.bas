@@ -54,6 +54,7 @@ Private Const PrimaryExchangeVENTURE            As String = "VENTURE"
 
 Public Const ProviderPropertyContractID         As String = "Contract id"
 Public Const ProviderPropertyOCAGroup           As String = "OCA group"
+Public Const ProviderPropertyPriceMagnifier     As String = "PriceMagnifier"
 
 '================================================================================
 ' Enums
@@ -111,7 +112,8 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function gContractSpecToTwsContractSpec(ByVal pContractSpecifier As IContractSpecifier) As TwsContractSpecifier
+Public Function gContractSpecToTwsContractSpec( _
+                ByVal pContractSpecifier As IContractSpecifier) As TwsContractSpecifier
 Const ProcName As String = "gContractSpecToTwsContractSpec"
 On Error GoTo Err
 
@@ -162,7 +164,17 @@ With gContractSpecToTwsContractSpec
     .Expiry = IIf(Len(pContractSpecifier.Expiry) >= 6, pContractSpecifier.Expiry, "")
     .LocalSymbol = pContractSpecifier.LocalSymbol
     .Multiplier = pContractSpecifier.Multiplier
-    If pContractSpecifier.SecType = SecTypeStock Then .Multiplier = 0
+    If pContractSpecifier.SecType = SecTypeStock Then
+        .Multiplier = 0
+    Else
+        Dim lPriceMagnifier As Long
+        If Not pContractSpecifier.ProviderProperties Is Nothing Then
+            lPriceMagnifier = pContractSpecifier.ProviderProperties.GetParameterValue(ProviderPropertyPriceMagnifier, "0")
+            If lPriceMagnifier <> 0 Then .Multiplier = pContractSpecifier.Multiplier / lPriceMagnifier
+        ElseIf UCase$(.CurrencyCode) = "GBP" Then
+            .Multiplier = .Multiplier / 100
+        End If
+    End If
     .OptRight = gOptionRightToTwsOptRight(pContractSpecifier.Right)
     .SecType = gSecTypeToTwsSecType(pContractSpecifier.SecType)
     .Strike = pContractSpecifier.Strike
@@ -662,6 +674,8 @@ Case OrderTypes.OrderTypeLimitOnOpen
     gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeLimitOnOpen
 Case OrderTypes.OrderTypePeggedToPrimary
     gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypePeggedToPrimary
+Case OrderTypes.OrderTypeMidprice
+    gOrderTypeToTwsOrderType = TwsOrderTypes.TwsOrderTypeMidprice
 Case Else
     AssertArgument False, "Value is not a valid OrderType"
 End Select
@@ -863,7 +877,7 @@ End Function
 
 Public Function gTwsContractSpecToContractSpecifier( _
                 ByVal pTwsContractSpec As TwsContractSpecifier, _
-                ByVal pPriceMagnifier) As IContractSpecifier
+                ByVal pPriceMagnifier As String) As IContractSpecifier
 Const ProcName As String = "gTwsContractSpecToContractSpecifier"
 On Error GoTo Err
 
@@ -894,6 +908,7 @@ With pTwsContractSpec
                                                 gTwsOptionRightToOptionRight(.OptRight))
     Dim p As New Parameters
     p.SetParameterValue ProviderPropertyContractID, .ConId
+    p.SetParameterValue ProviderPropertyPriceMagnifier, pPriceMagnifier
     lContractSpec.ProviderProperties = p
 End With
 
@@ -972,6 +987,8 @@ Case TwsOrderTypes.TwsOrderTypeLimitOnOpen
     gTwsOrderTypeToOrderType = OrderTypeLimitOnOpen
 Case TwsOrderTypes.TwsOrderTypePeggedToPrimary
     gTwsOrderTypeToOrderType = OrderTypePeggedToPrimary
+Case TwsOrderTypes.TwsOrderTypeMidprice
+    gTwsOrderTypeToOrderType = OrderTypeMidprice
 Case Else
     gTwsOrderTypeToOrderType = OrderTypeNone
 End Select

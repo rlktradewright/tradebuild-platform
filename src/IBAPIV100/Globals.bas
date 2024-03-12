@@ -935,6 +935,8 @@ Case "REL + MKT"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeRelativeMarketCombo
 Case "PEG BEST"
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToBest
+Case "MIDPRICE"
+    gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMidprice
 Case Else
     gTwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeNone
 End Select
@@ -1011,6 +1013,8 @@ Case TwsOrderTypes.TwsOrderTypeRelativeMarketCombo
     gTwsOrderTypeToString = "REL + MKT"
 Case TwsOrderTypes.TwsOrderTypePeggedToBest
     gTwsOrderTypeToString = "PEG BEST"
+Case TwsOrderTypes.TwsOrderTypeMidprice
+    gTwsOrderTypeToString = "MIDPRICE"
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select

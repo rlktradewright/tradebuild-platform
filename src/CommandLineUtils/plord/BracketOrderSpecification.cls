@@ -250,6 +250,7 @@ Private Function generateEntryAttributes() As String
 Dim s As String
 Select Case EntryType
 Case OrderTypeMarket
+Case OrderTypeMidprice
 Case OrderTypeMarketOnOpen
 Case OrderTypeMarketOnClose
 Case OrderTypeMarketToLimit
@@ -385,6 +386,7 @@ Private Function generateSingleLineParameters() As String
 Dim s As String
 Select Case EntryType
 Case OrderTypeMarket
+Case OrderTypeMidprice
 Case OrderTypeMarketOnOpen
 Case OrderTypeMarketOnClose
 Case OrderTypeMarketToLimit

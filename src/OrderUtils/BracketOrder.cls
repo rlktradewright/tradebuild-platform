@@ -2080,6 +2080,9 @@ Select Case EntryOrder.OrderType
     Case OrderTypes.OrderTypeMarket
         pendingTotalPrice = mEntryOrder.QuantityRemaining * _
                 IIf(LongPosition, mDataSource.CurrentTick(TickTypeAsk).Price, mDataSource.CurrentTick(TickTypeBid).Price)
+    Case OrderTypes.OrderTypeMidprice
+        pendingTotalPrice = mEntryOrder.QuantityRemaining * _
+                (mDataSource.CurrentTick(TickTypeAsk).Price + mDataSource.CurrentTick(TickTypeBid).Price) / 2#
     Case OrderTypes.OrderTypeLimit, _
             OrderTypes.OrderTypeStopLimit, _
             OrderTypeLimitIfTouched, _

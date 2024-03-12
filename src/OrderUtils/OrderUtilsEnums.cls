@@ -274,6 +274,7 @@ Public Enum OrderTypes
     OrderTypeMarketWithProtection = &H40000
     OrderTypePeggedToPrimary = &H80000
     OrderTypeRelative = &H100000
+    OrderTypeMidprice = &H200000
 End Enum
 
 Public Enum PositionManagerChangeTypes

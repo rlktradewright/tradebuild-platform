@@ -196,6 +196,8 @@ For i = 0 To UBound(lOrderTypesStr)
             lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttDisplaySize
         Case "IOC"  ' immediate or cancel
             lPermittedOrderTifs = lPermittedOrderTifs Or OrderTIFs.OrderTIFImmediateOrCancel
+        Case "MIDPX"
+            lPermittedOrderTypes = lPermittedOrderTypes Or OrderTypes.OrderTypeMidprice
         Case "RTH"
             lPermittedOrderAttributes = lPermittedOrderAttributes Or OrderAttributes.OrderAttIgnoreRTH
         Case "SWEEP"
@@ -228,7 +230,6 @@ For i = 0 To UBound(lOrderTypesStr)
             "IMB", _
             "LARGE", _
             "LTH", _
-            "MIDPX", _
             "MKTPROT", _
             "NGCOMB"
         Case "NODARK", _

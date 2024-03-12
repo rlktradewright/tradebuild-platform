@@ -446,7 +446,7 @@ Set mSocket = Nothing
 mIsConnected = False
 
 RaiseEvent ConnectionClosed(pMessage)
-If Not pClosedByApplication Then retryConnection 60
+If Not pClosedByApplication Then retryConnection    ' 60
 
 Exit Sub
 

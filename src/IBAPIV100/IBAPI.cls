@@ -214,6 +214,7 @@ Public Enum TwsOrderTypes
     TwsOrderTypeStopWithProtection
     TwsOrderTypeRelativeLimitCombo
     TwsOrderTypeRelativeMarketCombo
+    TwsOrderTypeMidprice
 End Enum
 
 Public Enum TwsSecTypes

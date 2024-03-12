@@ -717,6 +717,7 @@ lOrder.IgnoreRegularTradingHours = pOutsideRTH
 
 Select Case pEntryType
 Case OrderTypeMarket
+Case OrderTypeMidprice
 Case OrderTypeMarketOnOpen
 Case OrderTypeMarketOnClose
 Case OrderTypeMarketIfTouched
@@ -1099,6 +1100,7 @@ Dim lPriceDesc As String
 
 Select Case pOrder.OrderType
 Case OrderTypeMarket
+Case OrderTypeMidprice
 Case OrderTypeMarketOnOpen
 Case OrderTypeMarketOnClose
 Case OrderTypeMarketIfTouched

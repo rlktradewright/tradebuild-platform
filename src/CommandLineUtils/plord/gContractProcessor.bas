@@ -71,7 +71,8 @@ Select Case pOrderType
 Case OrderTypeMarket, _
         OrderTypeMarketOnClose, _
         OrderTypeMarketOnOpen, _
-        OrderTypeMarketToLimit
+        OrderTypeMarketToLimit, _
+        OrderTypeMidprice
     If notifyUnexpectedPrice(pPrice1, "limit", pMessage) Then gParseOrderPrices = False
     If notifyUnexpectedPrice(pPrice2, "trigger", pMessage) Then gParseOrderPrices = False
 Case OrderTypeMarketIfTouched, _
@@ -287,7 +288,8 @@ Select Case pOrderType
 Case OrderTypeMarket, _
         OrderTypeMarketOnClose, _
         OrderTypeMarketOnOpen, _
-        OrderTypeMarketToLimit
+        OrderTypeMarketToLimit, _
+        OrderTypeMidprice
     lMaxNumberOfArgsRequired = 1
 Case OrderTypeMarketIfTouched, _
         OrderTypeStop, _
