@@ -75,7 +75,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-SessionsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GSessions.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -94,7 +94,7 @@ End If
 Exit Sub
 
 Err:
-SessionsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GSessions.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -110,7 +110,7 @@ Set Future = mFutureBuilder.Future
 Exit Property
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -129,7 +129,7 @@ mFutureWaiter.Add pSessionBuilderFuture
 Exit Sub
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -146,7 +146,7 @@ mFutureBuilder.Complete
 Exit Sub
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

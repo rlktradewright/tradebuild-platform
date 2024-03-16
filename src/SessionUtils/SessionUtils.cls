@@ -90,42 +90,36 @@ Public Function CreateSessionBuilder( _
 Const ProcName As String = "CreateSessionBuilder"
 On Error GoTo Err
 
-Set CreateSessionBuilder = New SessionBuilder
-CreateSessionBuilder.Initialise pSessionStartTime, pSessionEndTime, pTimeZone
-CreateSessionBuilder.SetSessionCurrentTime pInitialSessionTime
+Set CreateSessionBuilder = GSessionUtils.CreateSessionBuilder(pSessionStartTime, pSessionEndTime, pTimeZone, pInitialSessionTime)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSessionBuilderFuture(ByVal pSessionFuture As IFuture) As IFuture
 Const ProcName As String = "CreateSessionBuilderFuture"
 On Error GoTo Err
 
-Dim lBuilder As New SessionBuilderFutBldr
-lBuilder.Initialise pSessionFuture
-Set CreateSessionBuilderFuture = lBuilder.Future
+Set CreateSessionBuilderFuture = GSessionUtils.CreateSessionBuilderFuture(pSessionFuture)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSessionFuture(ByVal pSessionBuilderFuture As IFuture) As IFuture
 Const ProcName As String = "CreateSessionFuture"
 On Error GoTo Err
 
-Dim lBuilder As New SessionFutureBuilder
-lBuilder.Initialise pSessionBuilderFuture
-Set CreateSessionFuture = lBuilder.Future
+Set CreateSessionFuture = GSessionUtils.CreateSessionFuture(pSessionBuilderFuture)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOffsetSessionTimes( _
@@ -136,16 +130,15 @@ Public Function GetOffsetSessionTimes( _
 Const ProcName As String = "GetOffsetSessionTimes"
 On Error GoTo Err
 
-GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, _
+GetOffsetSessionTimes = GSessionUtils.GetOffsetSessionTimes(Timestamp, _
                             offset, _
-                            gNormaliseSessionStartTime(StartTime), _
-                            gNormaliseSessionEndTime(EndTime), _
-                            False)
+                            StartTime, _
+                            EndTime)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOffsetSessionTimesIgnoringWeekend( _
@@ -156,16 +149,15 @@ Public Function GetOffsetSessionTimesIgnoringWeekend( _
 Const ProcName As String = "GetOffsetSessionTimesIgnoringWeekend"
 On Error GoTo Err
 
-GetOffsetSessionTimesIgnoringWeekend = gCalcOffsetSessionTimes(Timestamp, _
+GetOffsetSessionTimesIgnoringWeekend = GSessionUtils.GetOffsetSessionTimesIgnoringWeekend(Timestamp, _
                             offset, _
-                            gNormaliseSessionStartTime(StartTime), _
-                            gNormaliseSessionEndTime(EndTime), _
-                            True)
+                            StartTime, _
+                            EndTime)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSessionTimes( _
@@ -173,17 +165,16 @@ Public Function GetSessionTimes( _
                 Optional ByVal StartTime As Date, _
                 Optional ByVal EndTime As Date) As SessionTimes
 Const ProcName As String = "GetSessionTimes"
-
 On Error GoTo Err
 
-GetSessionTimes = gCalcSessionTimes(Timestamp, _
-                            gNormaliseSessionStartTime(StartTime), _
-                            gNormaliseSessionEndTime(EndTime))
+GetSessionTimes = GSessionUtils.GetSessionTimes(Timestamp, _
+                            StartTime, _
+                            EndTime)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSessionTimesIgnoringWeekend( _
@@ -193,19 +184,17 @@ Public Function GetSessionTimesIgnoringWeekend( _
 Const ProcName As String = "GetSessionTimesIgnoringWeekend"
 On Error GoTo Err
 
-GetSessionTimesIgnoringWeekend = gGetSessionTimesIgnoringWeekend(pTimestamp, pSessionStartTime, pSessionEndTime)
+GetSessionTimesIgnoringWeekend = GSessionUtils.GetSessionTimesIgnoringWeekend(pTimestamp, pSessionStartTime, pSessionEndTime)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-
 
 

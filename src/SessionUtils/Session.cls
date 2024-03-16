@@ -99,7 +99,7 @@ CurrentSessionEndTime = mCurrentSessionTimes.EndTime
 Exit Property
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentSessionStartTime() As Date
@@ -111,7 +111,7 @@ CurrentSessionStartTime = mCurrentSessionTimes.StartTime
 Exit Property
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get SessionBuilder() As SessionBuilder
@@ -127,7 +127,7 @@ SessionCurrentTime = mTimestamp
 Exit Property
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let SessionEndTime( _
@@ -135,12 +135,12 @@ Friend Property Let SessionEndTime( _
 Const ProcName As String = "SessionEndTime"
 On Error GoTo Err
 
-mSessionEndTime = gNormaliseSessionEndTime(Value)
+mSessionEndTime = GSessionUtils.NormaliseSessionEndTime(Value)
 
 Exit Property
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionEndTime() As Date
@@ -152,12 +152,12 @@ Friend Property Let SessionStartTime( _
 Const ProcName As String = "SessionStartTime"
 On Error GoTo Err
 
-mSessionStartTime = gNormaliseSessionStartTime(Value)
+mSessionStartTime = GSessionUtils.NormaliseSessionStartTime(Value)
 
 Exit Property
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Property
                 
 Public Property Get SessionStartTime() As Date
@@ -178,7 +178,7 @@ End If
 Exit Property
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeZone() As TimeZone
@@ -194,12 +194,12 @@ Public Function GetSessionTimes( _
 Const ProcName As String = "GetSessionTimes"
 On Error GoTo Err
 
-GetSessionTimes = gCalcSessionTimes(Timestamp, mSessionStartTime, mSessionEndTime)
+GetSessionTimes = GSessionUtils.CalcSessionTimes(Timestamp, mSessionStartTime, mSessionEndTime)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetOffsetSessionTimes( _
@@ -208,12 +208,12 @@ Public Function GetOffsetSessionTimes( _
 Const ProcName As String = "GetOffsetSessionTimes"
 On Error GoTo Err
 
-GetOffsetSessionTimes = gCalcOffsetSessionTimes(Timestamp, offset, mSessionStartTime, mSessionEndTime, True)
+GetOffsetSessionTimes = GSessionUtils.CalcOffsetSessionTimes(Timestamp, offset, mSessionStartTime, mSessionEndTime, True)
 
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Initialise(ByVal pSessionBuilder As SessionBuilder)
@@ -235,7 +235,7 @@ End If
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
@@ -259,7 +259,7 @@ pSessionToLinkTo.SessionBuilder.LinkSession Me
 Exit Sub
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function SetSessionCurrentTime( _
@@ -288,8 +288,8 @@ End If
 
 If Not sInitialised Then
     sInitialised = True
-    mCurrentSessionTimes = gCalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
-    sNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime, True)
+    mCurrentSessionTimes = GSessionUtils.CalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
+    sNextSessionTimes = GSessionUtils.CalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime, True)
     ev.changeType = SessionChangeStart
     ev.Timestamp = mCurrentSessionTimes.StartTime
     RaiseEvent SessionStarted(ev)
@@ -304,8 +304,8 @@ If pTimestamp >= mCurrentSessionTimes.EndTime And Not sSessionEndNotified Then
 End If
 
 If pTimestamp >= sNextSessionTimes.StartTime Then
-    mCurrentSessionTimes = gCalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
-    sNextSessionTimes = gCalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime, True)
+    mCurrentSessionTimes = GSessionUtils.CalcSessionTimes(pTimestamp, mSessionStartTime, mSessionEndTime)
+    sNextSessionTimes = GSessionUtils.CalcOffsetSessionTimes(pTimestamp, 1, mSessionStartTime, mSessionEndTime, True)
     sSessionEndNotified = False
     ev.changeType = SessionChangeStart
     ev.Timestamp = mCurrentSessionTimes.StartTime
@@ -319,7 +319,7 @@ sPrevTimeNotified = pTimestamp
 Exit Function
 
 Err:
-SessionsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GSessions.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
