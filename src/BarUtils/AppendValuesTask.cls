@@ -90,7 +90,7 @@ End If
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
     
 End Sub
 
@@ -128,7 +128,7 @@ mEt.StartTiming
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -92,7 +92,7 @@ mIndex = mIndex + 1
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)

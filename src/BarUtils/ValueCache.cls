@@ -96,7 +96,7 @@ Else
     mNumValues = mNumValues + 1
 End If
 
-gSetVariant mValues(mNewest).Value, Value
+GBars.SetVariant mValues(mNewest).Value, Value
 mValues(mNewest).BarNumber = BarNumber
 mValues(mNewest).Timestamp = Timestamp
 mValues(mNewest).BarStartTime = BarStartTime
@@ -104,7 +104,7 @@ mValues(mNewest).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AppendValues( _
@@ -122,7 +122,7 @@ Next
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function AppendValuesAsync( _
@@ -138,7 +138,7 @@ Set AppendValuesAsync = StartTask(avt, PriorityNormal)
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetSValue(Optional ByVal ref As Long) As SValue
@@ -150,19 +150,19 @@ GetSValue = mValues(refToIndex(ref))
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetValue(Optional ByVal ref As Long) As Variant
 Const ProcName As String = "GetValue"
 On Error GoTo Err
 
-gSetVariant GetValue, mValues(refToIndex(ref)).Value
+GBars.SetVariant GetValue, mValues(refToIndex(ref)).Value
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -185,7 +185,7 @@ mValueName = ValueName
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub UpdateValue( _
@@ -199,7 +199,7 @@ On Error GoTo Err
 
 Dim i As Long
 i = refToIndex(ref)
-gSetVariant mValues(i).Value, Value
+GBars.SetVariant mValues(i).Value, Value
 If BarNumber > 0 Then mValues(i).BarNumber = BarNumber
 If CDbl(Timestamp) > 0 Then mValues(i).Timestamp = Timestamp
 If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
@@ -207,7 +207,7 @@ If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -241,7 +241,7 @@ End If
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

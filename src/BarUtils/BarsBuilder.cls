@@ -94,7 +94,7 @@ Set mCurrentBar = Nothing
 Exit Sub
 
 Err:
-BarsGlobals.gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GBars.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -132,7 +132,7 @@ setTickSize Value
 Exit Property
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get VolumeParser() As VolumeParser
@@ -172,7 +172,7 @@ addABar lBar
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddThisBar( _
@@ -186,7 +186,7 @@ addABar pBar
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addABar( _
@@ -201,10 +201,10 @@ mCurrentBarNumber = mCurrentBarNumber + 1
 pBar.BarNumber = mCurrentBarNumber
 
 Set mCurrentBar = pBar
-If mBarTimePeriod.Length <> 0 Then mBarEndTime = gCentiSecondsToDate(gBarEndTime(mCurrentBar.Timestamp, _
+If mBarTimePeriod.Length <> 0 Then mBarEndTime = GBarUtils.BarEndTime(mCurrentBar.Timestamp, _
                                                             mBarTimePeriod, _
                                                             mMainSession.SessionStartTime, _
-                                                            mMainSession.SessionEndTime))
+                                                            mMainSession.SessionEndTime)
 
 If Not mBars Is Nothing Then mBars.Add mCurrentBar, mCurrentBarNumber, pBar.Timestamp
 
@@ -213,7 +213,7 @@ FireBarAdded pBar
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AppendBars( _
@@ -231,7 +231,7 @@ mBars.AppendBars pBars, pMaxNumberToAppend, Me
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function AppendBarsAsync( _
@@ -249,7 +249,7 @@ Set AppendBarsAsync = mBars.AppendBarsAsync(pBars, maxNumberToAppend, Me)
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub FireBarAdded(ByVal pBar As Bar)
@@ -282,7 +282,7 @@ mCurrentBar.IncrementTickVolume increment
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -295,7 +295,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log "Initialise for " & pBarTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
+GBars.Logger.Log "Initialise for " & pBarTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
 
 Set mBarTimePeriod = pBarTimePeriod
 setTickSize pTickSize
@@ -314,7 +314,7 @@ End If
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub InitialiseWithInitialBars( _
@@ -324,7 +324,7 @@ Friend Sub InitialiseWithInitialBars( _
  Const ProcName As String = "InitialiseWithInitialBars"
 On Error GoTo Err
 
-gLogger.Log "Initialise with " & pInitialBars.Count & " initial bars", ProcName, ModuleName, LogLevelHighDetail
+GBars.Logger.Log "Initialise with " & pInitialBars.Count & " initial bars", ProcName, ModuleName, LogLevelHighDetail
 
 Set mBars = pInitialBars
 Set mBarTimePeriod = mBars.BarTimePeriod
@@ -343,10 +343,10 @@ If mBars.Count > 0 Then
     Set mCurrentBar = mBars.Bar(0)
     
     If Not mInitialBarsSession Is Nothing Then
-        mBarEndTime = gCentiSecondsToDate(gBarEndTime(mCurrentBar.Timestamp, _
+        mBarEndTime = GBarUtils.BarEndTime(mCurrentBar.Timestamp, _
                                     mBarTimePeriod, _
                                     mInitialBarsSession.SessionStartTime, _
-                                    mInitialBarsSession.SessionEndTime))
+                                    mInitialBarsSession.SessionEndTime)
     End If
     mCurrentBarNumber = mCurrentBar.BarNumber
 End If
@@ -356,7 +356,7 @@ checkLinkSessions
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyOpenInterest( _
@@ -388,7 +388,7 @@ End If
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyValue( _
@@ -448,10 +448,10 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickVolume Then
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
-ElseIf gCentiSecondsToDate(gBarEndTime(Value.Timestamp, _
-                                        mBarTimePeriod, _
-                                        mMainSession.SessionStartTime, _
-                                        mMainSession.SessionEndTime)) > mBarEndTime Then
+ElseIf GBarUtils.BarEndTime(Value.Timestamp, _
+                            mBarTimePeriod, _
+                            mMainSession.SessionStartTime, _
+                            mMainSession.SessionEndTime) > mBarEndTime Then
     createNewBar Value.Timestamp, Value.Value, 0, 0
 Else
     mCurrentBar.NotifyValue Value.Value
@@ -460,7 +460,7 @@ End If
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyVolume( _
@@ -516,7 +516,7 @@ End If
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -535,7 +535,7 @@ mMainSession.LinkToSession mInitialBarsSession
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createNewBar( _
@@ -551,10 +551,10 @@ Assert (Not mMainSession Is Nothing) Or mBarTimePeriod.Length = 0, "mMainSession
 
 Dim lBar As New Bar
 
-lBar.Timestamp = gCentiSecondsToDate(gBarStartTime(Timestamp, _
+lBar.Timestamp = GBarUtils.BarStartTime(Timestamp, _
                                 mBarTimePeriod, _
                                 mMainSession.SessionStartTime, _
-                                mMainSession.SessionEndTime))
+                                mMainSession.SessionEndTime)
 
 addABar lBar
 
@@ -565,7 +565,7 @@ If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createNewCustomPeriodBar( _
@@ -596,7 +596,7 @@ If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createVolumeAndOpenInterestParsers(ByVal pSession As Session)
@@ -612,7 +612,7 @@ mOpenInterestParser.Initialise pSession
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function newBar(ByVal BarNumber As Long) As Boolean
@@ -629,7 +629,7 @@ End If
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setTickSize(ByVal pTickSize As Double)
@@ -651,7 +651,7 @@ End If
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

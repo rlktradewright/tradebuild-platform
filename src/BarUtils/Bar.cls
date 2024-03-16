@@ -235,7 +235,7 @@ fireChange BarTickVolumeChanged
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Initialise( _
@@ -271,7 +271,7 @@ fireChange BarPriceChanged Or _
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOpenInterest( _
@@ -288,7 +288,7 @@ fireChange BarOpenInterestChanged
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyValue(ByVal Value As Double)
@@ -323,7 +323,7 @@ If mBarChanges Then fireChange BarPriceChanged
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyVolume( _
@@ -340,7 +340,7 @@ fireChange BarVolumeChanged
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetBarChanged()
@@ -381,7 +381,7 @@ RaiseEvent Changed(ev)
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

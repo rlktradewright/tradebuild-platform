@@ -133,7 +133,7 @@ End Sub
 'Exit Sub
 '
 'Err:
-'BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+'GBars.HandleUnexpectedError ProcName, ModuleName
 'End Sub
 
 Friend Sub Initialise( _
@@ -146,7 +146,7 @@ Set mSession = pSession
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Notify( _
@@ -187,7 +187,7 @@ mCurrSessionVolume = pTotalVolume
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

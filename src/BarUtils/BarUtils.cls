@@ -88,23 +88,12 @@ Public Function BarEndTime( _
 Const ProcName As String = "BarEndTime"
 On Error GoTo Err
 
-Select Case BarTimePeriod.Units
-Case TimePeriodVolume, _
-        TimePeriodTickVolume, _
-        TimePeriodTickMovement, _
-        TimePeriodNone
-    BarEndTime = Timestamp
-Case Else
-    BarEndTime = gCentiSecondsToDate(gBarEndTime(Timestamp, _
-                                    BarTimePeriod, _
-                                    gNormaliseSessionTime(SessionStartTime), _
-                                    gNormaliseSessionTime(SessionEndTime)))
-End Select
+BarEndTime = GBarUtils.BarEndTime(Timestamp, BarTimePeriod, SessionStartTime, SessionEndTime)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function BarStartTime( _
@@ -115,23 +104,12 @@ Public Function BarStartTime( _
 Const ProcName As String = "BarStartTime"
 On Error GoTo Err
 
-Select Case BarTimePeriod.Units
-Case TimePeriodVolume, _
-        TimePeriodTickVolume, _
-        TimePeriodTickMovement, _
-        TimePeriodNone
-    BarStartTime = Timestamp
-Case Else
-    BarStartTime = gCentiSecondsToDate(gBarStartTime(Timestamp, _
-                                    BarTimePeriod, _
-                                    gNormaliseSessionTime(SessionStartTime), _
-                                    gNormaliseSessionTime(SessionEndTime)))
-End Select
+BarStartTime = GBarUtils.BarStartTime(Timestamp, BarTimePeriod, SessionStartTime, SessionEndTime)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBar( _
@@ -146,20 +124,19 @@ Public Function CreateBar( _
 Const ProcName As String = "CreateBar"
 On Error GoTo Err
 
-Set CreateBar = New Bar
-CreateBar.Initialise Timestamp, _
+Set CreateBar = GBarUtils.CreateBar(Timestamp, _
                     OpenValue, _
                     HighValue, _
                     LowValue, _
                     CloseValue, _
                     Volume, _
                     TickVolume, _
-                    OpenInterest
+                    OpenInterest)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilder( _
@@ -172,17 +149,12 @@ Public Function CreateBarsBuilder( _
 Const ProcName As String = "CreateBarsBuilder"
 On Error GoTo Err
 
-AssertArgument Not pBarTimePeriod Is Nothing, "pBarTimePeriod is Nothing"
-AssertArgument Not pSession Is Nothing Or pBarTimePeriod.Length = 0, "pSession is Nothing"
-
-Dim lBarsBuilder As New BarsBuilder
-lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave
-Set CreateBarsBuilder = lBarsBuilder
+Set CreateBarsBuilder = GBarUtils.CreateBarsBuilder(pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilderFuture( _
@@ -195,17 +167,12 @@ Public Function CreateBarsBuilderFuture( _
 Const ProcName As String = "CreateBarsBuilderFuture"
 On Error GoTo Err
 
-AssertArgument Not pBarTimePeriod Is Nothing, "pBarTimePeriod is Nothing"
-AssertArgument Not pSessionFuture Is Nothing, "pSessionFuture is Nothing"
-
-Dim lFutureBuilder As New BarsBuilderFutureBuilder
-lFutureBuilder.Initialise pBarTimePeriod, pSessionFuture, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave
-Set CreateBarsBuilderFuture = lFutureBuilder.Future
+Set CreateBarsBuilderFuture = GBarUtils.CreateBarsBuilderFuture(pBarTimePeriod, pSessionFuture, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilderWithInitialBars( _
@@ -215,17 +182,12 @@ Public Function CreateBarsBuilderWithInitialBars( _
 Const ProcName As String = "CreateBarsBuilderWithInitialBars"
 On Error GoTo Err
 
-AssertArgument Not pBars Is Nothing, "pBars Is Nothing"
-AssertArgument Not pSession Is Nothing, "pSession is Nothing"
-    
-Dim lBarsBuilder As New BarsBuilder
-lBarsBuilder.InitialiseWithInitialBars pBars, pSession, pTickSize
-Set CreateBarsBuilderWithInitialBars = lBarsBuilder
+Set CreateBarsBuilderWithInitialBars = GBarUtils.CreateBarsBuilderWithInitialBars(pBars, pSession, pTickSize)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarsBuilderWithInitialBarsFuture( _
@@ -235,17 +197,12 @@ Public Function CreateBarsBuilderWithInitialBarsFuture( _
 Const ProcName As String = "CreateBarsBuilderWithInitialBarsFuture"
 On Error GoTo Err
 
-AssertArgument Not pBarsFuture Is Nothing, "pBarsFuture Is Nothing"
-AssertArgument Not pSession Is Nothing, "pSession is Nothing"
-    
-Dim lFutureBuilder As New BarsBuilderFutureBuilder
-lFutureBuilder.InitialiseWithInitialBars pBarsFuture, pSession, pTickSize
-Set CreateBarsBuilderWithInitialBarsFuture = lFutureBuilder.Future
+Set CreateBarsBuilderWithInitialBarsFuture = GBarUtils.CreateBarsBuilderWithInitialBarsFuture(pBarsFuture, pSession, pTickSize)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateValueCache( _
@@ -254,13 +211,12 @@ Public Function CreateValueCache( _
 Const ProcName As String = "CreateValueCache"
 On Error GoTo Err
 
-Set CreateValueCache = New ValueCache
-CreateValueCache.Initialise CyclicSize, ValueName
+Set CreateValueCache = GBarUtils.CreateValueCache(CyclicSize, ValueName)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateVolumeParser( _
@@ -268,13 +224,12 @@ Public Function CreateVolumeParser( _
 Const ProcName As String = "CreateVolumeParser"
 On Error GoTo Err
 
-Set CreateVolumeParser = New VolumeParser
-CreateVolumeParser.Initialise pSession
+Set CreateVolumeParser = GBarUtils.CreateVolumeParser(pSession)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub GetTimespanData( _
@@ -288,7 +243,7 @@ Public Sub GetTimespanData( _
 Const ProcName As String = "GetTimespanData"
 On Error GoTo Err
 
-gGetTimespanData pBarTimePeriod, _
+GBarUtils.GetTimespanData pBarTimePeriod, _
                 pFromTime, _
                 pToTime, _
                 pFromSessionTimes, _
@@ -299,7 +254,7 @@ gGetTimespanData pBarTimePeriod, _
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -312,27 +267,17 @@ Public Function MaxNumberOfBarsInTimespan( _
 Const ProcName As String = "MaxNumberOfBarsInTimespan"
 On Error GoTo Err
 
-Dim lFromSessionTimes As SessionTimes
-Dim lToSessionTimes As SessionTimes
-gGetTimespanData pBarTimePeriod, _
-                pStartTime, _
-                pEndTime, _
-                lFromSessionTimes, _
-                lToSessionTimes, _
-                pSessionStartTime, _
-                pSessionEndTime
-
-MaxNumberOfBarsInTimespan = gMaxNumberOfBarsInTimespanNormalized( _
+MaxNumberOfBarsInTimespan = GBarUtils.MaxNumberOfBarsInTimespan( _
                                                         pBarTimePeriod, _
                                                         pStartTime, _
                                                         pEndTime, _
-                                                        lFromSessionTimes, _
-                                                        lToSessionTimes)
+                                                        pSessionStartTime, _
+                                                        pSessionEndTime)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function MaxNumberOfBarsInTimespanNormalized( _
@@ -344,7 +289,7 @@ Public Function MaxNumberOfBarsInTimespanNormalized( _
 Const ProcName As String = "MaxNumberOfBarsInTimespanNormalized"
 On Error GoTo Err
 
-MaxNumberOfBarsInTimespanNormalized = gMaxNumberOfBarsInTimespanNormalized( _
+MaxNumberOfBarsInTimespanNormalized = GBarUtils.MaxNumberOfBarsInTimespanNormalized( _
                                             pBarTimePeriod, _
                                             pStartTime, _
                                             pEndTime, _
@@ -354,7 +299,7 @@ MaxNumberOfBarsInTimespanNormalized = gMaxNumberOfBarsInTimespanNormalized( _
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 
@@ -363,7 +308,7 @@ Public Function NormaliseBarTimestamp( _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pSessionStartTime As Date, _
                 ByVal pSessionEndTime As Date) As Date
-NormaliseBarTimestamp = gNormaliseTimestamp(pTimestamp, _
+NormaliseBarTimestamp = GBarUtils.NormaliseTimestamp(pTimestamp, _
                                             pTimePeriod, _
                                             pSessionStartTime, _
                                             pSessionEndTime)
@@ -376,23 +321,15 @@ Public Function NumberOfBarsInSession( _
 Const ProcName As String = "NumberOfBarsInSession"
 On Error GoTo Err
 
-Select Case BarTimePeriod.Units
-Case TimePeriodSecond
-Case TimePeriodMinute
-Case TimePeriodHour
-Case Else
-    AssertArgument False, "Can't calculate number of Bars in session for this time unit"
-End Select
-
-NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
+NumberOfBarsInSession = GBarUtils.NumberOfBarsInSession( _
                                                 BarTimePeriod, _
-                                                gNormaliseSessionTime(SessionStartTime), _
-                                                gNormaliseSessionTime(SessionEndTime))
+                                                SessionStartTime, _
+                                                SessionEndTime)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OffsetBarStartTime( _
@@ -404,19 +341,17 @@ Public Function OffsetBarStartTime( _
 Const ProcName As String = "OffsetBarStartTime"
 On Error GoTo Err
 
-AssertArgument BarTimePeriod.Units <> TimePeriodNone, "Invalid time Units argument"
-
-OffsetBarStartTime = gCalcOffsetBarStartTime( _
+OffsetBarStartTime = GBarUtils.OffsetBarStartTime( _
                                 Timestamp, _
                                 BarTimePeriod, _
                                 offset, _
-                                gNormaliseSessionTime(SessionStartTime), _
-                                gNormaliseSessionTime(SessionEndTime))
+                                SessionStartTime, _
+                                SessionEndTime)
 
 Exit Function
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

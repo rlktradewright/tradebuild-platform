@@ -82,13 +82,13 @@ ElseIf ev.Future.IsCancelled Then
     mFutureBuilder.Cancel
     mFutureWaiter.Clear
 ElseIf TypeOf ev.Future.Value Is Bars Then
-    gLogger.Log "Got bars", ProcName, ModuleName, LogLevelHighDetail
+    GBars.Logger.Log "Got bars", ProcName, ModuleName, LogLevelHighDetail
     Set mBars = ev.Future.Value
 
     Dim lBarsBuilder As New BarsBuilder
     lBarsBuilder.InitialiseWithInitialBars mBars, mSession, mTickSize
     
-    gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
+    GBars.Logger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
     mFutureBuilder.Value = lBarsBuilder
     mFutureBuilder.Complete
     
@@ -98,7 +98,7 @@ End If
 Exit Sub
 
 Err:
-BarsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GBars.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -114,7 +114,7 @@ Set Future = mFutureBuilder.Future
 Exit Property
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -134,14 +134,14 @@ On Error GoTo Err
 Dim lBarsBuilder As New BarsBuilder
 lBarsBuilder.Initialise pBarTimePeriod, pSession, pTickSize, pNumberOfBarsToCache, pNormaliseDailyTimestamps, pSave
 
-gLogger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
+GBars.Logger.Log "BarsBuilder future builder completed", ProcName, ModuleName, LogLevelHighDetail
 mFutureBuilder.Value = lBarsBuilder
 mFutureBuilder.Complete
 
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub InitialiseWithInitialBars( _
@@ -160,7 +160,7 @@ Set mSelfRef = Me
 Exit Sub
 
 Err:
-BarsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
