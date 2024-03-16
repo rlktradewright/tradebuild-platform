@@ -133,7 +133,7 @@ If mTaskContext.State = TaskStateSuspended Then mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -161,7 +161,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickfileReplayMonitor_NotifyReady( _
@@ -189,7 +189,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickfileReplayMonitor_NotifyReplayComplete(ByVal pSource As Object, ByVal pEventsPlayed As Long)
@@ -199,12 +199,12 @@ On Error GoTo Err
 mTickfileState = TickfileStateNotPlaying
 mTaskContext.Continue
 
-mTickfileReplayController.NotifyTickfileCompleted Me, gGetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
+mTickfileReplayController.NotifyTickfileCompleted Me, GetTickfileEventData(mTickfileReplayController, mTickfileSpec, Me), mEventsPlayed
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickfileReplayMonitor_NotifyTickfilePrepared( _
@@ -218,7 +218,7 @@ mTickfileReplayController.NotifyTickfilePrepared Me, mTickfileSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -270,7 +270,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -304,7 +304,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTickfiles.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -323,7 +323,7 @@ mClockFutureBuilder.Complete
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get PlayerState() As PlayerStates
@@ -343,7 +343,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ReplayProgressTicks() As Long
@@ -359,7 +359,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let ReplaySpeed(ByVal Value As Long)
@@ -372,7 +372,7 @@ If Not mClock Is Nothing Then mClock.Rate = mReplaySpeed
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ReplaySpeed() As Long
@@ -400,7 +400,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get TimeZone() As TimeZone
@@ -441,7 +441,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -469,7 +469,7 @@ mTimestampAdjustmentEnd = pTimestampAdjustmentEnd / 86400
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PauseReplay()
@@ -485,7 +485,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PrepareTickfile( _
@@ -501,7 +501,7 @@ mReader.PrepareTickfile mTickfileSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ProcessTick(ByRef pTick As GenericTick)
@@ -520,7 +520,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ResumeReplay()
@@ -536,7 +536,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -554,7 +554,7 @@ adjustTimestamp = Timestamp + _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -583,7 +583,7 @@ mFutureWaiter.Add FetchContract(pContractSpec, mPrimaryContractStore, mSecondary
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setContract(ByVal pContract As IContract)
@@ -598,13 +598,13 @@ If mContract Is Nothing Then
     mTickScheduler.AddPlayer Me
 Else
     ' this is not the first tickfile - just make sure we haven't changed contracts
-    Assert gVerifyContractSpec(pContract.Specifier, mContract.Specifier), "Tickfile's contract is incompatible with previous tickfile's contract"
+    Assert VerifyContractSpec(pContract.Specifier, mContract.Specifier), "Tickfile's contract is incompatible with previous tickfile's contract"
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub StartReplay()
@@ -620,7 +620,7 @@ StartTask Me, PriorityLow
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

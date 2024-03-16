@@ -112,7 +112,7 @@ StopReplay
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITask_Run()
@@ -122,7 +122,7 @@ On Error GoTo Err
 Static sStarted As Boolean
 If Not sStarted Then
     sStarted = True
-    gLogger.Log "Tickfile replay started", ProcName, ModuleName
+    GTickfiles.Logger.Log "Tickfile replay started", ProcName, ModuleName
     RaiseEvent ReplayStarted
 End If
 
@@ -137,7 +137,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -176,7 +176,7 @@ If Not mTickScheduler Is Nothing Then mTickScheduler.ReplaySpeed = mReplaySpeed
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ReplaySpeed() As Long
@@ -188,7 +188,7 @@ ReplaySpeed = mReplaySpeed
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let SequentialTickFileSpecifiers(Value As TickFileSpecifiers)
@@ -214,7 +214,7 @@ prepareTickfilePlayer mPlayers(0), mTickfileSpecifiers(mTickfileIndex), 0
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 
@@ -241,7 +241,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickFileSpecifiers() As TickFileSpecifiers
@@ -253,7 +253,7 @@ Set TickFileSpecifiers = mTickfileSpecifiers
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickStream(ByVal pIndex As Long) As ITickStream
@@ -267,7 +267,7 @@ If Not mPlayers(pIndex) Is Nothing Then Set TickStream = mPlayers(pIndex).TickSt
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimestampAdjustmentStart() As Double
@@ -279,7 +279,7 @@ TimestampAdjustmentStart = mTimestampAdjustmentStart
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimestampAdjustmentEnd() As Double
@@ -291,7 +291,7 @@ TimestampAdjustmentEnd = mTimestampAdjustmentEnd
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -307,7 +307,7 @@ mListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Intialise( _
@@ -333,7 +333,7 @@ mReplayProgressEventInterval = pReplayProgressEventInterval
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyCantPlay(ByVal pPlayer As TickfilePlayer)
@@ -347,7 +347,7 @@ If mReplayInProgress Then mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyEvent(ev As NotificationEventData)
@@ -360,7 +360,7 @@ fireNotifyEvent ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyProgress(ByVal pTimestamp As Date, ByVal pEventsPlayed As Long, ByVal pPercentComplete As Long)
@@ -372,14 +372,14 @@ fireProgress pTimestamp, pEventsPlayed, pPercentComplete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyReady(ByVal pPlayer As TickfilePlayer, ByVal pTickfileSpec As TickfileSpecifier)
 Const ProcName As String = "NotifyReady"
 On Error GoTo Err
 
-gLogger.Log "Tickfile player ready", ProcName, ModuleName, , pTickfileSpec.ToString
+GTickfiles.Logger.Log "Tickfile player ready", ProcName, ModuleName, , pTickfileSpec.ToString
 
 Assert mNumberOfPlayersAwaitingReady > 0, "Ready notified when none expected"
 mNumberOfPlayersAwaitingReady = mNumberOfPlayersAwaitingReady - 1
@@ -389,14 +389,14 @@ If mReplayInProgress Then mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyTickfileCompleted(ByVal pPlayer As TickfilePlayer, ByRef ev As TickfileEventData, ByVal pEventsPlayed As Long)
 Const ProcName As String = "NotifyTickfileCompleted"
 On Error GoTo Err
 
-gLogger.Log "Tickfile player completed", ProcName, ModuleName, , ev.Specifier.ToString
+GTickfiles.Logger.Log "Tickfile player completed", ProcName, ModuleName, , ev.Specifier.ToString
 
 fireTickfileCompleted ev, pEventsPlayed
 
@@ -419,7 +419,7 @@ If mReplayInProgress Then mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyTickfilePrepared( _
@@ -435,7 +435,7 @@ mNumberOfPlayersAwaitingPrepare = mNumberOfPlayersAwaitingPrepare - 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub PauseReplay()
@@ -458,7 +458,7 @@ RaiseEvent ReplayPaused
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveTickfileReplayListener(ByVal pListener As ITickfileReplayListener)
@@ -470,7 +470,7 @@ mListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ResumeReplay()
@@ -494,7 +494,7 @@ RaiseEvent ReplayResumed
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function StartReplay() As TaskController
@@ -509,7 +509,7 @@ Set StartReplay = StartTask(Me, PriorityNormal)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub StopReplay()
@@ -532,7 +532,7 @@ RaiseEvent ReplayStopped
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -565,7 +565,7 @@ RaiseEvent NotifyEvent(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireProgress(ByVal pTimestamp As Date, ByVal pEventsPlayed As Long, ByVal pPercentComplete As Long)
@@ -594,7 +594,7 @@ RaiseEvent ReplayProgress(pTimestamp, pEventsPlayed, pPercentComplete)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireTickfileCompleted(ByRef ev As TickfileEventData, ByVal pEventsPlayed As Long)
@@ -623,7 +623,7 @@ RaiseEvent TickfileCompleted(ev, pEventsPlayed)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub prepareTickfilePlayer(ByVal pPlayer As TickfilePlayer, ByVal tickfileSpec As TickfileSpecifier, ByVal pStreamId As Long)
@@ -641,7 +641,7 @@ pPlayer.PrepareTickfile lTickfileReader, tickfileSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function setupTickfilePlayer( _
@@ -668,48 +668,48 @@ Set setupTickfilePlayer = lTickfilePlayer
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub startScheduler()
 Const ProcName As String = "startScheduler"
 On Error GoTo Err
 
-gLogger.Log "Tickfile replay scheduling started", ProcName, ModuleName
+GTickfiles.Logger.Log "Tickfile replay scheduling started", ProcName, ModuleName
 mTickScheduler.StartScheduling
 mTaskContext.Suspend -1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub terminateReplay()
 Const ProcName As String = "terminateReplay"
 On Error GoTo Err
 
-gLogger.Log "Tickfile replay scheduling stopped", ProcName, ModuleName
+GTickfiles.Logger.Log "Tickfile replay scheduling stopped", ProcName, ModuleName
 mTickScheduler.StopScheduling
 If mUnableToReplay Then
-    gLogger.Log "Tickfile replay completed with errors: one of more files was invalid", ProcName, ModuleName
+    GTickfiles.Logger.Log "Tickfile replay completed with errors: one of more files was invalid", ProcName, ModuleName
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "One or more files was invalid"
 Else
-    gLogger.Log "Tickfile replay scheduling completed successfully", ProcName, ModuleName
+    GTickfiles.Logger.Log "Tickfile replay scheduling completed successfully", ProcName, ModuleName
     mTaskContext.Finish Empty, False
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub waitForPlayers()
 Const ProcName As String = "waitForPlayers"
 On Error GoTo Err
 
-gLogger.Log "Waiting for tickfile players: " & _
+GTickfiles.Logger.Log "Waiting for tickfile players: " & _
             mNumberOfPlayersAwaitingPrepare & _
             " to prepare and " & _
             mNumberOfPlayersAwaitingReady & _
@@ -720,6 +720,6 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

@@ -39,7 +39,7 @@ End Type
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TickfileSpecsParser"
+Private Const ModuleName                            As String = "GTickfileSpecsParser"
 
 Private Const NoDate                                As Date = 0
 
@@ -95,7 +95,7 @@ Set gParseTickfileListFile = lTickFileSpecifiers
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -118,7 +118,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFromDate( _
@@ -131,7 +131,7 @@ getFromDate = getDate(FromSwitch, pClp)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getRootDir( _
@@ -146,7 +146,7 @@ AssertArgument pFileSys.FolderExists(getRootDir), "Specified root folder does no
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getSessionOnly(ByVal pClp As CommandLineParser) As Boolean
@@ -164,7 +164,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getToDate(ByVal pClp As CommandLineParser) As Date
@@ -176,7 +176,7 @@ getToDate = getDate(ToSwitch, pClp)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function processLine( _
@@ -233,7 +233,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function processTickfileName( _
@@ -268,7 +268,7 @@ Set processTickfileName = lTickfileSpecifier
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

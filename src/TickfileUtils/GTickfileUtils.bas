@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "GTickfileUtils"
 Option Explicit
 
 ''
@@ -162,8 +162,7 @@ End Type
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "TickfileUtils27"
-Private Const ModuleName                            As String = "Globals"
+Private Const ModuleName                            As String = "GTickfileUtils"
 
 Public Const TRADEBUILD_TICKFILE_CURR_VERSION       As Integer = 5
 
@@ -223,81 +222,81 @@ Public Const TickfileFormatESignal                  As String = "urn:tradewright
 ' Methods
 '@================================================================================
 
-Public Function gCapabilitiesCrescendoV1(ByVal mode As TickfileAccessModes) As Long
+Public Function CapabilitiesCrescendoV1(ByVal mode As TickfileAccessModes) As Long
 Select Case mode
 Case TickfileReadOnly
-    gCapabilitiesCrescendoV1 = _
+    CapabilitiesCrescendoV1 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 Case TickfileWriteOnly
-    gCapabilitiesCrescendoV1 = 0
+    CapabilitiesCrescendoV1 = 0
 Case TickfileReadWrite
-    gCapabilitiesCrescendoV1 = _
+    CapabilitiesCrescendoV1 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 End Select
 End Function
 
-Public Function gCapabilitiesCrescendoV2(ByVal mode As TickfileAccessModes) As Long
+Public Function CapabilitiesCrescendoV2(ByVal mode As TickfileAccessModes) As Long
 Select Case mode
 Case TickfileReadOnly
-    gCapabilitiesCrescendoV2 = _
+    CapabilitiesCrescendoV2 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 Case TickfileWriteOnly
-    gCapabilitiesCrescendoV2 = 0
+    CapabilitiesCrescendoV2 = 0
 Case TickfileReadWrite
-    gCapabilitiesCrescendoV2 = _
+    CapabilitiesCrescendoV2 = _
                 TickfileStoreCapabilities.TickfileStoreCanRecord Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 End Select
 End Function
 
-Public Function gCapabilitiesESignal(ByVal mode As TickfileAccessModes) As Long
+Public Function CapabilitiesESignal(ByVal mode As TickfileAccessModes) As Long
 Select Case mode
 Case TickfileReadOnly
-    gCapabilitiesESignal = _
+    CapabilitiesESignal = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 Case TickfileWriteOnly
-    gCapabilitiesESignal = 0
+    CapabilitiesESignal = 0
 Case TickfileReadWrite
-    gCapabilitiesESignal = _
+    CapabilitiesESignal = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 End Select
 End Function
 
-Public Function gCapabilitiesTradeBuildV3(ByVal mode As TickfileAccessModes) As Long
+Public Function CapabilitiesTradeBuildV3(ByVal mode As TickfileAccessModes) As Long
 Select Case mode
 Case TickfileReadOnly
-    gCapabilitiesTradeBuildV3 = _
+    CapabilitiesTradeBuildV3 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplayMarketDepth Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 Case TickfileWriteOnly
-    gCapabilitiesTradeBuildV3 = 0
+    CapabilitiesTradeBuildV3 = 0
 Case TickfileReadWrite
-    gCapabilitiesTradeBuildV3 = _
+    CapabilitiesTradeBuildV3 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplayMarketDepth Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress
 End Select
 End Function
 
-Public Function gCapabilitiesTradeBuildV4(ByVal mode As TickfileAccessModes) As Long
+Public Function CapabilitiesTradeBuildV4(ByVal mode As TickfileAccessModes) As Long
 Select Case mode
 Case TickfileReadOnly
-    gCapabilitiesTradeBuildV4 = _
+    CapabilitiesTradeBuildV4 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplayMarketDepth Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress Or _
                 TickfileStoreCapabilities.TickfileStoreCanSaveContractInformation
 Case TickfileWriteOnly
-    gCapabilitiesTradeBuildV4 = 0
+    CapabilitiesTradeBuildV4 = 0
 Case TickfileReadWrite
-    gCapabilitiesTradeBuildV4 = _
+    CapabilitiesTradeBuildV4 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplayMarketDepth Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress Or _
@@ -305,23 +304,23 @@ Case TickfileReadWrite
 End Select
 End Function
 
-Public Function gCapabilitiesTradeBuildV5(ByVal mode As TickfileAccessModes) As Long
+Public Function CapabilitiesTradeBuildV5(ByVal mode As TickfileAccessModes) As Long
 Select Case mode
 Case TickfileReadOnly
-    gCapabilitiesTradeBuildV5 = _
+    CapabilitiesTradeBuildV5 = _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplayMarketDepth Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress Or _
                 TickfileStoreCapabilities.TickfileStoreCanSaveContractInformation
 Case TickfileWriteOnly
-    gCapabilitiesTradeBuildV5 = _
-                TickfileStoreCapabilities.TickfileStoreCanRecord Or _
-                TickfileStoreCapabilities.TickfileStoreCanRecordMarketDepth Or _
-                TickfileStoreCapabilities.TickfileStoreCanSaveContractInformation
-Case TickfileReadWrite
-    gCapabilitiesTradeBuildV5 = _
+    CapabilitiesTradeBuildV5 = _
                 TickfileStoreCapabilities.TickfileStoreCanRecord Or _
                 TickfileStoreCapabilities.TickfileStoreCanRecordMarketDepth Or _
+                TickfileStoreCapabilities.TickfileStoreCanSaveContractInformation
+Case TickfileReadWrite
+    CapabilitiesTradeBuildV5 = _
+                TickfileStoreCapabilities.TickfileStoreCanRecord Or _
+                TickfileStoreCapabilities.TickfileStoreCanRecordMarketDepth Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplay Or _
                 TickfileStoreCapabilities.TickfileStoreCanReplayMarketDepth Or _
                 TickfileStoreCapabilities.TickfileStoreCanReportReplayProgress Or _
@@ -329,57 +328,70 @@ Case TickfileReadWrite
 End Select
 End Function
 
-Public Function gCreateBufferedTickfileWriter( _
+Public Function CreateBufferedTickfileWriter( _
                 ByVal pTickfileStore As ITickfileStore, _
                 ByVal pOutputMonitor As ITickfileOutputMonitor, _
                 ByVal pContractFuture As IFuture, _
                 ByVal pFormatIdentifier As String, _
                 ByVal pLocation As String) As ITickfileWriter
-Const ProcName As String = "gCreateBufferedTickfileWriter"
+Const ProcName As String = "CreateBufferedTickfileWriter"
 On Error GoTo Err
 
 Dim lBufferedWriter As New BufferedTickfileWriter
 Dim lWriter As ITickfileWriter
 Set lWriter = pTickfileStore.CreateTickfileWriter(lBufferedWriter, pContractFuture, pFormatIdentifier, pLocation)
 lBufferedWriter.Initialise pOutputMonitor, lWriter
-Set gCreateBufferedTickfileWriter = lBufferedWriter
+Set CreateBufferedTickfileWriter = lBufferedWriter
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gFormatSpecifiersToString( _
-                                ByVal formatId As TickfileFormats, _
-                                ByVal Version As TickFileVersions) As String
-Select Case formatId
-Case TickfileFormats.TickfileESignal
-    Select Case Version
-    Case TickFileVersions.ESignal
-        gFormatSpecifiersToString = TickfileFormatESignal
-    End Select
-Case TickfileFormats.TickfileTradeBuild
-    Select Case Version
-    Case TickFileVersions.TradeBuildV3
-        gFormatSpecifiersToString = TickfileFormatTradeBuildV3
-    Case TickFileVersions.TradeBuildV4
-        gFormatSpecifiersToString = TickfileFormatTradeBuildV4
-    Case TickFileVersions.TradeBuildV5
-        gFormatSpecifiersToString = TickfileFormatTradeBuildV5
-    End Select
-Case TickfileFormats.TickfileCrescendo
-    Select Case Version
-    Case TickFileVersions.CrescendoV1
-        gFormatSpecifiersToString = TickfileFormatCrescendoV1
-    Case TickFileVersions.CrescendoV2
-        gFormatSpecifiersToString = TickfileFormatCrescendoV2
-    End Select
-End Select
+Public Function CreateTickfileReplayController( _
+                ByVal pTickfileStore As ITickfileStore, _
+                Optional ByVal pPrimaryContractStore As IContractStore, _
+                Optional ByVal pSecondaryContractStore As IContractStore, _
+                Optional ByVal pReplaySpeed As Long = 1, _
+                Optional ByVal pReplayProgressEventInterval As Long = 1000, _
+                Optional ByVal pTimestampAdjustmentStart As Double = 0#, _
+                Optional ByVal pTimestampAdjustmentEnd As Double = 0#) As ReplayController
+Const ProcName As String = "CreateTickfileReplayController"
+On Error GoTo Err
 
+AssertArgument Not pTickfileStore Is Nothing, "pTickfileStore is Nothing"
+AssertArgument pReplayProgressEventInterval >= 50, "pReplayProgressEventInterval cannot be less than 50"
+
+Dim clr As New ReplayController
+clr.Intialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pReplaySpeed, pTimestampAdjustmentStart, pTimestampAdjustmentEnd, pReplayProgressEventInterval
+
+Set CreateTickfileReplayController = clr
+
+Exit Function
+
+Err:
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gFormatSpecifiersFromString(ByVal Value As String, _
+Public Function CreateTickfileStore( _
+                ByVal pMode As TickfileAccessModes, _
+                Optional ByVal pOutputTickfilePath As String, _
+                Optional ByVal pTickfileGranularity As TickfileGranularities = TickfileGranularityWeek) As ITickfileStore
+Const ProcName As String = "CreateTickfileStore"
+On Error GoTo Err
+
+Dim lStore As New TickfileStore
+lStore.Initialise pMode, pOutputTickfilePath, pTickfileGranularity
+Set CreateTickfileStore = lStore
+
+Exit Function
+
+Err:
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Sub FormatSpecifiersFromString(ByVal Value As String, _
                                 ByRef formatId As TickfileFormats, _
                                 ByRef Version As TickFileVersions)
 Select Case Value
@@ -410,128 +422,127 @@ Case Else
 End Select
 End Sub
 
-Public Function gGetTickfileEventData( _
-                ByVal pSource As Object, _
-                ByRef pTickfileSpec As ITickfileSpecifier, _
-                ByVal pPlayer As TickfilePlayer) As TickfileEventData
-Const ProcName As String = "gGetTickfileEventData"
+Public Function GenerateTickfileSpecifiers( _
+                ByVal pContracts As IContracts, _
+                ByVal pTickfileFormatID As String, _
+                ByVal pStartDate As Date, _
+                ByVal pEndDate As Date, _
+                Optional ByVal pCompleteSessionsOnly As Boolean = True, _
+                Optional ByVal pUseExchangeTimezone As Boolean = True, _
+                Optional ByVal pCustomSessionStartTime As Date, _
+                Optional ByVal pCustomSessionEndTime As Date) As TickFileSpecifiers
+Const ProcName As String = "GenerateTickfileSpecifiers"
 On Error GoTo Err
 
-Set gGetTickfileEventData.Source = pSource
-If Not pPlayer Is Nothing Then
-    gGetTickfileEventData.SizeInBytes = pPlayer.TickfileSizeBytes
-    Set gGetTickfileEventData.TickStream = pPlayer.TickStream
-End If
+Dim tfsg As New TickfileSpecGenerator
+tfsg.Initialise pContracts, _
+                pTickfileFormatID, _
+                pStartDate, _
+                pEndDate, _
+                pCompleteSessionsOnly, _
+                pUseExchangeTimezone, _
+                pCustomSessionStartTime, _
+                pCustomSessionEndTime
 
-Set gGetTickfileEventData.Specifier = pTickfileSpec
+Set GenerateTickfileSpecifiers = tfsg.Generate()
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Public Function GenerateTickfileSpecifiersFromFile( _
+                ByVal pFilename As String) As TickFileSpecifiers
+Const ProcName As String = "GenerateTickfileSpecifiersFromFile"
+On Error GoTo Err
 
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
+Set GenerateTickfileSpecifiersFromFile = gParseTickfileListFile(pFilename)
 
-Public Property Get gLogger() As FormattingLogger
-Static sLogger As FormattingLogger
-If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("tickfileutils", ProjectName)
-Set gLogger = sLogger
-End Property
+Exit Function
 
-Public Property Get gTracer() As Tracer
-Static sTracer As Tracer
-If sTracer Is Nothing Then Set sTracer = GetTracer("tickfileutils")
-Set gTracer = sTracer
-End Property
+Err:
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
+End Function
 
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Public Function GetTickfileEventData( _
+                ByVal pSource As Object, _
+                ByRef pTickfileSpec As ITickfileSpecifier, _
+                ByVal pPlayer As TickfilePlayer) As TickfileEventData
+Const ProcName As String = "GetTickfileEventData"
+On Error GoTo Err
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
+Set GetTickfileEventData.Source = pSource
+If Not pPlayer Is Nothing Then
+    GetTickfileEventData.SizeInBytes = pPlayer.TickfileSizeBytes
+    Set GetTickfileEventData.TickStream = pPlayer.TickStream
+End If
 
-Public Function gSecTypeHasExpiry(ByVal pSecType As SecurityTypes) As Boolean
-gSecTypeHasExpiry = (pSecType = SecurityTypes.SecTypeFuture Or _
+Set GetTickfileEventData.Specifier = pTickfileSpec
+
+Exit Function
+
+Err:
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function RecordTickData( _
+                ByVal pTickSource As IGenericTickSource, _
+                ByVal pContractFuture As IFuture, _
+                ByVal pTickfileStore As ITickfileStore, _
+                Optional ByVal pOutputMonitor As ITickfileOutputMonitor, _
+                Optional ByVal pFormatIdentifier As String = "", _
+                Optional ByVal pLocation As String = "") As TickDataWriter
+Const ProcName As String = "RecordTickData"
+On Error GoTo Err
+
+Set RecordTickData = New TickDataWriter
+RecordTickData.Initialise pTickSource, pContractFuture, pOutputMonitor, pTickfileStore, pFormatIdentifier, pLocation
+
+Exit Function
+
+Err:
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function SecTypeHasExpiry(ByVal pSecType As SecurityTypes) As Boolean
+SecTypeHasExpiry = (pSecType = SecurityTypes.SecTypeFuture Or _
             pSecType = SecurityTypes.SecTypeOption Or _
             pSecType = SecurityTypes.SecTypeFuturesOption)
 End Function
 
-Public Function gSupports( _
-                            ByVal Capabilities As Long, _
-                            ByVal mode As TickfileAccessModes, _
-                            Optional ByVal FormatIdentifier As String) As Boolean
+Public Function Supports( _
+                ByVal Capabilities As Long, _
+                ByVal mode As TickfileAccessModes, _
+                Optional ByVal FormatIdentifier As String) As Boolean
 Dim formatId As TickfileFormats
 Dim formatVersion As TickFileVersions
 Dim capMask As Long
 
-gFormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
+FormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
 If formatId = TickfileFormats.TickfileUnknown Then Exit Function
 
 Select Case formatVersion
 Case TradeBuildV3
-    capMask = gCapabilitiesTradeBuildV3(mode)
+    capMask = CapabilitiesTradeBuildV3(mode)
 Case TradeBuildV4
-    capMask = gCapabilitiesTradeBuildV4(mode)
+    capMask = CapabilitiesTradeBuildV4(mode)
 Case TradeBuildV5
-    capMask = gCapabilitiesTradeBuildV5(mode)
+    capMask = CapabilitiesTradeBuildV5(mode)
 Case CrescendoV1
-    capMask = gCapabilitiesCrescendoV1(mode)
+    capMask = CapabilitiesCrescendoV1(mode)
 Case CrescendoV2
-    capMask = gCapabilitiesCrescendoV2(mode)
+    capMask = CapabilitiesCrescendoV2(mode)
 Case ESignal
-    capMask = gCapabilitiesESignal(mode)
+    capMask = CapabilitiesESignal(mode)
 End Select
 
-gSupports = (capMask And Capabilities)
+Supports = (capMask And Capabilities)
 
 End Function
 
-Public Function gTickfileSpecifierToString(ByVal pTickfileSpec As ITickfileSpecifier) As String
-Const ProcName As String = "gTickfileSpecifierToString"
-On Error GoTo Err
-
-If pTickfileSpec.Filename <> "" Then
-    gTickfileSpecifierToString = pTickfileSpec.Filename
-ElseIf Not pTickfileSpec.Contract Is Nothing Then
-    gTickfileSpecifierToString = "Contract: " & _
-                                Replace(pTickfileSpec.Contract.Specifier.ToString, vbCrLf, "; ") & _
-                            ": From: " & FormatDateTime(pTickfileSpec.FromDate, vbGeneralDate) & _
-                            " To: " & FormatDateTime(pTickfileSpec.ToDate, vbGeneralDate)
-Else
-    gTickfileSpecifierToString = "Contract: unknown"
-End If
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function gVerifyContracts(ByVal pContracts As IContracts) As Boolean
-Const ProcName As String = "gVerifyContracts"
+Public Function VerifyContracts(ByVal pContracts As IContracts) As Boolean
+Const ProcName As String = "VerifyContracts"
 On Error GoTo Err
 
 Dim en As Enumerator: Set en = pContracts.Enumerator
@@ -541,33 +552,33 @@ Dim lFirstContract As IContract
 Set lFirstContract = en.Current
 
 Dim lPrevExpiry As Date
-If gSecTypeHasExpiry(lFirstContract.Specifier.SecType) Then lPrevExpiry = lFirstContract.ExpiryDate
+If SecTypeHasExpiry(lFirstContract.Specifier.SecType) Then lPrevExpiry = lFirstContract.ExpiryDate
 
 Do While en.MoveNext
     Dim lCurrContract As IContract
     Set lCurrContract = en.Current
-    If Not gVerifyContractSpec(lFirstContract.Specifier, lCurrContract.Specifier) Then
-        gVerifyContracts = False
+    If Not VerifyContractSpec(lFirstContract.Specifier, lCurrContract.Specifier) Then
+        VerifyContracts = False
         Exit Function
     End If
-    If gSecTypeHasExpiry(lFirstContract.Specifier.SecType) Then
+    If SecTypeHasExpiry(lFirstContract.Specifier.SecType) Then
         If Not lPrevExpiry < lCurrContract.ExpiryDate Then
-            gVerifyContracts = False
+            VerifyContracts = False
             Exit Function
         End If
         lPrevExpiry = lCurrContract.ExpiryDate
     End If
 Loop
 
-gVerifyContracts = True
+VerifyContracts = True
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gVerifyContractSpec( _
+Public Function VerifyContractSpec( _
                 ByVal pContractSpec1 As IContractSpecifier, _
                 ByVal pContractSpec2 As IContractSpecifier) As Boolean
 If pContractSpec1.Symbol <> "" And pContractSpec1.Symbol <> pContractSpec2.Symbol Then Exit Function
@@ -577,12 +588,62 @@ If pContractSpec1.CurrencyCode <> "" And pContractSpec1.CurrencyCode <> pContrac
 If pContractSpec1.Multiplier <> pContractSpec2.Multiplier Then Exit Function
 If pContractSpec1.Right <> OptNone And pContractSpec1.Right <> pContractSpec2.Right Then Exit Function
 If pContractSpec1.Strike <> 0# And pContractSpec1.Strike <> pContractSpec2.Strike Then Exit Function
-gVerifyContractSpec = True
+VerifyContractSpec = True
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function gFormatSpecifiersToString( _
+                                ByVal formatId As TickfileFormats, _
+                                ByVal Version As TickFileVersions) As String
+Select Case formatId
+Case TickfileFormats.TickfileESignal
+    Select Case Version
+    Case TickFileVersions.ESignal
+        gFormatSpecifiersToString = TickfileFormatESignal
+    End Select
+Case TickfileFormats.TickfileTradeBuild
+    Select Case Version
+    Case TickFileVersions.TradeBuildV3
+        gFormatSpecifiersToString = TickfileFormatTradeBuildV3
+    Case TickFileVersions.TradeBuildV4
+        gFormatSpecifiersToString = TickfileFormatTradeBuildV4
+    Case TickFileVersions.TradeBuildV5
+        gFormatSpecifiersToString = TickfileFormatTradeBuildV5
+    End Select
+Case TickfileFormats.TickfileCrescendo
+    Select Case Version
+    Case TickFileVersions.CrescendoV1
+        gFormatSpecifiersToString = TickfileFormatCrescendoV1
+    Case TickFileVersions.CrescendoV2
+        gFormatSpecifiersToString = TickfileFormatCrescendoV2
+    End Select
+End Select
+
+End Function
+
+'Private Function gTickfileSpecifierToString(ByVal pTickfileSpec As ITickfileSpecifier) As String
+'Const ProcName As String = "gTickfileSpecifierToString"
+'On Error GoTo Err
+'
+'If pTickfileSpec.Filename <> "" Then
+'    gTickfileSpecifierToString = pTickfileSpec.Filename
+'ElseIf Not pTickfileSpec.Contract Is Nothing Then
+'    gTickfileSpecifierToString = "Contract: " & _
+'                                Replace(pTickfileSpec.Contract.Specifier.ToString, vbCrLf, "; ") & _
+'                            ": From: " & FormatDateTime(pTickfileSpec.FromDate, vbGeneralDate) & _
+'                            " To: " & FormatDateTime(pTickfileSpec.ToDate, vbGeneralDate)
+'Else
+'    gTickfileSpecifierToString = "Contract: unknown"
+'End If
+'
+'Exit Function
+'
+'Err:
+'GTickfiles.HandleUnexpectedError ProcName, ModuleName
+'End Function
 
 
 

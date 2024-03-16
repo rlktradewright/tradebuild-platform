@@ -83,7 +83,7 @@ en.MoveNext
 Dim lContract As IContract
 Set lContract = en.Current
 
-If Not gSecTypeHasExpiry(lContract.Specifier.SecType) Then Assert mContracts.Count = 1, "Only one contract can be supplied"
+If Not GTickfileUtils.SecTypeHasExpiry(lContract.Specifier.SecType) Then Assert mContracts.Count = 1, "Only one contract can be supplied"
 
 Dim sessionStartTime As Date
 Dim sessionEndTime As Date
@@ -97,12 +97,12 @@ Dim currentEndDate As Date: currentEndDate = mEndDate
 Dim lTickFileSpecifiers As New TickFileSpecifiers
 
 If mCompleteSessionsOnly Then
-    If gSecTypeHasExpiry(lContract.Specifier.SecType) Then
+    If GTickfileUtils.SecTypeHasExpiry(lContract.Specifier.SecType) Then
         Set Generate = generateExpiringWholeSession(lContract, en, sessionStartTime, sessionEndTime, currentStartDate, currentEndDate)
     Else
         Set Generate = generateNonExpiringWholeSession(lContract, sessionStartTime, sessionEndTime, currentStartDate, currentEndDate)
     End If
-ElseIf gSecTypeHasExpiry(lContract.Specifier.SecType) Then
+ElseIf GTickfileUtils.SecTypeHasExpiry(lContract.Specifier.SecType) Then
     Set Generate = generateExpiringNonSession(lContract, en, sessionStartTime, sessionEndTime, currentStartDate, currentEndDate)
 Else
     Set Generate = generateNonExpiringNonSession(lContract, sessionStartTime, sessionEndTime, currentStartDate, currentEndDate)
@@ -111,7 +111,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -128,7 +128,7 @@ On Error GoTo Err
 
 AssertArgument Not pContracts Is Nothing, "pContracts Is Nothing"
 AssertArgument pContracts.Count <> 0, "pContracts is empty"
-If pContracts.Count > 1 Then AssertArgument gVerifyContracts(pContracts), "pContracts contains conflicting contracts"
+If pContracts.Count > 1 Then AssertArgument VerifyContracts(pContracts), "pContracts contains conflicting contracts"
 AssertArgument (pCustomSessionStartTime = 0 And pCustomSessionEndTime = 0) Or _
     (pCustomSessionStartTime <> 0 And pCustomSessionEndTime <> 0), "Session start and end times must be either both supplied or both omitted"
     
@@ -144,7 +144,7 @@ mCustomSessionEndTime = pCustomSessionEndTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -173,7 +173,7 @@ contractHasExpired = pDate >= getFirstExpiredSessionTimesForContract(pContract).
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub convertTimesToExchangeTimezone(ByVal pContract As IContract)
@@ -229,7 +229,7 @@ Set generateExpiringNonSession = lTickFileSpecifiers
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateExpiringWholeSession( _
@@ -284,7 +284,7 @@ Set generateExpiringWholeSession = lTickFileSpecifiers
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateNonExpiringNonSession( _
@@ -309,7 +309,7 @@ Set generateNonExpiringNonSession = lTickFileSpecifiers
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateNonExpiringWholeSession( _
@@ -341,20 +341,20 @@ Set generateNonExpiringWholeSession = lTickFileSpecifiers
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFirstExpiredSessionTimesForContract(ByVal pContract As IContract) As SessionTimes
 Const ProcName As String = "getFirstExpiredSessionTimesForContract"
 On Error GoTo Err
 
-Assert gSecTypeHasExpiry(pContract.Specifier.SecType), "Contract is non-expiring"
+Assert GTickfileUtils.SecTypeHasExpiry(pContract.Specifier.SecType), "Contract is non-expiring"
 getFirstExpiredSessionTimesForContract = GetOffsetSessionTimes(pContract.ExpiryDate + 0.5, -pContract.DaysBeforeExpiryToSwitch, pContract.sessionStartTime, pContract.sessionEndTime)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function newTickFileSpec( _

@@ -1,16 +1,4 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-  Persistable = 0  'NotPersistable
-  DataBindingBehavior = 0  'vbNone
-  DataSourceBehavior  = 0  'vbNone
-  MTSTransactionMode  = 0  'NotAnMTSObject
-END
-Attribute VB_Name = "TickDataWriter"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Name = "GTickfiles"
 Option Explicit
 
 ''
@@ -21,8 +9,6 @@ Option Explicit
 '@================================================================================
 ' Interfaces
 '@================================================================================
-
-Implements IGenericTickListener
 
 '@================================================================================
 ' Events
@@ -40,11 +26,11 @@ Implements IGenericTickListener
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TickDataWriter"
+#If SingleDll = 0 Then
+Public Const ProjectName                            As String = "TickfileUtils27"
+#End If
 
-Private mTickWriter                                 As ITickfileWriter
-
-Private mSelfRef                                    As Object
+Private Const ModuleName                            As String = "GTickfiles"
 
 '@================================================================================
 ' Member variables
@@ -55,24 +41,8 @@ Private mSelfRef                                    As Object
 '@================================================================================
 
 '@================================================================================
-' IGenericTickListener Interface Members
+' XXXX Interface Members
 '@================================================================================
-
-Private Sub IGenericTickListener_NoMoreTicks(ev As GenericTickEventData)
-Set mSelfRef = Nothing
-End Sub
-
-Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
-Const ProcName As String = "IGenericTickListener_NotifyTick"
-On Error GoTo Err
-
-mTickWriter.WriteTick ev.Tick
-
-Exit Sub
-
-Err:
-GTickfiles.HandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -86,47 +56,51 @@ End Sub
 ' Methods
 '@================================================================================
 
-Public Sub Finish()
-Const ProcName As String = "Finish"
-On Error GoTo Err
+Public Sub HandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-mTickWriter.Finish
-
-Exit Sub
-
-Err:
-GTickfiles.HandleUnexpectedError ProcName, ModuleName
+TWUtilities40.HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
-Friend Sub Initialise( _
-                ByVal pTickSource As IGenericTickSource, _
-                ByVal pContractFuture As IFuture, _
-                ByVal pOutputMonitor As ITickfileOutputMonitor, _
-                ByVal pTickfileStore As ITickfileStore, _
-                ByVal pFormatIdentifier As String, _
-                ByVal pLocation As String)
-Const ProcName As String = "Initialise"
-On Error GoTo Err
+Public Property Get Logger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("tickfileutils", ProjectName)
+Set Logger = sLogger
+End Property
 
-AssertArgument Not pTickSource Is Nothing, "pTickSource is Nothing"
-AssertArgument Not pTickfileStore Is Nothing, "pTickfileStore is Nothing"
+Public Property Get Tracer() As Tracer
+Static sTracer As Tracer
+If sTracer Is Nothing Then Set sTracer = GetTracer("tickfileutils")
+Set Tracer = sTracer
+End Property
 
-Set mTickWriter = GTickfileUtils.CreateBufferedTickfileWriter(pTickfileStore, pOutputMonitor, pContractFuture, pFormatIdentifier, pLocation)
+Public Sub NotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-pTickSource.AddGenericTickListener Me
-
-Set mSelfRef = Me
-
-Exit Sub
-
-Err:
-GTickfiles.HandleUnexpectedError ProcName, ModuleName
+TWUtilities40.UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 
 
 

@@ -91,7 +91,7 @@ Set ITickfileStore_CreateTickfileReader = CreateTickfileReader(pDataConsumer, pR
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ITickfileStore_CreateTickfileWriter( _
@@ -106,7 +106,7 @@ Set ITickfileStore_CreateTickfileWriter = CreateTickfileWriter(pOutputMonitor, p
 
 Exit Function
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub ITickfileStore_Finish()
@@ -118,7 +118,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickfileStore_SupportedFormats() As TickfileFormatSpecifier()
@@ -154,37 +154,37 @@ formats(0).Name = "TradeBuild V5"
 formats(0).FormalID = TickfileFormatTradeBuildV5
 formats(0).FileExtension = "tck"
 formats(0).FormatType = TickfileModeFileBased
-formats(0).Capabilities = gCapabilitiesTradeBuildV5(mMode)
+formats(0).Capabilities = CapabilitiesTradeBuildV5(mMode)
 
 formats(1).Name = "TradeBuild V4"
 formats(1).FormalID = TickfileFormatTradeBuildV4
 formats(1).FileExtension = "tck"
 formats(1).FormatType = TickfileModeFileBased
-formats(1).Capabilities = gCapabilitiesTradeBuildV4(mMode)
+formats(1).Capabilities = CapabilitiesTradeBuildV4(mMode)
 
 formats(2).Name = "TradeBuild V3"
 formats(2).FormalID = TickfileFormatTradeBuildV3
 formats(2).FileExtension = "tck"
 formats(2).FormatType = TickfileModeFileBased
-formats(2).Capabilities = gCapabilitiesTradeBuildV3(mMode)
+formats(2).Capabilities = CapabilitiesTradeBuildV3(mMode)
 
 formats(5).Name = "Crescendo V1"
 formats(5).FormalID = TickfileFormatCrescendoV1
 formats(5).FileExtension = "csv"
 formats(5).FormatType = TickfileModeFileBased
-formats(5).Capabilities = gCapabilitiesCrescendoV1(mMode)
+formats(5).Capabilities = CapabilitiesCrescendoV1(mMode)
 
 formats(4).Name = "Crescendo V2"
 formats(4).FormalID = TickfileFormatCrescendoV2
 formats(4).FileExtension = "csv"
 formats(4).FormatType = TickfileModeFileBased
-formats(4).Capabilities = gCapabilitiesCrescendoV2(mMode)
+formats(4).Capabilities = CapabilitiesCrescendoV2(mMode)
 
 formats(3).Name = "eSignal"
 formats(3).FormalID = TickfileFormatESignal
 formats(3).FileExtension = "epf"
 formats(3).FormatType = TickfileModeFileBased
-formats(3).Capabilities = gCapabilitiesESignal(mMode)
+formats(3).Capabilities = CapabilitiesESignal(mMode)
 
 SupportedFormats = formats
 
@@ -208,7 +208,7 @@ lReader.Initialise pReplayMonitor, _
                     Me, _
                     pDataConsumer
 
-gLogger.Log "Adding data reader " & GetObjectKey(lReader), ProcName, ModuleName
+GTickfiles.Logger.Log "Adding data reader " & GetObjectKey(lReader), ProcName, ModuleName
 mTickfileDataReaders.Add lReader
 
 Set CreateTickfileReader = lReader
@@ -216,7 +216,7 @@ Set CreateTickfileReader = lReader
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickfileWriter( _
@@ -232,7 +232,7 @@ Dim formatVersion As TickFileVersions
 Dim lWriter As TextTickfileWriter
 
 If pFormatIdentifier = "" Then pFormatIdentifier = TickfileFormatTradeBuildV5
-gFormatSpecifiersFromString pFormatIdentifier, formatId, formatVersion
+FormatSpecifiersFromString pFormatIdentifier, formatId, formatVersion
 AssertArgument formatId <> TickfileFormats.TickfileUnknown, "Invalid format identifier"
 
 Set lWriter = New TextTickfileWriter
@@ -249,7 +249,7 @@ Set CreateTickfileWriter = lWriter
 
 Exit Function
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub DataReaderFinished( _
@@ -257,13 +257,13 @@ Friend Sub DataReaderFinished( _
 Const ProcName As String = "DataReaderFinished"
 On Error GoTo Err
 
-gLogger.Log "Removing data reader " & GetObjectKey(dataReader), ProcName, ModuleName
+GTickfiles.Logger.Log "Removing data reader " & GetObjectKey(dataReader), ProcName, ModuleName
 mTickfileDataReaders.Remove dataReader
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub DataWriterFinished( _
@@ -276,7 +276,7 @@ mTickfileDataWriters.Remove dataWriter
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -289,7 +289,7 @@ finishWriters
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -306,13 +306,13 @@ mTickfileGranularity = pTickfileGranularity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Supports( _
                 ByVal Capabilities As Long, _
                 Optional ByVal FormatIdentifier As String) As Boolean
-Supports = gSupports(Capabilities, mMode, FormatIdentifier)
+Supports = GTickfileUtils.Supports(Capabilities, mMode, FormatIdentifier)
 End Function
 
 '================================================================================
@@ -331,7 +331,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub finishWriters()
@@ -346,7 +346,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

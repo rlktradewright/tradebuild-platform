@@ -77,7 +77,7 @@ Count = mTickfileSpecifiers.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enumerator() As Enumerator
@@ -99,7 +99,7 @@ fireCollectionChange CollItemAdded, tfs
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
@@ -112,7 +112,7 @@ mChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Clear()
@@ -124,7 +124,7 @@ mTickfileSpecifiers.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Clone() As TickFileSpecifiers
@@ -141,7 +141,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item( _
@@ -155,7 +155,7 @@ Set Item = mTickfileSpecifiers(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -169,7 +169,7 @@ Set NewEnum = mTickfileSpecifiers.Enumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Remove( _
@@ -192,7 +192,7 @@ fireCollectionChange CollItemRemoved, tfs
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
@@ -204,7 +204,7 @@ mChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -244,7 +244,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

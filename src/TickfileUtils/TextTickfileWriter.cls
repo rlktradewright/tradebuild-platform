@@ -109,7 +109,7 @@ mTickfileStore.DataWriterFinished Me
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickfileWriter_IsReady() As Boolean
@@ -128,7 +128,7 @@ WriteComment pComment
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickfileWriter_WriteTick(Tick As GenericTick)
@@ -142,7 +142,7 @@ writeTickfileLine formatTickData(Tick)
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -164,7 +164,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -180,7 +180,7 @@ If mTsOut Is Nothing Then createTickfile mSession.SessionCurrentTime
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTickfiles.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEventData)
@@ -205,7 +205,7 @@ End Select
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTickfiles.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -227,7 +227,7 @@ Set mOutputMonitor = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -261,7 +261,7 @@ mFutureWaiter.Add pContractFuture
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -275,7 +275,7 @@ On Error GoTo Err
 If Not mTsOut Is Nothing Then
     mTsOut.Close
     Set mTsOut = Nothing
-    gLogger.Log "Closed tickfile (" & mContract.Specifier.LocalSymbol & "): " & vbCrLf & _
+    GTickfiles.Logger.Log "Closed tickfile (" & mContract.Specifier.LocalSymbol & "): " & vbCrLf & _
                 mBytesWritten & " bytes written", _
                 ProcName, ModuleName
 End If
@@ -283,7 +283,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createCrescendoTickfile(ByVal Timestamp As Date)
@@ -306,7 +306,7 @@ With mContract.Specifier
     Set mTsOut = CreateWriteableTextFile(tfPath & tfName, False)
     
     mOutputMonitor.NotifyOutputFileCreated Me, tfPath & tfName
-    gLogger.Log "Created output tickfile " & tfPath & tfName, ProcName, ModuleName
+    GTickfiles.Logger.Log "Created output tickfile " & tfPath & tfName, ProcName, ModuleName
     
     writeTickfileLine "tickfile," & _
                 TICKFILE_CURR_VERSION & "," & _
@@ -319,7 +319,7 @@ End With
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createTickfile(ByVal pTimestamp As Date)
@@ -337,7 +337,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createTradeBuildTickFile(ByVal Timestamp As Date)
@@ -357,7 +357,7 @@ tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
 Set mTsOut = CreateWriteableTextFile(tfPath & tfName, False)
 
 mOutputMonitor.NotifyOutputFileCreated Me, tfPath & tfName
-gLogger.Log "Created output tickfile " & tfPath & tfName, ProcName, ModuleName
+GTickfiles.Logger.Log "Created output tickfile " & tfPath & tfName, ProcName, ModuleName
 
 If getFileSize(tfPath & tfName) = 0 Then
     writeTickfileLine TICKFILE_DECLARER & "," & _
@@ -374,7 +374,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function formatCrescendoTickData( _
@@ -410,7 +410,7 @@ If crescendoTickType <> 0 Then formatCrescendoTickData = CDbl(pTick.Timestamp) &
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function formatTickData( _
@@ -428,7 +428,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function formatTradeBuildTickData( _
@@ -499,7 +499,7 @@ formatTradeBuildTickData = s
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFilenameDatePart(ByVal pTimestamp As Date) As String
@@ -520,7 +520,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFileSize(ByVal pFilename As String) As Long
@@ -535,7 +535,7 @@ getFileSize = f.Size
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getSessionDate(ByVal pTimestamp As Date) As Date
@@ -554,7 +554,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setReady()
@@ -567,7 +567,7 @@ If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyReady Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupSession()
@@ -580,7 +580,7 @@ Set mSession = mSessionBuilder.Session
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteComment(ByVal pComment As String)
@@ -592,7 +592,7 @@ writeTickfileLine "// " & FormatTimestamp(mSession.SessionCurrentTime, Timestamp
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub writeTickfileLine( _
@@ -609,7 +609,7 @@ mBytesWritten = mBytesWritten + Len(text)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

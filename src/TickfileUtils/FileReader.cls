@@ -104,7 +104,7 @@ CurrentTick = mTicks(mTicksIndex)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get EventCode() As TickfileEventCodes
@@ -151,7 +151,7 @@ On Error GoTo Err
 
 Set mTickfileSpec = pTickfileSpec
 
-gLogger.Log "Opening tickfile: " & mTickfileSpec.Filename, ProcName, ModuleName
+GTickfiles.Logger.Log "Opening tickfile: " & mTickfileSpec.Filename, ProcName, ModuleName
     
 If Not openFile(mTickfileSpec.Filename) Then Exit Function
 If fileIsEmpty(mTickfileSpec.Filename) Then Exit Function
@@ -173,7 +173,7 @@ Initialise = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function MoveNext() As Boolean
@@ -205,7 +205,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -224,7 +224,7 @@ convertLocalDateToExchangeTimezone = ConvertDateUTCToTZ(ConvertDateLocalToUTC(pT
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function fileIsEmpty(ByVal pFilename As String) As Boolean
@@ -244,7 +244,7 @@ Const ProcName As String = "getCrescendoV1ContractInfo"
 On Error GoTo Err
 
 On Error Resume Next
-Set mContractSpecifier = CreateContractSpecifier( _
+Set mContractSpecifier = GContractUtils.CreateContractSpecifier( _
                                 , _
                                 pHeaderLineFields(TickfileFieldsV1.Symbol), _
                                 , _
@@ -269,7 +269,7 @@ getCrescendoV1ContractInfo = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getCrescendoV2ContractInfo(ByRef pHeaderLineFields() As String) As Boolean
@@ -292,7 +292,7 @@ getCrescendoV2ContractInfo = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getContractInfo( _
@@ -317,7 +317,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFirstTickfileTime(ByVal pBuffer As String) As Boolean
@@ -336,7 +336,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getHeaderLineFields(ByRef pAr() As String, ByVal pFilename As String) As Boolean
@@ -373,7 +373,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getTradeBuildContractInfo( _
@@ -422,7 +422,7 @@ getTradeBuildContractInfo = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isESignalFile(ByVal pFilename As String) As Boolean
@@ -441,7 +441,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isCommentOrBlank(ByVal pBuffer As String) As Boolean
@@ -485,7 +485,7 @@ ElseIf Err.Number = VBErrorCodes.VbErrPathNotFound Then
 ElseIf Err.Number = VBErrorCodes.VbErrPermissionDenied Then
     setEventDetails TickfileEventCodes.TickfileEventFileDoesNotExist, "Tickfile access denied: " & pFilename
 Else
-    gHandleUnexpectedError ProcName, ModuleName
+    GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
@@ -531,7 +531,7 @@ parseCrescendoV1Record = lFileTicks
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function parseCrescendoV2Record( _
@@ -581,7 +581,7 @@ parseCrescendoV2Record = lFileTicks
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function parseESignalRecord( _
@@ -653,7 +653,7 @@ parseESignalRecord = lFileTicks
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function parseRecord(ByVal pBuffer As String) As FileTick()
@@ -676,7 +676,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function parseTradeBuildRecord( _
@@ -770,7 +770,7 @@ parseTradeBuildRecord = lFileTicks
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub recogniseFileFormat(ByRef pHeaderLineFields() As String)
@@ -800,7 +800,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub repositionFile(ByVal pFilename As String)
@@ -835,7 +835,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setEventDetails(ByVal pEventCode As TickfileEventCodes, pMessage As String)

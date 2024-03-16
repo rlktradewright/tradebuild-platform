@@ -124,7 +124,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -139,7 +139,7 @@ mTickfileStore.DataReaderFinished Me
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ITickfileReader_FireNextTick() As Boolean
@@ -187,7 +187,7 @@ End If
 
 Exit Function
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ITickfileReader_PrepareTickfile(ByVal pTickfileSpec As ITickfileSpecifier) As Boolean
@@ -195,7 +195,7 @@ Const ProcName As String = "ITickfileReader_PrepareTickfile"
 On Error GoTo Err
 
 Set mTickfileSpec = pTickfileSpec
-gLogger.Log "Preparing tickfile: " & mTickfileSpec.Filename, ProcName, ModuleName
+GTickfiles.Logger.Log "Preparing tickfile: " & mTickfileSpec.Filename, ProcName, ModuleName
 
 Set mFileReader = New FileReader
 If Not mFileReader.Initialise(mTickfileSpec) Then
@@ -208,7 +208,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get ITickfileReader_ReplayProgressPercent() As Long
@@ -222,7 +222,7 @@ End Property
 Private Function ITickfileReader_Supports( _
                             ByVal Capabilities As Long, _
                             Optional ByVal FormatIdentifier As String) As Boolean
-ITickfileReader_Supports = gSupports(Capabilities, FormatIdentifier)
+ITickfileReader_Supports = GTickfileUtils.Supports(Capabilities, FormatIdentifier)
 End Function
 
 Private Property Get ITickfileReader_TickfileSizeBytes() As Long
@@ -255,7 +255,7 @@ ElseIf fromFilterRecord Then
         End If
         moveToNextUnprocessedRecord
     Loop
-    gLogger.Log "No ticks meet filter criteria: " & mTickfileSpec.Filename, ProcName, ModuleName
+    GTickfiles.Logger.Log "No ticks meet filter criteria: " & mTickfileSpec.Filename, ProcName, ModuleName
     mReplayMonitor.NotifyReplayComplete Me, mTicksReplayed
     mCurrentTimestamp = 0
     mTaskContext.Finish Empty, False
@@ -267,7 +267,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -294,7 +294,7 @@ Friend Sub Finish()
 Const ProcName As String = "Finish"
 On Error GoTo Err
 
-gLogger.Log "Closed input tickfile: " & mFileReader.BytesRead & " bytes read", ProcName, ModuleName
+GTickfiles.Logger.Log "Closed input tickfile: " & mFileReader.BytesRead & " bytes read", ProcName, ModuleName
 If Not mFileReader Is Nothing Then mFileReader.Finish
 Set mFileReader = Nothing
 Set mReplayMonitor = Nothing
@@ -303,7 +303,7 @@ Set mDataConsumer = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -330,7 +330,7 @@ StartTask Me, PriorityLow
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function fromFilterRecord() As Boolean
@@ -346,7 +346,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function incrementIndex(ByVal pIndex As Long) As Long
@@ -400,7 +400,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function lookAhead(ByRef pLookAheadIndex As Long) As Boolean
@@ -417,7 +417,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function lookForTick(ByVal pTickType As TickTypes, ByVal pCurrentTime As Date) As Boolean
@@ -444,7 +444,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub moveToNextUnprocessedRecord()
@@ -499,7 +499,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processLastSizeCorrection()
@@ -568,7 +568,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processTickData(ByVal pNotifyTicks As Boolean) As Boolean
@@ -687,7 +687,7 @@ processTickData = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processVolume()
@@ -714,7 +714,7 @@ mPendingImpliedVolumeTick = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function readNextFilteredTickRecord() As Boolean
@@ -733,7 +733,7 @@ readNextFilteredTickRecord = False
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ReadNextTickRecord() As Boolean
@@ -750,7 +750,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function readRecord(ByRef pReturnedIndex As Long) As Boolean
@@ -776,7 +776,7 @@ readRecord = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function toFilterRecord() As Boolean
@@ -793,7 +793,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

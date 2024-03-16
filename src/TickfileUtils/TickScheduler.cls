@@ -110,7 +110,7 @@ Set mProgressTimerListItem = mTimerList.Add(Empty, mReplayProgressEventInterval,
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTickfiles.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -129,7 +129,7 @@ fireTick lIndex
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTickfiles.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -156,7 +156,7 @@ schedule
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -188,7 +188,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -231,7 +231,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PauseReplay()
@@ -247,7 +247,7 @@ fireProgress
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemovePlayer(ByVal pPlayer As TickfilePlayer)
@@ -270,7 +270,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ResumeReplay()
@@ -287,7 +287,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StartScheduling()
@@ -301,7 +301,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StopScheduling()
@@ -316,7 +316,7 @@ unProgress
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -362,7 +362,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireProgress()
@@ -385,7 +385,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireTick(ByVal pIndex As Long)
@@ -405,7 +405,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getIndexToSchedule() As Long
@@ -433,7 +433,7 @@ getIndexToSchedule = lMinIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getPlayerIndex(ByVal pPlayer As TickfilePlayer) As Long
@@ -452,7 +452,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -472,7 +472,7 @@ If lIndex >= 0 Then dispatchTick lIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub undispatch()
@@ -487,7 +487,7 @@ Set mTickTimer = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unProgress()
@@ -502,5 +502,5 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Sub

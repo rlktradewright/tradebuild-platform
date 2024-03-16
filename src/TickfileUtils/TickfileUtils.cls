@@ -147,12 +147,12 @@ Public Function CreateBufferedTickfileWriter( _
 Const ProcName As String = "CreateBufferedTickfileWriter"
 On Error GoTo Err
 
-Set CreateBufferedTickfileWriter = gCreateBufferedTickfileWriter(pTickfileStore, pOutputMonitor, pContractFuture, pFormatIdentifier, pLocation)
+Set CreateBufferedTickfileWriter = GTickfileUtils.CreateBufferedTickfileWriter(pTickfileStore, pOutputMonitor, pContractFuture, pFormatIdentifier, pLocation)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickfileReplayController( _
@@ -166,18 +166,19 @@ Public Function CreateTickfileReplayController( _
 Const ProcName As String = "CreateTickfileReplayController"
 On Error GoTo Err
 
-AssertArgument Not pTickfileStore Is Nothing, "pTickfileStore is Nothing"
-AssertArgument pReplayProgressEventInterval >= 50, "pReplayProgressEventInterval cannot be less than 50"
-
-Dim clr As New ReplayController
-clr.Intialise pTickfileStore, pPrimaryContractStore, pSecondaryContractStore, pReplaySpeed, pTimestampAdjustmentStart, pTimestampAdjustmentEnd, pReplayProgressEventInterval
-
-Set CreateTickfileReplayController = clr
+Set CreateTickfileReplayController = GTickfileUtils.CreateTickfileReplayController( _
+                                                pTickfileStore, _
+                                                pPrimaryContractStore, _
+                                                pSecondaryContractStore, _
+                                                pReplaySpeed, _
+                                                pReplayProgressEventInterval, _
+                                                pTimestampAdjustmentStart, _
+                                                pTimestampAdjustmentEnd)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickfileStore( _
@@ -187,14 +188,13 @@ Public Function CreateTickfileStore( _
 Const ProcName As String = "CreateTickfileStore"
 On Error GoTo Err
 
-Dim lStore As New TickfileStore
-lStore.Initialise pMode, pOutputTickfilePath, pTickfileGranularity
-Set CreateTickfileStore = lStore
+
+Set CreateTickfileStore = GTickfileUtils.CreateTickfileStore(pMode, pOutputTickfilePath, pTickfileGranularity)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GenerateTickfileSpecifiers( _
@@ -209,22 +209,20 @@ Public Function GenerateTickfileSpecifiers( _
 Const ProcName As String = "GenerateTickfileSpecifiers"
 On Error GoTo Err
 
-Dim tfsg As New TickfileSpecGenerator
-tfsg.Initialise pContracts, _
-                pTickfileFormatID, _
-                pStartDate, _
-                pEndDate, _
-                pCompleteSessionsOnly, _
-                pUseExchangeTimezone, _
-                pCustomSessionStartTime, _
-                pCustomSessionEndTime
-
-Set GenerateTickfileSpecifiers = tfsg.Generate()
+Set GenerateTickfileSpecifiers = GTickfileUtils.GenerateTickfileSpecifiers( _
+                                                pContracts, _
+                                                pTickfileFormatID, _
+                                                pStartDate, _
+                                                pEndDate, _
+                                                pCompleteSessionsOnly, _
+                                                pUseExchangeTimezone, _
+                                                pCustomSessionStartTime, _
+                                                pCustomSessionEndTime)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GenerateTickfileSpecifiersFromFile( _
@@ -232,12 +230,12 @@ Public Function GenerateTickfileSpecifiersFromFile( _
 Const ProcName As String = "GenerateTickfileSpecifiersFromFile"
 On Error GoTo Err
 
-Set GenerateTickfileSpecifiersFromFile = gParseTickfileListFile(pFilename)
+Set GenerateTickfileSpecifiersFromFile = GTickfileUtils.GenerateTickfileSpecifiersFromFile(pFilename)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function RecordTickData( _
@@ -250,13 +248,12 @@ Public Function RecordTickData( _
 Const ProcName As String = "RecordTickData"
 On Error GoTo Err
 
-Set RecordTickData = New TickDataWriter
-RecordTickData.Initialise pTickSource, pContractFuture, pOutputMonitor, pTickfileStore, pFormatIdentifier, pLocation
+GTickfileUtils.RecordTickData pTickSource, pContractFuture, pTickfileStore, pOutputMonitor, pFormatIdentifier, pLocation
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTickfiles.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
