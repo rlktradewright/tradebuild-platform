@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "GHistDataUtils"
 Option Explicit
 
 ''
@@ -26,8 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "HistDataUtils27"
-Private Const ModuleName                            As String = "Globals"
+Private Const ModuleName                            As String = "GHistDataUtils"
 
 Public Const Latest                                 As String = "LATEST"
 Public Const Today                                  As String = "TODAY"
@@ -59,33 +58,59 @@ Public Const All                                    As Long = &H7FFFFFFF
 ' Properties
 '@================================================================================
 
-Public Property Get gLogger() As FormattingLogger
-Static sLogger As FormattingLogger
-If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("histdatautils", ProjectName)
-Set gLogger = sLogger
+Public Property Get AllBars() As Long
+AllBars = All
+End Property
+
+Public Property Get DateLatest() As String
+DateLatest = Latest
+End Property
+
+Public Property Get DateToday() As String
+DateToday = Today
+End Property
+
+Public Property Get DateTomorrow() As String
+DateTomorrow = Tomorrow
+End Property
+
+Public Property Get DateYesterday() As String
+DateYesterday = Yesterday
+End Property
+
+Public Property Get DateEndOfWeek() As String
+DateEndOfWeek = EndOfWeek
+End Property
+
+Public Property Get DateStartOfWeek() As String
+DateStartOfWeek = StartOfWeek
+End Property
+
+Public Property Get DateStartOfPreviousWeek() As String
+DateStartOfPreviousWeek = StartOfPreviousWeek
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function gBarTypeToString(ByVal pBarType As BarTypes) As String
+Public Function BarTypeToString(ByVal pBarType As BarTypes) As String
 Select Case pBarType
 Case BarTypeTrade
-    gBarTypeToString = "TRADE"
+    BarTypeToString = "TRADE"
 Case BarTypeBid
-    gBarTypeToString = "BID"
+    BarTypeToString = "BID"
 Case BarTypeAsk
-    gBarTypeToString = "ASK"
+    BarTypeToString = "ASK"
 Case Else
     AssertArgument False, "Invalid bar type"
 End Select
 End Function
 
-Public Function gCreateBarDataSpecifier( _
+Public Function CreateBarDataSpecifier( _
                 ByVal pBarTimePeriod As TimePeriod, _
-                ByVal pToTime As Date, _
-                ByVal pFromTime As Date, _
+                ByVal pfromTime As Date, _
+                ByVal ptoTime As Date, _
                 ByVal pMaxNumberOfBars As Long, _
                 ByVal pBarType As BarTypes, _
                 ByVal pExcludeCurrentBar As Boolean, _
@@ -93,7 +118,7 @@ Public Function gCreateBarDataSpecifier( _
                 ByVal pNormaliseDailyTimestamps As Boolean, _
                 ByVal pCustomSessionStartTime As Date, _
                 ByVal pCustomSessionEndTime As Date) As BarDataSpecifier
-Const ProcName As String = "gCreateBarDataSpecifier"
+Const ProcName As String = "CreateBarDataSpecifier"
 On Error GoTo Err
 
 AssertArgument Not pBarTimePeriod Is Nothing
@@ -101,8 +126,8 @@ AssertArgument Not pBarTimePeriod Is Nothing
 Dim lBarDataSpecifier As New BarDataSpecifier
 lBarDataSpecifier.Initialise _
                             pBarTimePeriod, _
-                            pToTime, _
-                            pFromTime, _
+                            ptoTime, _
+                            pfromTime, _
                             pMaxNumberOfBars, _
                             pBarType, _
                             pExcludeCurrentBar, _
@@ -110,69 +135,62 @@ lBarDataSpecifier.Initialise _
                             pNormaliseDailyTimestamps, _
                             pCustomSessionStartTime, _
                             pCustomSessionEndTime
-Set gCreateBarDataSpecifier = lBarDataSpecifier
+Set CreateBarDataSpecifier = lBarDataSpecifier
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gCreateBufferedBarWriter( _
+Public Function CreateBufferedBarWriter( _
                 ByVal pHistDataStore As IHistoricalDataStore, _
                 ByVal pOutputMonitor As IBarOutputMonitor, _
                 ByVal pContractFuture As IFuture) As IBarWriter
-Const ProcName As String = "gCreateBufferedBarWriter"
+Const ProcName As String = "CreateBufferedBarWriter"
 On Error GoTo Err
 
 Dim lBufferedWriter As New BufferedBarWriter
 Dim lWriter As IBarWriter
 Set lWriter = pHistDataStore.CreateBarWriter(lBufferedWriter, pContractFuture)
 lBufferedWriter.Initialise pOutputMonitor, lWriter, pContractFuture
-Set gCreateBufferedBarWriter = lBufferedWriter
+Set CreateBufferedBarWriter = lBufferedWriter
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Public Function RecordHistoricalBars( _
+                ByVal pContractFuture As IFuture, _
+                ByVal pClockFuture As IFuture, _
+                ByVal pStudyBase As IStudyBase, _
+                ByVal pHistDataStore As IHistoricalDataStore, _
+                ByVal pOptions As HistDataWriteOptions, _
+                Optional ByVal pSaveIntervalSeconds As Long = 5, _
+                Optional ByVal pOutputMonitor As IBarOutputMonitor) As HistDataWriter
+Const ProcName As String = "RecordHistoricalBars"
+On Error GoTo Err
 
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
+GHistData.Logger.Log "RecordHistoricalBars", ProcName, ModuleName, LogLevelHighDetail
 
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Dim lWriter As New HistDataWriter
+lWriter.Initialise pContractFuture, pClockFuture, pStudyBase, pHistDataStore, pOutputMonitor, pOptions, pSaveIntervalSeconds
+Set RecordHistoricalBars = lWriter
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
+Exit Function
 
-Public Function gSpecialTimeToDate( _
+Err:
+GHistData.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function SpecialTimeToDate( _
                 ByVal pSpecialTime As String, _
                 ByVal pSessionStartTime As Date, _
                 ByVal pSessionEndTime As Date, _
                 Optional ByVal pClock As Clock) As Date
-Const ProcName As String = "gSpecialTimeToDate"
+Const ProcName As String = "SpecialTimeToDate"
 On Error GoTo Err
 
 Dim lTimestamp As Date
@@ -185,19 +203,19 @@ End If
 pSpecialTime = UCase$(pSpecialTime)
 
 If pSpecialTime = Today Then
-    gSpecialTimeToDate = todayDate(lTimestamp, pSessionStartTime, pSessionEndTime)
+    SpecialTimeToDate = todayDate(lTimestamp, pSessionStartTime, pSessionEndTime)
 ElseIf pSpecialTime = Yesterday Then
-    gSpecialTimeToDate = yesterdayDate(lTimestamp, pSessionStartTime, pSessionEndTime)
+    SpecialTimeToDate = yesterdayDate(lTimestamp, pSessionStartTime, pSessionEndTime)
 ElseIf pSpecialTime = StartOfWeek Then
-    gSpecialTimeToDate = startOfWeekDate(lTimestamp, pSessionStartTime, pSessionEndTime)
+    SpecialTimeToDate = startOfWeekDate(lTimestamp, pSessionStartTime, pSessionEndTime)
 ElseIf pSpecialTime = StartOfPreviousWeek Then
-    gSpecialTimeToDate = startOfPreviousWeekDate(lTimestamp, pSessionStartTime, pSessionEndTime)
+    SpecialTimeToDate = startOfPreviousWeekDate(lTimestamp, pSessionStartTime, pSessionEndTime)
 ElseIf pSpecialTime = Latest Then
-    gSpecialTimeToDate = MaxDate
+    SpecialTimeToDate = MaxDate
 ElseIf pSpecialTime = Tomorrow Then
-    gSpecialTimeToDate = tomorrowDate(lTimestamp, pSessionStartTime, pSessionEndTime)
+    SpecialTimeToDate = tomorrowDate(lTimestamp, pSessionStartTime, pSessionEndTime)
 ElseIf pSpecialTime = EndOfWeek Then
-    gSpecialTimeToDate = endOfWeekDate(lTimestamp, pSessionStartTime, pSessionEndTime)
+    SpecialTimeToDate = endOfWeekDate(lTimestamp, pSessionStartTime, pSessionEndTime)
 Else
     AssertArgument False, "Invalid special time '" & pSpecialTime & "'"
 End If
@@ -205,7 +223,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -271,6 +289,8 @@ yesterdayDate = GetSessionTimes( _
                 pSessionStartTime, _
                 pSessionEndTime).StartTime
 End Function
+
+
 
 
 

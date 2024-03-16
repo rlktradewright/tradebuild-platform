@@ -116,7 +116,7 @@ Set mBarWriter = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -131,7 +131,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log "Initialising TimeframeHandler for timeframe " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
+GHistData.Logger.Log "Initialising TimeframeHandler for timeframe " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
 
 Set mTimePeriod = pTimePeriod
 Set mBarWriter = pBarWriter
@@ -152,7 +152,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

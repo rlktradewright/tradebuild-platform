@@ -81,7 +81,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -123,7 +123,7 @@ Next
 
 Set mTickStream = Nothing
 
-gLogger.Log "HistDataWriter finished" & s, ProcName, ModuleName
+GHistData.Logger.Log "HistDataWriter finished" & s, ProcName, ModuleName
 
 mTimeframeHandlers.Clear
 
@@ -132,7 +132,7 @@ If Not mBarWriter Is Nothing Then mBarWriter.Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -149,12 +149,12 @@ On Error GoTo Err
 If pOptions And HistDataWriteOptionWriteTradeBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteTradeBars), "HistDataStore does not support writing trade bars"
 If pOptions And HistDataWriteOptionWriteBidAndAskBars Then AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityWriteBidAndAskBars), "HistDataStore does not support writing bid and ask bars"
 
-gLogger.Log "Initialising HistDataWriter", ProcName, ModuleName, LogLevelHighDetail
+GHistData.Logger.Log "Initialising HistDataWriter", ProcName, ModuleName, LogLevelHighDetail
 
 Set mContractFuture = pContractFuture
 mOptions = pOptions
 
-Set mBarWriter = gCreateBufferedBarWriter(pHistDataStore, pOutputMonitor, mContractFuture)
+Set mBarWriter = GHistDataUtils.CreateBufferedBarWriter(pHistDataStore, pOutputMonitor, mContractFuture)
 
 Dim lTask As New TimeframeSetupTask
 lTask.Initialise pHistDataStore, mBarWriter, pOutputMonitor, mContractFuture, pClockFuture, pStudyBase, pOptions, pSaveIntervalSeconds
@@ -164,7 +164,7 @@ Set mTimeframeSetupTC = StartTask(lTask, PriorityNormal)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -88,7 +88,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -108,7 +108,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
@@ -126,7 +126,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -142,7 +142,7 @@ Set Future = mFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -184,7 +184,7 @@ If Not mClockFuture Is Nothing Then mFutureWaiter.Add mClockFuture
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -238,7 +238,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

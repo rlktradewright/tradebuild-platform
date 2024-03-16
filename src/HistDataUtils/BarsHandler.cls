@@ -100,7 +100,7 @@ mBarsWritten = mBarsWritten + 1
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -115,10 +115,10 @@ If TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
     mLocalSymbol = lContract.Specifier.LocalSymbol
-    gLogger.Log "Got contract: " & mLocalSymbol, ProcName, ModuleName, LogLevelHighDetail
+    GHistData.Logger.Log "Got contract: " & mLocalSymbol, ProcName, ModuleName, LogLevelHighDetail
 ElseIf TypeOf ev.Future.Value Is Bars Then
     Set mBars = ev.Future.Value
-    gLogger.Log "BarsHandler retrieved " & mBars.Count & " bars for " & mLocalSymbol, ProcName, ModuleName, LogLevelHighDetail
+    GHistData.Logger.Log "BarsHandler retrieved " & mBars.Count & " bars for " & mLocalSymbol, ProcName, ModuleName, LogLevelHighDetail
     mStudyBase.StudyManager.StartStudy mBarStudy, 0
     If mBars.Count <> 0 Then
         Set mBarWriteController = CreateBarWriteController(mBars.Bar(0), mBarType)
@@ -129,7 +129,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -164,7 +164,7 @@ Set mBars = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -180,7 +180,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log "Initialising BarsHandler for timeframe " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
+GHistData.Logger.Log "Initialising BarsHandler for timeframe " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
 
 Set mTimePeriod = pTimePeriod
 Set mBarWriter = pBarWriter
@@ -200,7 +200,7 @@ mFutureWaiter.Add mBarStudy.BarsFuture
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -218,7 +218,7 @@ Private Function createABarStudy( _
 Const ProcName As String = "createABarStudy"
 On Error GoTo Err
 
-gLogger.Log "Creating bar study for timeperiod: " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
+GHistData.Logger.Log "Creating bar study for timeperiod: " & pTimePeriod.ToShortString, ProcName, ModuleName, LogLevelHighDetail
 
 Dim lBarStudy As IBarStudy
 
@@ -232,7 +232,7 @@ Set createABarStudy = lBarStudy
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CreateBarWriteController( _
@@ -248,7 +248,7 @@ Set CreateBarWriteController = lBarWriteController
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function fetchLatestBar( _
@@ -261,7 +261,7 @@ Const ProcName As String = "fetchLatestBar"
 On Error GoTo Err
 
 Dim lBarSpec As BarDataSpecifier
-Set lBarSpec = gCreateBarDataSpecifier( _
+Set lBarSpec = GHistDataUtils.CreateBarDataSpecifier( _
                             pTimePeriod, _
                             0, _
                             0, _
@@ -283,7 +283,7 @@ Set fetchLatestBar = pHistDataStore.FetchBars( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

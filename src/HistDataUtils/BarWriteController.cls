@@ -84,7 +84,7 @@ WriteBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -111,7 +111,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -137,7 +137,7 @@ Set mBarWriter = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -167,7 +167,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -192,7 +192,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub WriteBar()
@@ -204,8 +204,8 @@ On Error GoTo Err
 If mBarWriter Is Nothing Then Exit Sub
 If mBar.Blank Then Exit Sub
 
-If gLogger.IsLoggable(LogLevelHighDetail) Then
-    gLogger.Log "Write " & gBarTypeToString(mBarType) & " bar for " & mLocalSymbol & _
+If GHistData.Logger.IsLoggable(LogLevelHighDetail) Then
+    GHistData.Logger.Log "Write " & GHistDataUtils.BarTypeToString(mBarType) & " bar for " & mLocalSymbol & _
                     ": " & mTimePeriod.ToString & _
                     " bar " & mBar.BarNumber & ": " & _
                     mBar.ToString, _
@@ -219,6 +219,6 @@ mLastWriteTime = GetTimestamp
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

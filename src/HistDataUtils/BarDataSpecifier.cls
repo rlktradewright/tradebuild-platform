@@ -127,7 +127,7 @@ mFromDate = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get FromDate() As Date
@@ -152,7 +152,7 @@ mMaxNumberOfBars = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaxNumberOfBars() As Long
@@ -177,7 +177,7 @@ mToDate = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ToDate() As Date
@@ -207,13 +207,13 @@ Clone.SetContract Contract
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
                 ByVal pBarTimePeriod As TimePeriod, _
-                ByVal pToTime As Date, _
-                ByVal pFromTime As Date, _
+                ByVal ptoTime As Date, _
+                ByVal pfromTime As Date, _
                 ByVal pMaxNumberOfBars As Long, _
                 ByVal pBarType As BarTypes, _
                 ByVal pExcludeLatestBar As Boolean, _
@@ -223,8 +223,8 @@ Friend Sub Initialise( _
                 ByVal pCustomSessionEndTime As Date)
 Set mBarTimePeriod = pBarTimePeriod
 mBarType = pBarType
-FromDate = pFromTime
-ToDate = pToTime
+FromDate = pfromTime
+ToDate = ptoTime
 SetCustomSessionTimes pCustomSessionStartTime, pCustomSessionEndTime
 mIncludeBarsOutsideSession = pIncludeBarsOutsideSession
 mMaxNumberOfBars = pMaxNumberOfBars
@@ -260,8 +260,8 @@ Else
     lSessionEndTime = mContract.SessionEndTime
 End If
 
-If pSpecialFromTime <> "" Then mFromDate = gSpecialTimeToDate(pSpecialFromTime, lSessionStartTime, lSessionEndTime)
-If pSpecialToTime <> "" Then mToDate = gSpecialTimeToDate(pSpecialToTime, lSessionStartTime, lSessionEndTime)
+If pSpecialFromTime <> "" Then mFromDate = GHistDataUtils.SpecialTimeToDate(pSpecialFromTime, lSessionStartTime, lSessionEndTime)
+If pSpecialToTime <> "" Then mToDate = GHistDataUtils.SpecialTimeToDate(pSpecialToTime, lSessionStartTime, lSessionEndTime)
 
 If mToDate = MaxDate Then
     Dim lClock As Clock
@@ -299,7 +299,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetCustomSessionTimes( _
@@ -331,7 +331,7 @@ ToString = _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

@@ -94,35 +94,35 @@ Private Const ModuleName                            As String = "HistDataUtils"
 '@================================================================================
 
 Public Property Get AllBars() As Long
-AllBars = All
+AllBars = GHistDataUtils.All
 End Property
 
 Public Property Get DateLatest() As String
-DateLatest = Latest
+DateLatest = GHistDataUtils.Latest
 End Property
 
 Public Property Get DateToday() As String
-DateToday = Today
+DateToday = GHistDataUtils.Today
 End Property
 
 Public Property Get DateTomorrow() As String
-DateTomorrow = Tomorrow
+DateTomorrow = GHistDataUtils.Tomorrow
 End Property
 
 Public Property Get DateYesterday() As String
-DateYesterday = Yesterday
+DateYesterday = GHistDataUtils.Yesterday
 End Property
 
 Public Property Get DateEndOfWeek() As String
-DateEndOfWeek = EndOfWeek
+DateEndOfWeek = GHistDataUtils.EndOfWeek
 End Property
 
 Public Property Get DateStartOfWeek() As String
-DateStartOfWeek = StartOfWeek
+DateStartOfWeek = GHistDataUtils.StartOfWeek
 End Property
 
 Public Property Get DateStartOfPreviousWeek() As String
-DateStartOfPreviousWeek = StartOfPreviousWeek
+DateStartOfPreviousWeek = GHistDataUtils.StartOfPreviousWeek
 End Property
 
 '@================================================================================
@@ -130,7 +130,7 @@ End Property
 '@================================================================================
 
 Public Function BarTypeToString(ByVal pBarType As BarTypes) As String
-BarTypeToString = gBarTypeToString(pBarType)
+BarTypeToString = GHistDataUtils.BarTypeToString(pBarType)
 End Function
 
 Public Function CreateBarDataSpecifier( _
@@ -147,10 +147,10 @@ Public Function CreateBarDataSpecifier( _
 Const ProcName As String = "CreateBarDataSpecifier"
 On Error GoTo Err
 
-Set CreateBarDataSpecifier = gCreateBarDataSpecifier( _
+Set CreateBarDataSpecifier = GHistDataUtils.CreateBarDataSpecifier( _
                                         pBarTimePeriod, _
-                                        pToTime, _
                                         pFromTime, _
+                                        pToTime, _
                                         pMaxNumberOfBars, _
                                         pBarType, _
                                         pExcludeCurrentBar, _
@@ -162,7 +162,7 @@ Set CreateBarDataSpecifier = gCreateBarDataSpecifier( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBufferedBarWriter( _
@@ -172,12 +172,12 @@ Public Function CreateBufferedBarWriter( _
 Const ProcName As String = "CreateBufferedBarWriter"
 On Error GoTo Err
 
-Set CreateBufferedBarWriter = gCreateBufferedBarWriter(pHistDataStore, pOutputMonitor, pContractFuture)
+Set CreateBufferedBarWriter = GHistDataUtils.CreateBufferedBarWriter(pHistDataStore, pOutputMonitor, pContractFuture)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function RecordHistoricalBars( _
@@ -191,16 +191,19 @@ Public Function RecordHistoricalBars( _
 Const ProcName As String = "RecordHistoricalBars"
 On Error GoTo Err
 
-gLogger.Log "RecordHistoricalBars", ProcName, ModuleName, LogLevelHighDetail
-
-Dim lWriter As New HistDataWriter
-lWriter.Initialise pContractFuture, pClockFuture, pStudyBase, pHistDataStore, pOutputMonitor, pOptions, pSaveIntervalSeconds
-Set RecordHistoricalBars = lWriter
+Set RecordHistoricalBars = GHistDataUtils.RecordHistoricalBars( _
+                                            pContractFuture, _
+                                            pClockFuture, _
+                                            pStudyBase, _
+                                            pHistDataStore, _
+                                            pOptions, _
+                                            pSaveIntervalSeconds, _
+                                            pOutputMonitor)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SpecialTimeToDate( _
@@ -211,7 +214,7 @@ Public Function SpecialTimeToDate( _
 Const ProcName As String = "SpecialTimeToDate"
 On Error GoTo Err
 
-SpecialTimeToDate = gSpecialTimeToDate( _
+SpecialTimeToDate = GHistDataUtils.SpecialTimeToDate( _
                                 pSpecialTime, _
                                 pSessionStartTime, _
                                 pSessionEndTime, _
@@ -220,7 +223,7 @@ SpecialTimeToDate = gSpecialTimeToDate( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

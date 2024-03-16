@@ -91,7 +91,7 @@ mOutputMonitor.NotifyEvent ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBarOutputMonitor_NotifyNotReady(ByVal pSource As Object)
@@ -105,7 +105,7 @@ If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyNotReady Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBarOutputMonitor_NotifyOutputFileClosed(ByVal pSource As Object)
@@ -117,7 +117,7 @@ If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyOutputFileClosed Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBarOutputMonitor_NotifyOutputFileCreated(ByVal pSource As Object, ByVal pFilename As String)
@@ -129,7 +129,7 @@ If Not mOutputMonitor Is Nothing Then mOutputMonitor.NotifyOutputFileCreated Me,
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBarOutputMonitor_NotifyReady(ByVal pSource As Object)
@@ -159,7 +159,7 @@ If mPendingClose Then Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -179,7 +179,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBarWriter_IsReady() As Boolean
@@ -195,7 +195,7 @@ WriteBar pBar, pBarType, pTimePeriod
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBarWriter_WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
@@ -207,7 +207,7 @@ WriteComment pComment, pTimestamp
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -228,7 +228,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -244,7 +244,7 @@ WriteComment "Session ended at " & FormatTimestamp(mSession.CurrentSessionEndTim
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEventData)
@@ -256,7 +256,7 @@ WriteComment "Session started at " & FormatTimestamp(mSession.CurrentSessionStar
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GHistData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -276,7 +276,7 @@ NumberOfPendingWrites = mPendingWrites.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get IsReady() As Boolean
@@ -295,7 +295,7 @@ If Not mReady Then
     mPendingClose = True
 Else
     WriteComment "Bar writing finished", mSession.CurrentSessionEndTime
-    gLogger.Log "Closing output file", ProcName, ModuleName
+    GHistData.Logger.Log "Closing output file", ProcName, ModuleName
     mWriter.Finish
     mPendingClose = False
     mReady = False
@@ -304,7 +304,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -322,7 +322,7 @@ mFutureWaiter.Add mContractFuture
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
@@ -342,7 +342,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteBar( _
@@ -366,7 +366,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -386,7 +386,7 @@ Set mSession = mSessionBuilder.Session
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

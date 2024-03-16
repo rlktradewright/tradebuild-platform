@@ -95,7 +95,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -130,7 +130,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log "Initialising TimeframeSetupTask", ProcName, ModuleName, LogLevelHighDetail
+GHistData.Logger.Log "Initialising TimeframeSetupTask", ProcName, ModuleName, LogLevelHighDetail
 
 Set mHistDataStore = pHistDataStore
 mWriterTimeframes = mHistDataStore.WriterTimeframes
@@ -145,7 +145,7 @@ Set mBarWriter = pBarWriter
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -163,6 +163,6 @@ Set createTimeframeHandler = lTimeframeHandler
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GHistData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
