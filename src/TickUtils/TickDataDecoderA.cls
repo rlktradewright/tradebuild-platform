@@ -132,7 +132,7 @@ ITickDataDecoder_getNextTick = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

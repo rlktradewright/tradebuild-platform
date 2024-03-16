@@ -118,7 +118,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeBid( _
@@ -138,7 +138,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeClose( _
@@ -155,7 +155,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickDataEncoder_encodedData() As Byte()
@@ -176,7 +176,7 @@ Exit Property
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get ITickDataEncoder_encodedDataLength() As Long
@@ -197,7 +197,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeLow( _
@@ -214,7 +214,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeMarketDepthData( _
@@ -261,7 +261,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeMarketDepthReset( _
@@ -284,7 +284,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeOpen(ByVal pTimestamp As Date, ByVal pPrice As Double)
@@ -299,7 +299,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeOpenInterest( _
@@ -317,7 +317,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeTrade( _
@@ -337,7 +337,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickDataEncoder_encodeVolume( _
@@ -356,7 +356,7 @@ Exit Sub
 
 Err:
 rollback
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickDataEncoder_encodingFormatIdentifier() As String
@@ -449,7 +449,7 @@ mDataIndex = mDataIndex + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteDecimal( _
@@ -491,7 +491,7 @@ WriteByte CByte(Int(theInt / &H100) And &HFF)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteLong( _
@@ -545,7 +545,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WritePriceRecord( _
@@ -571,7 +571,7 @@ WritePrice pPrice
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteQuoteRecord( _
@@ -606,7 +606,7 @@ WriteSize pSize, lSizeType
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteSize( _
@@ -635,7 +635,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteSizeRecord( _
@@ -662,7 +662,7 @@ WriteSize pSize, lSizeType
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteString( _
@@ -693,7 +693,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub WriteTimestamp( _
@@ -716,7 +716,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

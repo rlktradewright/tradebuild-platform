@@ -91,7 +91,7 @@ AddGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickSource_RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -103,7 +103,7 @@ RemoveGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -119,7 +119,7 @@ AddGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickStream_AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -131,7 +131,7 @@ AddOptionComputationListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickStream_AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -143,7 +143,7 @@ AddStateChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickStream_ClockFuture() As IFuture
@@ -163,7 +163,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickStream_IsDelayed() As Boolean
@@ -183,7 +183,7 @@ RemoveGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickStream_RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -195,7 +195,7 @@ RemoveOptionComputationListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickStream_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -207,7 +207,7 @@ RemoveStateChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITickStream_Start()
@@ -219,7 +219,7 @@ Start
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickStream_State() As TickStreamStates
@@ -256,7 +256,7 @@ Assert MinimumPriceVariation > 0, "MinimumPriceVariation has not been set"
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let State(ByVal Value As TickStreamStates)
@@ -298,7 +298,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get State() As TickStreamStates
@@ -322,7 +322,7 @@ mGenericTickListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -334,7 +334,7 @@ mOptionComputationListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -346,7 +346,7 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -360,7 +360,7 @@ Set mBuilder = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetMinimumPriceVariation() As Double
@@ -386,7 +386,7 @@ mIsDelayed = pIsDelayed
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NoMoreTicks()
@@ -430,7 +430,7 @@ State = TickStreamStateFinished
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOptionComputation(ByRef pComputation As OptionComputation)
@@ -462,7 +462,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyTick(ByRef pTick As GenericTick)
@@ -489,7 +489,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -501,7 +501,7 @@ mGenericTickListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -513,7 +513,7 @@ mOptionComputationListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -525,7 +525,7 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetMinimumPriceVariation(ByVal Value As Double)
@@ -544,7 +544,7 @@ mBuilder.NotifyStart
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

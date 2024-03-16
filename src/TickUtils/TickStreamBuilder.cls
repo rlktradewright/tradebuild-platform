@@ -64,7 +64,7 @@ mTickStream.State = TickStreamStateCreated
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -96,7 +96,7 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -114,7 +114,7 @@ mStateChangeListeners.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsMinimumPriceVariationSet() As Boolean
@@ -136,7 +136,7 @@ fireStateChange TickStreamStateReady
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyOptionComputation(pComputation As OptionComputation)
@@ -188,7 +188,7 @@ mTickStream.NotifyOptionComputation pComputation
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyStart()
@@ -200,7 +200,7 @@ fireStateChange TickStreamStateRunning
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyTick(pTick As GenericTick)
@@ -215,7 +215,7 @@ mTickStream.NotifyTick pTick
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -227,7 +227,7 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetMinimumPriceVariation(ByVal Value As Double)
@@ -242,7 +242,7 @@ mTickStream.SetMinimumPriceVariation Value
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -279,7 +279,7 @@ RaiseEvent StateChange(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

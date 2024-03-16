@@ -514,13 +514,13 @@ Private Const ModuleName                    As String = "TickUtils"
 ' this property is hidden as it is only needed by the test program
 Public Property Get EncodingFormatIdentifierV1() As String
 Attribute EncodingFormatIdentifierV1.VB_MemberFlags = "40"
-EncodingFormatIdentifierV1 = TickEncodingFormatV1
+EncodingFormatIdentifierV1 = GTickUtils.EncodingFormatIdentifierV1
 End Property
 
 ' this property is hidden as it is only needed by the test program
 Public Property Get EncodingFormatIdentifierV2() As String
 Attribute EncodingFormatIdentifierV2.VB_MemberFlags = "40"
-EncodingFormatIdentifierV2 = TickEncodingFormatV2
+EncodingFormatIdentifierV2 = GTickUtils.EncodingFormatIdentifierV2
 End Property
 
 '@================================================================================
@@ -567,19 +567,12 @@ Public Function CreateTickDecoder( _
                 ByVal pBasePrice As Double, _
                 ByRef pData() As Byte, _
                 ByVal pEncodingFormat As String) As ITickDataDecoder
-
-If pTickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
-
-If pEncodingFormat = TickfileFormatTradeBuildSQL Then
-    pEncodingFormat = TickEncodingFormatV1
-End If
-
-Select Case pEncodingFormat
-Case TickEncodingFormatV1, TickEncodingFormatV2
-    Dim dec1 As New TickDataDecoderA
-    Set CreateTickDecoder = dec1
-    dec1.Initialise pPeriodStartTime, pBasePrice, pTickSize, pEncodingFormat, pData
-End Select
+Set CreateTickDecoder = GTickUtils.CreateTickDecoder( _
+                            pPeriodStartTime, _
+                            pTickSize, _
+                            pBasePrice, _
+                            pData, _
+                            pEncodingFormat)
 End Function
 
 ''
@@ -594,14 +587,7 @@ End Function
 Public Function CreateTickEncoder( _
                 ByVal pPeriodStartTime As Date, _
                 ByVal pTickSize As Double) As ITickDataEncoder
-
-Dim enc As New TickDataEncoderA
-
-If pTickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
-
-Set CreateTickEncoder = enc
-enc.Initialise pPeriodStartTime, pTickSize, TickEncodingFormatV2
-
+Set CreateTickEncoder = GTickUtils.CreateTickEncoder(pPeriodStartTime, pTickSize)
 End Function
 
 ' This method is hidden. because it only exists to enable the test program
@@ -612,19 +598,10 @@ Public Function CreateTickEncoderByType( _
                 ByVal pTickSize As Double, _
                 ByVal pEncodingFormat As String) As ITickDataEncoder
 Attribute CreateTickEncoderByType.VB_MemberFlags = "40"
-
-If pTickSize <= 0 Then Err.Raise ErrInvalidProcedureCall, , "tickSize must be positive"
-
-If pEncodingFormat = TickfileFormatTradeBuildSQL Then
-    pEncodingFormat = TickEncodingFormatV1
-End If
-
-Select Case pEncodingFormat
-Case TickEncodingFormatV1, TickEncodingFormatV2
-    Dim enc1 As New TickDataEncoderA
-    Set CreateTickEncoderByType = enc1
-    enc1.Initialise pPeriodStartTime, pTickSize, pEncodingFormat
-End Select
+Set CreateTickEncoderByType = GTickUtils.CreateTickEncoderByType( _
+                            pPeriodStartTime, _
+                            pTickSize, _
+                            pEncodingFormat)
 End Function
 
 Public Function CreateTickStreamBuilder( _
@@ -635,13 +612,15 @@ Public Function CreateTickStreamBuilder( _
 Const ProcName As String = "CreateTickStreamBuilder"
 On Error GoTo Err
 
-Set CreateTickStreamBuilder = New TickStreamBuilder
-CreateTickStreamBuilder.Initialise pStreamId, pContractFuture, pClockFuture, pIsDelayed
+Set CreateTickStreamBuilder = GTickUtils.CreateTickStreamBuilder( _
+                                    pStreamId, pContractFuture, _
+                                    pClockFuture, _
+                                    pIsDelayed)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTicks.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -660,63 +639,11 @@ End Function
 '@/
 Public Function GenericTickToString( _
                 ByRef pTick As GenericTick) As String
-Dim s As String
-
-s = formatTimestamp(pTick.Timestamp) & ","
-
-Select Case pTick.TickType
-Case TickTypes.TickTypeBid
-    s = s & "B" & "," & pTick.Price & "," & pTick.Size
-Case TickTypes.TickTypeAsk
-    s = s & "A" & "," & pTick.Price & "," & pTick.Size
-Case TickTypes.TickTypeClosePrice
-    s = s & "C" & "," & pTick.Price
-Case TickTypes.TickTypeHighPrice
-    s = s & "H" & "," & pTick.Price
-Case TickTypes.TickTypeLowPrice
-    s = s & "L" & "," & pTick.Price
-Case TickTypes.TickTypeMarketDepth
-    s = s & "D" & "," & pTick.Position & "," & pTick.MarketMaker & "," & pTick.Operation & "," & pTick.Side & "," & pTick.Price & "," & pTick.Size
-Case TickTypes.TickTypeMarketDepthReset
-    s = s & "R"
-Case TickTypes.TickTypeTrade
-    s = s & "T" & "," & pTick.Price & "," & pTick.Size
-Case TickTypes.TickTypeVolume
-    s = s & "V" & "," & pTick.Size
-Case TickTypes.TickTypeOpenInterest
-    s = s & "I" & "," & pTick.Size
-Case TickTypes.TickTypeOpenPrice
-    s = s & "O" & "," & pTick.Price
-End Select
-
-GenericTickToString = s
-
+GenericTickToString = GTickUtils.GenericTickToString(pTick)
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function formatTimestamp( _
-            ByVal pTimestamp As Date) As String
-Dim lTimestampDays  As Long
-Dim lTimestampSecs  As Double
-Dim lTimestampAsDate As Date
-Dim lMilliseconds As Long
-
-lTimestampDays = Int(pTimestamp)
-lTimestampSecs = Int((pTimestamp - Int(pTimestamp)) * 86400) / 86400#
-lTimestampAsDate = CDate(CDbl(lTimestampDays) + lTimestampSecs)
-lMilliseconds = CLng((pTimestamp - lTimestampAsDate) * 86400# * 1000#)
-
-If lMilliseconds >= 1000& Then
-    lMilliseconds = lMilliseconds - 1000&
-    lTimestampSecs = lTimestampSecs + (1# / 86400#)
-    lTimestampAsDate = CDate(CDbl(lTimestampDays) + lTimestampSecs)
-End If
-
-formatTimestamp = Format(lTimestampAsDate, "yyyy/mm/dd hh:nn:ss") & _
-                        Format(lMilliseconds, "\.000")
-            
-End Function
 
