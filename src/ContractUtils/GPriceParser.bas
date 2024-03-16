@@ -369,7 +369,7 @@ End If
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParsePriceAs32nds( _
@@ -391,7 +391,7 @@ gParsePriceAs32nds = True
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParsePriceAs32ndsAndFractions( _
@@ -425,7 +425,7 @@ gParsePriceAs32ndsAndFractions = True
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParsePriceAs64ths( _
@@ -439,7 +439,7 @@ If Not getSubmatches(pPriceString, _
                     gParsePriceAs64thsPattern, _
                     lSubmatches) Then Exit Function
 
-If Not gRegExp.Test(pPriceString) Then Exit Function
+If Not GContracts.RegExpProcessor.Test(pPriceString) Then Exit Function
 
 If lSubmatches.Count = 0 Then Exit Function
 
@@ -451,7 +451,7 @@ gParsePriceAs64ths = True
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParsePriceAs64thsAndFractions( _
@@ -481,7 +481,7 @@ gParsePriceAs64thsAndFractions = True
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParsePriceAsDecimals( _
@@ -502,7 +502,7 @@ End If
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gParsePriceGeneric( _
@@ -524,7 +524,7 @@ End If
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -544,7 +544,7 @@ mParsePriceAsDecimalsPatternsIndex = mParsePriceAsDecimalsPatternsIndex + 1
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function convertToRegexpChoices( _
@@ -661,7 +661,7 @@ generateParsePriceAsDecimalsPattern = "^\d+($" & _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getParsePriceAsDecimalsPattern(ByVal pTickSize As Double) As String
@@ -685,7 +685,7 @@ getParsePriceAsDecimalsPattern = lPattern
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getSubmatches( _
@@ -695,8 +695,8 @@ Private Function getSubmatches( _
 Const ProcName As String = "getSubmatches"
 On Error GoTo Err
 
-gRegExp.Pattern = pPattern
-Dim lMatches As MatchCollection: Set lMatches = gRegExp.Execute(pPriceString)
+GContracts.RegExpProcessor.Pattern = pPattern
+Dim lMatches As MatchCollection: Set lMatches = GContracts.RegExpProcessor.Execute(pPriceString)
 
 If lMatches.Count = 0 Then Exit Function
 
@@ -707,7 +707,7 @@ getSubmatches = True
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IsMatched( _
@@ -716,13 +716,13 @@ Private Function IsMatched( _
 Const ProcName As String = "IsMatched"
 On Error GoTo Err
 
-gRegExp.Pattern = pPattern
-IsMatched = gRegExp.Test(pPriceString)
+GContracts.RegExpProcessor.Pattern = pPattern
+IsMatched = GContracts.RegExpProcessor.Test(pPriceString)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function makeStringArray(ByRef inString) As String()
@@ -746,7 +746,7 @@ Next
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

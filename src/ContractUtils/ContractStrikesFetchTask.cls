@@ -104,7 +104,7 @@ mTaskContext.suspend -1
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -116,7 +116,7 @@ Set mTaskContext = Value
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get ITask_TaskName() As String
@@ -128,7 +128,7 @@ ITask_TaskName = mTaskContext.Name
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -147,7 +147,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -171,7 +171,7 @@ End If
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -187,7 +187,7 @@ Set StrikesFuture = mStrikesFutureBuilder.Future
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -209,12 +209,12 @@ mExchange = pExchange
 Set mPrimaryContractStore = pPrimaryContractStore
 mExpiry = pExpiry
 Set mSecondaryContractStore = pSecondaryContractStore
-gSetVariant mCallerCookie, pCookie
+GContracts.SetVariant mCallerCookie, pCookie
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

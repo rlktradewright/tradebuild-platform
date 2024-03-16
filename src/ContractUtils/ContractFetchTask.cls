@@ -109,7 +109,7 @@ End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-gLogger.Log "ContractFetchTask terminated for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+GContracts.Logger.Log "ContractFetchTask terminated for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
 End Sub
 
 '@================================================================================
@@ -121,10 +121,10 @@ Const ProcName As String = "IContractFetchListener_FetchCancelled"
 On Error GoTo Err
 
 If mSingleContractOnly Then
-    gLogger.Log "Contract fetch cancelled for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+    GContracts.Logger.Log "Contract fetch cancelled for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
     mContractFutureBuilder.Cancel
 Else
-    gLogger.Log "Contracts fetch cancelled for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+    GContracts.Logger.Log "Contracts fetch cancelled for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
     mContractsFutureBuilder.Cancel
 End If
 
@@ -135,28 +135,28 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 Const ProcName As String = "IContractFetchListener_FetchCompleted"
 On Error GoTo Err
 
-gLogger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mIsOffsetExpiry=" & mIsOffsetExpiry, ProcName, ModuleName, LogLevelMediumDetail
+GContracts.Logger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mIsOffsetExpiry=" & mIsOffsetExpiry, ProcName, ModuleName, LogLevelMediumDetail
 
 If Not mIsOffsetExpiry Then
     completeContractProcessing
 ElseIf mOffsetContractsOutstanding = 0 Then
     completeContractProcessing
 Else
-    gLogger.Log "Got all sample contracts for: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
+    GContracts.Logger.Log "Got all sample contracts for: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
     mGotAllSampleContracts = True
 End If
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
@@ -164,11 +164,11 @@ Const ProcName As String = "IContractFetchListener_FetchFailed"
 On Error GoTo Err
 
 If mSingleContractOnly Then
-    gLogger.Log "Contract fetch failed for: " & mInitialContractSpec.ToString & _
+    GContracts.Logger.Log "Contract fetch failed for: " & mInitialContractSpec.ToString & _
                 "; (" & pErrorCode & ") " & pErrorMessage, ProcName, ModuleName, LogLevelDetail
     mContractFutureBuilder.Fail pErrorCode, pErrorMessage, pErrorSource
 Else
-    gLogger.Log "ContractS fetch failed for: " & mInitialContractSpec.ToString & _
+    GContracts.Logger.Log "ContractS fetch failed for: " & mInitialContractSpec.ToString & _
                 "; (" & pErrorCode & ") " & pErrorMessage, ProcName, ModuleName, LogLevelDetail
     mContractsFutureBuilder.Fail pErrorCode, pErrorMessage, pErrorSource
 End If
@@ -180,7 +180,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As IContract)
@@ -190,7 +190,7 @@ On Error GoTo Err
 If mCancelled Then Exit Sub
 
 If mIsOffsetExpiry Then
-    gLogger.Log "Sample contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
+    GContracts.Logger.Log "Sample contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
     Dim lResolver As New OffsetContractResolver
     mOffsetContractFutureWaiter.Add lResolver.Resolve(pContract, _
                                         mExpiryOffset, _
@@ -198,14 +198,14 @@ If mIsOffsetExpiry Then
                                         mCurrentContractStore)
     mOffsetContractsOutstanding = mOffsetContractsOutstanding + 1
 Else
-    gLogger.Log "Contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
+    GContracts.Logger.Log "Contract received: " & pContract.Specifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
     processContract pContract
 End If
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -220,7 +220,7 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-gLogger.Log "Running FetchContractTask for " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
+GContracts.Logger.Log "Running FetchContractTask for " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Set mCurrentContractStore = mPrimaryContractStore
 If mCurrentContractStore Is Nothing Then
@@ -230,7 +230,7 @@ End If
 
 Static l As Long
 l = l + 1
-If l Mod 10 = 0 Then gLogger.Log "Task counter = " & l, ProcName, ModuleName, LogLevelDetail
+If l Mod 10 = 0 Then GContracts.Logger.Log "Task counter = " & l, ProcName, ModuleName, LogLevelDetail
 
 If mSorted And Not mIsOffsetExpiry Then
     Set mFetchFuture = mCurrentContractStore.FetchContractsSorted( _
@@ -251,7 +251,7 @@ mTaskContext.suspend -1
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -263,7 +263,7 @@ Set mTaskContext = Value
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get ITask_TaskName() As String
@@ -275,7 +275,7 @@ ITask_TaskName = mTaskContext.Name
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -286,7 +286,7 @@ Private Sub mContractFutureBuilder_Cancelled(ev As CancelledEventData)
 Const ProcName As String = "mContractFutureBuilder_Cancelled"
 On Error GoTo Err
 
-gLogger.Log "Future builder cancelled: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+GContracts.Logger.Log "Future builder cancelled: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
 
 If Not mFetchFuture Is Nothing Then
     If Not mFetchFuture.IsCancelled Then mFetchFuture.Cancel
@@ -299,7 +299,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -310,7 +310,7 @@ Private Sub mContractsFutureBuilder_Cancelled(ev As CancelledEventData)
 Const ProcName As String = "mContractsFutureBuilder_Cancelled"
 On Error GoTo Err
 
-gLogger.Log "Future builder cancelled: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+GContracts.Logger.Log "Future builder cancelled: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
 
 If Not mFetchFuture Is Nothing Then
     If Not mFetchFuture.IsCancelled Then mFetchFuture.Cancel
@@ -323,7 +323,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -337,7 +337,7 @@ On Error GoTo Err
 If ev.Future.IsCancelled Then
     Assert False, "Unexpected cancellation"
 ElseIf ev.Future.IsFaulted Then
-    gLogger.Log "Fetch failed: " & mInitialContractSpec.ToString & _
+    GContracts.Logger.Log "Fetch failed: " & mInitialContractSpec.ToString & _
                 ": (" & ev.Future.ErrorNumber & "); " & ev.Future.ErrorMessage, _
                 ProcName, ModuleName, LogLevelDetail
     If Not mListener Is Nothing Then mListener.FetchFailed _
@@ -351,9 +351,9 @@ ElseIf ev.Future.IsFaulted Then
 End If
 
 If mIsOffsetExpiry Then
-    gLogger.Log "Sample contract fetch completed: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
+    GContracts.Logger.Log "Sample contract fetch completed: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
 Else
-    gLogger.Log "Fetch completed: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+    GContracts.Logger.Log "Fetch completed: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
     If Not mListener Is Nothing Then mListener.FetchCompleted ev.ContinuationData
     mTaskContext.Finish Empty, False
     Set mSelfRef = Nothing
@@ -362,7 +362,7 @@ End If
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -379,9 +379,9 @@ If ev.Future.IsCancelled Then Exit Sub
 
 If Not ev.Future.IsFaulted Then
     Set lContract = ev.Future.Value
-    gLogger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+    GContracts.Logger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
 ElseIf ev.Future.ErrorNumber = ErrorCodes.ErrIllegalArgumentException Then
-    gLogger.Log ev.Future.ErrorMessage, ProcName, ModuleName, LogLevelDetail
+    GContracts.Logger.Log ev.Future.ErrorMessage, ProcName, ModuleName, LogLevelDetail
     mOffsetContractErrorMessage = ev.Future.ErrorMessage
 Else
     mOffsetContractFutureWaiter.Clear
@@ -396,7 +396,7 @@ Else
 End If
 
 mOffsetContractsOutstanding = mOffsetContractsOutstanding - 1
-gLogger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mGotAllSampleContracts=" & mGotAllSampleContracts, ProcName, ModuleName, LogLevelDetail
+GContracts.Logger.Log "mOffsetContractsOutstanding=" & mOffsetContractsOutstanding & "; mGotAllSampleContracts=" & mGotAllSampleContracts, ProcName, ModuleName, LogLevelDetail
 
 If Not lContract Is Nothing Then processContract lContract
 
@@ -408,7 +408,7 @@ End If
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -433,13 +433,13 @@ Else
         mContractsFutureBuilder.Complete
     End If
     
-    gLogger.Log "Sorted contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+    GContracts.Logger.Log "Sorted contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
 End If
 
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -455,7 +455,7 @@ Set ContractFuture = mContractFutureBuilder.Future
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ContractsFuture() As IFuture
@@ -467,7 +467,7 @@ Set ContractsFuture = mContractsFutureBuilder.Future
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -484,14 +484,14 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log "Fetching contract for " & pContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+GContracts.Logger.Log "Fetching contract for " & pContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
 
 Set mSelfRef = Me
 
 Set mPrimaryContractStore = pPrimaryContractStore
 Set mSecondaryContractStore = pSecondaryContractStore
 
-gSetVariant mCallerCookie, pCookie
+GContracts.SetVariant mCallerCookie, pCookie
 
 Set mListener = pListener
 
@@ -501,38 +501,38 @@ createFutureBuilder
 Set mInitialContractSpec = pContractSpec
 mContractsBuilder.ContractSpecifier = mInitialContractSpec
 
-If Not gIsOffsetExpiry(pContractSpec.Expiry) Then
+If Not GContractUtils.IsOffsetExpiry(pContractSpec.Expiry) Then
     Set mContractSpec = mInitialContractSpec
 Else
-    gLogger.Log "Contract has offset expiry: " & pContractSpec.Expiry, ProcName, ModuleName, LogLevelDetail
+    GContracts.Logger.Log "Contract has offset expiry: " & pContractSpec.Expiry, ProcName, ModuleName, LogLevelDetail
     Set mOffsetContractFutureWaiter = New FutureWaiter
     mIsOffsetExpiry = True
     Dim lErrorMessage As String
-    Assert gParseOffsetExpiry( _
+    Assert GContractUtils.TryParseOffsetExpiry( _
                     mInitialContractSpec.Expiry, _
                     mExpiryOffset, _
                     mDaysBeforeExpiryToSwitch, _
                     lErrorMessage), _
             lErrorMessage
     With mInitialContractSpec
-        Set mContractSpec = gCreateContractSpecifier(.LocalSymbol, _
+        Set mContractSpec = GContractUtils.CreateContractSpecifier(.LocalSymbol, _
                                                     .Symbol, _
                                                     .TradingClass, _
                                                     .Exchange, _
                                                     .SecType, _
                                                     .CurrencyCode, _
-                                                    gGetCurrentQuarterExpiry, _
+                                                    GContractUtils.GetCurrentQuarterExpiry, _
                                                     .Multiplier, _
                                                     .Strike, _
                                                     .Right)
-        gLogger.Log "Fetch sample contract(s) for: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+        GContracts.Logger.Log "Fetch sample contract(s) for: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
     End With
 End If
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 Friend Sub InitialiseSorted( _
@@ -568,7 +568,7 @@ Initialise pContractSpec, _
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 '@================================================================================
@@ -612,14 +612,14 @@ Else
     End If
 End If
 
-gLogger.Log "Contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
+GContracts.Logger.Log "Contract fetch completed for: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Set mSelfRef = Nothing
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub createFutureBuilder()
@@ -637,7 +637,7 @@ End If
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function futureIsPending() As Boolean
@@ -653,7 +653,7 @@ End If
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processContract(ByVal pContract As IContract)
@@ -664,7 +664,7 @@ If mCancelled Then Exit Sub
 
 If mContractsBuilder.Contracts.Count = 1 And mSingleContractOnly Then
     mCancelled = True
-    gLogger.Log "Contract fetch error for: " & mInitialContractSpec.ToString & _
+    GContracts.Logger.Log "Contract fetch error for: " & mInitialContractSpec.ToString & _
                 "; contract is not uniquely specified", ProcName, ModuleName, LogLevelDetail
     mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract is not uniquely specified", ""
     mFetchFuture.Cancel
@@ -680,7 +680,7 @@ If Not mListener Is Nothing Then mListener.NotifyContract mCallerCookie, pContra
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function trySecondaryContractStore() As Boolean
@@ -699,7 +699,7 @@ End If
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

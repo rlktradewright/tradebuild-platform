@@ -79,7 +79,7 @@ mExpiries.Add pExpiry
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

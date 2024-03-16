@@ -72,7 +72,7 @@ Add pContract
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IContractsBuilder_Contracts() As IContracts
@@ -138,7 +138,7 @@ mContracts.SortKeys = ar
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SortKeys() As ContractSortKeyIds()
@@ -158,7 +158,7 @@ mContracts.Add pContract
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

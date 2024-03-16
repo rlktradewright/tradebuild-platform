@@ -140,7 +140,7 @@ End With
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -154,19 +154,19 @@ mContract.Specifier = Specifier
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LoadFromConfig(ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "LoadFromConfig"
 On Error GoTo Err
 
-Set mContract = gLoadContractFromConfig(pConfig)
+Set mContract = GContractUtils.LoadContractFromConfig(pConfig)
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -83,7 +83,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -114,7 +114,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -130,7 +130,7 @@ Set Future = mFutureBuilder.Future
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -151,7 +151,7 @@ mUseFullSession = pUseFullSession
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -210,7 +210,7 @@ Key = Specifier.Key
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get NumberOfDecimals() As Long
@@ -226,7 +226,7 @@ ProviderID = mProviderIDs.GetParameterValue(providerKey, mSpecifier.LocalSymbol)
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ProviderIDs(ByVal Value As Parameters)
@@ -289,7 +289,7 @@ mNumberOfDecimals = Len(minTickString) - 2
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickValue() As Double
@@ -321,7 +321,7 @@ FormatPrice = gFormatPrice(pPrice, mSpecifier.SecType, mTickSize)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub FromXML(ByVal contractXML As String)
@@ -391,6 +391,10 @@ Set specifierEl = contractEl.selectSingleNode("pr:specifier")
 Set specifierObj = New ContractSpecifier
 Me.Specifier = specifierObj
 With specifierObj
+    Dim lTradingClass As Variant
+    lTradingClass = specifierEl.getAttribute("tradingclass")
+    If IsNull(lTradingClass) Then lTradingClass = ""
+    
     Dim lMultiplier As Double
     If Not IsNull(contractEl.getAttribute("multiplier")) Then
         lMultiplier = contractEl.getAttribute("multiplier")
@@ -400,7 +404,7 @@ With specifierObj
      
     .Initialise specifierEl.getAttribute("localsymbol"), _
                 specifierEl.getAttribute("symbol"), _
-                specifierEl.getAttribute("tradingclass"), _
+                lTradingClass, _
                 specifierEl.getAttribute("exchange"), _
                 specifierEl.getAttribute("sectype"), _
                 specifierEl.getAttribute("currencycode"), _
@@ -410,7 +414,7 @@ With specifierObj
                 specifierEl.getAttribute("right")
     
     Set comboLegsEl = specifierEl.selectSingleNode("pr:combolegs")
-    Set nodeList = comboLegsEl.selectNodes("pr:comboleg")
+    Set nodeList = comboLegsEl.selectNodes("comboleg")
     If nodeList.length <> 0 Then .ComboLegs = New ComboLegs
     For Each comboLegEl In nodeList
         Set comboLegObj = New ComboLeg
@@ -438,7 +442,7 @@ End With
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsValidPrice( _
@@ -447,24 +451,24 @@ Public Function IsValidPrice( _
 Const ProcName As String = "IsValidPrice"
 On Error GoTo Err
 
-IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, mSpecifier.SecType, mTickSize)
+IsValidPrice = GContractUtils.IsValidPrice(pPrice, pPrevValidPrice, mSpecifier.SecType, mTickSize)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub SaveToConfig(ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "SaveToConfig"
 On Error GoTo Err
 
-gSaveContractToConfig Me, pConfig
+GContractUtils.SaveContractToConfig Me, pConfig
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ToJSON() As String
@@ -511,32 +515,32 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
 Const ProcName As String = "ToString"
 On Error GoTo Err
 
-ToString = gContractToString(Me)
+ToString = GContractUtils.ContractToString(Me)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToXML() As String
 Const ProcName As String = "ToXML"
 On Error GoTo Err
 
-ToXML = gContractToXML(Me)
+ToXML = GContractUtils.ContractToXML(Me)
 
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

@@ -66,7 +66,7 @@ Assert TypeOf pObj Is ContractComparable, "Type of pobj is not ContractComparabl
 
 Dim lComparable As ContractComparable
 Set lComparable = pObj
-IComparable_CompareTo = gContractSpecsCompare( _
+IComparable_CompareTo = GContractUtils.ContractSpecsCompare( _
                                     mContractSpec, _
                                     lComparable.ContractSpec, _
                                     mSortKeys, _
@@ -75,7 +75,7 @@ IComparable_CompareTo = gContractSpecsCompare( _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -108,7 +108,7 @@ mAscending = pAscending
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 '@================================================================================

@@ -101,7 +101,7 @@ AddCollectionChangeListener pListener
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IContracts_Contains(ByVal pKey As IContractSpecifier) As Boolean
@@ -113,7 +113,7 @@ IContracts_Contains = Contains(pKey)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IContracts_ContractSpecifier() As IContractSpecifier
@@ -129,7 +129,7 @@ IContracts_Count = Count
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IContracts_Enumerator() As Enumerator
@@ -141,7 +141,7 @@ Set IContracts_Enumerator = Enumerator
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IContracts_Item(ByVal pKey As IContractSpecifier) As IContract
@@ -153,7 +153,7 @@ Set IContracts_Item = Item(pKey)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IContracts_ItemAtIndex(ByVal pIndex As Long) As IContract
@@ -165,7 +165,7 @@ Set IContracts_ItemAtIndex = ItemAtIndex(pIndex)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IContracts_NewEnum() As stdole.IUnknown
@@ -181,7 +181,7 @@ RemoveCollectionChangeListener pListener
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IContracts_SortAscending(ByVal Value As Boolean)
@@ -201,7 +201,7 @@ setSortKeys Value, False
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IContracts_SortKeys() As ContractSortKeyIds()
@@ -217,7 +217,7 @@ IContracts_ToString = ToString
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -253,7 +253,7 @@ Count = mContracts.Count
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enumerator() As Enumerator
@@ -280,7 +280,7 @@ setSortKeys Value, False
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
                 
 Public Property Get SortKeys() As ContractSortKeyIds()
@@ -302,7 +302,7 @@ End If
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddCollectionChangeListener( _
@@ -315,7 +315,7 @@ mChangeListeners.Add pListener
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Contains(ByVal pKey As IContractSpecifier) As Boolean
@@ -327,7 +327,7 @@ Contains = mContracts.Contains(createComparable(pKey))
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(ByVal pKey As IContractSpecifier) As IContract
@@ -339,7 +339,7 @@ Set Item = mContracts.Item(createComparable(pKey))
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ItemAtIndex(ByVal pIndex As Long) As IContract
@@ -363,7 +363,7 @@ Loop
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -382,7 +382,7 @@ mChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ToString() As String
@@ -402,7 +402,7 @@ Loop
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -424,7 +424,7 @@ AddContract = True
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createComparable( _
@@ -438,7 +438,7 @@ createComparable.Initialise pContractSpec, mSortKeys, mAscending
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub fireCollectionChange( _
@@ -473,7 +473,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSortKeys( _
@@ -514,7 +514,7 @@ Set mContracts = lNewContracts
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 Private Function sortKeysEqual( _
@@ -552,5 +552,5 @@ End If
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function

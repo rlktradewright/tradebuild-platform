@@ -95,7 +95,7 @@ Set AddLeg = mComboLegs.AddLeg(ContractSpec, IsBuyLeg, Ratio)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub RemoveLeg(ByVal index As Variant)
@@ -108,7 +108,7 @@ mComboLegs.Remove index
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

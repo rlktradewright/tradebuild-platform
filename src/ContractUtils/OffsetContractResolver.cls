@@ -86,28 +86,35 @@ Else
     Dim lContract As IContract
     Dim lIndex As Long: lIndex = -1
     For Each lContract In lContracts
-        If gIsContractExpired(lContract, mClock) Then
+        If GContractUtils.IsContractExpired(lContract, mClock) Then
             lIndex = -1
         Else
             lIndex = lIndex + 1
         End If
         If lIndex < mExpiryOffset Then
-        ElseIf GetOffsetSessionTimes( _
+#If SingleDll Then
+        ElseIf GSessionUtils.GetOffsetSessionTimes( _
                             lContract.ExpiryDate, _
                             -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
         Then
+#Else
+        ElseIf SessionUtils27.GetOffsetSessionTimes( _
+                            lContract.ExpiryDate, _
+                            -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
+        Then
+#End If
             ' we've found the contract we're after
             Exit For
         End If
     Next
             
     If Not lContract Is Nothing Then
-        gLogger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GContracts.Logger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
         mFutureBuilder.Value = lContract
         mFutureBuilder.Complete
     Else
         Dim s As String: s = "Can't find contract with offset " & mExpiryOffset & ": " & mContractSpec.ToString
-        gLogger.Log s, ProcName, ModuleName, LogLevelDetail
+        GContracts.Logger.Log s, ProcName, ModuleName, LogLevelDetail
         mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, s, ""
     End If
 End If
@@ -117,7 +124,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-ContractsGlobals.gNotifyUnhandledError ProcName, ModuleName
+GContracts.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -149,7 +156,7 @@ Set mClock = pClock
 ' from the expiry date)
 
 With pSampleContract.Specifier
-    Set mContractSpec = gCreateContractSpecifier("", _
+    Set mContractSpec = GContractUtils.CreateContractSpecifier("", _
                                                 .Symbol, _
                                                 .TradingClass, _
                                                 .Exchange, _
@@ -161,12 +168,12 @@ With pSampleContract.Specifier
                                                 .Right)
 End With
 
-gLogger.Log "Fetching all expiries for contract: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+GContracts.Logger.Log "Fetching all expiries for contract: " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
 
 ReDim lsortkeys(0) As ContractSortKeyIds
 lsortkeys(0) = ContractSortKeyExpiry
 
-Set mFetchFuture = gFetchContractsSorted( _
+Set mFetchFuture = GContractUtils.FetchContractsSorted( _
                             mContractSpec, _
                             pContractStore, _
                             lsortkeys, _
@@ -181,7 +188,7 @@ Set Resolve = mFutureBuilder.Future
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

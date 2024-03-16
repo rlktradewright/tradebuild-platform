@@ -176,7 +176,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
@@ -191,7 +191,7 @@ ToString = IIf(mIsBuyLeg, "BUY", "SELL") & ";" & _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 

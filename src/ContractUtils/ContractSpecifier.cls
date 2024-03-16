@@ -195,14 +195,14 @@ On Error GoTo Err
 
 If Value = "" Then Exit Property
 Dim lErrorMessage As String
-AssertArgument gIsValidExpiry(Value, lErrorMessage), "Invalid Expiry"
+AssertArgument GContractUtils.IsValidExpiry(Value, lErrorMessage), "Invalid Expiry"
 
 mExpiry = Value
 
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Expiry() As String
@@ -214,13 +214,13 @@ Const ProcName As String = "Key"
 On Error GoTo Err
 
 Static sKey As String
-If sKey = "" Then sKey = gGetContractSpecKey(Me)
+If sKey = "" Then sKey = GContractUtils.GetContractSpecKey(Me)
 Key = sKey
 
 Exit Property
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let zLocalSymbol(ByVal Value As String)
@@ -307,12 +307,12 @@ Public Function Equals(ByVal pContractSpecifier As IContractSpecifier) As Boolea
 Const ProcName As String = "Equals"
 On Error GoTo Err
 
-Equals = gContractSpecsEqual(Me, pContractSpecifier)
+Equals = GContractUtils.ContractSpecsEqual(Me, pContractSpecifier)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 'Public Function FuzzyEquals(ByVal pContractSpecifier As IContractSpecifier) As Boolean
@@ -328,7 +328,7 @@ End Function
 'Exit Function
 '
 'Err:
-'ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+'GContracts.HandleUnexpectedError ProcName, ModuleName
 'End Function
 
 Public Sub Initialise( _
@@ -346,9 +346,9 @@ Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 AssertArgument LocalSymbol <> "" Or Symbol <> "", "Symbol must be supplied if LocalSymbol is not supplied"
-AssertArgument Exchange = "" Or gIsValidExchangeSpecifier(Exchange), "'" & Exchange & "' is not a valid Exchange specifier"
+AssertArgument Exchange = "" Or GContractUtils.IsValidExchangeSpecifier(Exchange), "'" & Exchange & "' is not a valid Exchange specifier"
 Dim lErrorMessage As String
-If Not gIsValidExpiry(Expiry, lErrorMessage) Then _
+If Not GContractUtils.IsValidExpiry(Expiry, lErrorMessage) Then _
     AssertArgument False, "'" & Expiry & "' is not a valid Expiry format: " & lErrorMessage
 
 Select Case SecType
@@ -386,7 +386,7 @@ mRight = Right
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ToJSON() As String
@@ -439,7 +439,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ToString() As String
@@ -450,11 +450,11 @@ Dim comboLegObj As ComboLeg
 Dim i As Long
 
 ToString = IIf(mLocalSymbol <> "", "[" & mLocalSymbol & "]", "")
-ToString = ToString & IIf(mSecType <> 0, gSecTypeToShortString(mSecType) & "#", "")
+ToString = ToString & IIf(mSecType <> 0, GContractUtils.SecTypeToShortString(mSecType) & "#", "")
 ToString = ToString & mSymbol & IIf(mTradingClass <> "", "/" & mTradingClass, "")
 Select Case mRight
 Case OptCall, OptPut
-    ToString = ToString & "=" & gOptionRightToString(mRight)
+    ToString = ToString & "=" & GContractUtils.OptionRightToString(mRight)
 End Select
 ToString = ToString & IIf(mStrike <> 0, Format(mStrike, "0.00"), "")
 ToString = ToString & IIf(mExpiry <> "", "(" & mExpiry & ")", "")
@@ -476,7 +476,7 @@ End If
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

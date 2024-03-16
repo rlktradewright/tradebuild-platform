@@ -146,7 +146,7 @@ HalfThirtySecondIndicators = gHalfThirtySecondIndicators
 End Property
 
 Public Property Get MaxContractExpiryOffset() As Long
-MaxContractExpiryOffset = ContractsGlobals.MaxContractExpiryOffset
+MaxContractExpiryOffset = GContractUtils.MaxContractExpiryOffset
 End Property
                 
 Public Property Let QuarterThirtySecondIndicators( _
@@ -271,7 +271,7 @@ Public Function ContractSpecsCompare( _
 Const ProcName As String = "ContractSpecsCompare"
 On Error GoTo Err
 
-ContractSpecsCompare = gContractSpecsCompare( _
+ContractSpecsCompare = GContractUtils.ContractSpecsCompare( _
                                 pContractSpec1, _
                                 pContractSpec2, _
                                 pSortkeys, _
@@ -280,7 +280,7 @@ ContractSpecsCompare = gContractSpecsCompare( _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ContractSpecsCompatible( _
@@ -289,12 +289,12 @@ Public Function ContractSpecsCompatible( _
 Const ProcName As String = "ContractSpecsCompatible"
 On Error GoTo Err
 
-ContractSpecsCompatible = gContractSpecsCompatible(pContractSpec1, pContractSpec2)
+ContractSpecsCompatible = GContractUtils.ContractSpecsCompatible(pContractSpec1, pContractSpec2)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ContractSpecsEqual( _
@@ -303,36 +303,36 @@ Public Function ContractSpecsEqual( _
 Const ProcName As String = "ContractSpecsEqual"
 On Error GoTo Err
 
-ContractSpecsEqual = gContractSpecsEqual(pContractSpec1, pContractSpec2)
+ContractSpecsEqual = GContractUtils.ContractSpecsEqual(pContractSpec1, pContractSpec2)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ContractToString(ByVal pContract As IContract) As String
 Const ProcName As String = "ContractToString"
 On Error GoTo Err
 
-ContractToString = gContractToString(pContract)
+ContractToString = GContractUtils.ContractToString(pContract)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ContractToXML(ByVal pContract As IContract) As String
 Const ProcName As String = "ContractToXML"
 On Error GoTo Err
 
-ContractToXML = gContractToXML(pContract)
+ContractToXML = GContractUtils.ContractToXML(pContract)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateClockFuture( _
@@ -342,14 +342,12 @@ Public Function CreateClockFuture( _
 Const ProcName As String = "CreateClockFuture"
 On Error GoTo Err
 
-Dim lClockFutureBuilder As New ClockFutureBuilder
-lClockFutureBuilder.Initialise pContractFuture, pIsSimulated, pClockRate
-Set CreateClockFuture = lClockFutureBuilder.Future
+Set CreateClockFuture = GContractUtils.CreateClockFuture(pContractFuture, pIsSimulated, pClockRate)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 
@@ -357,8 +355,7 @@ Public Function CreateComboLeg( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pIsBuyLeg As Boolean, _
                 ByVal pRatio As Long) As ComboLeg
-Set CreateComboLeg = New ComboLeg
-CreateComboLeg.Initialise pContractSpec, pIsBuyLeg, pRatio
+Set CreateComboLeg = GContractUtils.CreateComboLeg(pContractSpec, pIsBuyLeg, pRatio)
 End Function
 
 
@@ -367,13 +364,12 @@ Public Function CreateContractBuilder( _
 Const ProcName As String = "CreateContractBuilder"
 On Error GoTo Err
 
-Set CreateContractBuilder = New ContractBuilder
-CreateContractBuilder.Initialise Specifier
+Set CreateContractBuilder = GContractUtils.CreateContractBuilder(Specifier)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractBuilderFromContract( _
@@ -381,14 +377,12 @@ Public Function CreateContractBuilderFromContract( _
 Const ProcName As String = "CreateContractBuilderFromContract"
 On Error GoTo Err
 
-Set CreateContractBuilderFromContract = New ContractBuilder
-CreateContractBuilderFromContract.Initialise pContract.Specifier
-CreateContractBuilderFromContract.BuildFrom pContract
+Set CreateContractBuilderFromContract = GContractUtils.CreateContractBuilderFromContract(pContract)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractSpecifier( _
@@ -405,7 +399,7 @@ Public Function CreateContractSpecifier( _
 Const ProcName As String = "CreateContractSpecifier"
 On Error GoTo Err
 
-Set CreateContractSpecifier = gCreateContractSpecifier( _
+Set CreateContractSpecifier = GContractUtils.CreateContractSpecifier( _
                                     LocalSymbol, _
                                     Symbol, _
                                     TradingClass, _
@@ -420,7 +414,7 @@ Set CreateContractSpecifier = gCreateContractSpecifier( _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractSpecifierFromString( _
@@ -428,12 +422,12 @@ Public Function CreateContractSpecifierFromString( _
 Const ProcName As String = "CreateContractSpecifierFromString"
 On Error GoTo Err
 
-Set CreateContractSpecifierFromString = gCreateContractSpecifierFromString(SpecString)
+Set CreateContractSpecifierFromString = GContractUtils.CreateContractSpecifierFromString(SpecString)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateContractFromXML( _
@@ -441,14 +435,12 @@ Public Function CreateContractFromXML( _
 Const ProcName As String = "CreateContractFromXML"
 On Error GoTo Err
 
-Dim lContract As New Contract
-lContract.FromXML xmlString
-Set CreateContractFromXML = lContract
+Set CreateContractFromXML = GContractUtils.CreateContractFromXML(xmlString)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSessionBuilderFutureFromContractFuture( _
@@ -458,38 +450,40 @@ Public Function CreateSessionBuilderFutureFromContractFuture( _
 Const ProcName As String = "CreateSessionBuilderFutureFromContractFuture"
 On Error GoTo Err
 
-Dim lBuilder As New SessnBuilderFutBldr
-lBuilder.Initialise pContractFuture, pUseExchangeTimeZone, pUseFullSession
-Set CreateSessionBuilderFutureFromContractFuture = lBuilder.Future
+Set CreateSessionBuilderFutureFromContractFuture = GContractUtils.CreateSessionBuilderFutureFromContractFuture( _
+                                                        pContractFuture, _
+                                                        pUseExchangeTimeZone, _
+                                                        pUseFullSession)
+                                                        
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetContractSpecKey(ByVal pContractSpec As IContractSpecifier) As String
 Const ProcName As String = "GetContractSpecKey"
 On Error GoTo Err
 
-GetContractSpecKey = gGetContractSpecKey(pContractSpec)
+GetContractSpecKey = GContractUtils.GetContractSpecKey(pContractSpec)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetExchangeCodes() As String()
 Const ProcName As String = "GetExchangeCodes"
 On Error GoTo Err
 
-GetExchangeCodes = gGetExchangeCodes
+GetExchangeCodes = GContractUtils.GetExchangeCodes
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchContract( _
@@ -502,7 +496,7 @@ Public Function FetchContract( _
 Const ProcName As String = "FetchContract"
 On Error GoTo Err
 
-Set FetchContract = gFetchContracts(pContractSpec, _
+Set FetchContract = GContractUtils.FetchContracts(pContractSpec, _
                                 True, _
                                 pPrimaryContractStore, _
                                 pSecondaryContractStore, _
@@ -514,7 +508,7 @@ Set FetchContract = gFetchContracts(pContractSpec, _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchContracts( _
@@ -528,7 +522,7 @@ Public Function FetchContracts( _
 Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
-Set FetchContracts = gFetchContracts(pContractSpec, _
+Set FetchContracts = GContractUtils.FetchContracts(pContractSpec, _
                                 False, _
                                 pPrimaryContractStore, _
                                 pSecondaryContractStore, _
@@ -540,7 +534,7 @@ Set FetchContracts = gFetchContracts(pContractSpec, _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchContractsSorted( _
@@ -555,7 +549,7 @@ Public Function FetchContractsSorted( _
 Const ProcName As String = "FetchContractsSorted"
 On Error GoTo Err
 
-Set FetchContractsSorted = gFetchContractsSorted( _
+Set FetchContractsSorted = GContractUtils.FetchContractsSorted( _
                                 pContractSpec, _
                                 pPrimaryContractStore, _
                                 pSortkeys, _
@@ -568,7 +562,7 @@ Set FetchContractsSorted = gFetchContractsSorted( _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchOptionExpiries( _
@@ -583,23 +577,20 @@ Public Function FetchOptionExpiries( _
 Const ProcName As String = "FetchOptionExpiries"
 On Error GoTo Err
 
-AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
-AssertArgument pPrimaryContractStore.Supports(ContractStoreOptionExpiries), "This Contract Store does not support Option Expiry retrieval"
-If Not pSecondaryContractStore Is Nothing Then _
-    AssertArgument pSecondaryContractStore.Supports(ContractStoreOptionExpiries), "This Contract Store does not support Option Expiry retrieval"
-
-If IsMissing(pCookie) Then pCookie = GenerateGUIDString
-
-Dim t As New ContractExpsFetchTask
-t.Initialise pUnderlyingContractSpecifier, pExchange, pPrimaryContractStore, pStrike, pSecondaryContractStore, pCookie
-StartTask t, pPriority, pTaskName
-
-Set FetchOptionExpiries = t.ExpiriesFuture
+Set FetchOptionExpiries = GContractUtils.FetchOptionExpiries( _
+                                    pUnderlyingContractSpecifier, _
+                                    pExchange, _
+                                    pPrimaryContractStore, _
+                                    pStrike, _
+                                    pSecondaryContractStore, _
+                                    pPriority, _
+                                    pTaskName, _
+                                    pCookie)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchOptionStrikes( _
@@ -614,23 +605,20 @@ Public Function FetchOptionStrikes( _
 Const ProcName As String = "FetchOptionStrikes"
 On Error GoTo Err
 
-AssertArgument Not pPrimaryContractStore Is Nothing, "pPrimaryContractStore cannot be Nothing"
-AssertArgument pPrimaryContractStore.Supports(ContractStoreOptionStrikes), "This Contract Store does not support Option Strike retrieval"
-If Not pSecondaryContractStore Is Nothing Then _
-    AssertArgument pSecondaryContractStore.Supports(ContractStoreOptionStrikes), "This Contract Store does not support Option Strike retrieval"
-
-If IsMissing(pCookie) Then pCookie = GenerateGUIDString
-
-Dim t As New ContractStrikesFetchTsk
-t.Initialise pUnderlyingContractSpecifier, pExchange, pPrimaryContractStore, pExpiry, pSecondaryContractStore, pCookie
-StartTask t, pPriority, pTaskName
-
-Set FetchOptionStrikes = t.StrikesFuture
+Set FetchOptionStrikes = GContractUtils.FetchOptionStrikes( _
+                                    pUnderlyingContractSpecifier, _
+                                    pExchange, _
+                                    pPrimaryContractStore, _
+                                    pExpiry, _
+                                    pSecondaryContractStore, _
+                                    pPriority, _
+                                    pTaskName, _
+                                    pCookie)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPrice( _
@@ -648,7 +636,7 @@ FormatPrice = gFormatPrice(pPrice, pSecType, pTickSize)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAs32nds( _
@@ -661,7 +649,7 @@ FormatPriceAs32nds = gFormatPriceAs32nds(pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAs32ndsAndFractions( _
@@ -674,7 +662,7 @@ FormatPriceAs32ndsAndFractions = gFormatPriceAs32ndsAndFractions(pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAs64ths( _
@@ -687,7 +675,7 @@ FormatPriceAs64ths = gFormatPriceAs64ths(pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAs64thsAndFractions( _
@@ -700,7 +688,7 @@ FormatPriceAs64thsAndFractions = gFormatPriceAs64thsAndFractions(pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FormatPriceAsDecimals( _
@@ -715,7 +703,7 @@ FormatPriceAsDecimals = gFormatPriceAsDecimals(pPrice, pTickSize)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsContractExpired( _
@@ -724,32 +712,32 @@ Public Function IsContractExpired( _
 Const ProcName As String = "IsContractExpired"
 On Error GoTo Err
 
-IsContractExpired = gIsContractExpired(pContract, pClock)
+IsContractExpired = GContractUtils.IsContractExpired(pContract, pClock)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsContractSpecOffsetExpiry( _
                 ByVal pContractSpec As IContractSpecifier, _
                 Optional ByRef pErrorMessage) As Boolean
-Dim lErrorMessage As String
-IsContractSpecOffsetExpiry = gIsOffsetExpiry(pContractSpec.Expiry, lErrorMessage)
-If Not IsMissing(pErrorMessage) Then pErrorMessage = lErrorMessage
+IsContractSpecOffsetExpiry = GContractUtils.IsContractSpecOffsetExpiry( _
+                                    pContractSpec, _
+                                    pErrorMessage)
 End Function
 
 Public Function IsValidExchangeCode(ByVal ExchangeCode As String) As Boolean
 Const ProcName As String = "IsValidExchangeCode"
 On Error GoTo Err
 
-IsValidExchangeCode = gIsValidExchangeCode(ExchangeCode)
+IsValidExchangeCode = GContractUtils.IsValidExchangeCode(ExchangeCode)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidExpiry( _
@@ -758,12 +746,12 @@ Public Function IsValidExpiry( _
 Const ProcName As String = "IsValidExpiry"
 On Error GoTo Err
 
-IsValidExpiry = gIsValidExpiry(Value, pErrorMessage)
+IsValidExpiry = GContractUtils.IsValidExpiry(Value, pErrorMessage)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidPrice( _
@@ -774,12 +762,12 @@ Public Function IsValidPrice( _
 Const ProcName As String = "IsValidPrice"
 On Error GoTo Err
 
-IsValidPrice = gIsValidPrice(pPrice, pPrevValidPrice, pSecType, pTickSize)
+IsValidPrice = GContractUtils.IsValidPrice(pPrice, pPrevValidPrice, pSecType, pTickSize)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsValidSecType( _
@@ -787,36 +775,36 @@ Public Function IsValidSecType( _
 Const ProcName As String = "IsValidSecType"
 On Error GoTo Err
 
-IsValidSecType = gIsValidSecType(Value)
+IsValidSecType = GContractUtils.IsValidSecType(Value)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadContractFromConfig(ByVal pConfig As ConfigurationSection) As IContract
 Const ProcName As String = "LoadContractFromConfig"
 On Error GoTo Err
 
-Set LoadContractFromConfig = gLoadContractFromConfig(pConfig)
+Set LoadContractFromConfig = GContractUtils.LoadContractFromConfig(pConfig)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadContractSpecFromConfig(ByVal pConfig As ConfigurationSection) As IContractSpecifier
 Const ProcName As String = "LoadContractSpecFromConfig"
 On Error GoTo Err
 
-Set LoadContractSpecFromConfig = gLoadContractSpecFromConfig(pConfig)
+Set LoadContractSpecFromConfig = GContractUtils.LoadContractSpecFromConfig(pConfig)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OptionRightFromString( _
@@ -824,12 +812,12 @@ Public Function OptionRightFromString( _
 Const ProcName As String = "OptionRightFromString"
 On Error GoTo Err
 
-OptionRightFromString = gOptionRightFromString(Value)
+OptionRightFromString = GContractUtils.OptionRightFromString(Value)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OptionRightToString( _
@@ -837,35 +825,29 @@ Public Function OptionRightToString( _
 Const ProcName As String = "OptionRightToString"
 On Error GoTo Err
 
-OptionRightToString = gOptionRightToString(Value)
+OptionRightToString = GContractUtils.OptionRightToString(Value)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub ParseOffsetExpiry( _
                 ByVal Value As String, _
                 ByRef pExpiryOffset As Long, _
                 ByRef pDaysBeforeExpiryToSwitch As Long)
-                
 Const ProcName As String = "ParseOffsetExpiry"
 On Error GoTo Err
 
-Dim lErrorMessage As String
-If Not gParseOffsetExpiry(Value, _
+GContractUtils.ParseOffsetExpiry Value, _
                             pExpiryOffset, _
-                            pDaysBeforeExpiryToSwitch, _
-                            lErrorMessage) _
-Then
-    AssertArgument False, lErrorMessage
-End If
+                            pDaysBeforeExpiryToSwitch
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ParsePrice( _
@@ -881,7 +863,7 @@ ParsePrice = gParsePrice(pPriceString, pSecType, pTickSize, pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ParsePriceAs32nds( _
@@ -895,7 +877,7 @@ ParsePriceAs32nds = gParsePriceAs32nds(pPriceString, pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ParsePriceAs32ndsAndFractions( _
@@ -909,7 +891,7 @@ ParsePriceAs32ndsAndFractions = gParsePriceAs32ndsAndFractions(pPriceString, pPr
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ParsePriceAs64ths( _
@@ -923,7 +905,7 @@ ParsePriceAs64ths = gParsePriceAs64ths(pPriceString, pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ParsePriceAs64thsAndFractions( _
@@ -937,7 +919,7 @@ ParsePriceAs64thsAndFractions = gParsePriceAs64thsAndFractions(pPriceString, pPr
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ParsePriceAsDecimals( _
@@ -952,31 +934,31 @@ ParsePriceAsDecimals = gParsePriceAsDecimals(pPriceString, pTickSize, pPrice)
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub SaveContractSpecToConfig(ByVal pContractSpec As IContractSpecifier, ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "SaveContractSpecToConfig"
 On Error GoTo Err
 
-gSaveContractSpecToConfig pContractSpec, pConfig
+GContractUtils.SaveContractSpecToConfig pContractSpec, pConfig
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SaveContractToConfig(ByVal pContract As IContract, ByVal pConfig As ConfigurationSection)
 Const ProcName As String = "SaveContractToConfig"
 On Error GoTo Err
 
-gSaveContractToConfig pContract, pConfig
+GContractUtils.SaveContractToConfig pContract, pConfig
 
 Exit Sub
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function SecTypeFromString( _
@@ -984,12 +966,12 @@ Public Function SecTypeFromString( _
 Const ProcName As String = "SecTypeFromString"
 On Error GoTo Err
 
-SecTypeFromString = gSecTypeFromString(Value)
+SecTypeFromString = GContractUtils.SecTypeFromString(Value)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SecTypeToShortString( _
@@ -997,12 +979,12 @@ Public Function SecTypeToShortString( _
 Const ProcName As String = "SecTypeToShortString"
 On Error GoTo Err
 
-SecTypeToShortString = gSecTypeToShortString(Value)
+SecTypeToShortString = GContractUtils.SecTypeToShortString(Value)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SecTypeToString( _
@@ -1010,12 +992,12 @@ Public Function SecTypeToString( _
 Const ProcName As String = "SecTypeToString"
 On Error GoTo Err
 
-SecTypeToString = gSecTypeToString(Value)
+SecTypeToString = GContractUtils.SecTypeToString(Value)
 
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function TryCreateContractSpecifierFromString( _
@@ -1026,7 +1008,7 @@ Const ProcName As String = "CreateContractSpecifierFromString"
 On Error GoTo Err
 
 
-Set ContractSpec = gCreateContractSpecifierFromString(SpecString)
+Set ContractSpec = GContractUtils.CreateContractSpecifierFromString(SpecString)
 
 Exit Function
 
@@ -1035,7 +1017,7 @@ If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     ErrorMessage = Err.Description
     TryCreateContractSpecifierFromString = False
 Else
-    ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+    GContracts.HandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
@@ -1047,7 +1029,7 @@ Public Function TryParseOffsetExpiry( _
 Const ProcName As String = "TryParseOffsetExpiry"
 On Error GoTo Err
 
-TryParseOffsetExpiry = gParseOffsetExpiry(Value, _
+TryParseOffsetExpiry = GContractUtils.TryParseOffsetExpiry(Value, _
                                     pExpiryOffset, _
                                     pDaysBeforeExpiryToSwitch, _
                                     pErrorMessage)
@@ -1055,7 +1037,7 @@ TryParseOffsetExpiry = gParseOffsetExpiry(Value, _
 Exit Function
 
 Err:
-ContractsGlobals.gHandleUnexpectedError ProcName, ModuleName
+GContracts.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
