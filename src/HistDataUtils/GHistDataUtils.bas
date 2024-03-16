@@ -109,15 +109,15 @@ End Function
 
 Public Function CreateBarDataSpecifier( _
                 ByVal pBarTimePeriod As TimePeriod, _
-                ByVal pfromTime As Date, _
-                ByVal ptoTime As Date, _
-                ByVal pMaxNumberOfBars As Long, _
-                ByVal pBarType As BarTypes, _
-                ByVal pExcludeCurrentBar As Boolean, _
-                ByVal pIncludeBarsOutsideSession As Boolean, _
-                ByVal pNormaliseDailyTimestamps As Boolean, _
-                ByVal pCustomSessionStartTime As Date, _
-                ByVal pCustomSessionEndTime As Date) As BarDataSpecifier
+                Optional ByVal pFromTime As Date, _
+                Optional ByVal pToTime As Date, _
+                Optional ByVal pMaxNumberOfBars As Long, _
+                Optional ByVal pBarType As BarTypes, _
+                Optional ByVal pExcludeCurrentbar As Boolean, _
+                Optional ByVal pIncludeBarsOutsideSession As Boolean, _
+                Optional ByVal pNormaliseDailyTimestamps As Boolean, _
+                Optional ByVal pCustomSessionStartTime As Date, _
+                Optional ByVal pCustomSessionEndTime As Date) As BarDataSpecifier
 Const ProcName As String = "CreateBarDataSpecifier"
 On Error GoTo Err
 
@@ -126,11 +126,11 @@ AssertArgument Not pBarTimePeriod Is Nothing
 Dim lBarDataSpecifier As New BarDataSpecifier
 lBarDataSpecifier.Initialise _
                             pBarTimePeriod, _
-                            ptoTime, _
-                            pfromTime, _
+                            pToTime, _
+                            pFromTime, _
                             pMaxNumberOfBars, _
                             pBarType, _
-                            pExcludeCurrentBar, _
+                            pExcludeCurrentbar, _
                             pIncludeBarsOutsideSession, _
                             pNormaliseDailyTimestamps, _
                             pCustomSessionStartTime, _
