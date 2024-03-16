@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "GTimeframeUtils"
 Option Explicit
 
 ''
@@ -26,8 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "TimeframeUtils27"
-Private Const ModuleName                            As String = "Globals"
+Private Const ModuleName                            As String = "GTimeframeUtils"
 
 '@================================================================================
 ' Member variables
@@ -49,49 +48,44 @@ Private Const ModuleName                            As String = "Globals"
 ' Properties
 '@================================================================================
 
-Public Property Get gLogger() As FormattingLogger
-Static sLogger As FormattingLogger
-If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("timeframeutils", ProjectName)
-Set gLogger = sLogger
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Public Function CreateTimeframes( _
+                ByVal pStudyBase As IStudyBase, _
+                Optional ByVal pContractFuture As IFuture, _
+                Optional ByVal pHistDataStore As IHistoricalDataStore, _
+                Optional ByVal pClockFuture As IFuture, _
+                Optional ByVal pBarType As BarTypes = BarTypeTrade) As Timeframes
+Const ProcName As String = "CreateTimeframes"
+On Error GoTo Err
 
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
+If Not pHistDataStore Is Nothing Then
+    Select Case pBarType
+    Case BarTypeTrade
+        AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityFetchTradeBars), "Cannot fetch historical trade bars"
+    Case BarTypeBid, BarTypeAsk
+        AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityFetchBidAndAskBars), "Cannot fetch historical bid and ask bars"
+    Case Else
+        AssertArgument False, "Invalid bar type"
+    End Select
+End If
 
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Set CreateTimeframes = New Timeframes
+CreateTimeframes.Initialise pStudyBase, pContractFuture, pHistDataStore, pClockFuture, pBarType
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
+Exit Function
+
+Err:
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 
 

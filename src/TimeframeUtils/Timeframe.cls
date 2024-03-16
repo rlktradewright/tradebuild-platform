@@ -128,7 +128,9 @@ If Not lFetchInitialBars Then
 Else
     Set mBarFetchListener = mBarStudy.InitialBarFetchListener
     Dim lBarSpec As BarDataSpecifier
-    Set lBarSpec = CreateBarDataSpecifier( _
+    
+    #If SingleDll = 0 Then
+    Set lBarSpec = HistDataUtils27.CreateBarDataSpecifier( _
                         mTimePeriod, _
                         mFromTime, _
                         mToTime, _
@@ -139,6 +141,19 @@ Else
                         , _
                         mCustomSessionStartTime, _
                         mCustomSessionStartTime)
+    #Else
+    Set lBarSpec = GHistDataUtils.CreateBarDataSpecifier( _
+                        mTimePeriod, _
+                        mFromTime, _
+                        mToTime, _
+                        mMaxNumberOfBars, _
+                        mBarType, _
+                        mExcludeCurrentbar, _
+                        mIncludeBarsOutsideSession, _
+                        , _
+                        mCustomSessionStartTime, _
+                        mCustomSessionStartTime)
+    #End If
     Set mInitialBarsFuture = mHistDataStore.FetchBars( _
                                         mContractFuture, _
                                         lBarSpec, _
@@ -151,7 +166,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -167,7 +182,7 @@ fireStateChange TimeframeStateFetching
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTimeframes.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mBarFetchListener_FetchDataRetrieved(ByVal pCookie As Variant)
@@ -179,10 +194,10 @@ fireStateChange TimeframeStateLoading
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTimeframes.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As BarUtils27.Bar)
+Private Sub mBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)
 Const ProcName As String = "mBarFetchListener_NotifyBar"
 On Error GoTo Err
 
@@ -211,7 +226,7 @@ sETimer.StartTiming
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTimeframes.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -230,7 +245,7 @@ RaiseEvent BarsLoaded
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTimeframes.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
@@ -255,7 +270,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTimeframes.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -300,7 +315,7 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -317,7 +332,7 @@ fireStateChange TimeframeStateFinished
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -369,7 +384,7 @@ DeferAction Me, lFetchInitialBars
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener( _
@@ -387,7 +402,7 @@ On Error GoTo Err
 
 mState = newState
 
-If gLogger.IsLoggable(LogLevelDetail) Then
+If GTimeframes.Logger.IsLoggable(LogLevelDetail) Then
     Dim s As String
     Select Case newState
     Case TimeframeStateFetching
@@ -431,7 +446,7 @@ RaiseEvent StateChange(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getName() As String
@@ -451,11 +466,11 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logAMessage(ByVal pMessage As String, ByVal pProcName As String, Optional ByVal pLogLevel As LogLevels = LogLevels.LogLevelDetail)
-gLogger.Log "Timeframe (" & getName & ") " & pMessage, pProcName, ModuleName, pLogLevel
+GTimeframes.Logger.Log "Timeframe (" & getName & ") " & pMessage, pProcName, ModuleName, pLogLevel
 End Sub
 
 

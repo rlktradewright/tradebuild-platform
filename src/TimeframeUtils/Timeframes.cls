@@ -166,7 +166,7 @@ Set Add = addTimeframe(BarTimePeriod, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
@@ -181,7 +181,7 @@ mCollectionChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -252,7 +252,7 @@ Set AddHistorical = addTimeframe(BarTimePeriod, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -265,7 +265,7 @@ RemoveAll
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -292,7 +292,7 @@ mBarType = pBarType
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Item(Key As String) As Timeframe
@@ -310,7 +310,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Remove(Key As String)
@@ -330,7 +330,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveAll()
@@ -347,7 +347,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
@@ -359,7 +359,7 @@ mCollectionChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -442,7 +442,7 @@ fireCollectionChange CollItemAdded, tte.TheTimeFrame
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub clearTimeframeTableEntry(ByVal index As Long)
@@ -457,7 +457,7 @@ Set mTimeframeTable(index).BarTimePeriod = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireCollectionChange( _
@@ -492,7 +492,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function generateKey( _
@@ -522,7 +522,7 @@ generateKey = BarTimePeriod.ToString & _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getTimeframeIndex( _
@@ -556,6 +556,6 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTimeframes.HandleUnexpectedError ProcName, ModuleName
 End Function
 

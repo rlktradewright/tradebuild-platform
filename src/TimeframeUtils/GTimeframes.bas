@@ -1,16 +1,4 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-  Persistable = 0  'NotPersistable
-  DataBindingBehavior = 0  'vbNone
-  DataSourceBehavior  = 0  'vbNone
-  MTSTransactionMode  = 0  'NotAnMTSObject
-END
-Attribute VB_Name = "TimeframeUtils"
-Attribute VB_GlobalNameSpace = True
-Attribute VB_Creatable = True
-Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Name = "GTimeframes"
 Option Explicit
 
 ''
@@ -30,13 +18,6 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum TimeframeStates
-    TimeframeStateFetching
-    TimeframeStateLoading
-    TimeframeStateLoaded
-    TimeframeStateFinished
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
@@ -45,7 +26,11 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TimeframeUtils"
+#If SingleDll = 0 Then
+Public Const ProjectName                            As String = "TimeframeUtils27"
+#End If
+
+Private Const ModuleName                            As String = "GTimeframes"
 
 '@================================================================================
 ' Member variables
@@ -67,42 +52,45 @@ Private Const ModuleName                            As String = "TimeframeUtils"
 ' Properties
 '@================================================================================
 
+Public Property Get Logger() As FormattingLogger
+Static sLogger As FormattingLogger
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("timeframeutils", ProjectName)
+Set Logger = sLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function CreateTimeframes( _
-                ByVal pStudyBase As IStudyBase, _
-                Optional ByVal pContractFuture As IFuture, _
-                Optional ByVal pHistDataStore As IHistoricalDataStore, _
-                Optional ByVal pClockFuture As IFuture, _
-                Optional ByVal pBarType As BarTypes = BarTypeTrade) As Timeframes
-Const ProcName As String = "CreateTimeframes"
-On Error GoTo Err
+Public Sub HandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-If Not pHistDataStore Is Nothing Then
-    Select Case pBarType
-    Case BarTypeTrade
-        AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityFetchTradeBars), "Cannot fetch historical trade bars"
-    Case BarTypeBid, BarTypeAsk
-        AssertArgument pHistDataStore.Supports(HistDataStoreCapabilityFetchBidAndAskBars), "Cannot fetch historical bid and ask bars"
-    Case Else
-        AssertArgument False, "Invalid bar type"
-    End Select
-End If
+TWUtilities.HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
 
-Set CreateTimeframes = GTimeframeUtils.CreateTimeframes( _
-                                        pStudyBase, _
-                                        pContractFuture, _
-                                        pHistDataStore, _
-                                        pClockFuture, _
-                                        pBarType)
+Public Sub NotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-Exit Function
-
-Err:
-GTimeframes.HandleUnexpectedError ProcName, ModuleName
-End Function
+TWUtilities.UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
 
 '@================================================================================
 ' Helper Functions
