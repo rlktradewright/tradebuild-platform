@@ -116,7 +116,7 @@ mNotifyName = mNotifyNames(0)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

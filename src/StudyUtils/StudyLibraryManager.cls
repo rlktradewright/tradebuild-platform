@@ -85,7 +85,7 @@ mMaxLibIndex = -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -122,7 +122,7 @@ Set AddBuiltInStudyLibrary = AddStudyLibrary( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function AddStudyLibrary( _
@@ -144,7 +144,7 @@ If pAddToConfig Then addConfigEntry progId, enabled, Name
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudy( _
@@ -174,7 +174,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyManager( _
@@ -197,7 +197,7 @@ Set CreateStudyManager = lStudyManager
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyManagerWithSessionFuture( _
@@ -214,7 +214,7 @@ Set CreateStudyManagerWithSessionFuture = lStudyManager.InitialiseWithSessionFut
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetAvailableStudies() As StudyListEntry()
@@ -255,7 +255,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetStudyDefaultParameters( _
@@ -285,7 +285,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetStudyDefinition( _
@@ -315,7 +315,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub LoadStudyLibraryConfiguration( _
@@ -333,7 +333,7 @@ loadStudyLibs
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStudyLibrary( _
@@ -355,7 +355,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveAllStudyLibraries( _
@@ -371,7 +371,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function SetStudyDefaultParameters( _
@@ -402,7 +402,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -443,7 +443,7 @@ studyLib.Initialise Me, mMaxLibIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub addConfigEntry( _
@@ -464,7 +464,7 @@ sl.SetAttribute AttributeNameStudyLibraryProgId, progId
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub failIfNoLibs()
@@ -507,7 +507,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub removeAtIndex( _
@@ -532,6 +532,6 @@ mStudyLibraries(i).Name = ""
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

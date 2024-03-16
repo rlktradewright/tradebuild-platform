@@ -66,7 +66,7 @@ Set IStudyBase_BaseStudy = mStudyInputHandler
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IStudyBase_StudyManager() As StudyManager
@@ -78,7 +78,7 @@ Set IStudyBase_StudyManager = mStudyManager
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

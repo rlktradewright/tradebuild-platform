@@ -117,7 +117,7 @@ mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyBarNumber(pBarNumber As Long, ByVal pTimestamp As Date)
@@ -129,7 +129,7 @@ mStudyManager.NotifyInput mInputHandleBarNumber, pBarNumber, pTimestamp
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyValue(pValue As Double, ByVal pTimestamp As Date)
@@ -141,7 +141,7 @@ mStudyManager.NotifyInput mInputHandleValue, pValue, pTimestamp
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

@@ -83,20 +83,20 @@ End Property
 '@================================================================================
 
 Public Function Add( _
-                ByVal valueName As String) As StudyValueDefinition
+                ByVal ValueName As String) As StudyValueDefinition
 Const ProcName As String = "Add"
 On Error GoTo Err
 
 Set Add = New StudyValueDefinition
-Add.Name = valueName
+Add.Name = ValueName
 Add.ValueMode = ValueModeNone
 Add.ValueType = ValueTypeReal
-mStudyValueDefinitions.Add Add, valueName
+mStudyValueDefinitions.Add Add, ValueName
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyValueDefinition
@@ -109,7 +109,7 @@ Set Item = mStudyValueDefinitions(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -123,7 +123,7 @@ Set NewEnum = mStudyValueDefinitions.[_NewEnum]
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

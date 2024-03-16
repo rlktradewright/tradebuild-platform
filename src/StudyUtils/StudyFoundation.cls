@@ -112,7 +112,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -132,7 +132,7 @@ BarNumber = mBarNumber
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Id() As String
@@ -144,7 +144,7 @@ Id = mIdent
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InputValueNames() As String()
@@ -162,7 +162,7 @@ InstanceName = mShortName & "(" & _
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstancePath() As String
@@ -177,7 +177,7 @@ InstancePath = mShortName & "(" & _
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsNewBar() As Boolean
@@ -189,7 +189,7 @@ IsNewBar = mIsNewBar
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LibraryName() As String
@@ -205,7 +205,7 @@ LocalBarNumber = mLocalBarNumber
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
@@ -221,7 +221,7 @@ Set Parameters = mParams.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ReplayUsingStudyValues( _
@@ -234,7 +234,7 @@ mReplayUsingStudyValues = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Session() As Session
@@ -344,7 +344,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function AddStudyValueListener( _
@@ -397,7 +397,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FindValueCache( _
@@ -421,7 +421,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetStudyValue( _
@@ -435,7 +435,7 @@ GetStudyValue = FindValueCache(ValueName).GetSValue(ref)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Initialise( _
@@ -477,7 +477,7 @@ Set mSession = pSession
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -498,7 +498,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 Public Sub NotifyValue( _
@@ -513,7 +513,7 @@ mListeners.Notify ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 Public Function NumberOfBarsRequired( _
@@ -532,7 +532,7 @@ NumberOfBarsRequired = IIf(studyNeeds > superiorStudiesNeeds, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NumberOfCachedValues( _
@@ -554,7 +554,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub RemoveStudyValueListener( _
@@ -567,7 +567,7 @@ mListeners.Remove listener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -641,7 +641,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub createValueCaches( _
@@ -665,7 +665,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ParamsToString() As String
@@ -691,7 +691,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function replayCacheValues( _
@@ -726,7 +726,7 @@ Set replayCacheValues = StartTask( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function Study() As IStudy
@@ -738,6 +738,6 @@ Set Study = mStudyRef.Target
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 

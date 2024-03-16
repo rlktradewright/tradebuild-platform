@@ -83,7 +83,7 @@ Count = mStudyParameterDefinitions.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -103,7 +103,7 @@ mStudyParameterDefinitions.Add Add, paramName
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(ByVal index As Variant) As StudyParameterDefinition
@@ -115,7 +115,7 @@ Set Item = mStudyParameterDefinitions(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -129,7 +129,7 @@ Set NewEnum = mStudyParameterDefinitions.[_NewEnum]
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

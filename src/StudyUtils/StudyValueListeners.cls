@@ -88,7 +88,7 @@ mNextListenerTableIndex = mNextListenerTableIndex + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Notify( _
@@ -117,7 +117,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Remove( _
@@ -139,7 +139,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

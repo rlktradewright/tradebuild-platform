@@ -125,103 +125,103 @@ End Type
 '@================================================================================
 
 Public Property Get BuiltInStudyLibraryName() As String
-BuiltInStudyLibraryName = BuiltInStudyLibName
+BuiltInStudyLibraryName = GStudyUtils.BuiltInStudyLibraryName
 End Property
 
 Public Property Get BuiltInStudyLibraryProgId() As String
-BuiltInStudyLibraryProgId = BuiltInStudyLibProgId
+BuiltInStudyLibraryProgId = GStudyUtils.BuiltInStudyLibraryProgId
 End Property
 
 Public Property Get ConstMomentumBarsParamTicksPerBar() As String
-ConstMomentumBarsParamTicksPerBar = Globals.ConstMomentumBarsParamTicksPerBar
+ConstMomentumBarsParamTicksPerBar = GStudyUtils.ConstMomentumBarsParamTicksPerBar
 End Property
 
 Public Property Get ConstMomentumBarsStudyName() As String
-ConstMomentumBarsStudyName = Globals.ConstMomentumBarsStudyName
+ConstMomentumBarsStudyName = GStudyUtils.ConstMomentumBarsStudyName
 End Property
 
 Public Property Get ConstMomentumBarsStudyShortName() As String
-ConstMomentumBarsStudyShortName = Globals.ConstMomentumBarsStudyShortName
+ConstMomentumBarsStudyShortName = GStudyUtils.ConstMomentumBarsStudyShortName
 End Property
 
 Public Property Get ConstTickVolumeBarsParamTicksPerBar() As String
-ConstTickVolumeBarsParamTicksPerBar = Globals.ConstTickVolumeBarsParamTicksPerBar
+ConstTickVolumeBarsParamTicksPerBar = GStudyUtils.ConstTickVolumeBarsParamTicksPerBar
 End Property
 
 Public Property Get ConstTickVolumeBarsStudyName() As String
-ConstTickVolumeBarsStudyName = Globals.ConstTickVolumeBarsStudyName
+ConstTickVolumeBarsStudyName = GStudyUtils.ConstTickVolumeBarsStudyName
 End Property
 
 Public Property Get ConstTickVolumeBarsStudyShortName() As String
-ConstTickVolumeBarsStudyShortName = Globals.ConstTickVolumeBarsStudyShortName
+ConstTickVolumeBarsStudyShortName = GStudyUtils.ConstTickVolumeBarsStudyShortName
 End Property
 
 Public Property Get ConstTimeBarsParamBarLength() As String
-ConstTimeBarsParamBarLength = Globals.ConstTimeBarsParamBarLength
+ConstTimeBarsParamBarLength = GStudyUtils.ConstTimeBarsParamBarLength
 End Property
 
 Public Property Get ConstTimeBarsParamTimeUnits() As String
-ConstTimeBarsParamTimeUnits = Globals.ConstTimeBarsParamTimeUnits
+ConstTimeBarsParamTimeUnits = GStudyUtils.ConstTimeBarsParamTimeUnits
 End Property
 
 Public Property Get ConstTimeBarsStudyName() As String
-ConstTimeBarsStudyName = Globals.ConstTimeBarsStudyName
+ConstTimeBarsStudyName = GStudyUtils.ConstTimeBarsStudyName
 End Property
 
 Public Property Get ConstTimeBarsStudyShortName() As String
-ConstTimeBarsStudyShortName = Globals.ConstTimeBarsStudyShortName
+ConstTimeBarsStudyShortName = GStudyUtils.ConstTimeBarsStudyShortName
 End Property
 
 Public Property Get ConstVolumeBarsParamVolPerBar() As String
-ConstVolumeBarsParamVolPerBar = Globals.ConstVolumeBarsParamVolPerBar
+ConstVolumeBarsParamVolPerBar = GStudyUtils.ConstVolumeBarsParamVolPerBar
 End Property
 
 Public Property Get ConstVolumeBarsStudyShortName() As String
-ConstVolumeBarsStudyShortName = Globals.ConstVolumeBarsStudyShortName
+ConstVolumeBarsStudyShortName = GStudyUtils.ConstVolumeBarsStudyShortName
 End Property
 
 Public Property Get ConstVolumeBarsStudyName() As String
-ConstVolumeBarsStudyName = Globals.ConstVolumeBarsStudyName
+ConstVolumeBarsStudyName = GStudyUtils.ConstVolumeBarsStudyName
 End Property
 
 Public Property Get InputNameAsk() As String
-InputNameAsk = Globals.AskInputName
+InputNameAsk = GStudyUtils.InputNameAsk
 End Property
 
 Public Property Get InputNameBarNumber() As String
-InputNameBarNumber = Globals.BarNumberInputName
+InputNameBarNumber = GStudyUtils.InputNameBarNumber
 End Property
 
 Public Property Get InputNameBid() As String
-InputNameBid = Globals.BidInputName
+InputNameBid = GStudyUtils.InputNameBid
 End Property
 
 Public Property Get InputNameOpenInterest() As String
-InputNameOpenInterest = Globals.OpenInterestInputName
+InputNameOpenInterest = GStudyUtils.InputNameOpenInterest
 End Property
 
 Public Property Get InputNameTickVolume() As String
-InputNameTickVolume = Globals.TickVolumeInputName
+InputNameTickVolume = GStudyUtils.InputNameTickVolume
 End Property
 
 Public Property Get InputNameTrade() As String
-InputNameTrade = Globals.TradeInputName
+InputNameTrade = GStudyUtils.InputNameTrade
 End Property
 
 Public Property Get InputNameValue() As String
-InputNameValue = Globals.ValueInputName
+InputNameValue = GStudyUtils.InputNameValue
 End Property
 
 Public Property Get InputNameVolume() As String
-InputNameVolume = Globals.VolumeInputName
+InputNameVolume = GStudyUtils.InputNameVolume
 End Property
 
 Public Property Get UserDefinedBarsStudyName() As String
-UserDefinedBarsStudyName = Globals.UserDefinedBarsStudyName
+UserDefinedBarsStudyName = GStudyUtils.UserDefinedBarsStudyName
 End Property
 
 Public Property Get UserDefinedBarsStudyShortName() As String
-UserDefinedBarsStudyShortName = Globals.UserDefinedBarsStudyShortName
+UserDefinedBarsStudyShortName = GStudyUtils.UserDefinedBarsStudyShortName
 End Property
 
 '@================================================================================
@@ -229,47 +229,47 @@ End Property
 '@================================================================================
 
 Public Function BarStudyValueBar() As String
-BarStudyValueBar = Globals.BarStudyValueBar
+BarStudyValueBar = GStudyUtils.BarStudyValueBar
 End Function
 
 Public Function BarStudyValueOpen() As String
-BarStudyValueOpen = Globals.BarStudyValueOpen
+BarStudyValueOpen = GStudyUtils.BarStudyValueOpen
 End Function
 
 Public Function BarStudyValueHigh() As String
-BarStudyValueHigh = Globals.BarStudyValueHigh
+BarStudyValueHigh = GStudyUtils.BarStudyValueHigh
 End Function
 
 Public Function BarStudyValueLow() As String
-BarStudyValueLow = Globals.BarStudyValueLow
+BarStudyValueLow = GStudyUtils.BarStudyValueLow
 End Function
 
 Public Function BarStudyValueClose() As String
-BarStudyValueClose = Globals.BarStudyValueClose
+BarStudyValueClose = GStudyUtils.BarStudyValueClose
 End Function
 
 Public Function BarStudyValueVolume() As String
-BarStudyValueVolume = Globals.BarStudyValueVolume
+BarStudyValueVolume = GStudyUtils.BarStudyValueVolume
 End Function
 
 Public Function BarStudyValueTickVolume() As String
-BarStudyValueTickVolume = Globals.BarStudyValueTickVolume
+BarStudyValueTickVolume = GStudyUtils.BarStudyValueTickVolume
 End Function
 
 Public Function BarStudyValueOpenInterest() As String
-BarStudyValueOpenInterest = Globals.BarStudyValueOpenInterest
+BarStudyValueOpenInterest = GStudyUtils.BarStudyValueOpenInterest
 End Function
 
 Public Function BarStudyValueHL2() As String
-BarStudyValueHL2 = Globals.BarStudyValueHL2
+BarStudyValueHL2 = GStudyUtils.BarStudyValueHL2
 End Function
 
 Public Function BarStudyValueHLC3() As String
-BarStudyValueHLC3 = Globals.BarStudyValueHLC3
+BarStudyValueHLC3 = GStudyUtils.BarStudyValueHLC3
 End Function
 
 Public Function BarStudyValueOHLC4() As String
-BarStudyValueOHLC4 = Globals.BarStudyValueOHLC4
+BarStudyValueOHLC4 = GStudyUtils.BarStudyValueOHLC4
 End Function
 
 Public Function CreateBarStudy( _
@@ -281,33 +281,17 @@ Public Function CreateBarStudy( _
 Const ProcName As String = "CreateBarStudy"
 On Error GoTo Err
 
-AssertArgument pAllowInitialBars Or pInitialBarsFuture Is Nothing, "Either pAllowInitialBars must be true or pInitialBarsFuture must be Nothing"
-
-If pTimePeriod.Units = TimePeriodNone Or pTimePeriod.Length = 0 Then
-    Set CreateBarStudy = setupUserDefinedBarsStudy(pAllowInitialBars, pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
-Else
-    Select Case pTimePeriod.Units
-    Case TimePeriodSecond, _
-            TimePeriodMinute, _
-            TimePeriodHour, _
-            TimePeriodDay, _
-            TimePeriodWeek, _
-            TimePeriodMonth, _
-            TimePeriodYear
-        Set CreateBarStudy = setupConstantTimeBarsStudy(pAllowInitialBars, pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
-    Case TimePeriodTickMovement
-        Set CreateBarStudy = setupConstantMomentumBarsStudy(pAllowInitialBars, pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
-    Case TimePeriodTickVolume
-        Set CreateBarStudy = setupConstantTickVolumeBarsStudy(pAllowInitialBars, pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
-    Case TimePeriodVolume
-        Set CreateBarStudy = setupConstantVolumeBarsStudy(pAllowInitialBars, pTimePeriod, pStudyBase, pInitialBarsFuture, pIncludeDataOutsideSession)
-    End Select
-End If
+Set CreateBarStudy = GStudyUtils.CreateBarStudy( _
+                                    pAllowInitialBars, _
+                                    pTimePeriod, _
+                                    pStudyBase, _
+                                    pIncludeDataOutsideSession, _
+                                    pInitialBarsFuture)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBarStudySupport( _
@@ -317,13 +301,12 @@ Public Function CreateBarStudySupport( _
 Const ProcName As String = "CreateBarStudySupport"
 On Error GoTo Err
 
-Set CreateBarStudySupport = New BarStudySupport
-CreateBarStudySupport.Initialise pTimePeriod, pSession, pPriceTickSize
+Set CreateBarStudySupport = GStudyUtils.CreateBarStudySupport(pTimePeriod, pSession, pPriceTickSize)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateCacheReplayTask( _
@@ -336,18 +319,17 @@ Public Function CreateCacheReplayTask( _
 Const ProcName As String = "CreateCacheReplayTask"
 On Error GoTo Err
 
-Set CreateCacheReplayTask = New CacheReplayTask
-CreateCacheReplayTask.Initialise pStudyManager, _
+Set CreateCacheReplayTask = GStudyUtils.CreateCacheReplayTask(pStudyManager, _
                             pValueCache, _
                             pTarget, _
                             pSourceStudy, _
                             pNumberOfValuesToReplay, _
-                            pDiscriminator
+                            pDiscriminator)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyBaseForDoubleInput( _
@@ -357,18 +339,15 @@ Public Function CreateStudyBaseForDoubleInput( _
 Const ProcName As String = "CreateStudyBaseForDoubleInput"
 On Error GoTo Err
 
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument pQuantum >= 0, "pQuantum is negative"
-
-Dim lStudyBase As New StudyBaseForDoubleInput
-lStudyBase.Initialise pStudyManager, pQuantum, pName
-
-Set CreateStudyBaseForDoubleInput = lStudyBase
+Set CreateStudyBaseForDoubleInput = GStudyUtils.CreateStudyBaseForDoubleInput( _
+                                                pStudyManager, _
+                                                pQuantum, _
+                                                pName)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyBaseForIntegerInput( _
@@ -377,17 +356,14 @@ Public Function CreateStudyBaseForIntegerInput( _
 Const ProcName As String = "CreateStudyBaseForIntegerInput"
 On Error GoTo Err
 
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-
-Dim lStudyBase As New StudyBaseForIntegerInput
-lStudyBase.Initialise pStudyManager, pName
-
-Set CreateStudyBaseForIntegerInput = lStudyBase
+Set CreateStudyBaseForIntegerInput = GStudyUtils.CreateStudyBaseForIntegerInput( _
+                                                pStudyManager, _
+                                                pName)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyBaseForNullInput( _
@@ -396,17 +372,14 @@ Public Function CreateStudyBaseForNullInput( _
 Const ProcName As String = "CreateStudyBaseForNullInput"
 On Error GoTo Err
 
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-
-Dim lStudyBase As New StudyBaseForNullInput
-lStudyBase.Initialise pStudyManager, pName
-
-Set CreateStudyBaseForNullInput = lStudyBase
+Set CreateStudyBaseForNullInput = GStudyUtils.CreateStudyBaseForNullInput( _
+                                                pStudyManager, _
+                                                pName)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyBaseForTickDataInput( _
@@ -416,20 +389,15 @@ Public Function CreateStudyBaseForTickDataInput( _
 Const ProcName As String = "CreateStudyBaseForTickDataInput"
 On Error GoTo Err
 
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument Not pContractFuture Is Nothing, "pContractFuture Is Nothing"
-
-Dim lStudyBase As New StudyBaseForTickDataInput
-lStudyBase.Initialise pStudyManager, pContractFuture
-
-If Not pTickSource Is Nothing Then pTickSource.AddGenericTickListener lStudyBase
-
-Set CreateStudyBaseForTickDataInput = lStudyBase
+Set CreateStudyBaseForTickDataInput = GStudyUtils.CreateStudyBaseForTickDataInput( _
+                                                pStudyManager, _
+                                                pTickSource, _
+                                                pContractFuture)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyBaseForTickDataInputWithContract( _
@@ -439,20 +407,15 @@ Public Function CreateStudyBaseForTickDataInputWithContract( _
 Const ProcName As String = "CreateStudyBaseForTickDataInputWithContract"
 On Error GoTo Err
 
-AssertArgument Not pStudyManager Is Nothing, "pStudyManager Is Nothing"
-AssertArgument Not pContract Is Nothing, "pContract Is Nothing"
-
-Dim lStudyBase As New StudyBaseForTickDataInput
-lStudyBase.InitialiseWithContract pStudyManager, pContract
-
-If Not pTickSource Is Nothing Then pTickSource.AddGenericTickListener lStudyBase
-
-Set CreateStudyBaseForTickDataInputWithContract = lStudyBase
+Set CreateStudyBaseForTickDataInputWithContract = GStudyUtils.CreateStudyBaseForTickDataInputWithContract( _
+                                                pStudyManager, _
+                                                pTickSource, _
+                                                pContract)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyPoint( _
@@ -461,38 +424,36 @@ Public Function CreateStudyPoint( _
 Const ProcName As String = "CreateStudyPoint"
 On Error GoTo Err
 
-Set CreateStudyPoint = New StudyPoint
-CreateStudyPoint.X = X
-CreateStudyPoint.Y = Y
+Set CreateStudyPoint = GStudyUtils.CreateStudyPoint(X, Y)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DefaultStudyValueName() As String
 Const ProcName As String = "DefaultStudyValueName"
 On Error GoTo Err
 
-DefaultStudyValueName = DefaultStudyValueNameStr
+DefaultStudyValueName = GStudyUtils.DefaultStudyValueName
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function MovingAverageStudyValueName() As String
 Const ProcName As String = "MovingAverageStudyValueName"
 On Error GoTo Err
 
-MovingAverageStudyValueName = MovingAverageStudyValueNameStr
+MovingAverageStudyValueName = GStudyUtils.MovingAverageStudyValueName
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub SetDefaultStudyLibraryConfig( _
@@ -500,169 +461,15 @@ Public Sub SetDefaultStudyLibraryConfig( _
 Const ProcName As String = "SetDefaultStudyLibraryConfig"
 On Error GoTo Err
 
-Dim currSLsList As ConfigurationSection
-Dim currSL As ConfigurationSection
-
-Set currSLsList = configdata.AddConfigurationSection(ConfigNameStudyLibraries)
-
-Set currSLsList = configdata.AddConfigurationSection(ConfigNameStudyLibraries, , StudyLibrariesRenderer)
-
-Set currSL = currSLsList.AddConfigurationSection(ConfigNameStudyLibrary & "(" & BuiltInStudyLibraryName & ")")
-
-currSL.SetAttribute AttributeNameEnabled, "True"
-currSL.SetAttribute AttributeNameStudyLibraryBuiltIn, "True"
+GStudyUtils.SetDefaultStudyLibraryConfig configdata
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function setupBarStudy( _
-                ByVal pAllowInitialBars As Boolean, _
-                ByVal pStudyName As String, _
-                ByVal pStudyBase As IStudyBase, _
-                ByVal pParams As Parameters, _
-                ByVal pInitialBarsFuture As IFuture, _
-                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
-Const ProcName As String = "setupBarStudy"
-On Error GoTo Err
-
-If pStudyName = UserDefinedBarsStudyName Then
-    ReDim InputValueNames(4) As String
-    InputValueNames(0) = DefaultStudyValueName
-    InputValueNames(1) = InputNameVolume
-    InputValueNames(2) = InputNameTickVolume
-    InputValueNames(3) = InputNameOpenInterest
-    InputValueNames(4) = InputNameBarNumber
-Else
-    ReDim InputValueNames(3) As String
-    InputValueNames(0) = DefaultStudyValueName
-    InputValueNames(1) = InputNameVolume
-    InputValueNames(2) = InputNameTickVolume
-    InputValueNames(3) = InputNameOpenInterest
-End If
-
-gLogger.Log "Adding study: " & pStudyName & " to " & pStudyBase.BaseStudy.Name, ProcName, ModuleName, LogLevelHighDetail
-Dim lBarStudy As IBarStudy
-Set lBarStudy = pStudyBase.StudyManager.AddStudy(pStudyName, _
-                                        pStudyBase.BaseStudy, _
-                                        InputValueNames, _
-                                        pIncludeDataOutsideSession, _
-                                        pParams)
-lBarStudy.AllowInitialBars = pAllowInitialBars
-If Not pInitialBarsFuture Is Nothing Then lBarStudy.InitialBarsFuture = pInitialBarsFuture
-Set setupBarStudy = lBarStudy
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function setupConstantMomentumBarsStudy( _
-                ByVal pAllowInitialBars As Boolean, _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pStudyBase As IStudyBase, _
-                ByVal pInitialBarsFuture As IFuture, _
-                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
-Const ProcName As String = "setupConstantMomentumBarsStudy"
-On Error GoTo Err
-
-Dim lParams As New Parameters
-lParams.SetParameterValue ConstMomentumBarsParamTicksPerBar, pTimePeriod.Length
-
-Set setupConstantMomentumBarsStudy = setupBarStudy(pAllowInitialBars, ConstMomentumBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function setupConstantTickVolumeBarsStudy( _
-                ByVal pAllowInitialBars As Boolean, _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pStudyBase As IStudyBase, _
-                ByVal pInitialBarsFuture As IFuture, _
-                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
-Const ProcName As String = "setupConstantTickVolumeBarsStudy"
-On Error GoTo Err
-
-Dim lParams As New Parameters
-lParams.SetParameterValue ConstTickVolumeBarsParamTicksPerBar, pTimePeriod.Length
-
-Set setupConstantTickVolumeBarsStudy = setupBarStudy(pAllowInitialBars, ConstTickVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function setupConstantTimeBarsStudy( _
-                ByVal pAllowInitialBars As Boolean, _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pStudyBase As IStudyBase, _
-                ByVal pInitialBarsFuture As IFuture, _
-                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
-Const ProcName As String = "setupConstantTimeBarsStudy"
-On Error GoTo Err
-
-Dim lParams As New Parameters
-lParams.SetParameterValue ConstTimeBarsParamBarLength, pTimePeriod.Length
-lParams.SetParameterValue ConstTimeBarsParamTimeUnits, _
-                        TimePeriodUnitsToString(pTimePeriod.Units)
-
-Set setupConstantTimeBarsStudy = setupBarStudy(pAllowInitialBars, ConstTimeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function setupConstantVolumeBarsStudy( _
-                ByVal pAllowInitialBars As Boolean, _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pStudyBase As IStudyBase, _
-                ByVal pInitialBarsFuture As IFuture, _
-                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
-Const ProcName As String = "setupConstantVolumeBarsStudy"
-On Error GoTo Err
-
-Dim lParams As New Parameters
-lParams.SetParameterValue ConstVolumeBarsParamVolPerBar, pTimePeriod.Length
-
-Set setupConstantVolumeBarsStudy = setupBarStudy(pAllowInitialBars, ConstVolumeBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
-Private Function setupUserDefinedBarsStudy( _
-                ByVal pAllowInitialBars As Boolean, _
-                ByVal pTimePeriod As TimePeriod, _
-                ByVal pStudyBase As IStudyBase, _
-                ByVal pInitialBarsFuture As IFuture, _
-                ByVal pIncludeDataOutsideSession As Boolean) As IBarStudy
-Const ProcName As String = "setupUserDefinedBarsStudy"
-On Error GoTo Err
-
-Dim lParams As New Parameters
-
-Set setupUserDefinedBarsStudy = setupBarStudy(pAllowInitialBars, UserDefinedBarsStudyName, pStudyBase, lParams, pInitialBarsFuture, pIncludeDataOutsideSession)
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
-
 

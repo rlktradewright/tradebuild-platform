@@ -76,7 +76,7 @@ mStudyLine.Point1 = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Point2(ByVal Value As StudyPoint)
@@ -88,7 +88,7 @@ mStudyLine.Point2 = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyLine() As StudyLine
@@ -100,7 +100,7 @@ Set StudyLine = mStudyLine
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

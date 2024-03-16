@@ -84,7 +84,7 @@ NotifyTick ev.Tick
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -121,7 +121,7 @@ mStudyManager.SetInputTicksize mInputHandleTrade, lContract.TickSize
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -158,7 +158,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub InitialiseWithContract( _
@@ -172,7 +172,7 @@ init pStudyManager, pContract.Specifier.ToString, pContract.TickSize
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyBarNumber(pBarNumber As Long, ByVal pTimestamp As Date)
@@ -184,7 +184,7 @@ mStudyManager.NotifyInput mInputHandleBarNumber, pBarNumber, pTimestamp
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyTick(pTick As GenericTick)
@@ -209,7 +209,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -275,7 +275,7 @@ mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -290,7 +290,7 @@ mFutureWaiter.Add pFuture
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

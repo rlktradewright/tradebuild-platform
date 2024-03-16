@@ -78,7 +78,7 @@ Set mTickSizes = New Collection
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -99,7 +99,7 @@ mStudies.Add pStudy, ValueNames
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IStudy_AddStudyValueListener( _
@@ -116,7 +116,7 @@ mListeners.Add listener, ValueName
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IStudy_BaseStudy() As IStudy
@@ -128,7 +128,7 @@ Set IStudy_BaseStudy = Me
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IStudy_GetStudyValue( _
@@ -143,7 +143,7 @@ On Error GoTo Err
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IStudy_GetValueTicksize( _
@@ -157,7 +157,7 @@ IStudy_GetValueTicksize = mTickSizes(ValueName)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IStudy_Id() As String
@@ -169,7 +169,7 @@ IStudy_Id = mIdent
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_Initialise( _
@@ -183,7 +183,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IStudy_InstanceName() As String
@@ -195,7 +195,7 @@ IStudy_InstanceName = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IStudy_InstancePath() As String
@@ -207,7 +207,7 @@ IStudy_InstancePath = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IStudy_LibraryName() As String
@@ -231,7 +231,7 @@ mListeners.Notify ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IStudy_NumberOfBarsRequired() As Long
@@ -244,7 +244,7 @@ On Error GoTo Err
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IStudy_NumberOfCachedValues( _
@@ -258,7 +258,7 @@ On Error GoTo Err
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IStudy_Parameters() As Parameters
@@ -271,7 +271,7 @@ On Error GoTo Err
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IStudy_RemoveStudyValueListener( _
@@ -284,7 +284,7 @@ mListeners.Remove listener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IStudy_SetInputTicksize(ByVal InputName As String, ByVal TickSize As Double)
@@ -296,7 +296,7 @@ SetInputTicksize InputName, TickSize
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IStudy_studyDefinition() As StudyDefinition
@@ -309,7 +309,7 @@ Set IStudy_studyDefinition = mStudyDef.Clone
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 
 End Property
 
@@ -343,7 +343,7 @@ Timestamp = mTimestamp
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -389,7 +389,7 @@ If IsDefault Then mTickSizes.Add TickSize, DefaultStudyValueNameStr
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -404,7 +404,7 @@ mStudyDef.Name = mName
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetInputTicksize( _
@@ -425,7 +425,7 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
     mTickSizes.Remove Name
     Resume
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

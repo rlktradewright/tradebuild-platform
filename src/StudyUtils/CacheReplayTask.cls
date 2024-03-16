@@ -180,7 +180,7 @@ If mValuesNotified Mod 20 = 0 Then
 End If
 
 If mNextValueNumber > mValueCache.Count Then
-    gLogger.Log "Study (" & mSourceStudy.Id & ") " & mSourceStudy.InstanceName & _
+    GStudies.Logger.Log "Study (" & mSourceStudy.Id & ") " & mSourceStudy.InstanceName & _
                 " replayed " & mValuesNotified & " values for " & mValueName, _
                 ProcName, ModuleName, LogLevelHighDetail
     mTaskContext.Progress 100, Empty
@@ -191,7 +191,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
@@ -282,14 +282,14 @@ End If
 mNextValueNumber = mValueCache.Count - numValuesToNotify + 1
 mFirstValueNumber = mNextValueNumber
 
-gLogger.Log "Study (" & mSourceStudy.Id & ") " & _
+GStudies.Logger.Log "Study (" & mSourceStudy.Id & ") " & _
             mSourceStudy.InstanceName & _
             " replaying  values for " & mValueName, ProcName, ModuleName, LogLevelHighDetail
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -308,7 +308,7 @@ Set mTaskContext = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

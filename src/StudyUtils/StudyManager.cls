@@ -92,7 +92,7 @@ Set mFutureWaiter = New FutureWaiter
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub Class_Terminate()
@@ -111,16 +111,16 @@ Next
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' ITaskCompletionListener Interface Members
 '@================================================================================
 
-Private Sub ITaskCompletionListener_taskCompleted( _
+Private Sub ITaskCompletionListener_TaskCompleted( _
                 ev As TaskCompletionEventData)
-Const ProcName As String = "ITaskCompletionListener_taskCompleted"
+Const ProcName As String = "ITaskCompletionListener_TaskCompleted"
 On Error GoTo Err
 
 Dim result As ValueReplayResult
@@ -138,7 +138,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -152,7 +152,7 @@ On Error GoTo Err
 If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is Session Then
-    gLogger.Log "Got session", ProcName, ModuleName, LogLevelHighDetail
+    GStudies.Logger.Log "Got session", ProcName, ModuleName, LogLevelHighDetail
     Set mSession = ev.Future.Value
     mFutureBuilder.Value = Me
     mFutureBuilder.Complete
@@ -162,7 +162,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -216,7 +216,7 @@ mNextInputIndex = mNextInputIndex + 1
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function AddStudy(ByVal Name As String, _
@@ -314,7 +314,7 @@ Set AddStudy = lStudy
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStudyInputHandler( _
@@ -346,7 +346,7 @@ If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
     mStudyInputHandlers.Remove lStudy.Id
     Resume
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetInputDescriptor( _
@@ -359,7 +359,7 @@ GetInputDescriptor = mInputs(inputHandle)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetStudyEntry(ByVal pStudy As IStudy) As StudyTableEntry
@@ -371,7 +371,7 @@ Set GetStudyEntry = mStudiesCollection(pStudy.Id)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetUnderlyingStudy( _
@@ -387,7 +387,7 @@ Set GetUnderlyingStudy = se.Study
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -409,7 +409,7 @@ Set mSession = mSessionBuilder.Session
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function InitialiseWithSessionFuture( _
@@ -433,7 +433,7 @@ Set InitialiseWithSessionFuture = mFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 ' pTimestamp must be in exchange timezone
@@ -470,7 +470,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetInputTicksize( _
@@ -485,7 +485,7 @@ mInputs(pInputHandle).StudyInputHandler.SetInputTicksize mInputs(pInputHandle).I
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function StartStudy( _
@@ -522,7 +522,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -564,7 +564,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub linkSession( _
@@ -577,7 +577,7 @@ mSession.LinkToSession GetStudyEntry(pStudy).SessionBuilder.Session
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function stringArraysEqual( _
@@ -600,6 +600,6 @@ stringArraysEqual = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 

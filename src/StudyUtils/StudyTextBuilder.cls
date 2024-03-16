@@ -76,7 +76,7 @@ mStudyText.Position = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Text(ByVal Value As String)
@@ -88,7 +88,7 @@ mStudyText.Text = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyText() As StudyText
@@ -100,7 +100,7 @@ Set StudyText = mStudyText
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================

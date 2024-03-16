@@ -99,7 +99,7 @@ RaiseEvent InitialBarsLoaded
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mBarFetchListener_NotifyBar(ByVal pCookie As Variant, ByVal pBar As Bar)
@@ -112,7 +112,7 @@ mTimestamp = pBar.Timestamp
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -128,7 +128,7 @@ If ev.Future.IsAvailable Then setupBars ev.Future.Value
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -148,7 +148,7 @@ Set BarsFuture = mBarsFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InitialBarFetchListener() As IBarFetchListener
@@ -161,13 +161,13 @@ Assert Not mInitialBarsFutureSupplied, "InitialBarsFuture has been supplied"
 If mBarFetchListener Is Nothing Then Set mBarFetchListener = New BarFetchListener
 Set InitialBarFetchListener = mBarFetchListener
 
-Set mBarsBuilder = CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
+Set mBarsBuilder = GBarUtils.CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
 setupBars mBarsBuilder
 
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let InitialBarsFuture(ByVal Value As IFuture)
@@ -181,17 +181,17 @@ mInitialBarsFutureSupplied = True
 
 Set mBarsFutureBuilder = New FutureBuilder
 If Value.IsAvailable Then
-    gLogger.Log "Creating BarsBuilder with initial bars", ProcName, ModuleName, LogLevelHighDetail
+    GStudies.Logger.Log "Creating BarsBuilder with initial bars", ProcName, ModuleName, LogLevelHighDetail
     setupBars CreateBarsBuilderWithInitialBars(Value.Value, mSession, mPriceTickSize)
 Else
-    gLogger.Log "Creating BarsBuilder future with initial bars", ProcName, ModuleName, LogLevelHighDetail
+    GStudies.Logger.Log "Creating BarsBuilder future with initial bars", ProcName, ModuleName, LogLevelHighDetail
     mFutureWaiter.Add CreateBarsBuilderWithInitialBarsFuture(Value, mSession, mPriceTickSize)
 End If
 
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsReady() As Boolean
@@ -218,7 +218,7 @@ Set mBarsFutureBuilder = New FutureBuilder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Start( _
@@ -243,7 +243,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -266,7 +266,7 @@ RaiseEvent BarsAvailable(mBars)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

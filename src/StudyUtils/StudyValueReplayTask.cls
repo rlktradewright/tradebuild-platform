@@ -164,7 +164,7 @@ If processValue(mNextValueNumber) Then
         mTaskContext.Progress 100 * mValuesNotified / (mSourceStudy.NumberOfCachedValues - mFirstValueNumber + 1), Empty
     End If
 Else
-    gLogger.Log "Study (" & mSourceStudy.Id & ") " & mSourceStudy.InstanceName & _
+    GStudies.Logger.Log "Study (" & mSourceStudy.Id & ") " & mSourceStudy.InstanceName & _
                 " replayed " & mValuesNotified & _
                 " values for " & Join(mReplayValueNames(), ","), _
                 ProcName, ModuleName, LogLevelHighDetail
@@ -176,7 +176,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
@@ -199,7 +199,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GStudies.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -300,7 +300,7 @@ End If
 mNextValueNumber = mSourceStudy.NumberOfCachedValues - numValuesToNotify + 1
 mFirstValueNumber = mNextValueNumber
 
-gLogger.Log "Study (" & mSourceStudy.Id & ") " & _
+GStudies.Logger.Log "Study (" & mSourceStudy.Id & ") " & _
             mSourceStudy.InstanceName & _
             " replaying values for " & Join(mReplayValueNames(), ","), _
             ProcName, ModuleName, LogLevelHighDetail
@@ -308,7 +308,7 @@ gLogger.Log "Study (" & mSourceStudy.Id & ") " & _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -326,7 +326,7 @@ Set mTaskContext = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub NotifyValue(ByRef pValue As SValue, ByVal pNotifyName As String)
@@ -349,7 +349,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processValue(ByVal pValueNumber As Long) As Boolean
@@ -370,7 +370,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

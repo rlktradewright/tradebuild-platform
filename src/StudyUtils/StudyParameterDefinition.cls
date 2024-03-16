@@ -83,7 +83,7 @@ mDescription = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Description() As String
@@ -95,7 +95,7 @@ Description = mDescription
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let MaximumValue(ByVal Value As Variant)
@@ -107,7 +107,7 @@ mMaximumValue = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaximumValue() As Variant
@@ -119,7 +119,7 @@ MaximumValue = mMaximumValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let MinimumValue(ByVal Value As Variant)
@@ -131,7 +131,7 @@ mMinimumValue = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MinimumValue() As Variant
@@ -143,7 +143,7 @@ MinimumValue = mMinimumValue
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let Name(ByVal Value As String)
@@ -155,7 +155,7 @@ mName = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
@@ -167,7 +167,7 @@ Name = mName
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ParameterType(ByVal Value As StudyParameterTypes)
@@ -179,7 +179,7 @@ mParameterType = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ParameterType() As StudyParameterTypes
@@ -191,7 +191,7 @@ ParameterType = mParameterType
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let PermittedValues(ByRef Value() As Variant)
@@ -203,7 +203,7 @@ mPermittedValues = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PermittedValues() As Variant()
@@ -215,7 +215,7 @@ PermittedValues = mPermittedValues
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GStudies.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
