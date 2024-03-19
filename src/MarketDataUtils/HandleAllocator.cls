@@ -66,7 +66,7 @@ mNextFreeHandlesIndex = NullIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

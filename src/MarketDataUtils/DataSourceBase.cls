@@ -142,7 +142,7 @@ initialiseTicks True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -166,7 +166,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -190,14 +190,14 @@ ElseIf mIsSnapshot And _
     Const DelayFuzz As Double = 0.5
     Dim lRandomDelay As Double: lRandomDelay = 2# * DelayFuzz * Rnd(GetTimestamp) - DelayFuzz
     Dim lRestartInterval As Double
-    lRestartInterval = mSnapshotRefreshInterval - (GetTimestampUTC - mLastSnapshotRequestTimeUTC) / OneSecond
+    lRestartInterval = mSnapshotRefreshInterval - (GetTimestampUTC - mLastSnapshotRequestTimeUTC) / GMktDataUtils.OneSecond
     If lRestartInterval < DelayFuzz Then
         lRestartInterval = DelayFuzz + lRandomDelay
     Else
         lRestartInterval = lRestartInterval + lRandomDelay
     End If
     lRestartInterval = lRestartInterval + OneMillisec ' ensure delay is not zero
-    gLogger.Log "Snapshot completed for: " & _
+    GMktData.Logger.Log "Snapshot completed for: " & _
                 mContract.Specifier.ToString & _
                 "; restarting in " & Format(lRestartInterval, "0.000") & " seconds", _
                 ProcName, ModuleName, LogLevelDetail
@@ -210,7 +210,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
@@ -222,7 +222,7 @@ NotifyTick ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -238,7 +238,7 @@ NotifyMarketDataError pErrorCode, pErrorMessage
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataErrorListener_NotifyMarketDepthError(ByVal pStreamId As Long, ByVal pErrorCode As Long, ByVal pErrorMessage As String)
@@ -250,7 +250,7 @@ NotifyMarketDepthError pErrorCode, pErrorMessage
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -270,7 +270,7 @@ NotifyOptionComputation ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -292,7 +292,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GMktData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mSnapshotRefreshTLI_StateChange(ev As StateChangeEventData)
@@ -305,7 +305,7 @@ Set mSnapshotRefreshTLI = Nothing
 initialiseTicks False
 
 mSnapshotRefreshCount = mSnapshotRefreshCount + 1
-gLogger.Log "Restarting snapshot for: " & _
+GMktData.Logger.Log "Restarting snapshot for: " & _
             mContract.Specifier.ToString & _
             "; restart " & mSnapshotRefreshCount, _
             ProcName, ModuleName, LogLevelDetail
@@ -314,7 +314,7 @@ RequestMarketData True
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GMktData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -370,7 +370,7 @@ mDataSources.Add pDataSource
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AddMarketDataSubscription()
@@ -384,7 +384,7 @@ RequestMarketData False
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AddMarketDepthSubscription()
@@ -397,7 +397,7 @@ RequestMarketDepth
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AddPriorityTickListener(ByVal Value As IGenericTickListener)
@@ -409,7 +409,7 @@ mPriorityTickListeners.Add Value
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -430,7 +430,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetCurrentTick(ByVal pTickType As TickTypes) As GenericTick
@@ -481,7 +481,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetCurrentQuote(ByVal pTickType As TickTypes) As Quote
@@ -532,7 +532,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetPriceChange() As PriceChange
@@ -550,7 +550,7 @@ GetPriceChange = lPriceChange
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function HasCurrentTick(ByVal pTickType As TickTypes) As Boolean
@@ -601,7 +601,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -626,7 +626,7 @@ Set mContract = mContractFuture.Value
 If mOptions And MarketDataSourceOptions.MarketDataSourceOptUseFullSession Then
     Set mSessionBuilder = CreateSessionBuilder(mContract.FullSessionStartTime, mContract.FullSessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
 Else
-    Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
+    Set mSessionBuilder = CreateSessionBuilder(mContract.sessionStartTime, mContract.sessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
 End If
 
 Set mVolumeAdjuster = New VolumeAdjuster
@@ -656,7 +656,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener, ByVal pDataSource As MarketDataSource)
@@ -673,7 +673,7 @@ DeferAction Me, lData
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
@@ -690,7 +690,7 @@ DeferAction Me, lData
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processClockFuture(ByVal pClockFuture As IFuture)
@@ -708,7 +708,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveMarketDataSource(ByVal pDataSource As MarketDataSource)
@@ -727,7 +727,7 @@ getDataManager.RemoveMarketDataSource pDataSource
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveMarketDataSubscription()
@@ -740,7 +740,7 @@ CancelMarketData
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveMarketDepthSubscription()
@@ -753,7 +753,7 @@ CancelMarketDepth
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -779,7 +779,7 @@ initialiseTicks True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub CancelMarketDepth()
@@ -797,7 +797,7 @@ mDOMManager.Reset
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doNotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener, ByVal pDataSource As MarketDataSource)
@@ -847,7 +847,7 @@ pListener.Volume ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doNotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener, ByVal pDataSource As MarketDataSource)
@@ -905,7 +905,7 @@ FireTick pListener, mOptionModelUnderlyingPriceTick, pDataSource
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireNoMorePriorityTicks(ByRef ev As GenericTickEventData)
@@ -928,7 +928,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePriorityTick(ByRef ev As GenericTickEventData)
@@ -951,7 +951,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub FireTick(ByVal pListener As IGenericTickListener, ByVal pTick As Tick, ByVal pSource As Object)
@@ -968,7 +968,7 @@ pListener.NotifyTick ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getDataManager() As MarketDataManager
@@ -1008,7 +1008,7 @@ mDataSources.NotifyMarketDataError pErrorCode, pErrorMessage
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub NotifyMarketDepthError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
@@ -1020,7 +1020,7 @@ mDataSources.NotifyMarketDepthError pErrorCode, pErrorMessage
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub NotifyOptionComputation(ByRef ev As OptionComputationEventData)
@@ -1036,7 +1036,7 @@ mDataSources.NotifyOptionComputation ev.Computation
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub NotifyTick(ByRef ev As GenericTickEventData)
@@ -1156,7 +1156,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub RequestMarketData(ByVal pRestartingSnapshot As Boolean)
@@ -1198,7 +1198,7 @@ mDataTickStream.Start
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub RequestMarketDepth()
@@ -1214,7 +1214,7 @@ mDepthTickStream.Start
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updatePriorityOptionComputationListeners()
@@ -1253,7 +1253,7 @@ Case TickTypes.TickTypeAsk, _
         pTick.Operation = DOMDelete Then
         ' price is always zero
     ElseIf Not IsValidPrice(pTick.Price, sPrevValidPrice, mContract.Specifier.SecType, mContract.TickSize) Then
-        gLogger.Log "Invalid price rejected: " & _
+        GMktData.Logger.Log "Invalid price rejected: " & _
                     "tick={" & GenericTickToString(pTick) & "}; " & _
                     "contract={" & mContract.Specifier.ToString & "}", _
                     ProcName, ModuleName
@@ -1267,7 +1267,7 @@ validPrice = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

@@ -163,13 +163,13 @@ mTickfileStreamId = NullIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
 On Error Resume Next
-gLogger.Log "MarketDataSource terminated (" & mKey & ")", ProcName, ModuleName, LogLevelDetail
+GMktData.Logger.Log "MarketDataSource terminated (" & mKey & ")", ProcName, ModuleName, LogLevelDetail
 End Sub
 
 '@================================================================================
@@ -185,7 +185,7 @@ AddGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickSource_RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -197,7 +197,7 @@ RemoveGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -213,7 +213,7 @@ AddErrorListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_AddGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -225,7 +225,7 @@ AddGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_AddMarketDepthListener(ByVal pListener As IMarketDepthListener)
@@ -237,7 +237,7 @@ AddMarketDepthListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -249,7 +249,7 @@ AddOptionComputationListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_AddPriceChangeListener(ByVal pListener As IPriceChangeListener)
@@ -261,7 +261,7 @@ AddPriceChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_AddQuoteListener(ByVal pListener As IQuoteListener)
@@ -273,7 +273,7 @@ AddQuoteListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_AddRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
@@ -285,7 +285,7 @@ AddRawMarketDepthListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -297,7 +297,7 @@ AddStateChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IMarketDataSource_ClockFuture() As IFuture
@@ -317,7 +317,7 @@ IMarketDataSource_CurrentQuote = CurrentQuote(pTickType)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IMarketDataSource_CurrentTick(ByVal pTickType As TickTypes) As GenericTick
@@ -337,7 +337,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IMarketDataSource_Handle() As Long
@@ -349,10 +349,10 @@ IMarketDataSource_Handle = Handle
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
-Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickUtils27.TickTypes) As Boolean
+Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickTypes) As Boolean
 IMarketDataSource_HasCurrentTick = HasCurrentTick(pTickType)
 End Property
 
@@ -385,7 +385,7 @@ NotifyCurrentDOM pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_NotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener)
@@ -397,7 +397,7 @@ NotifyCurrentMarketDataQuoteValues pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_NotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener)
@@ -409,7 +409,7 @@ NotifyCurrentMarketDataTickValues pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_NotifyCurrentMarketDepthValues(ByVal pListener As IRawMarketDepthListener)
@@ -421,7 +421,7 @@ NotifyCurrentMarketDepthValues pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IMarketDataSource_NumberOfMarketDepthRows() As Long
@@ -445,7 +445,7 @@ PriorityTickListener = pListener
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IMarketDataSource_Refresh()
@@ -457,7 +457,7 @@ Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RefreshPriceChange(ByVal pListener As IPriceChangeListener)
@@ -469,7 +469,7 @@ RefreshPriceChange pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RefreshQuotes(ByVal pListener As IQuoteListener)
@@ -481,7 +481,7 @@ RefreshQuotes pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RefreshTicks(ByVal pListener As IGenericTickListener)
@@ -493,7 +493,7 @@ RefreshTicks pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemoveErrorListener(ByVal pListener As IErrorListener)
@@ -505,7 +505,7 @@ RemoveErrorListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemoveFromConfig()
@@ -517,7 +517,7 @@ RemoveFromConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -529,7 +529,7 @@ RemoveGenericTickListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemoveMarketDepthListener(ByVal pListener As IMarketDepthListener)
@@ -541,7 +541,7 @@ RemoveMarketDepthListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -553,7 +553,7 @@ RemoveOptionComputationListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemovePriceChangeListener(ByVal pListener As IPriceChangeListener)
@@ -565,7 +565,7 @@ RemovePriceChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemoveQuoteListener(ByVal pListener As IQuoteListener)
@@ -577,7 +577,7 @@ RemoveQuoteListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataSource_RemoveRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
@@ -593,7 +593,7 @@ RemoveStateChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IMarketDataSource_SessionFuture() As IFuture
@@ -617,7 +617,7 @@ IMarketDataSource_State = State
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IMarketDataSource_StopMarketData()
@@ -641,7 +641,7 @@ IMarketDataSource_Timestamp = Timestamp
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -662,20 +662,20 @@ ElseIf ev.Future.IsCancelled Then
     mFutureWaiter.Cancel
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Debug.Print "Contract available for MarketDataSource with key: " & mKey
-    gLogger.Log "Contract available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    GMktData.Logger.Log "Contract available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mGotContract = True
     processContractAvailable
     If checkReady Then setReady
 ElseIf TypeOf ev.Future.Value Is Clock Then
     Debug.Print "Clock available for MarketDataSource with key: "
-    gLogger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    GMktData.Logger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mGotClock = True
     mClockFutureBuilder.Value = ev.Future.Value
     mClockFutureBuilder.Complete
     If checkReady Then setReady
 ElseIf TypeOf ev.Future.Value Is StudyManager Then
     Debug.Print "StudyManager available for MarketDataSource with key: " & Key
-    gLogger.Log "StudyManager available for MarketDataSource with key: " & Key, ProcName, ModuleName, LogLevelHighDetail
+    GMktData.Logger.Log "StudyManager available for MarketDataSource with key: " & Key, ProcName, ModuleName, LogLevelHighDetail
     ' note that this will always be after the other futures have become
     ' available because it depends on the session future being available,
     ' which only occurs during processContractAvailable()
@@ -688,7 +688,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GMktData.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -714,7 +714,7 @@ CurrentQuote = DataSourceBase.GetCurrentQuote(pTickType)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentTick(ByVal pTickType As TickTypes) As GenericTick
@@ -729,7 +729,7 @@ CurrentTick = DataSourceBase.GetCurrentTick(pTickType)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ErrorMessage() As String
@@ -754,7 +754,7 @@ HasCurrentTick = DataSourceBase.HasCurrentTick(pTickType)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get HasQuoteListeners()
@@ -804,7 +804,7 @@ PriceChange = DataSourceBase.GetPriceChange()
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let PriorityTickListener(ByVal Value As IGenericTickListener)
@@ -817,7 +817,7 @@ If Not mDataSourceBaseRef Is Nothing Then DataSourceBase.AddPriorityTickListener
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionFuture() As IFuture
@@ -837,7 +837,7 @@ StreamId = mStreamId
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StudyBase() As IStudyBase
@@ -857,24 +857,24 @@ Const ProcName As String = "Tag"
 On Error GoTo Err
 
 checkNotFinished
-gSetVariant mTag, Value
+GMktData.SetVariant mTag, Value
 
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Tag() As Variant
 Const ProcName As String = "Tag"
 On Error GoTo Err
 
-gSetVariant Tag, mTag
+GMktData.SetVariant Tag, mTag
 
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Timestamp() As Date
@@ -888,7 +888,7 @@ Timestamp = DataSourceBase.Timestamp
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -905,7 +905,7 @@ mErrorListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -918,7 +918,7 @@ mGenericTickListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddMarketDepthListener(ByVal pListener As IMarketDepthListener)
@@ -931,7 +931,7 @@ mMarketDepthListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -943,7 +943,7 @@ mOptionComputationListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddPriceChangeListener(ByVal pListener As IPriceChangeListener)
@@ -956,7 +956,7 @@ mPriceChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddQuoteListener(ByVal pListener As IQuoteListener)
@@ -969,7 +969,7 @@ mQuoteListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
@@ -982,7 +982,7 @@ mRawMarketDepthListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -995,7 +995,7 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -1029,12 +1029,12 @@ If mContractFuture.IsAvailable Then
 End If
 
 gReleaseHandle mHandle
-gLogger.Log "MarketDataSource finished (" & mKey & ")", ProcName, ModuleName, LogLevelDetail, s
+GMktData.Logger.Log "MarketDataSource finished (" & mKey & ")", ProcName, ModuleName, LogLevelDetail, s
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireError(ByVal pErrorCode As Long, ByVal pErrorMessage As String)
@@ -1060,7 +1060,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireNoMoreTicks()
@@ -1103,7 +1103,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FirePriceChange(ByRef pPriceChange As PriceChange)
@@ -1130,7 +1130,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireQuote(ByRef pQuote As Quote, ByVal pTickType As TickTypes)
@@ -1178,7 +1178,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireRawMarketDepth( _
@@ -1218,7 +1218,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireResetMarketDepth()
@@ -1258,7 +1258,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireSetMarketDepthCell( _
@@ -1289,7 +1289,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireOptionComputation(ByRef pOptionComputation As OptionComputation)
@@ -1316,7 +1316,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FireTick(ByRef pTick As GenericTick)
@@ -1353,12 +1353,12 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrTypeMismatch And Not lListener Is Nothing Then
-    gHandleUnexpectedError ProcName, _
+    GMktData.HandleUnexpectedError ProcName, _
                             ModuleName, _
                             pErrorNumber:=VBErrorCodes.VbErrTypeMismatch, _
                             pErrorDesc:=Err.Description & ": " & TypeName(lListener)
 Else
-    gHandleUnexpectedError ProcName, ModuleName
+    GMktData.HandleUnexpectedError ProcName, ModuleName
 End If
 End Sub
 
@@ -1375,7 +1375,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLogger.Log "Initialising MarketDataSource with key: " & pKey, ProcName, ModuleName, LogLevelHighDetail
+GMktData.Logger.Log "Initialising MarketDataSource with key: " & pKey, ProcName, ModuleName, LogLevelHighDetail
 
 Set mMarketDataManagerRef = CreateWeakReference(pMarketDataManager)
 
@@ -1389,28 +1389,28 @@ mSnapshotRefreshInterval = pSnapshotRefreshInterval
 setState MarketDataSourceStateCreated
 
 If mContractFuture.IsAvailable And pClockFuture.IsAvailable Then
-    gLogger.Log "Contract available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
-    gLogger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    GMktData.Logger.Log "Contract available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    GMktData.Logger.Log "Clock available for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mClockFutureBuilder.Value = pClockFuture.Value
     mClockFutureBuilder.Complete
     processContractAvailable
     If pStudyManagerFuture Is Nothing Then
         setReady
     Else
-        gLogger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+        GMktData.Logger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
         mNeedStudyManager = True
         mFutureWaiter.Add pStudyManagerFuture
     End If
 Else
-    gLogger.Log "Waiting for clock for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    GMktData.Logger.Log "Waiting for clock for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mNeedClock = True
     mFutureWaiter.Add pClockFuture
     
-    gLogger.Log "Waiting for contract for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+    GMktData.Logger.Log "Waiting for contract for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
     mFutureWaiter.Add mContractFuture
     
     If Not pStudyManagerFuture Is Nothing Then
-        gLogger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+        GMktData.Logger.Log "Waiting for study manager for MarketDataSource with key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
         mNeedStudyManager = True
         mFutureWaiter.Add pStudyManagerFuture
     End If
@@ -1419,7 +1419,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyCurrentDOM( _
@@ -1433,7 +1433,7 @@ If mState = MarketDataSourceStateRunning Then DataSourceBase.DOMManager.NotifyCu
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyCurrentMarketDataQuoteValues(ByVal pListener As IQuoteListener)
@@ -1446,7 +1446,7 @@ If mState = MarketDataSourceStateRunning Then DataSourceBase.NotifyCurrentMarket
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyCurrentMarketDataTickValues(ByVal pListener As IGenericTickListener)
@@ -1459,7 +1459,7 @@ If mState = MarketDataSourceStateRunning Then DataSourceBase.NotifyCurrentMarket
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyCurrentMarketDepthValues( _
@@ -1473,7 +1473,7 @@ If mState = MarketDataSourceStateRunning Then DataSourceBase.DOMManager.NotifyCu
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Refresh()
@@ -1524,7 +1524,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RefreshPriceChange(ByVal pListener As IPriceChangeListener)
@@ -1543,7 +1543,7 @@ pListener.Change ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RefreshQuotes(ByVal pListener As IQuoteListener)
@@ -1558,7 +1558,7 @@ DataSourceBase.NotifyCurrentMarketDataQuoteValues pListener, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RefreshTicks(ByVal pListener As IGenericTickListener)
@@ -1573,7 +1573,7 @@ DataSourceBase.NotifyCurrentMarketDataTickValues pListener, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveErrorListener(ByVal pListener As IErrorListener)
@@ -1587,7 +1587,7 @@ mErrorListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -1602,7 +1602,7 @@ Set mConfig = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveGenericTickListener(ByVal pListener As IGenericTickListener)
@@ -1618,7 +1618,7 @@ unsubscribeIfNoMarketDataListeners
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveMarketDepthListener(ByVal pListener As IMarketDepthListener)
@@ -1634,7 +1634,7 @@ unsubscribeIfNoMarketDepthListeners
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveOptionComputationListener(ByVal pListener As IOptionComputationListener)
@@ -1646,7 +1646,7 @@ mOptionComputationListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemovePriceChangeListener(ByVal pListener As IPriceChangeListener)
@@ -1662,7 +1662,7 @@ unsubscribeIfNoMarketDataListeners
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveQuoteListener(ByVal pListener As IQuoteListener)
@@ -1678,7 +1678,7 @@ unsubscribeIfNoMarketDataListeners
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveRawMarketDepthListener(ByVal pListener As IRawMarketDepthListener)
@@ -1694,7 +1694,7 @@ unsubscribeIfNoMarketDepthListeners
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -1708,7 +1708,7 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetError( _
@@ -1725,7 +1725,7 @@ FireError pErrorCode, pErrorMessage
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StartMarketData()
@@ -1744,7 +1744,7 @@ storeSettings
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StartMarketDepth()
@@ -1761,7 +1761,7 @@ storeSettings
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StopMarketData()
@@ -1783,7 +1783,7 @@ storeSettings
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StopMarketDepth()
@@ -1805,7 +1805,7 @@ storeSettings
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1855,7 +1855,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getMarketDataManager() As MarketDataManager
@@ -1887,7 +1887,7 @@ mSessionFutureBuilder.Complete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setReady()
@@ -1896,7 +1896,7 @@ On Error GoTo Err
 
 Assert State = MarketDataSourceStateCreated, "invalid state"
 
-gLogger.Log "MarketDataSource is ready: key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
+GMktData.Logger.Log "MarketDataSource is ready: key: " & mKey, ProcName, ModuleName, LogLevelHighDetail
 setState MarketDataSourceStateReady
 
 If mIsMarketDataRequested Then subscribeToMarketData
@@ -1907,7 +1907,7 @@ storeSettings
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setState(ByVal pState As MarketDataSourceStates)
@@ -1922,7 +1922,7 @@ fireStateChange mState
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub storeSettings()
@@ -1942,7 +1942,7 @@ mConfig.SetSetting ConfigSettingIsMarketDepthRequested, mIsMarketDepthRequested
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub subscribeToMarketData()
@@ -1959,7 +1959,7 @@ Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub subscribeToMarketDepth()
@@ -1974,7 +1974,7 @@ DataSourceBase.AddMarketDepthSubscription
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unsubscribeIfNoMarketDataListeners()
@@ -1992,7 +1992,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unsubscribeIfNoMarketDepthListeners()
@@ -2006,7 +2006,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updateCurrentErrorListeners()

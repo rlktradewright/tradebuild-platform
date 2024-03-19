@@ -77,7 +77,7 @@ Private Function IMarketDataFactory_CreateMarketDataStream(ByVal pContractFuture
 Const ProcName As String = "IMarketDataFactory_CreateMarketDataStream"
 On Error GoTo Err
 
-gLogger.Log "Retrieving tick stream for contract future: " & GetObjectKey(pContractFuture), ProcName, ModuleName
+GMktData.Logger.Log "Retrieving tick stream for contract future: " & GetObjectKey(pContractFuture), ProcName, ModuleName
 
 Dim lStream As ITickStream
 Set lStream = mTickStreams.Item(GetObjectKey(pContractFuture))
@@ -90,7 +90,7 @@ Set IMarketDataFactory_CreateMarketDataStream = lStream
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
@@ -107,7 +107,7 @@ Set IMarketDataFactory_CreateMarketDepthStream = lStream
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IMarketDataFactory_CreateSnapshotMarketDataStream( _
@@ -123,7 +123,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, "Not supported"
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IMarketDataFactory_MaxStreamId() As Long
@@ -153,7 +153,7 @@ Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource(pContract
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
@@ -172,7 +172,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, "Not supported"
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IMarketDataManager_DataSources() As EnumerableCollection
@@ -188,7 +188,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IMarketDataManager_GetMarketDataSource(ByVal pKey As String) As IMarketDataSource
@@ -200,7 +200,7 @@ Set IMarketDataManager_GetMarketDataSource = GetMarketDataSource(pKey)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IMarketDataManager_LoadFromConfig( _
@@ -213,7 +213,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, "Not supported"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataManager_RemoveFromConfig()
@@ -225,7 +225,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, "Not supported"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IMarketDataManager_Supports(ByVal pCapability As MarketDataManagerCapabilities) As Boolean
@@ -250,7 +250,7 @@ mTickStreams.Remove GetObjectKey(lStream.ContractFuture)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -308,7 +308,7 @@ Set CreateMarketDataSource = lDataSource
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Finish()
@@ -320,7 +320,7 @@ mDataManager.Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetMarketDataSource(ByVal pKey As String) As IMarketDataSource
@@ -332,7 +332,7 @@ Set GetMarketDataSource = mDataManager.GetMarketDataSourceByKey(pKey)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -374,14 +374,14 @@ If pPlaySequentially Then
     mReplayController.SequentialTickFileSpecifiers = pTickfileSpecifiers
     Set lTickStream = mReplayController.TickStream(0)
     lTickStream.AddStateChangeListener Me
-    gLogger.Log "Add tick stream for contract future: " & GetObjectKey(lTickStream.ContractFuture), ProcName, ModuleName
+    GMktData.Logger.Log "Add tick stream for contract future: " & GetObjectKey(lTickStream.ContractFuture), ProcName, ModuleName
     mTickStreams.Add lTickStream, GetObjectKey(lTickStream.ContractFuture)
 Else
     mReplayController.TickFileSpecifiers = pTickfileSpecifiers
     Dim i As Long
     For i = 1 To pTickfileSpecifiers.Count
         Set lTickStream = mReplayController.TickStream(i - 1)
-        gLogger.Log "Add tick stream for contract future: " & GetObjectKey(lTickStream.ContractFuture), ProcName, ModuleName
+        GMktData.Logger.Log "Add tick stream for contract future: " & GetObjectKey(lTickStream.ContractFuture), ProcName, ModuleName
         mTickStreams.Add lTickStream, GetObjectKey(lTickStream.ContractFuture)
     Next
 End If
@@ -389,7 +389,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

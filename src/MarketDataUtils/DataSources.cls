@@ -85,7 +85,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub DOMReset()
@@ -106,7 +106,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub DOMSetCell( _
@@ -130,7 +130,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
                 
 Friend Sub Initialise(ByVal pDataSourceBase As DataSourceBase)
@@ -157,7 +157,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyMarketDepthError( _
@@ -180,7 +180,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyMarketDataStreamFinished()
@@ -204,7 +204,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyMarketDepthStreamFinished()
@@ -228,7 +228,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOptionComputation(ByRef pComputation As OptionComputation)
@@ -249,7 +249,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyTick(ByRef pTick As GenericTick)
@@ -289,7 +289,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Remove(ByVal pDataSource As MarketDataSource)
@@ -302,7 +302,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

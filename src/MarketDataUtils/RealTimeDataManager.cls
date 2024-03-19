@@ -88,7 +88,7 @@ Set IMarketDataManager_CreateMarketDataSource = CreateMarketDataSource( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IMarketDataManager_CreateSnapshotMarketDataSource( _
@@ -114,7 +114,7 @@ Set IMarketDataManager_CreateSnapshotMarketDataSource = CreateSnapshotMarketData
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IMarketDataManager_DataSources() As EnumerableCollection
@@ -130,7 +130,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IMarketDataManager_GetMarketDataSource(ByVal pKey As String) As IMarketDataSource
@@ -142,7 +142,7 @@ Set IMarketDataManager_GetMarketDataSource = GetMarketDataSource(pKey)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IMarketDataManager_LoadFromConfig( _
@@ -155,7 +155,7 @@ LoadFromConfig pConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataManager_RemoveFromConfig()
@@ -167,7 +167,7 @@ RemoveFromConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IMarketDataManager_Supports(ByVal pCapability As MarketDataManagerCapabilities) As Boolean
@@ -213,7 +213,7 @@ Set CreateMarketDataSource = mDataManager.CreateMarketDataSource( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSnapshotMarketDataSource( _
@@ -244,7 +244,7 @@ Set CreateSnapshotMarketDataSource = mDataManager.CreateMarketDataSource( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Finish()
@@ -256,7 +256,7 @@ mDataManager.Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetMarketDataSource(ByVal pKey As String) As IMarketDataSource
@@ -268,7 +268,7 @@ Set GetMarketDataSource = mDataManager.GetMarketDataSourceByKey(pKey)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -295,7 +295,7 @@ mDataManager.Initialise pFactory, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LoadFromConfig( _
@@ -309,7 +309,7 @@ mDataManager.LoadFromConfig pConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveFromConfig()
@@ -321,7 +321,7 @@ mDataManager.RemoveFromConfig
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

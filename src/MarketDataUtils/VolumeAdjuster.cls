@@ -111,10 +111,10 @@ Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then
     Dim errSource As String
     errSource = Err.Source
-    gLogger.Log "Overflow: mAccumulatedVolume=" & mAccumulatedVolume & "; tick=" & GenericTickToString(pTradeTick), ProcName, ModuleName
+    GMktData.Logger.Log "Overflow: mAccumulatedVolume=" & mAccumulatedVolume & "; tick=" & GenericTickToString(pTradeTick), ProcName, ModuleName
     Err.Raise VBErrorCodes.VbErrOverflow, errSource, "Overflow"
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -191,7 +191,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -220,7 +220,7 @@ If pSize.GE(DecimalZero) Then Exit Function
     
 isInvalidSize = True
 ' tickfile encoding can't cope with negative volumes, so just log it
-gLogger.Log "Corrected Volume tick is negative" & vbCrLf & _
+GMktData.Logger.Log "Corrected Volume tick is negative" & vbCrLf & _
                 "Corrected Size: " & DecimalToString(pSize) & vbCrLf & _
                 "mPrevSessionAccumulatedVolume: " & DecimalToString(mPrevSessionAccumulatedVolume) & vbCrLf & _
                 "mVolumeCorrectionIncrement: " & DecimalToString(mVolumeCorrectionIncrement), _
@@ -231,7 +231,7 @@ gLogger.Log "Corrected Volume tick is negative" & vbCrLf & _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function sizeImpliesUnnotifiedTrade(pSize As BoxedDecimal) As Boolean

@@ -1,16 +1,4 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-  Persistable = 0  'NotPersistable
-  DataBindingBehavior = 0  'vbNone
-  DataSourceBehavior  = 0  'vbNone
-  MTSTransactionMode  = 0  'NotAnMTSObject
-END
-Attribute VB_Name = "MarketDataUtils"
-Attribute VB_GlobalNameSpace = True
-Attribute VB_Creatable = True
-Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Name = "GMktDataUtils"
 Option Explicit
 
 ''
@@ -30,29 +18,22 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum MarketDataErrorCodes
-    MarketDataErrCancelled = vbObjectError + 1536
-    MarketDataErrContractNotUnique
-    MarketDataErrNoContract
-    MarketDataErrContractFetchError
-    MarketDataErrContractExpired
-End Enum
-
 '@================================================================================
 ' Types
 '@================================================================================
-
-Public Type DeferredNotificationActionData
-    Action              As Long
-    Listener            As Object
-    DataSource          As MarketDataSource
-End Type
 
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "MarketDataUtils"
+Private Const ModuleName                            As String = "GMktDataUtils"
+
+Public Const NullIndex                              As Long = -1
+
+Public Const ConfigSectionContract                  As String = "Contract"
+
+Public Const OneSecond                              As Double = 1# / 86400#
+Public Const OneMillisec                            As Double = 1# / 86400# / 1000#
 
 '@================================================================================
 ' Member variables
@@ -89,14 +70,17 @@ Public Function CreateRealtimeDataManager( _
 Const ProcName As String = "CreateRealtimeDataManager"
 On Error GoTo Err
 
-Set CreateRealtimeDataManager = GMktDataUtils.CreateRealtimeDataManager( _
-                                                pMarketDataFactory, _
-                                                pPrimaryContractStore, _
-                                                pSecondaryContractStore, _
-                                                pStudyLibManager, _
-                                                pOptions, _
-                                                pDefaultStateChangeListener, _
-                                                pNumberOfMarketDepthRows)
+AssertArgument Not pMarketDataFactory Is Nothing, "pMarketDataFactory is Nothing"
+
+Dim rtm As New RealTimeDataManager
+rtm.Initialise pMarketDataFactory, _
+                pPrimaryContractStore, _
+                pSecondaryContractStore, _
+                pStudyLibManager, _
+                pOptions, _
+                pDefaultStateChangeListener, _
+                pNumberOfMarketDepthRows
+Set CreateRealtimeDataManager = rtm
 
 Exit Function
 
@@ -120,7 +104,10 @@ Public Function CreateSequentialTickDataManager( _
 Const ProcName As String = "CreateSequentialTickDataManager"
 On Error GoTo Err
 
-Set CreateSequentialTickDataManager = GMktDataUtils.CreateSequentialTickDataManager(pTickfileSpecifiers, pTickfileStore, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
+Dim lTickDataManager As New TickfileDataManager
+lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, True, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
+
+Set CreateSequentialTickDataManager = lTickDataManager
 
 Exit Function
 
@@ -144,7 +131,10 @@ Public Function CreateTickDataManager( _
 Const ProcName As String = "CreateTickDataManager"
 On Error GoTo Err
 
-Set CreateTickDataManager = GMktDataUtils.CreateTickDataManager(pTickfileSpecifiers, pTickfileStore, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd)
+Dim lTickDataManager As New TickfileDataManager
+lTickDataManager.Initialise pTickfileSpecifiers, pTickfileStore, False, pStudyLibManager, pPrimaryContractStore, pSecondaryContractStore, pOptions, pDefaultStateChangeListener, pNumberOfMarketDepthRows, pReplaySpeed, pReplayProgressEventInterval, pTimestampAdjustmentStart, pTimestampAdjustmentEnd
+
+Set CreateTickDataManager = lTickDataManager
 
 Exit Function
 
@@ -156,7 +146,7 @@ Public Function GetCurrentTickSummary(ByVal pDataSource As IMarketDataSource) As
 Const ProcName As String = "GetCurrentTickSummary"
 On Error GoTo Err
 
-GetCurrentTickSummary = GMktDataUtils.GetCurrentTickSummary(pDataSource)
+GetCurrentTickSummary = gGetCurrentTickSummary(pDataSource)
 
 Exit Function
 
@@ -169,7 +159,10 @@ Dim lDataSource As IMarketDataSource
 Const ProcName As String = "GetFormattedPriceFromQuoteEvent"
 On Error GoTo Err
 
-GetFormattedPriceFromQuoteEvent = GMktDataUtils.GetFormattedPriceFromQuoteEvent(ev)
+Set lDataSource = ev.Source
+Dim lContract As IContract
+Set lContract = lDataSource.ContractFuture.Value
+GetFormattedPriceFromQuoteEvent = FormatPrice(ev.Quote.Price, lContract.Specifier.SecType, lContract.TickSize)
 
 Exit Function
 
@@ -180,6 +173,9 @@ End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
+
 
 
 

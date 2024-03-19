@@ -92,7 +92,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -131,7 +131,7 @@ DeferAction Me, lData
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyCurrentMarketDepthValues( _
@@ -150,7 +150,7 @@ DeferAction Me, lData
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ProcessMarketDepth( _
@@ -181,7 +181,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ProcessMarketDepthReset()
@@ -195,7 +195,7 @@ mDataSources.DOMReset
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ProcessTrade( _
@@ -219,7 +219,7 @@ mPrevTradePrice = pTick.Price
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Reset()
@@ -232,7 +232,7 @@ mPrevTradePrice = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -259,7 +259,7 @@ notifyDOMSide DOMSides.DOMAsk, mAskPrices, mMaxAskPricesIndex, pListener, pDataS
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub doNotifyCurrentMarketDepthValues( _
@@ -274,7 +274,7 @@ notifyMarketDepthValues mAskPrices, mMaxAskPricesIndex, pListener, pDataSource, 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub initialisePriceTables(ByVal pNumberOfRows As Long)
@@ -308,7 +308,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyDOMValue( _
@@ -324,7 +324,7 @@ pListener.SetMarketDepthCell ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyMarketDepthValue( _
@@ -347,7 +347,7 @@ pListener.UpdateMarketDepth ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyMarketDepthValues( _
@@ -376,7 +376,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub updatePrices(ByRef pPrices() As PriceTableEntry, _
@@ -475,7 +475,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

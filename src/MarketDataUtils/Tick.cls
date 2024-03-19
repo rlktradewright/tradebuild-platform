@@ -108,10 +108,10 @@ If mIsLive Then
     mPreviousTick = mTick
     
     mPrevPriceChange = mPriceChange
-    mPriceChange = gCalcPriceValueChange(pTick.Price, mPreviousTick.Price)
+    mPriceChange = CalcPriceValueChange(pTick.Price, mPreviousTick.Price)
     
     mPrevSizeChange = mSizeChange
-    mSizeChange = gCalcSizeValueChange(pTick.Size, mPreviousTick.Size)
+    mSizeChange = CalcSizeValueChange(pTick.Size, mPreviousTick.Size)
 End If
 
 mTick = pTick
@@ -151,7 +151,7 @@ mAllowedTickType = pTickType
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

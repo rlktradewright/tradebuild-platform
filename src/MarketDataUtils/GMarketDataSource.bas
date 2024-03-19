@@ -80,7 +80,7 @@ gGetCurrentTickSummary = s
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -96,7 +96,7 @@ gAllocateHandle = mHandleAllocator.AllocateHandle
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gPadStringleft(ByRef pInput As String, ByVal pLength As Long) As String
@@ -118,7 +118,7 @@ mHandleAllocator.ReleaseHandle pHandle
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -175,7 +175,7 @@ formatPriceTick = s
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function formatSizeTick( _
@@ -193,7 +193,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

@@ -124,7 +124,7 @@ AssertArgument pIsRecoverable Or pOffsetExpiry = "", _
 
 If pKey = "" Then pKey = GenerateGUIDString
 
-gLogger.Log "Creating MarketDataSource with key: " & pKey, ProcName, ModuleName, LogLevelHighDetail
+GMktData.Logger.Log "Creating MarketDataSource with key: " & pKey, ProcName, ModuleName, LogLevelHighDetail
 
 Dim lDataSource As New MarketDataSource
 If Not pStateChangeListener Is Nothing Then lDataSource.AddStateChangeListener pStateChangeListener
@@ -152,7 +152,7 @@ Set CreateMarketDataSource = lDataSource
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Finish()
@@ -171,7 +171,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetMarketDataSourceByKey(ByVal pKey As String) As IMarketDataSource
@@ -183,7 +183,7 @@ If mDataSources.Contains(pKey) Then Set GetMarketDataSourceByKey = mDataSources.
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetDataSourceBase( _
@@ -224,7 +224,7 @@ Set GetDataSourceBase = lDataSourceBase
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -247,7 +247,7 @@ mNumberOfMarketDepthRows = pNumberOfMarketDepthRows
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub LoadFromConfig( _
@@ -257,7 +257,7 @@ On Error GoTo Err
 
 Assert Not pConfig Is Nothing, "pConfig Is Nothing"
 
-gLogger.Log "Loading market data sources from config", ProcName, ModuleName
+GMktData.Logger.Log "Loading market data sources from config", ProcName, ModuleName
 
 Set mConfig = pConfig
 
@@ -265,7 +265,7 @@ Dim lRemovableCSs As New Collection
 
 Dim lCs As ConfigurationSection
 For Each lCs In mConfig
-    gLogger.Log "Loading market data source: " & lCs.InstanceQualifier, ProcName, ModuleName
+    GMktData.Logger.Log "Loading market data source: " & lCs.InstanceQualifier, ProcName, ModuleName
     Dim lContractConfig As ConfigurationSection
     Set lContractConfig = lCs.GetConfigurationSection(ConfigSectionContract)
     If lContractConfig Is Nothing Then
@@ -321,12 +321,12 @@ For Each lCs In lRemovableCSs
     lCs.Remove
 Next
 
-gLogger.Log "Loaded market data sources", ProcName, ModuleName
+GMktData.Logger.Log "Loaded market data sources", ProcName, ModuleName
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub ReleaseDataSourceBase( _
@@ -347,7 +347,7 @@ If mContractMap.Contains(lContract.Specifier, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveFromConfig()
@@ -359,7 +359,7 @@ If Not mConfig Is Nothing Then mConfig.Remove
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveMarketDataSource(ByVal pDataSource As MarketDataSource)
@@ -371,7 +371,7 @@ mDataSources.Remove pDataSource.Key
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function RequestMarketData(ByVal pDataSourceBase As DataSourceBase) As ITickStream
@@ -383,7 +383,7 @@ Set RequestMarketData = mFactory.CreateMarketDataStream(pDataSourceBase.Contract
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function RequestMarketDataSnapshot(ByVal pDataSourceBase As DataSourceBase) As ITickStream
@@ -398,7 +398,7 @@ Set RequestMarketDataSnapshot = mFactory.CreateSnapshotMarketDataStream( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function RequestMarketDepth(ByVal pDataSourceBase As DataSourceBase, ByVal pNumberOfRows As Long) As ITickStream
@@ -410,7 +410,7 @@ Set RequestMarketDepth = mFactory.CreateMarketDepthStream(pDataSourceBase.Contra
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -448,7 +448,7 @@ allocateTableEntry = lIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub ensureTableSpace(ByVal pIndex As Long)
@@ -462,7 +462,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function findNextUnusedTableEntry(ByRef pIndex As Long) As Boolean
@@ -495,7 +495,7 @@ findNextUnusedTableEntry = lFound
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getConfigSection( _
@@ -521,7 +521,7 @@ Set getConfigSection = lConfig
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getDataSourceBaseIndex( _
@@ -545,7 +545,7 @@ getDataSourceBaseIndex = lIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub releaseTableEntry(ByVal pIndex As Long)
@@ -571,7 +571,7 @@ Set mDataSourceBaseTable(pIndex).DataSourceBase = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GMktData.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
