@@ -101,7 +101,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ICurrencyConverter_Convert( _
@@ -123,7 +123,7 @@ ICurrencyConverter_Convert = pAmount * mConversionTable(lIndex).ConversionFactor
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ICurrencyConverter_IsReadyCurrencies( _
@@ -150,7 +150,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub ICurrencyConverter_RemoveStateChangeListener( _
@@ -173,7 +173,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -198,7 +198,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -247,7 +247,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -300,7 +300,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getStateChangeListeners( _
@@ -375,7 +375,7 @@ startData = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function startTickData( _
@@ -410,6 +410,6 @@ Set startTickData = lDataSource
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Function
 

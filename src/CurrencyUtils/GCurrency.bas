@@ -1,16 +1,4 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-  Persistable = 0  'NotPersistable
-  DataBindingBehavior = 0  'vbNone
-  DataSourceBehavior  = 0  'vbNone
-  MTSTransactionMode  = 0  'NotAnMTSObject
-END
-Attribute VB_Name = "CurrencyUtils"
-Attribute VB_GlobalNameSpace = True
-Attribute VB_Creatable = True
-Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Name = "GCurrency"
 Option Explicit
 
 ''
@@ -34,16 +22,15 @@ Option Explicit
 ' Types
 '@================================================================================
 
-Public Type CurrencyDescriptor
-    Code        As String
-    Description         As String
-End Type
-
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "CurrencyUtils"
+#If SingleDll = 0 Then
+Public Const ProjectName                                As String = "CurrencyUtils27"
+#End If
+
+Private Const ModuleName                                As String = "GCurrency"
 
 '@================================================================================
 ' Member variables
@@ -69,56 +56,35 @@ Private Const ModuleName                            As String = "CurrencyUtils"
 ' Methods
 '@================================================================================
 
-Public Function CreateCurrencyConverter( _
-                ByVal pMarketDataManager As IMarketDataManager, _
-                ByVal pContractStore As IContractStore) As ICurrencyConverter
-Const ProcName As String = "CreateCurrencyConverter"
-On Error GoTo Err
+Public Sub HandleUnexpectedError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pReRaise As Boolean = True, _
+                Optional ByVal pLog As Boolean = False, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-Set CreateCurrencyConverter = GCurrencyUtils.CreateCurrencyConverter(pMarketDataManager, pContractStore)
+TWUtilities40.HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+End Sub
 
-Exit Function
+Public Sub NotifyUnhandledError( _
+                ByRef pProcedureName As String, _
+                ByRef pModuleName As String, _
+                Optional ByRef pFailpoint As String, _
+                Optional ByVal pErrorNumber As Long, _
+                Optional ByRef pErrorDesc As String, _
+                Optional ByRef pErrorSource As String)
+Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
+Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
+Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-Err:
-GCurrency.HandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function GetCurrencyDescriptor( _
-                ByVal CurrencyCode As String) As CurrencyDescriptor
-Const ProcName As String = "GetCurrencyDescriptor"
-On Error GoTo Err
-
-GetCurrencyDescriptor = GCurrencyUtils.GetCurrencyDescriptor(CurrencyCode)
-
-Exit Function
-
-Err:
-GCurrency.HandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function GetCurrencyDescriptors() As CurrencyDescriptor()
-Const ProcName As String = "GetCurrencyDescriptors"
-On Error GoTo Err
-
-GetCurrencyDescriptors = GCurrencyUtils.GetCurrencyDescriptors
-
-Exit Function
-
-Err:
-GCurrency.HandleUnexpectedError ProcName, ModuleName
-End Function
-
-Public Function IsValidCurrencyCode(ByVal CurrencyCode As String) As Boolean
-Const ProcName As String = "IsValidCurrencyCode"
-On Error GoTo Err
-
-IsValidCurrencyCode = GCurrencyUtils.IsValidCurrencyCode(CurrencyCode)
-
-Exit Function
-
-Err:
-GCurrency.HandleUnexpectedError ProcName, ModuleName
-End Function
+TWUtilities40.UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+End Sub
 
 '@================================================================================
 ' Helper Functions

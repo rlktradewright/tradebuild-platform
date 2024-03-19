@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "GCurrencyUtils"
 Option Explicit
 
 ''
@@ -26,10 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                                As String = "CurrencyUtils"
-Private Const ModuleName                                As String = "Globals"
-
-Public Const NullIndex                                  As Long = -1
+Private Const ModuleName                            As String = "GCurrencyUtils"
 
 '@================================================================================
 ' Member variables
@@ -58,89 +55,58 @@ Private mCurrencyDescriptors()                          As CurrencyDescriptor
 ' Methods
 '@================================================================================
 
-Public Function gGetCurrencyDescriptor( _
-                ByVal Code As String) As CurrencyDescriptor
-Const ProcName As String = "gGetCurrencyDescriptor"
+Public Function CreateCurrencyConverter( _
+                ByVal pMarketDataManager As IMarketDataManager, _
+                ByVal pContractStore As IContractStore) As ICurrencyConverter
+Const ProcName As String = "CreateCurrencyConverter"
 On Error GoTo Err
 
-If mCurrencyDescsColl Is Nothing Then setupCurrencyDescs
-
-Code = UCase$(Code)
-AssertArgument mCurrencyDescsColl.Contains(Code), "Invalid currency Code"
-
-gGetCurrencyDescriptor = mCurrencyDescsColl.Item(Code)
+Dim lCurrencyConverter As New CurrencyConverter
+lCurrencyConverter.Initialise pMarketDataManager, pContractStore
+Set CreateCurrencyConverter = lCurrencyConverter
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gGetCurrencyDescriptors() As CurrencyDescriptor()
-Const ProcName As String = "gGetCurrencyDescriptors"
+Public Function GetCurrencyDescriptor( _
+                ByVal CurrencyCode As String) As CurrencyDescriptor
+Const ProcName As String = "GetCurrencyDescriptor"
 On Error GoTo Err
 
-If mCurrencyDescsColl Is Nothing Then
-    setupCurrencyDescs
-    ReDim mCurrencyDescriptors(mCurrencyDescsColl.Count - 1) As CurrencyDescriptor
-    Dim lDesc As Variant
-    Dim i As Long
-    For Each lDesc In mCurrencyDescsColl
-        mCurrencyDescriptors(i) = lDesc
-        i = i + 1
-    Next
-End If
-gGetCurrencyDescriptors = mCurrencyDescriptors
+GetCurrencyDescriptor = getCurrencyDescr(CurrencyCode)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
-
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
-
-Public Function gIsValidCurrencyCode(ByVal Code As String) As Boolean
-Const ProcName As String = "gIsValidCurrencyCode"
+Public Function GetCurrencyDescriptors() As CurrencyDescriptor()
+Const ProcName As String = "GetCurrencyDescriptors"
 On Error GoTo Err
 
-If mCurrencyDescsColl Is Nothing Then setupCurrencyDescs
-
-gIsValidCurrencyCode = mCurrencyDescsColl.Contains(UCase$(Code))
+GetCurrencyDescriptors = getCurrencyDescrs
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Public Function IsValidCurrencyCode(ByVal CurrencyCode As String) As Boolean
+Const ProcName As String = "IsValidCurrencyCode"
+On Error GoTo Err
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
+IsValidCurrencyCode = isValidCurrCode(CurrencyCode)
+
+Exit Function
+
+Err:
+GCurrency.HandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -161,8 +127,62 @@ mCurrencyDescsColl.Add lDescriptor, Code
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function getCurrencyDescr( _
+                ByVal Code As String) As CurrencyDescriptor
+Const ProcName As String = "getCurrencyDescr"
+On Error GoTo Err
+
+If mCurrencyDescsColl Is Nothing Then setupCurrencyDescs
+
+Code = UCase$(Code)
+AssertArgument mCurrencyDescsColl.Contains(Code), "Invalid currency Code"
+
+getCurrencyDescr = mCurrencyDescsColl.Item(Code)
+
+Exit Function
+
+Err:
+GCurrency.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function getCurrencyDescrs() As CurrencyDescriptor()
+Const ProcName As String = "getCurrencyDescrs"
+On Error GoTo Err
+
+If mCurrencyDescsColl Is Nothing Then
+    setupCurrencyDescs
+    ReDim mCurrencyDescriptors(mCurrencyDescsColl.Count - 1) As CurrencyDescriptor
+    Dim lDesc As Variant
+    Dim i As Long
+    For Each lDesc In mCurrencyDescsColl
+        mCurrencyDescriptors(i) = lDesc
+        i = i + 1
+    Next
+End If
+getCurrencyDescrs = mCurrencyDescriptors
+
+Exit Function
+
+Err:
+GCurrency.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isValidCurrCode(ByVal Code As String) As Boolean
+Const ProcName As String = "isValidCurrCode"
+On Error GoTo Err
+
+If mCurrencyDescsColl Is Nothing Then setupCurrencyDescs
+
+isValidCurrCode = mCurrencyDescsColl.Contains(UCase$(Code))
+
+Exit Function
+
+Err:
+GCurrency.HandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Sub setupCurrencyDescs()
 Const ProcName As String = "setupCurrencyDescs"
@@ -345,8 +365,10 @@ addCurrencyDesc "ZWD", "Zimbabwe, Zimbabwe Dollars"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GCurrency.HandleUnexpectedError ProcName, ModuleName
 End Sub
+
+
 
 
 
