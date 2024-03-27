@@ -90,7 +90,7 @@ Private mVersion                            As Long
 '@================================================================================
 
 Private Sub Class_Initialize()
-mBasePrice = MaxDoubleValue
+mBasePrice = GTickUtils.MaxDoubleValue
 End Sub
 
 '@================================================================================
@@ -108,7 +108,7 @@ Private Sub ITickDataEncoder_encodeAsk( _
 Const ProcName As String = "ITickDataEncoder_encodeAsk"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
@@ -128,7 +128,7 @@ Private Sub ITickDataEncoder_encodeBid( _
 Const ProcName As String = "ITickDataEncoder_encodeBid"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
@@ -147,7 +147,7 @@ Private Sub ITickDataEncoder_encodeClose( _
 Const ProcName As String = "ITickDataEncoder_encodeClose"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 WritePriceRecord TickTypes.TickTypeClosePrice, pTimestamp, pPrice
 
@@ -162,7 +162,7 @@ Private Property Get ITickDataEncoder_encodedData() As Byte()
 Const ProcName As String = "ITickDataEncoder_encodedData"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 If mDataIndex = 0 Then Exit Property
 
@@ -189,7 +189,7 @@ Private Sub ITickDataEncoder_encodeHigh( _
 Const ProcName As String = "ITickDataEncoder_encodeHigh"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 WritePriceRecord TickTypes.TickTypeHighPrice, pTimestamp, pPrice
 
@@ -206,7 +206,7 @@ Private Sub ITickDataEncoder_encodeLow( _
 Const ProcName As String = "ITickDataEncoder_encodeLow"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 WritePriceRecord TickTypes.TickTypeLowPrice, pTimestamp, pPrice
 
@@ -232,7 +232,7 @@ Dim lTypeByte As Byte
 Dim lSizeType As SizeTypes
 Dim sideOperationPositionByte As Byte
 
-checkpoint
+Checkpoint
 
 'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
@@ -243,7 +243,7 @@ lTypeByte = lTypeByte Or (lSizeType * SizeTypeShifter)
 
 If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
 
-If mBasePrice = MaxDoubleValue Then mBasePrice = pPrice
+If mBasePrice = GTickUtils.MaxDoubleValue Then mBasePrice = pPrice
 If pPrice < mBasePrice Then lTypeByte = lTypeByte Or NegativeTicks
 
 WriteByte lTypeByte
@@ -271,7 +271,7 @@ On Error GoTo Err
 
 Dim lTypeByte As Byte
 
-checkpoint
+Checkpoint
 
 lTypeByte = TickTypes.TickTypeMarketDepthReset
 
@@ -291,7 +291,7 @@ Private Sub ITickDataEncoder_encodeOpen(ByVal pTimestamp As Date, ByVal pPrice A
 Const ProcName As String = "ITickDataEncoder_encodeOpen"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 WritePriceRecord TickTypes.TickTypeOpenPrice, pTimestamp, pPrice
 
@@ -307,7 +307,7 @@ Private Sub ITickDataEncoder_encodeOpenInterest( _
 Const ProcName As String = "ITickDataEncoder_encodeOpenInterest"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
@@ -327,7 +327,7 @@ Private Sub ITickDataEncoder_encodeTrade( _
 Const ProcName As String = "ITickDataEncoder_encodeTrade"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
@@ -346,7 +346,7 @@ Private Sub ITickDataEncoder_encodeVolume( _
 Const ProcName As String = "ITickDataEncoder_encodeVolume"
 On Error GoTo Err
 
-checkpoint
+Checkpoint
 
 'If pSize < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
@@ -408,7 +408,7 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub checkpoint()
+Private Sub Checkpoint()
 mDataIndexCheckpoint = mDataIndex
 End Sub
 
@@ -561,7 +561,7 @@ lTypeByte = pTickType
 
 If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
 
-If mBasePrice = MaxDoubleValue Then mBasePrice = pPrice
+If mBasePrice = GTickUtils.MaxDoubleValue Then mBasePrice = pPrice
 If pPrice < mBasePrice Then lTypeByte = lTypeByte Or NegativeTicks
 
 WriteByte lTypeByte
@@ -592,7 +592,7 @@ lTypeByte = lTypeByte Or (lSizeType * SizeTypeShifter)
 
 If pTimestamp = mTimestamp Then lTypeByte = lTypeByte Or NoTimestamp
 
-If mBasePrice = MaxDoubleValue Then mBasePrice = pPrice
+If mBasePrice = GTickUtils.MaxDoubleValue Then mBasePrice = pPrice
 If pPrice < mBasePrice Then lTypeByte = lTypeByte Or NegativeTicks
 
 WriteByte lTypeByte
@@ -698,17 +698,17 @@ End Sub
 
 Private Sub WriteTimestamp( _
                 ByVal pTimestamp As Date)
-Dim diff As Long
+Dim Diff As Long
 Const ProcName As String = "WriteTimestamp"
 On Error GoTo Err
 
 If pTimestamp <> mTimestamp Then
-    diff = (pTimestamp - mPeriodStartTime) * 86400 * 1000
-    Debug.Assert diff < &H10000
-    If diff < &H8000& Then
-        WriteInt diff
+    Diff = (pTimestamp - mPeriodStartTime) * 86400 * 1000
+    Debug.Assert Diff < &H10000
+    If Diff < &H8000& Then
+        WriteInt Diff
     Else
-        WriteInt CInt(diff - &H10000)
+        WriteInt CInt(Diff - &H10000)
     End If
     mTimestamp = pTimestamp
 End If
