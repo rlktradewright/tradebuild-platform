@@ -534,29 +534,29 @@ jb.EncodeNameAndValue "UnderlyingExchangeName", mUnderlyingExchangeName, ""
 jb.EncodeNameAndValue "CloseOrderType", mCloseOrderType, OrderTypeNone
 jb.EncodeNameAndValue "CloseTimeoutSecs", mCloseTimeoutSecs, 0
 
-If Not gIsNullPriceSpecifier(mCloseLimitPriceSpec) Then _
+If Not IsNullPriceSpecifier(mCloseLimitPriceSpec) Then _
     jb.EncodeNameAndValue "CloseLimitPriceSpec", mCloseLimitPriceSpec, Nothing
-If Not gIsNullPriceSpecifier(mCloseTriggerPriceSpec) Then _
+If Not IsNullPriceSpecifier(mCloseTriggerPriceSpec) Then _
     jb.EncodeNameAndValue "CloseTriggerPriceSpec", mCloseTriggerPriceSpec, Nothing
 
 jb.EncodeNameAndValue "EntryOrderType", mEntryOrderType, OrderTypeNone
 jb.EncodeNameAndValue "EntryTimeoutSecs", mEntryTimeoutSecs, 0
 
-If Not gIsNullPriceSpecifier(mEntryLimitPriceSpec) Then _
+If Not IsNullPriceSpecifier(mEntryLimitPriceSpec) Then _
     jb.EncodeNameAndValue "EntryLimitPriceSpec", mEntryLimitPriceSpec, Nothing
-If Not gIsNullPriceSpecifier(mEntryTriggerPriceSpec) Then _
+If Not IsNullPriceSpecifier(mEntryTriggerPriceSpec) Then _
     jb.EncodeNameAndValue "EntryTriggerPriceSpec", mEntryTriggerPriceSpec, Nothing
 
 jb.EncodeNameAndValue "StopLossOrderType", mStopLossOrderType, OrderTypeNone
-If Not gIsNullPriceSpecifier(mStopLossLimitPriceSpec) Then _
+If Not IsNullPriceSpecifier(mStopLossLimitPriceSpec) Then _
     jb.EncodeNameAndValue "StopLossLimitPriceSpec", mStopLossLimitPriceSpec, Nothing
-If Not gIsNullPriceSpecifier(mStopLossTriggerPriceSpec) Then _
+If Not IsNullPriceSpecifier(mStopLossTriggerPriceSpec) Then _
     jb.EncodeNameAndValue "StopLossTriggerPriceSpec", mStopLossTriggerPriceSpec, Nothing
 
 jb.EncodeNameAndValue "TargetOrderType", mTargetOrderType, OrderTypeNone
-If Not gIsNullPriceSpecifier(mTargetLimitPriceSpec) Then _
+If Not IsNullPriceSpecifier(mTargetLimitPriceSpec) Then _
     jb.EncodeNameAndValue "TargetLimitPriceSpec", mTargetLimitPriceSpec, Nothing
-If Not gIsNullPriceSpecifier(mTargetTriggerPriceSpec) Then _
+If Not IsNullPriceSpecifier(mTargetTriggerPriceSpec) Then _
     jb.EncodeNameAndValue "TargetTriggerPriceSpec", mTargetTriggerPriceSpec, Nothing
 
 jb.EndObject

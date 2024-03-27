@@ -135,7 +135,7 @@ Set IEnumerable_Enumerator = Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IEnumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
@@ -169,7 +169,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
@@ -193,7 +193,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -209,10 +209,10 @@ Dim lOrderContext As OrderContext
 If TypeOf ev.Source Is IOrderSubmitter Then
     Select Case ev.State
     Case OrderSubmitterStateNotReady
-        gLog "OrderSubmitter is not ready", ProcName, ModuleName, , LogLevelDetail
+        GOrderUtils.Log "OrderSubmitter is not ready", ProcName, ModuleName, , LogLevelDetail
         mProviderIsReady = False
     Case OrderSubmitterStateReady
-        gLog "OrderSubmitter is ready", ProcName, ModuleName, , LogLevelDetail
+        GOrderUtils.Log "OrderSubmitter is ready", ProcName, ModuleName, , LogLevelDetail
         mProviderIsReady = True
     End Select
     
@@ -229,7 +229,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -243,11 +243,11 @@ On Error GoTo Err
 If Not ev.Future.IsAvailable Then Exit Sub
 
 If TypeOf ev.Future.Value Is IPermittedOrderProperties Then
-    gLog "Got permitted properties", ProcName, ModuleName, , LogLevelDetail
+    GOrderUtils.Log "Got permitted properties", ProcName, ModuleName, , LogLevelDetail
     Set mPermittedOrderProperties = ev.Future.Value
     If Not mContract Is Nothing Then processPermittedOrderProperties
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    gLog "Got contract", ProcName, ModuleName, , LogLevelDetail
+    GOrderUtils.Log "Got contract", ProcName, ModuleName, , LogLevelDetail
     Set mContract = ev.Future.Value
     mSecType = mContract.Specifier.SecType
     If Not mPermittedOrderProperties Is Nothing Then processPermittedOrderProperties
@@ -260,7 +260,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -277,7 +277,7 @@ fireCollectionChanged ev
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -305,7 +305,7 @@ Set BalancingOrderContext = lBalancingOrderContext
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ContractFuture() As IFuture
@@ -322,7 +322,7 @@ Count = mOrderContexts.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrencyConverter() As ICurrencyConverter
@@ -346,7 +346,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let Enabled(ByVal Value As Boolean)
@@ -365,7 +365,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -381,7 +381,7 @@ Set Enumerator = mOrderContexts.Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let FixedAccountBalance(ByVal Value As Double)
@@ -409,7 +409,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsProviderReady() As Boolean
@@ -470,7 +470,7 @@ Add.IsDataSourceReady = mDataSourceIsReady
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
@@ -483,7 +483,7 @@ mCollectionChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Contains(ByVal pName As String) As Boolean
@@ -495,7 +495,7 @@ Contains = mOrderContexts.Contains(pName)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Finish()
@@ -521,7 +521,7 @@ Set mOrderManager = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -582,7 +582,7 @@ checkGotPermittedOrderProperties
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function IsGettingTickSize() As Boolean
@@ -610,7 +610,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(index As Variant) As OrderContext
@@ -623,7 +623,7 @@ Set Item = mOrderContexts(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -637,7 +637,7 @@ Set NewEnum = getEnumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub NotifyChange(pOrderContext As OrderContext)
@@ -649,7 +649,7 @@ mOrderContexts.NotifyChange pOrderContext.Name
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Remove( _
@@ -662,7 +662,7 @@ mOrderContexts.Remove pOrderContext.Name
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
@@ -674,7 +674,7 @@ mCollectionChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -695,7 +695,7 @@ ElseIf mPermittedOrderProperties Is Nothing Then
         Set lContract = mContractFuture.Value
         lContractString = lContract.Specifier.ToString
     End If
-    gLog "Fetching permitted order properties for", ProcName, ModuleName, lContractString, LogLevelDetail
+    GOrderUtils.Log "Fetching permitted order properties for", ProcName, ModuleName, lContractString, LogLevelDetail
     mFutureWaiter.Add mOrderSubmitter.FetchPermittedOrderProperties(mContractFuture)
     checkGotPermittedOrderProperties = False
 Else
@@ -705,7 +705,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function dataSourceHasPrice() As Boolean
@@ -744,7 +744,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getEnumerator() As Enumerator
@@ -756,7 +756,7 @@ Set getEnumerator = mOrderContexts.Enumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IsDataSourceReady( _
@@ -786,7 +786,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processPermittedOrderProperties()
@@ -802,7 +802,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub SetTickSize(ByVal pTickSize As Double)
@@ -811,9 +811,9 @@ On Error GoTo Err
 
 If pTickSize <= 0 Then Exit Sub
 
-gLog IIf(IsSimulated, "(simulated)", "") & _
+GOrderUtils.Log IIf(IsSimulated, "(simulated)", "") & _
     "Tick size for " & _
-    gGetContractName(mContract.Specifier) & _
+    GOrderUtils.GetContractName(mContract.Specifier) & _
     " is " & _
     pTickSize, _
     ProcName, ModuleName, , LogLevelDetail
@@ -827,6 +827,6 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

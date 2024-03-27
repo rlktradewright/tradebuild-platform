@@ -68,11 +68,11 @@ Private mToString                                   As String
 '@================================================================================
 
 Public Property Let Data(ByVal Value As Variant)
-gSetVariant mData, Value
+GOrders.SetVariant mData, Value
 End Property
 
 Public Property Get Data() As Variant
-gSetVariant Data, mData
+GOrders.SetVariant Data, mData
 End Property
 
 Public Property Let ItemType(ByVal Value As String)
@@ -116,7 +116,7 @@ mItemType = pInfoType
 Set mData = pData
 
 Dim s As String
-s = FormatTimestamp(mTimestamp, TimestampDateAndTimeISO8601)
+s = formatTimestamp(mTimestamp, TimestampDateAndTimeISO8601)
 s = s & "," & mRecoveryContextName
 s = s & "," & mItemType
 
@@ -127,7 +127,7 @@ mToString = s
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub InitialiseFromString(ByVal pValue As String)
@@ -157,7 +157,7 @@ If mItemType = OrderInfoData Then
     Dim lStartPos As Long
     lStartPos = InStr(1, pValue, mItemType) + Len(mItemType) + 2
     lData = Mid$(pValue, lStartPos, Len(pValue) - lStartPos)
-    gLog lData, ProcName, ModuleName, , LogLevelDetail
+    GOrderUtils.Log lData, ProcName, ModuleName, , LogLevelDetail
     ParseJSON lData, mData
     If TypeOf mData Is PMS Then
         Dim lPMS As PMS: Set lPMS = mData
@@ -174,7 +174,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ToString() As String

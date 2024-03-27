@@ -134,7 +134,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -176,7 +176,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -202,7 +202,7 @@ If Not mBracketOrderListener Is Nothing Then mBracketOrderListener.Add ev.Future
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -237,7 +237,7 @@ Set mBracketOrderListener = pBracketOrderListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -274,7 +274,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

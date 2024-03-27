@@ -125,11 +125,11 @@ Set lOrderContext = ev.Source
 If ev.changeType = OrderContextChangeTypes.OrderContextReadyStateChanged And _
     lOrderContext.IsProviderReady _
 Then
-    gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name, LogLevelDetail
+    GOrderUtils.Log "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name, LogLevelDetail
     mNumOrderContextsWaiting = mNumOrderContextsWaiting - 1
     lOrderContext.RemoveChangeListener Me
     If mNumOrderContextsWaiting = 0 And mState = RecoveryStateWaitingForOrderContexts Then
-        gLog "All order contexts are ready", ProcName, ModuleName
+        GOrderUtils.Log "All order contexts are ready", ProcName, ModuleName
         mState = RecoveryStateProcessingInfo
         mTaskContext.Continue
     End If
@@ -138,7 +138,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -243,7 +243,7 @@ mDataStore.SaveOrderInfo mScopeName, lOpi.ToString
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverableObjectListener_WriteRecoveryDataComment(ev As RecoveryDataCommentEventData)
@@ -267,7 +267,7 @@ mDataStore.SaveOrderInfo mScopeName, s
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -294,17 +294,17 @@ Static sPositionManagersEn As Enumerator
 Dim lOpItem As OPI
 
 If mState = RecoveryStateStarting Then
-    gLog "Starting order recovery", ProcName, ModuleName
+    GOrderUtils.Log "Starting order recovery", ProcName, ModuleName
     If mRecoveryAgent Is Nothing Or mOrderSubmitterFactory Is Nothing Then
         mTaskContext.Finish mPositionManagers, False
-        gLog "No order recovery undertaken - order submitter factory and/or order recovery agent is not configured", ProcName, ModuleName
+        GOrderUtils.Log "No order recovery undertaken - order submitter factory and/or order recovery agent is not configured", ProcName, ModuleName
         Exit Sub
     End If
 
-    gLog "Persisted order info processing started", ProcName, ModuleName
+    GOrderUtils.Log "Persisted order info processing started", ProcName, ModuleName
     mProcessingPersistedData = True
     Set sDataStoreEn = mDataStore.GetEnumeratorForScope(mScopeName)
-    gLog "Extracting recovery data", ProcName, ModuleName
+    GOrderUtils.Log "Extracting recovery data", ProcName, ModuleName
     mState = RecoveryStateExtractingInfo
 
 ElseIf mState = RecoveryStateExtractingInfo Then
@@ -317,11 +317,11 @@ ElseIf mState = RecoveryStateExtractingInfo Then
             mProcessingPersistedData = False
             mDataStore.Clear mScopeName
             mTaskContext.Finish mPositionManagers, False
-            gLog "Order recovery completed - nothing to recover", ProcName, ModuleName
+            GOrderUtils.Log "Order recovery completed - nothing to recover", ProcName, ModuleName
             Exit Sub
         End If
         Set sInMemoryStoreEn = mInMemoryStore.Enumerator
-        gLog "Creating position managers", ProcName, ModuleName
+        GOrderUtils.Log "Creating position managers", ProcName, ModuleName
         mState = RecoveryStateCreatingPositionManagers
     End If
 ElseIf mState = RecoveryStateCreatingPositionManagers Then
@@ -332,7 +332,7 @@ ElseIf mState = RecoveryStateCreatingPositionManagers Then
     Else
         Set sPositionManagersEn = mPositionManagers.Enumerator
         mContractFetchesRemaining = mPositionManagers.Count
-        gLog "Creating data sources", ProcName, ModuleName
+        GOrderUtils.Log "Creating data sources", ProcName, ModuleName
         mState = RecoveryStateCreatingDataSources
     End If
 ElseIf mState = RecoveryStateCreatingDataSources Then
@@ -341,7 +341,7 @@ ElseIf mState = RecoveryStateCreatingDataSources Then
         Dim lContract As IContract: Set lContract = lPm.ContractFuture.Value
         
         If IsContractExpired(lContract) Then
-            gLog "Discarding order recovery information for expired contract", ProcName, ModuleName, lContract.Specifier.ToString
+            GOrderUtils.Log "Discarding order recovery information for expired contract", ProcName, ModuleName, lContract.Specifier.ToString
         Else
             Dim lDataSource As MarketDataSource
             Set lDataSource = mMarketDataManager.CreateMarketDataSource(lPm.ContractFuture, False)
@@ -353,7 +353,7 @@ ElseIf mState = RecoveryStateCreatingDataSources Then
         End If
     Else
         Set sInMemoryStoreEn = mInMemoryStore.Enumerator
-        gLog "Creating order contexts", ProcName, ModuleName
+        GOrderUtils.Log "Creating order contexts", ProcName, ModuleName
         mState = RecoveryStateCreatingOrderContexts
     End If
 ElseIf mState = RecoveryStateCreatingOrderContexts Then
@@ -373,12 +373,12 @@ ElseIf mState = RecoveryStateCreatingOrderContexts Then
         On Error GoTo ErrWithRestoreData
         
         If mNumOrderContextsWaiting <> 0 Then
-            gLog "Waiting for order contexts to be ready", ProcName, ModuleName
+            GOrderUtils.Log "Waiting for order contexts to be ready", ProcName, ModuleName
             mState = RecoveryStateWaitingForOrderContexts
             mTaskContext.Suspend -1
         Else
             mDataStore.Clear mScopeName
-            gLog "Processing recovery data", ProcName, ModuleName
+            GOrderUtils.Log "Processing recovery data", ProcName, ModuleName
             mState = RecoveryStateProcessingInfo
         End If
     End If
@@ -388,16 +388,16 @@ ElseIf mState = RecoveryStateProcessingInfo Then
     If sInMemoryStoreEn.MoveNext Then
         Set lOpItem = sInMemoryStoreEn.Current
         
-        gLog "Processing persisted order info: " & lOpItem.ToString, ProcName, ModuleName, , LogLevelDetail
+        GOrderUtils.Log "Processing persisted order info: " & lOpItem.ToString, ProcName, ModuleName, , LogLevelDetail
     
         If processOrderPersistenceItem(lOpItem) Then
             mDataStore.SaveOrderInfo mScopeName, lOpItem.ToString
         End If
     Else
         mProcessingPersistedData = False
-        gLog "Persisted order info processing completed", ProcName, ModuleName
+        GOrderUtils.Log "Persisted order info processing completed", ProcName, ModuleName
         
-        gLog "Recovering orders", ProcName, ModuleName
+        GOrderUtils.Log "Recovering orders", ProcName, ModuleName
         mState = RecoveryStateRecoveringOrders
     End If
 ElseIf mState = RecoveryStateRecoveringOrders Then
@@ -428,7 +428,7 @@ ElseIf mState = RecoveryStateRecoveringOrders Then
         End If
     Next
 
-    gLog "Starting order recovery", ProcName, ModuleName
+    GOrderUtils.Log "Starting order recovery", ProcName, ModuleName
     mRecoveryAgent.StartOrderRecovery Me, mStartRecoveryFrom
     mTaskContext.Suspend -1
 End If
@@ -480,7 +480,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function RecoverOrders( _
@@ -520,12 +520,12 @@ Set mRecoveryAgent = pRecoveryAgent
 
 Set RecoverOrders = StartTask(Me, PriorityNormal, , pCookie)
 
-gLog "Order recovery task started", ProcName, ModuleName
+GOrderUtils.Log "Order recovery task started", ProcName, ModuleName
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -547,7 +547,7 @@ Set createBracketOrderRecoverer = lBor
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub ensurePositionManagerExists(ByVal pOpItem As OPI)
@@ -582,7 +582,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub FinishRecovery()
@@ -616,10 +616,10 @@ Do While en.MoveNext
     
     Dim lContract As IContract: Set lContract = pm.ContractFuture.Value
     If IsContractExpired(pm.ContractFuture.Value) Then
-        gLog "Finishing position manager for expired contract: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
+        GOrderUtils.Log "Finishing position manager for expired contract: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
         lPMsToFinish.Add pm
     ElseIf Not pm.IsActive Then
-        gLog "Finishing inactive position manager: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
+        GOrderUtils.Log "Finishing inactive position manager: " & lContract.ToString, ProcName, ModuleName, , LogLevelDetail
         lPMsToFinish.Add pm
     End If
 Loop
@@ -633,12 +633,12 @@ Next
 
 mTaskContext.Finish mPositionManagers, False
 
-gLog "Order recovery completed", ProcName, ModuleName
+GOrderUtils.Log "Order recovery completed", ProcName, ModuleName
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getOrderContext( _
@@ -650,17 +650,17 @@ On Error GoTo Err
 Dim lOrderContext As OrderContext
 
 If pPositionManager.OrderContexts.Contains(pContextName) Then
-    gLog "Order context already exists", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName, LogLevelDetail
+    GOrderUtils.Log "Order context already exists", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName, LogLevelDetail
     Set lOrderContext = pPositionManager.OrderContexts(pContextName)
 Else
-    gLog "Creating order context", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName, LogLevelDetail
+    GOrderUtils.Log "Creating order context", ProcName, ModuleName, pPositionManager.Name & "/" & pContextName, LogLevelDetail
     Set lOrderContext = pPositionManager.OrderContexts.Add(pContextName)
     If lOrderContext.IsProviderReady Then
-        gLog "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name, LogLevelDetail
+        GOrderUtils.Log "Order context ready", ProcName, ModuleName, lOrderContext.RecoveryContextName & "/" & lOrderContext.Name, LogLevelDetail
     Else
         lOrderContext.AddChangeListener Me
         mNumOrderContextsWaiting = mNumOrderContextsWaiting + 1
-        gLog "Order contexts awaiting ready", ProcName, ModuleName, mNumOrderContextsWaiting, LogLevelDetail
+        GOrderUtils.Log "Order contexts awaiting ready", ProcName, ModuleName, mNumOrderContextsWaiting, LogLevelDetail
     End If
 End If
 
@@ -669,7 +669,7 @@ Set getOrderContext = lOrderContext
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function GetPositionManager( _
@@ -679,7 +679,7 @@ On Error GoTo Err
 
 Dim lPm As PositionManager
 If Not mPositionManagersByRecoveryContextName.TryItem(lOpItem.RCN, lPm) Then
-    gLog "PositionManager " & lOpItem.RCN & " not recovered", ProcName, ModuleName, , LogLevelDetail
+    GOrderUtils.Log "PositionManager " & lOpItem.RCN & " not recovered", ProcName, ModuleName, , LogLevelDetail
 End If
 
 Set GetPositionManager = lPm
@@ -687,7 +687,7 @@ Set GetPositionManager = lPm
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub mapOrderIdToBracketOrderRecoverer(ByVal pOrder As IOrder, ByVal pBor As BracketOrderRecoverer)
@@ -701,7 +701,7 @@ mOrderIdToBracketOrderRecoverer.Add pBor, pOrder.Id
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub mapOrderIdsToBracketOrderRecoverer( _
@@ -717,7 +717,7 @@ mapOrderIdToBracketOrderRecoverer pBor.BracketOrder.TargetOrder, pBor
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function orderMayBeOutstanding(ByVal pOrder As IOrder) As Boolean
@@ -756,7 +756,7 @@ mapOrderIdsToBracketOrderRecoverer lBor
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processExecutionReport(ByVal pOpi As OPI)
@@ -776,7 +776,7 @@ lBor.UpdateExecution lExec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processOrder(ByVal pOpi As OPI) As Boolean
@@ -808,7 +808,7 @@ processOrder = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processOrderPersistenceInfo( _
@@ -829,7 +829,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processOrderPersistenceItem( _
@@ -870,7 +870,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processPositionManager( _
@@ -889,7 +889,7 @@ lRecoverable.LoadRecoveryData pOpi.RCN, lSummary
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub restoreOrderPersistenceDataAndFail(ByVal pProcName As String)
@@ -901,7 +901,7 @@ Assert lErrNum <> 0, "Not called in error context"
 
 Static sRestored As Boolean
 
-If sRestored Then HandleUnexpectedError pProcName, ProjectName, ModuleName, , , , lErrNum, lErrMsg, lErrSource
+If sRestored Then TWUtilities40.HandleUnexpectedError pProcName, ProjectName, ModuleName, , , , lErrNum, lErrMsg, lErrSource
 
 sRestored = True
 
@@ -916,7 +916,7 @@ Do While en.MoveNext
     mDataStore.SaveOrderInfo mScopeName, lOpItem.ToString
 Loop
 
-HandleUnexpectedError pProcName, ProjectName, ModuleName, , , , lErrNum, lErrMsg, lErrSource
+TWUtilities40.HandleUnexpectedError pProcName, ProjectName, ModuleName, , , , lErrNum, lErrMsg, lErrSource
 End Sub
 
 

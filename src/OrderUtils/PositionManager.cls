@@ -202,7 +202,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -230,7 +230,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -267,7 +267,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -293,11 +293,11 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
-    gLog "Order not in collection: id=" & pOrderId, _
+    GOrderUtils.Log "Order not in collection: id=" & pOrderId, _
         ProcName, ModuleName, , LogLevelNormal
         Exit Sub
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
@@ -307,7 +307,7 @@ On Error GoTo Err
 Dim lExec As Execution
 
 If mExecutions.Contains(pExecutionReport.Id) Then
-    gLog "Duplicate execution report received with id: " & pExecutionReport.Id, _
+    GOrderUtils.Log "Duplicate execution report received with id: " & pExecutionReport.Id, _
             ProcName, ModuleName, , LogLevelDetail
     ' we've already had this notification
     Set lExec = mExecutions.Item(pExecutionReport.Id)
@@ -317,7 +317,7 @@ If mExecutions.Contains(pExecutionReport.Id) Then
     Exit Sub
 End If
 
-gLog "New execution report received with id: " & pExecutionReport.Id, _
+GOrderUtils.Log "New execution report received with id: " & pExecutionReport.Id, _
         ProcName, ModuleName, , LogLevelDetail
 
 If TypeOf pExecutionReport Is Execution Then
@@ -354,7 +354,7 @@ fireChange PositionManagerChangeTypes.PositionSizeChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyMessage(ByVal pOrderId As String, ByVal pMessage As String)
@@ -368,11 +368,11 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
-    gLog "Order not in collection: id=" & pOrderId, _
+    GOrderUtils.Log "Order not in collection: id=" & pOrderId, _
         ProcName, ModuleName, , LogLevelNormal
         Exit Sub
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyOrderReport(ByVal pOrderReport As IOrderReport)
@@ -385,14 +385,14 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
-    gLog "Order not in collection: id=" & _
+    GOrderUtils.Log "Order not in collection: id=" & _
             pOrderReport.Id & _
             "; broker id=" & _
             pOrderReport.BrokerId, _
         ProcName, ModuleName, , LogLevelNormal
         Exit Sub
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyOrderStatusReport(ByVal pOrderStatusReport As IOrderStatusReport)
@@ -407,14 +407,14 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then
-    gLog "Order not in collection: id=" & _
+    GOrderUtils.Log "Order not in collection: id=" & _
             pOrderStatusReport.OrderId & _
             "; broker id=" & _
             pOrderStatusReport.BrokerId, _
         ProcName, ModuleName, , LogLevelNormal
         Exit Sub
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -430,7 +430,7 @@ AddRecoverableObjectListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
@@ -447,7 +447,7 @@ FinishRecovery
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverable_LoadRecoveryData( _
@@ -484,7 +484,7 @@ mIsInitialised = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IRecoverable_ProgId() As String
@@ -508,7 +508,7 @@ RemoveRecoverableObjectListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -545,7 +545,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -572,7 +572,7 @@ End Select
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -583,7 +583,7 @@ Private Sub mPositionCloser_PositionClosed()
 Const ProcName As String = "mPositionCloser_PositionClosed"
 On Error GoTo Err
 
-gLog "Closing positions succeeded for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
+GOrderUtils.Log "Closing positions succeeded for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
 
 mClosingPosition = False
 Set mPositionCloser = Nothing
@@ -592,14 +592,14 @@ fireChange PositionClosed
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mPositionCloser_PositionNotClosed(ByVal pErrorMessage As String)
 Const ProcName As String = "mPositionCloser_PositionNotClosed"
 On Error GoTo Err
 
-gLog "Closing positions failed for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
+GOrderUtils.Log "Closing positions failed for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
 
 mClosingPosition = False
 
@@ -610,7 +610,7 @@ Set mPositionCloser = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -622,7 +622,7 @@ Const ProcName As String = "mSession_SessionEnded"
 On Error GoTo Err
 
 'If mProfitIncrement = 0 Then Exit Sub
-'GLogProfitProfile FormatTimestamp(mProfitProfileBarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+'GOrderUtils.LogProfitProfile FormatTimestamp(mProfitProfileBarStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
 '                    mProfitProfileBarNumber & "," & _
 '                    mProfitProfileBarOpen & "," & _
 '                    mProfitProfileBarHigh & "," & _
@@ -630,7 +630,7 @@ On Error GoTo Err
 '                    mProfitProfileBarClose, _
 '                    mIsSimulated, _
 '                    Me
-'GLogProfitProfile FormatTimestamp(mSession.SessionCurrentTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+'GOrderUtils.LogProfitProfile FormatTimestamp(mSession.SessionCurrentTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
 '                mProfitProfileBarNumber + 1 & "," & _
 '                mSessionProfit & "," & _
 '                mSessionProfit & "," & _
@@ -642,7 +642,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEventData)
@@ -659,7 +659,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -684,7 +684,7 @@ Set BracketOrders = mBracketOrders
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ContractFuture() As IFuture
@@ -697,7 +697,7 @@ Set ContractFuture = mContractFuture
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ContractName() As String
@@ -718,7 +718,7 @@ Set DataSource = mDataSource
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Drawdown() As BoxedDecimal
@@ -732,7 +732,7 @@ Set Drawdown = mSessionDrawdown
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DrawdownLastTrade() As BoxedDecimal
@@ -745,7 +745,7 @@ Set DrawdownLastTrade = mSummary.DrawdownLastTrade
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DrawdownThisTrade() As BoxedDecimal
@@ -757,7 +757,7 @@ Set DrawdownThisTrade = mMaxProfitThisTrade.Subtr(mProfitThisTrade)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get EndingSession() As Boolean
@@ -774,7 +774,7 @@ Set Executions = mExecutions
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let FixedAccountBalance(ByVal Value As Double)
@@ -797,7 +797,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get HasBracketOrdersWithNonZeroSizes() As Boolean
@@ -815,7 +815,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsActive() As Boolean
@@ -835,7 +835,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 
@@ -857,7 +857,7 @@ IsRiskUnlimited = (Risk = MaxCurrency)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsSimulated() As Boolean
@@ -870,7 +870,7 @@ IsSimulated = mSummary.IsSimulated
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaxLoss() As BoxedDecimal
@@ -883,7 +883,7 @@ Set MaxLoss = mMaxSessionLoss
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaxLossThisTrade() As BoxedDecimal
@@ -895,7 +895,7 @@ Set MaxLossThisTrade = mMaxLossThisTrade
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaxProfit() As BoxedDecimal
@@ -908,7 +908,7 @@ Set MaxProfit = mMaxSessionProfit
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MaxProfitThisTrade() As BoxedDecimal
@@ -920,7 +920,7 @@ Set MaxProfitThisTrade = mMaxProfitThisTrade
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Name() As String
@@ -937,7 +937,7 @@ Set OrderContexts = mOrderContexts
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Orders() As Orders
@@ -950,7 +950,7 @@ Set Orders = mOrders
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OrderSubmitter() As IOrderSubmitter
@@ -976,7 +976,7 @@ Set PendingBuyPositionSize = Size
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PendingPositionSize() As BoxedDecimal
@@ -998,7 +998,7 @@ Set PendingPositionSize = Size
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PendingSellPositionSize() As BoxedDecimal
@@ -1020,7 +1020,7 @@ Set PendingSellPositionSize = Size
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PositionCloseErrorMessage() As String
@@ -1037,7 +1037,7 @@ Set PositionSize = mQuantityOutstanding
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Profit() As BoxedDecimal
@@ -1050,7 +1050,7 @@ Set Profit = mSessionProfit
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ProfitLastTrade() As BoxedDecimal
@@ -1063,7 +1063,7 @@ Set ProfitLastTrade = mSummary.ProfitLastTrade
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ProfitThisTrade() As BoxedDecimal
@@ -1076,7 +1076,7 @@ Set ProfitThisTrade = mProfitThisTrade
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ProviderIsReady() As Boolean
@@ -1089,7 +1089,7 @@ ProviderIsReady = mProviderIsReady
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Risk() As Currency
@@ -1116,7 +1116,7 @@ Risk = totRisk
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TradeStartTime() As Date
@@ -1128,7 +1128,7 @@ TradeStartTime = mTradeStartTime
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TradeStartTimezoneName() As String
@@ -1140,7 +1140,7 @@ TradeStartTimezoneName = mTradeStartTimezoneName
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -1156,7 +1156,7 @@ mChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
@@ -1168,7 +1168,7 @@ mOrderSubmitter.AddOrderSubmissionListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddProfitListener(ByVal pListener As IProfitListener)
@@ -1201,7 +1201,7 @@ pListener.NotifyProfit ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)
@@ -1214,7 +1214,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ClosePositions( _
@@ -1230,7 +1230,7 @@ If mClosingPosition Then
     Exit Function
 End If
 
-gLog "Closing positions for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
+GOrderUtils.Log "Closing positions for: " & mSummary.Name, ProcName, ModuleName, , LogLevelDetail
 
 mPositionCloseErrorMessage = ""
 mClosingPosition = True
@@ -1241,7 +1241,7 @@ Set ClosePositions = mPositionCloser.ClosePositions(Me, pCloseoutMode, pPriceSpe
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub CompleteRecoveryInitialisation( _
@@ -1300,7 +1300,7 @@ Set mOrderContexts = mOrderManager.CreateOrderContextsEx(mSummary.Name, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -1319,7 +1319,7 @@ doFinish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -1378,7 +1378,7 @@ mIsInitialised = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PreInitialise( _
@@ -1405,7 +1405,7 @@ If Not IsFinished Then doFinish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
@@ -1417,7 +1417,7 @@ mChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
@@ -1429,7 +1429,7 @@ mOrderSubmitter.RemoveOrderSubmissionListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveProfitListener(ByVal pListener As IProfitListener)
@@ -1441,7 +1441,7 @@ mProfitListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)
@@ -1453,7 +1453,7 @@ mRecoverableObjectListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StartRecovery()
@@ -1468,7 +1468,7 @@ mRecovering = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1531,20 +1531,20 @@ End If
 fireProfit lProfitTypes
 
 If lProfitTypes And ProfitTypes.ProfitTypeSessionProfit Then
-    gLogProfit mSessionProfit, mSummary.IsSimulated, Me
-    gLogDrawDown mSessionDrawdown, mSummary.IsSimulated, Me
+    LogProfit mSessionProfit, mSummary.IsSimulated, Me
+    GOrderUtils.LogDrawDown mSessionDrawdown, mSummary.IsSimulated, Me
 End If
 If lProfitTypes And ProfitTypeSessionMaxProfit Then
-    gLogMaxProfit mMaxSessionProfit, mSummary.IsSimulated, Me
+    GOrderUtils.LogMaxProfit mMaxSessionProfit, mSummary.IsSimulated, Me
 End If
 If lProfitTypes And ProfitTypeSessionMaxLoss Then
-    gLogMaxLoss mMaxSessionLoss, mSummary.IsSimulated, Me
+    GOrderUtils.LogMaxLoss mMaxSessionLoss, mSummary.IsSimulated, Me
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub checkCloseall()
@@ -1561,14 +1561,14 @@ If mMoneyManager.CloseAll(Me, _
                         lEndSession) _
 Then
     If Not mClosingPosition Then
-        gLogMoneyManagement "Close all positions: " & msg, mSummary.IsSimulated, Me
+        GOrderUtils.LogMoneyManagement "Close all positions: " & msg, mSummary.IsSimulated, Me
         ClosePositions False
     End If
 Else
     If lEndSession And Not mClosingPosition Then
         If Not mEndingSession Then
             mEndingSession = True
-            gLogMoneyManagement "Ending Session: " & msg, mSummary.IsSimulated, Me
+            GOrderUtils.LogMoneyManagement "Ending Session: " & msg, mSummary.IsSimulated, Me
         End If
     End If
 End If
@@ -1576,7 +1576,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub checkInitialised()
@@ -1597,7 +1597,7 @@ If Not IsActive Then setupNewSession
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub DeleteRecoveryInfo()
@@ -1607,13 +1607,13 @@ On Error GoTo Err
 If mBracketOrderRecoveryController Is Nothing Then Exit Sub
 
 mInitialRecoveryDataSaved = False
-gLog "Deleting order recovery info for Position Manager", ProcName, ModuleName, mSummary.Name, LogLevelDetail
+GOrderUtils.Log "Deleting order recovery info for Position Manager", ProcName, ModuleName, mSummary.Name, LogLevelDetail
 mBracketOrderRecoveryController.DeleteRecoveryInfo mRecoveryContextName
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doFinish()
@@ -1654,7 +1654,7 @@ mIsFinished = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub FinishRecovery()
@@ -1694,7 +1694,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireChange( _
@@ -1728,7 +1728,7 @@ RaiseEvent Change(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireProfit( _
@@ -1761,7 +1761,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireRecoveryDataChanged()
@@ -1791,7 +1791,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function haveActiveBracketOrders() As Boolean
@@ -1806,7 +1806,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function haveClosedBracketOrders() As Boolean
@@ -1821,7 +1821,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub init()
@@ -1856,7 +1856,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyPositionChange(ByVal pExec As IExecutionReport)
@@ -1865,7 +1865,7 @@ On Error GoTo Err
 
 If mQuantityOutstanding <> 0 Then
     'we need to notify the position change before the Profit
-    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
+    LogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
 
     If mQuantityOutstanding < 0 Then
         If mLastAsk <> 0 Then
@@ -1880,8 +1880,8 @@ Else
     'we need to notify the position change after the final Profit
     calcProfits
     
-    gLogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
-    gLogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
+    LogPosition mQuantityOutstanding, mSummary.IsSimulated, Me
+    LogTradeProfile FormatTimestamp(mTradeStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(pExec.FillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             mTradeStartTimezoneName & "," & _
             mProfitThisTrade & "," & _
@@ -1904,7 +1904,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processAskTick(ByRef pTick As GenericTick)
@@ -1924,7 +1924,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processBidTick(ByRef pTick As GenericTick)
@@ -1944,7 +1944,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processExecution(ByVal pExec As IExecutionReport)
@@ -1970,7 +1970,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub SaveRecoveryInfo()
@@ -1989,7 +1989,7 @@ mSummary.SetClean
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setContract()
@@ -2002,12 +2002,12 @@ Set lContract = mContractFuture.Value
 If mSummary.Contract Is Nothing Then mSummary.Contract = lContract
 Set mMultiplier = CreateBoxedDecimal(lContract.Specifier.Multiplier)
 mCurrencyCode = lContract.Specifier.CurrencyCode
-mContractName = gGetContractName(lContract.Specifier)
+mContractName = GOrderUtils.GetContractName(lContract.Specifier)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupNewSession()
@@ -2044,7 +2044,7 @@ If mInitialRecoveryDataSaved Then SaveRecoveryInfo
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setupSessionBracketOrders()
@@ -2066,7 +2066,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function stillInInitialSession() As Boolean
@@ -2076,7 +2076,7 @@ On Error GoTo Err
 If mSession.CurrentSessionStartTime = mSummary.TradingSessionStartTime Then
     stillInInitialSession = True
 Else
-    gLog "Session start times: current=" & FormatTimestamp(mSession.CurrentSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & _
+    GOrderUtils.Log "Session start times: current=" & FormatTimestamp(mSession.CurrentSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & _
             "; initial=" & FormatTimestamp(mSummary.TradingSessionStartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs), _
         ProcName, ModuleName, mSummary.Name, LogLevelDetail
     stillInInitialSession = False
@@ -2085,6 +2085,6 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 

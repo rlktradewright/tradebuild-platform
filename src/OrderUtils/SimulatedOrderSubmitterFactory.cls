@@ -86,7 +86,7 @@ mFutureWaiter.Add pDataSource.ContractFuture, pDataSource
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IOrderSubmitterFactory_NeedsDataSource() As Boolean
@@ -129,7 +129,7 @@ lSubmitter.SetSimulator lSimulator
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -154,7 +154,7 @@ mSubmitters.Remove pSubmitter.Key
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

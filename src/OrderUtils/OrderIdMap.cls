@@ -84,7 +84,7 @@ If Not mBrokerIds.Contains(pOrderId) Then mBrokerIds.Add pBrokerId, pOrderId
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetBrokerId( _
@@ -97,7 +97,7 @@ mBrokerIds.TryItem pOrderId, GetBrokerId
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
                 
 Friend Function GetOrderId( _
@@ -110,7 +110,7 @@ mOrderIds.TryItem pBrokerId, GetOrderId
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
                 
 '@================================================================================

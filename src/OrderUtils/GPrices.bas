@@ -65,7 +65,7 @@ Public Const BidAskSpreadPercentOffsetDesignator    As String = "S"
 '@================================================================================
 
 Public Function gNewPriceSpecifier( _
-                Optional ByVal pPrice As Double = MaxDoubleValue, _
+                Optional ByVal pPrice As Double = GOrderUtils.MaxDoubleValue, _
                 Optional ByVal pPriceString As String = "", _
                 Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
                 Optional ByVal pOffset As Double = 0#, _
@@ -88,21 +88,21 @@ Const ProcName As String = "gParsePrice"
 On Error GoTo Err
 
 If pValue = "" Then
-    Set pPriceSpec = gNewPriceSpecifier(MaxDoubleValue, "", PriceValueTypeNone, 0, PriceOffsetTypeNone)
+    Set pPriceSpec = gNewPriceSpecifier(GOrderUtils.MaxDoubleValue, "", PriceValueTypeNone, 0, PriceOffsetTypeNone)
     gParsePriceAndOffset = True
     Exit Function
 End If
 
-gRegExp.Global = False
-gRegExp.IgnoreCase = True
+GOrders.RegExpProcessor.Global = False
+GOrders.RegExpProcessor.IgnoreCase = True
 
 Dim p As String
 p = "(?:^(?:(ASK|BID|BIDASK|LAST|ENTRY|MID|MODEL|(?:[-+]?\d{1,6}(?:.\d{1,6})?))?)(?:\[(?:([-+]?\d{1,6}(?:.\d{1,6})?))([T%S]?)\])?$)"
 
-gRegExp.Pattern = p
+GOrders.RegExpProcessor.Pattern = p
 
 Dim lMatches As MatchCollection
-Set lMatches = gRegExp.Execute(Trim$(pValue))
+Set lMatches = GOrders.RegExpProcessor.Execute(Trim$(pValue))
 
 If lMatches.Count <> 1 Then
     pMessage = "price syntax is invalid"
@@ -112,7 +112,7 @@ End If
 
 Dim lMatch As Match: Set lMatch = lMatches(0)
 
-Dim lPrice As Double: lPrice = MaxDoubleValue
+Dim lPrice As Double: lPrice = GOrderUtils.MaxDoubleValue
 Dim lPriceType As PriceValueTypes
 Dim lOffset As Double
 Dim lOffsetType As PriceOffsetTypes
@@ -137,7 +137,7 @@ Case MidPriceDesignator
     lPriceType = PriceValueTypeMid
 Case Else
     lPriceType = PriceValueTypeValue
-    If Not parseprice(lPricePart, pSecType, pTickSize, lPrice) Then
+    If Not ParsePrice(lPricePart, pSecType, pTickSize, lPrice) Then
         pMessage = "price is not valid for this tick size"
         gParsePriceAndOffset = False
         Exit Function
@@ -172,7 +172,7 @@ gParsePriceAndOffset = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gPriceOffsetToString( _
@@ -186,7 +186,7 @@ gPriceOffsetToString = pOffset & gPriceOffsetTypeToString(pOffsetType)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gPriceOffsetTypeToString( _
@@ -212,7 +212,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gPriceOrSpecifierToString( _
@@ -222,7 +222,7 @@ Public Function gPriceOrSpecifierToString( _
 Const ProcName As String = "gPriceOrSpecifierToString"
 On Error GoTo Err
 
-If pPrice = MaxDoubleValue Then
+If pPrice = GOrderUtils.MaxDoubleValue Then
     gPriceOrSpecifierToString = gPriceSpecifierToString(pPriceSpec, pContract)
 Else
     gPriceOrSpecifierToString = FormatPrice(pPrice, pContract.Specifier.SecType, pContract.TickSize)
@@ -231,7 +231,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gPriceSpecifierToString( _
@@ -251,7 +251,7 @@ gPriceSpecifierToString = gTypedPriceToString( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gRoundToTickBoundary( _
@@ -309,7 +309,7 @@ gTypedPriceToString = s
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

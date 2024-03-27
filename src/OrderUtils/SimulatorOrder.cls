@@ -184,7 +184,7 @@ mTransmit = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get Transmit() As Boolean

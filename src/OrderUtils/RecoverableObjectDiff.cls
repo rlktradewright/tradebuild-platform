@@ -78,7 +78,7 @@ IJSONAble_ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -113,7 +113,7 @@ mProperties.Add pName, pValue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub UpdateHost(ByVal pHost As Object)
@@ -131,7 +131,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

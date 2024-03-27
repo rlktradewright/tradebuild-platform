@@ -108,7 +108,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -138,7 +138,7 @@ queueOrders
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -183,7 +183,7 @@ Set PermittedOrderProperties = lPermittedOrderProperties
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let UsageCount(ByVal Value As Long)
@@ -215,7 +215,7 @@ setCancelOrder lOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetOcaGroup( _
@@ -230,7 +230,7 @@ GetOcaGroup = lOrder.OcaGroup
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -246,7 +246,7 @@ mKey = pKey
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub PlaceOrder( _
@@ -284,7 +284,7 @@ ElseIf pOrder.BrokerId = "" Then
 Else
     ' the order is being updated
     Set lSimulatorOrder = mAllOrders(pOrder.Id)
-    gSyncToOrder lSimulatorOrder.Order, pOrder
+    SyncToOrder lSimulatorOrder.Order, pOrder
     lSimulatorOrder.Transmit = pTransmit
 End If
 
@@ -293,7 +293,7 @@ queueOrder lSimulatorOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveOrdersForListener(ByVal pListener As IOrderSubmissionListener)
@@ -314,7 +314,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
                     
 '@================================================================================
@@ -338,7 +338,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function createExecId() As String
@@ -380,7 +380,7 @@ Dim lOrder As New Order
 lOrder.DontCheckAttributeModificationPermitted = True
 lOrder.Initialise pOrder.GroupName, pOrder.ContractSpecifier, pOrder.OrderContext
 lOrder.Id = pOrder.Id
-gSyncToOrder lOrder, pOrder
+SyncToOrder lOrder, pOrder
 
 Dim lSimulatorOrder As New SimulatorOrder
 lSimulatorOrder.Initialise lOrder, pParentId, pOcaGroup, pTransmit, pListener
@@ -393,7 +393,7 @@ Set createSimulatorOrder = lSimulatorOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function delay() As Long
@@ -421,7 +421,7 @@ pOrder.Handled = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub handleNewOrders()
@@ -440,7 +440,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub handlePendingSubmitOrders()
@@ -458,7 +458,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub handleRelatedOrders(ByVal pOrder As SimulatorOrder)
@@ -492,7 +492,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub matchOrder(ByVal pOrder As SimulatorOrder)
@@ -519,7 +519,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
@@ -547,7 +547,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub NotifyOrderReport( _
@@ -593,7 +593,7 @@ pOrder.Listener.NotifyOrderReport lOrderReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyOrderStatus( _
@@ -610,7 +610,7 @@ pOrder.Listener.NotifyOrderStatusReport lOrderStatusReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processAsk(ByVal Timestamp As Date, _
@@ -659,7 +659,7 @@ queueOrders
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processBid(ByVal Timestamp As Date, _
@@ -708,7 +708,7 @@ queueOrders
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processTrade(ByVal pTimestamp As Date, _
@@ -773,7 +773,7 @@ queueOrders
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub queueOrder(ByVal pSimulatorOrder As SimulatorOrder)
@@ -819,7 +819,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub queueOrders()
@@ -838,7 +838,7 @@ mOrdersToBeQueued.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
                     
 Private Sub setCancelOrder(ByVal pOrder As SimulatorOrder)
@@ -864,7 +864,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setFillOrder(ByVal pOrder As SimulatorOrder, _
@@ -931,7 +931,7 @@ If pOrder.Order.QuantityRemaining = 0 Then pOrder.IsFinished = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOrderStatus( _
@@ -947,7 +947,7 @@ notifyOrderStatus pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setRejectOrder( _
@@ -965,7 +965,7 @@ notifyOrderStatus pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSubmitOrder(pOrder As SimulatorOrder)
@@ -1002,7 +1002,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

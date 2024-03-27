@@ -69,7 +69,7 @@ Set mExecutions = New EnumerableCollection
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -85,7 +85,7 @@ Set IEnumerable_Enumerator = getEnumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IEnumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
@@ -119,7 +119,7 @@ fireCollectionChanged ev
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -135,7 +135,7 @@ Count = mExecutions.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -151,7 +151,7 @@ mExecutions.Add pExecution, pExecution.Id
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
@@ -164,7 +164,7 @@ mCollectionChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Clear()
@@ -176,7 +176,7 @@ mExecutions.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Contains(ByVal pIndex As Variant) As Boolean
@@ -188,7 +188,7 @@ Contains = mExecutions.Contains(pIndex)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(ByVal pExecId As String) As IExecutionReport
@@ -201,7 +201,7 @@ Set Item = mExecutions.Item(pExecId)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -215,7 +215,7 @@ Set NewEnum = getEnumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub NotifyChange(pExecution As IExecutionReport)
@@ -227,7 +227,7 @@ mExecutions.NotifyChange pExecution.Id
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
@@ -239,7 +239,7 @@ mCollectionChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -272,7 +272,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getEnumerator() As Enumerator
@@ -284,7 +284,7 @@ Set getEnumerator = mExecutions.Enumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

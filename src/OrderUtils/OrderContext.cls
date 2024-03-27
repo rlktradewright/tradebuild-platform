@@ -142,7 +142,7 @@ If TypeOf ev.Source Is ICurrencyConverter Then fireChange OrderContextReadyState
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -169,7 +169,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -198,7 +198,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CancelPending() As Boolean
@@ -213,7 +213,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Clock() As Clock
@@ -226,7 +226,7 @@ Set Clock = mClock
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ClosedBracketOrders() As BracketOrders
@@ -265,7 +265,7 @@ fireChange OrderContextReadyStateChanged
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let FixedAccountBalance(ByVal Value As Double)
@@ -289,7 +289,7 @@ fireChange OrderContextReadyStateChanged
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsActive() As Boolean
@@ -308,7 +308,7 @@ fireChange OrderContextReadyStateChanged
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsDataSourceReady() As Boolean
@@ -331,7 +331,7 @@ fireChange OrderContextReadyStateChanged
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsProviderReady() As Boolean
@@ -400,7 +400,7 @@ Set PendingBuySize = lSize
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PendingSellSize() As BoxedDecimal
@@ -420,7 +420,7 @@ Set PendingSellSize = lSize
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PendingSize() As BoxedDecimal
@@ -440,7 +440,7 @@ Set PendingSize = lSize
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let PermittedOrderProperties(ByVal Value As IPermittedOrderProperties)
@@ -484,7 +484,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get ScopeName() As String
@@ -505,7 +505,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TemplateOrder() As IOrder
@@ -541,7 +541,7 @@ pBracketOrder.Activate
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddChangeListener(ByVal pListener As IChangeListener)
@@ -553,7 +553,7 @@ mChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -610,7 +610,7 @@ ExecuteBracketOrder Buy, True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CalculateOffsettedPrice( _
@@ -632,20 +632,95 @@ If mDataSource.HasCurrentTick(TickTypeTrade) Then lTradePrice = getCurrentPrice(
 Dim lOptionModelPrice As Double: lOptionModelPrice = MaxDouble
 If mDataSource.HasCurrentTick(TickTypeOptionModelPrice) Then lOptionModelPrice = getCurrentPrice(TickTypeOptionModelPrice)
 
-CalculateOffsettedPrice = gCalculateOffsettedPrice( _
-                                pPriceSpec, _
-                                pSecType, _
-                                pOrderAction, _
-                                mTickSize, _
-                                lBidPrice, _
-                                lAskPrice, _
-                                lTradePrice, _
-                                lOptionModelPrice)
+If pPriceSpec.PriceType = PriceValueTypeEntry Or _
+        pPriceSpec.PriceType = PriceValueTypeNone Then
+    CalculateOffsettedPrice = GOrderUtils.MaxDoubleValue
+    Exit Function
+End If
+
+If pPriceSpec.PriceType = PriceValueTypeValue Then
+    pPriceSpec.CheckPriceValid mTickSize, pSecType
+End If
+
+Dim lRoundingMode As TickRoundingModes
+If pOrderAction = OrderActionBuy Then
+    lRoundingMode = TickRoundingModeUp
+Else
+    lRoundingMode = TickRoundingModeDown
+End If
+
+Dim lPrice As Double
+
+Select Case pPriceSpec.PriceType
+Case PriceValueTypeNone
+    Assert False
+Case PriceValueTypeValue
+    lPrice = pPriceSpec.Price
+Case PriceValueTypeAsk
+    AssertArgument lAskPrice <> MaxDouble, "Ask price not available"
+    lPrice = lAskPrice
+Case PriceValueTypeBid
+    AssertArgument lBidPrice <> MaxDouble, "Bid price not available"
+    lPrice = lBidPrice
+Case PriceValueTypeLast
+    AssertArgument lTradePrice <> MaxDouble, "Trade price not available"
+    lPrice = lTradePrice
+Case PriceValueTypeModel
+    AssertArgument lOptionModelPrice <> MaxDouble, "Model price not available"
+    lPrice = lOptionModelPrice
+Case PriceValueTypeEntry
+    Assert False
+Case PriceValueTypeMid
+    AssertArgument lAskPrice <> MaxDouble, "Ask price not available"
+    AssertArgument lBidPrice <> MaxDouble, "Bid price not available"
+    lPrice = (lAskPrice + lBidPrice) / 2#
+Case PriceValueTypeBidOrAsk
+    If pOrderAction = OrderActionBuy Then
+        AssertArgument lBidPrice <> MaxDouble, "Bid price not available"
+        lPrice = lBidPrice
+    Else
+        AssertArgument lAskPrice <> MaxDouble, "Ask price not available"
+        lPrice = lAskPrice
+    End If
+End Select
+
+Dim lResult As Double
+
+Select Case pPriceSpec.OffsetType
+Dim lOffset As Double
+Case PriceOffsetTypeNone
+    lResult = lPrice
+Case PriceOffsetTypeIncrement
+    lOffset = pPriceSpec.Offset
+Case PriceOffsetTypeNumberOfTicks
+    lOffset = pPriceSpec.Offset * mTickSize
+Case PriceOffsetTypeBidAskPercent
+    AssertArgument lAskPrice <> MaxDouble, "Ask price not available"
+    AssertArgument lBidPrice <> MaxDouble, "Bid price not available"
+    lOffset = pPriceSpec.Offset * (lAskPrice - lBidPrice) / 100#
+Case PriceOffsetTypePercent
+    lOffset = pPriceSpec.Offset * lPrice / 100#
+End Select
+
+If Not pPriceSpec.UseCloseoutSemantics And _
+    pPriceSpec.PriceType <> PriceValueTypeBidOrAsk _
+Then
+    lResult = lPrice + lOffset
+ElseIf pOrderAction = OrderActionBuy Then
+    lResult = lPrice + lOffset
+Else
+    lResult = lPrice - lOffset
+End If
+
+CalculateOffsettedPrice = gRoundToTickBoundary( _
+                                        lResult, _
+                                        mTickSize, _
+                                        lRoundingMode)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Cancel() As Boolean
@@ -660,7 +735,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CloseOut() As TaskController
@@ -674,7 +749,7 @@ Set CloseOut = StartTask(New CloseoutOrderContextTask, PriorityNormal, , , Me)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBuyBracketOrder( _
@@ -695,7 +770,7 @@ Set CreateBuyBracketOrder = CreateBracketOrder( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateEntryOrder( _
@@ -706,7 +781,7 @@ Public Function CreateEntryOrder( _
 Const ProcName As String = "CreateEntryOrder"
 On Error GoTo Err
 
-AssertArgument gIsEntryOrderType(pEntryType), "Invalid entry order type"
+AssertArgument IsEntryOrderType(pEntryType), "Invalid entry order type"
 
 Dim lOrder As IOrder
 Set lOrder = NewOrder(pEntryType)
@@ -751,7 +826,7 @@ Set CreateEntryOrder = lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateStopLossOrder( _
@@ -762,7 +837,7 @@ Public Function CreateStopLossOrder( _
 Const ProcName As String = "CreateStopLossOrder"
 On Error GoTo Err
 
-AssertArgument gIsStopLossOrderType(pStopLossType), "Invalid stop-loss order type"
+AssertArgument IsStopLossOrderType(pStopLossType), "Invalid stop-loss order type"
 
 Dim lOrder As IOrder
 Set lOrder = NewOrder(pStopLossType)
@@ -789,7 +864,7 @@ Set CreateStopLossOrder = lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTargetOrder( _
@@ -800,7 +875,7 @@ Public Function CreateTargetOrder( _
 Const ProcName As String = "CreateTargetOrder"
 On Error GoTo Err
 
-AssertArgument gIsTargetOrderType(pTargetType), "Invalid target order type"
+AssertArgument IsTargetOrderType(pTargetType), "Invalid target order type"
 
 Dim lOrder As IOrder
 Set lOrder = NewOrder(pTargetType)
@@ -824,7 +899,7 @@ Set CreateTargetOrder = lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBracketOrder( _
@@ -849,7 +924,7 @@ Set CreateBracketOrder = CreateBracketOrderWithId( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBracketOrderWithId( _
@@ -866,9 +941,9 @@ AssertArgument pQuantity > 0, "Quantity must be greater than zero"
 AssertArgument Not pEntryOrder Is Nothing, "Entry order cannot be Nothing"
 AssertArgument pId <> "", "Id must be supplied"
 
-AssertArgument gIsEntryOrderType(pEntryOrder.OrderType), "Invalid entry order type"
-If Not pStopLossOrder Is Nothing Then AssertArgument gIsStopLossOrderType(pStopLossOrder.OrderType), "Invalid stop-loss order type"
-If Not pTargetOrder Is Nothing Then AssertArgument gIsTargetOrderType(pTargetOrder.OrderType), "Invalid target order type"
+AssertArgument IsEntryOrderType(pEntryOrder.OrderType), "Invalid entry order type"
+If Not pStopLossOrder Is Nothing Then AssertArgument IsStopLossOrderType(pStopLossOrder.OrderType), "Invalid stop-loss order type"
+If Not pTargetOrder Is Nothing Then AssertArgument IsTargetOrderType(pTargetOrder.OrderType), "Invalid target order type"
 
 Dim lBracketOrder As New BracketOrder
 lBracketOrder.Initialise pId, mRecoveryContextName, mGroupName, Me, mContract, mOrderSubmitter, mDataSource, mIsSimulated
@@ -894,7 +969,7 @@ lBracketOrder.Checkpoint
 
 Set CreateBracketOrderWithId = lBracketOrder
 
-gLogBracketOrderMessage "Created bracket order: " & vbCrLf & _
+LogBracketOrderMessage "Created bracket order: " & vbCrLf & _
                         lBracketOrder.ToString, _
                         mDataSource, _
                         mContract, _
@@ -905,7 +980,7 @@ gLogBracketOrderMessage "Created bracket order: " & vbCrLf & _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function CreateRawOrder( _
@@ -930,7 +1005,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSellBracketOrder( _
@@ -951,7 +1026,7 @@ Set CreateSellBracketOrder = CreateBracketOrder( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub ExecuteBracketOrderEx(ByVal pBracketOrder As IBracketOrder, _
@@ -997,14 +1072,14 @@ If pCheckMoneyManagement And Not mIsSimulated Then
                                 lNewQuantity, _
                                 msg) _
         Then
-            gLogBracketOrderMessage "Rejected by money management: " & msg, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
+            LogBracketOrderMessage "Rejected by money management: " & msg, mDataSource, mContract, pBracketOrder.Key, mIsSimulated, Me
             pBracketOrder.Cancel
             Set pBracketOrder = Nothing
             Exit Sub
         End If
     End If
     If lNewQuantity <> lOrigQuantity Then
-        gLogBracketOrderMessage "Order quantity adjusted by money management: " & _
+        LogBracketOrderMessage "Order quantity adjusted by money management: " & _
                                 "was " & lOrigQuantity & _
                                 "; now " & lNewQuantity, _
                                 mDataSource, _
@@ -1017,8 +1092,8 @@ If pCheckMoneyManagement And Not mIsSimulated Then
     End If
 End If
 
-gLogBracketOrderMessage "Execute bracket order: " & vbCrLf & _
-                        gBracketOrderToString(pBracketOrder), _
+LogBracketOrderMessage "Execute bracket order: " & vbCrLf & _
+                        BracketOrderToString(pBracketOrder), _
                         mDataSource, _
                         mContract, _
                         pBracketOrder.Key, _
@@ -1028,7 +1103,7 @@ gLogBracketOrderMessage "Execute bracket order: " & vbCrLf & _
 If pAddToActiveBracketOrders Then
     If Not mActiveBracketOrders.Contains(pBracketOrder) Then
         mActiveBracketOrders.Add pBracketOrder
-        gLog "Order context " & mName & ": active orders count: " & mActiveBracketOrders.Count, ProcName, ModuleName, , LogLevelDetail
+        GOrderUtils.Log "Order context " & mName & ": active orders count: " & mActiveBracketOrders.Count, ProcName, ModuleName, , LogLevelDetail
     End If
 End If
 
@@ -1046,7 +1121,7 @@ pBracketOrder.Execute
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder, _
@@ -1059,7 +1134,7 @@ ExecuteBracketOrderEx pBracketOrder, pCheckMoneyManagement, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function Finish()
@@ -1087,7 +1162,7 @@ fireChange OrderContextFinished
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub FixupEntryOrder(pOrder As Order)
@@ -1165,10 +1240,10 @@ Exit Sub
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                gGetSourceDesignator(ModuleName, ProcName), _
+                getSourceDesignator(ModuleName, ProcName), _
                 "Entry " & lPriceDesc & " price: " & Err.Description
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -1230,7 +1305,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -1245,7 +1320,7 @@ IsOrderAttributeSupported = ((mPermittedOrderProperties.PermittedOrderAttributes
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsOrderTifSupported( _
@@ -1259,7 +1334,7 @@ IsOrderTifSupported = ((mPermittedOrderProperties.PermittedOrderTifs And Value) 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsOrderTypeSupported( _
@@ -1273,7 +1348,7 @@ IsOrderTypeSupported = ((mPermittedOrderProperties.PermittedOrderTypes And Value
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsReadyForAutoSize( _
@@ -1311,7 +1386,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsReadyForBracketOrder( _
@@ -1343,7 +1418,7 @@ IsReadyForBracketOrder = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsReadyForOrderType( _
@@ -1355,13 +1430,13 @@ IsReadyForOrderType = mOrderSubmitter.IsReadyForOrderType(pOrderType)
 If IsReadyForOrderType Then
     mNotReadyMessage = ""
 Else
-    mNotReadyMessage = "Not ready for order type : " & gOrderTypeToShortString(pOrderType)
+    mNotReadyMessage = "Not ready for order type : " & OrderTypeToShortString(pOrderType)
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsReadyForPriceSpecifier(ByVal pPriceSpec As PriceSpecifier) As Boolean
@@ -1426,7 +1501,7 @@ IsReadyForPriceSpecifier = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsReadyTickSize() As Boolean
@@ -1452,7 +1527,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsStopTriggerMethodSupported( _
@@ -1466,7 +1541,7 @@ IsStopTriggerMethodSupported = ((mPermittedOrderProperties.PermittedStopTriggerM
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function NewExecution(ByVal pSetOrderRecovery As Boolean) As IExecutionReport
@@ -1484,7 +1559,7 @@ Set NewExecution = lExec
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function NewOrder( _
@@ -1508,19 +1583,19 @@ Else
     lOrder.OrderType = pOrderType
     lOrder.Id = gNextId
     
-    gSyncToOrder lOrder, pBasedOn
+    SyncToOrder lOrder, pBasedOn
     
     lOrder.BrokerId = ""
     lOrder.ErrorCode = 0
     lOrder.ErrorMessage = ""
-    lOrder.LimitPrice = MaxDoubleValue
+    lOrder.LimitPrice = GOrderUtils.MaxDoubleValue
     lOrder.Message = ""
     lOrder.FillTime = 0
     lOrder.LastFillPrice = 0#
     lOrder.QuantityFilled = DecimalZero
     lOrder.QuantityRemaining = lOrder.Quantity
     lOrder.Status = OrderStatusCreated
-    lOrder.TriggerPrice = MaxDoubleValue
+    lOrder.TriggerPrice = GOrderUtils.MaxDoubleValue
     lOrder.DontCheckAttributeModificationPermitted = False
 End If
 
@@ -1538,7 +1613,7 @@ Set NewOrder = lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function NotifyBracketOrderClosed( _
@@ -1548,7 +1623,7 @@ On Error GoTo Err
 
 If mActiveBracketOrders.Contains(pBracketOrder) Then
     mActiveBracketOrders.Remove pBracketOrder
-    gLog "Order context " & mName & ": active orders count: " & mActiveBracketOrders.Count, ProcName, ModuleName, , LogLevelDetail
+    GOrderUtils.Log "Order context " & mName & ": active orders count: " & mActiveBracketOrders.Count, ProcName, ModuleName, , LogLevelDetail
 End If
 
 If Not mClosedBracketOrders.Contains(pBracketOrder.Key) Then
@@ -1560,7 +1635,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub NotifyDataReadinessChanged()
@@ -1573,7 +1648,7 @@ fireChange OrderContextReadyStateChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ParsePriceAndOffset( _
@@ -1595,7 +1670,7 @@ ParsePriceAndOffset = gParsePriceAndOffset( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
@@ -1607,7 +1682,7 @@ mChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Sell( _
@@ -1640,7 +1715,7 @@ ExecuteBracketOrder Sell, True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub SetTickSize(ByVal pTickSize As Double)
@@ -1653,7 +1728,7 @@ If mTickSize > 0# Then fireChange OrderContextReadyStateChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1682,7 +1757,7 @@ Else
                                 pMessage)
 End If
 
-gLogBracketOrderMessage pMessage, _
+LogBracketOrderMessage pMessage, _
                         mDataSource, _
                         mContract, _
                         lBracketOrder.Key, _
@@ -1702,7 +1777,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function autoSizeAmount( _
@@ -1752,7 +1827,7 @@ Set autoSizeAmount = CreateBoxedDecimal(lQuantity)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function autoSizePercent( _
@@ -1786,7 +1861,7 @@ Set autoSizePercent = CreateBoxedDecimal(CDec(autoSizeAmount(lAmount, pLotSize, 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub fireChange(ByVal pChangeType As OrderContextChangeTypes)
@@ -1819,7 +1894,7 @@ RaiseEvent Change(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fixupStopLossOrder(pOrder As Order)
@@ -1864,10 +1939,10 @@ Exit Sub
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                gGetSourceDesignator(ModuleName, ProcName), _
+                getSourceDesignator(ModuleName, ProcName), _
                 "Entry " & lPriceDesc & " price: " & Err.Description
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fixupTargetOrder(pOrder As Order)
@@ -1921,10 +1996,10 @@ Exit Sub
 Err:
 If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                gGetSourceDesignator(ModuleName, ProcName), _
+                getSourceDesignator(ModuleName, ProcName), _
                 "Entry " & lPriceDesc & " price: " & Err.Description
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getCurrentPrice(ByVal pTickType As TickTypes) As Double
@@ -1936,11 +2011,19 @@ If isDataSourceRunning Then getCurrentPrice = mDataSource.CurrentTick(pTickType)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getOrderContexts() As OrderContexts
 Set getOrderContexts = mOrderContextsRef.Target
+End Function
+
+Private Function getSourceDesignator( _
+                ByRef pModuleName As String, _
+                ByRef pProcedureName As String) As String
+getSourceDesignator = "[" & ProjectName & "." & _
+            pModuleName & ":" & _
+            pProcedureName & "]"
 End Function
 
 Private Property Get IsAccountProviderReady() As Boolean
@@ -1969,7 +2052,7 @@ isReadyForOrder = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setContract(ByVal pContract As IContract)
@@ -1986,7 +2069,7 @@ mTemplateOrder.IsSimulated = mIsSimulated
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOrderRecoveryForBracketOrder(ByVal pBracketOrder As IBracketOrder)
@@ -2011,7 +2094,7 @@ If Not lObj Is Nothing Then lObj.AddRecoverableObjectListener mBracketOrderRecov
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setTimerList()
@@ -2032,6 +2115,6 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

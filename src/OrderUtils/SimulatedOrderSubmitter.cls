@@ -122,7 +122,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
@@ -149,7 +149,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyMessage(ByVal pOrderId As String, ByVal pMessage As String)
@@ -176,7 +176,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyOrderReport(ByVal pOrderReport As IOrderReport)
@@ -203,7 +203,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyOrderStatusReport(ByVal pOrderStatusReport As IOrderStatusReport)
@@ -230,7 +230,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -246,7 +246,7 @@ mOrderSubmissionListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -258,7 +258,7 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IOrderSubmitter_CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
@@ -322,7 +322,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -348,7 +348,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As IOrder)
@@ -360,7 +360,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not implemented"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
@@ -385,7 +385,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
@@ -410,7 +410,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IOrderSubmitter_Capabilities() As OrderSubmitterCapabilities
@@ -456,7 +456,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IOrderSubmitter_FetchPermittedOrderProperties(ByVal pContractFuture As IFuture, Optional ByVal pCookie As Variant) As IFuture
@@ -468,7 +468,7 @@ Set IOrderSubmitter_FetchPermittedOrderProperties = CreateFuture(mSimulator.Perm
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IOrderSubmitter_Finish()
@@ -485,7 +485,7 @@ mStateChangeListeners.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IOrderSubmitter_GetTickSize() As IFuture
@@ -534,7 +534,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ModifyOrder(ByVal pOrder As IOrder)
@@ -546,7 +546,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not implemented"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_NotifyRecoveredOrder(ByVal pOrder As IOrder)
@@ -558,7 +558,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not implemented"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IOrderSubmitter_OrdersAreStaged(ByVal Value As Boolean)
@@ -570,7 +570,7 @@ Assert Not Value, "Order Staging is not supported", ErrorCodes.ErrUnsupportedOpe
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrderSubmitter_OrdersAreStaged() As Boolean
@@ -591,7 +591,7 @@ IOrderSubmitter_PermittedOrderTypes = PermittedOrderTypes
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IOrderSubmitter_PlaceOrder(ByVal pOrder As IOrder)
@@ -603,7 +603,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Not implemented"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
@@ -615,7 +615,7 @@ mOrderSubmissionListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -627,7 +627,7 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
@@ -651,7 +651,7 @@ PlaceOrder lTargetOrder, "", lOCAGroup, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
@@ -674,7 +674,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
@@ -697,7 +697,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IOrderSubmitter_State() As OrderSubmitterStates
@@ -709,7 +709,7 @@ IOrderSubmitter_State = mState
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -725,7 +725,7 @@ If ev.Future.IsAvailable Then Set mContract = ev.Future.Value
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -760,7 +760,7 @@ setState OrderSubmitterStateReady
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -801,7 +801,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function orderCanBePlaced(ByVal pOrder As IOrder) As Boolean
@@ -828,7 +828,7 @@ mSimulator.PlaceOrder pOrder, pParentId, pOcaGroup, pTransmit, Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOcaGroup( _
@@ -846,7 +846,7 @@ pOrder.ProviderProperties = lProps
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setState(ByVal pState As OrderSubmitterStates)
@@ -860,7 +860,7 @@ fireStateChange
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

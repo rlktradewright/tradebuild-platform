@@ -74,7 +74,7 @@ mSessionName = FormatTimestamp(GetTimestamp, TimestampDateAndTime)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -151,7 +151,7 @@ StartTask t, PriorityNormal
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CloseGroupPositions( _
@@ -174,7 +174,7 @@ StartTask t, PriorityNormal
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateOrderContexts( _
@@ -201,7 +201,7 @@ Set CreateOrderContexts = CreateOrderContextsEx(pName, pContractFuture, pOrderSu
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function CreateOrderContextsEx( _
@@ -238,7 +238,7 @@ Set CreateOrderContextsEx = lOrderContexts
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreatePositionManager( _
@@ -258,7 +258,7 @@ Set CreatePositionManager = createPosnManager(pName, pOrderSubmitterFactory, pDa
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateRecoverablePositionManager( _
@@ -281,7 +281,7 @@ Set CreateRecoverablePositionManager = createPosnManager(pName, pOrderSubmitterF
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetGroupNames() As EnumerableCollection
@@ -300,7 +300,7 @@ Set GetGroupNames = lGroupNames
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function getOrderContexts( _
@@ -318,7 +318,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetPositionManager( _
@@ -337,7 +337,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetPositionManagersForGroup( _
@@ -357,7 +357,7 @@ Set GetPositionManagersForGroup = lPMS
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function RecoverOrdersFromPreviousSession( _
@@ -390,7 +390,7 @@ Set RecoverOrdersFromPreviousSession = _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub RemoveOrderContexts(ByVal pOrderContexts As OrderContexts)
@@ -407,7 +407,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemovePositionManager(ByVal pPositionManager As PositionManager)
@@ -423,7 +423,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -489,7 +489,7 @@ Set createPosnManager = lPm
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getBracketOrderRecoveryController(ByVal pScopeName As String) As BracketOrderRecoveryCtlr
@@ -508,7 +508,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

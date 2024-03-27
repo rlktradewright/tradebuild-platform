@@ -92,7 +92,7 @@ setDirty
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -108,7 +108,7 @@ Action = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Action() As OrderActions
@@ -124,7 +124,7 @@ AllOrNone = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_AllOrNone() As Boolean
@@ -140,7 +140,7 @@ AveragePrice = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_AveragePrice() As Double
@@ -156,7 +156,7 @@ BlockOrder = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_BlockOrder() As Boolean
@@ -186,7 +186,7 @@ DiscretionaryAmount = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_DiscretionaryAmount() As Double
@@ -202,7 +202,7 @@ DisplaySize = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_DisplaySize() As Long
@@ -234,7 +234,7 @@ FillTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_FillTime() As Date
@@ -250,7 +250,7 @@ GoodAfterTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodAfterTime() As Date
@@ -266,7 +266,7 @@ GoodAfterTimeTZ = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodAfterTimeTZ() As String
@@ -282,7 +282,7 @@ GoodTillDate = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodTillDate() As Date
@@ -298,7 +298,7 @@ GoodTillDateTZ = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_GoodTillDateTZ() As String
@@ -314,7 +314,7 @@ IOrder_GroupName = GroupName
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Let IOrder_Hidden(ByVal Value As Boolean)
@@ -326,7 +326,7 @@ Hidden = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Hidden() As Boolean
@@ -342,7 +342,7 @@ Id = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Id() As String
@@ -358,7 +358,7 @@ IgnoreRegularTradingHours = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_IgnoreRegularTradingHours() As Boolean
@@ -377,7 +377,7 @@ Initialise pGroupName, pContractSpec, pOrderContext
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IOrder_IsActive() As Boolean
@@ -393,7 +393,7 @@ IOrder_IsAttributeModifiable = IsAttributeModifiable(pAttribute)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IOrder_IsDirty() As Boolean
@@ -413,7 +413,7 @@ IsSimulated = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_IsSimulated() As Boolean
@@ -429,7 +429,7 @@ LastFillPrice = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_LastFillPrice() As Double
@@ -457,7 +457,7 @@ Message = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Message() As String
@@ -473,7 +473,7 @@ MinimumQuantity = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_MinimumQuantity() As Long
@@ -493,7 +493,7 @@ NotifyFill pExec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrder_NotifyMessage(ByVal pMessage As String)
@@ -505,7 +505,7 @@ NotifyMessage pMessage
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IOrder_OrderContext() As OrderContext
@@ -525,7 +525,7 @@ Origin = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Origin() As OrderOrigins
@@ -541,7 +541,7 @@ OriginatorRef = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_OriginatorRef() As String
@@ -557,7 +557,7 @@ OverrideConstraints = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_OverrideConstraints() As Boolean
@@ -573,7 +573,7 @@ PercentOffset = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_PercentOffset() As Double
@@ -601,7 +601,7 @@ Set IOrder_Quantity = Quantity
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Let IOrder_QuantityFilled(ByVal Value As BoxedDecimal)
@@ -613,7 +613,7 @@ QuantityFilled = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_QuantityFilled() As BoxedDecimal
@@ -629,7 +629,7 @@ QuantityRemaining = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_QuantityRemaining() As BoxedDecimal
@@ -645,7 +645,7 @@ SettlingFirm = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_SettlingFirm() As String
@@ -661,7 +661,7 @@ Status = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_Status() As OrderStatuses
@@ -677,7 +677,7 @@ StopTriggerMethod = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Let IOrder_SweepToFill(ByVal Value As Boolean)
@@ -689,7 +689,7 @@ SweepToFill = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_SweepToFill() As Boolean
@@ -705,7 +705,7 @@ SyncToOrderReport pOrderReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IOrder_TimeInForce(ByVal Value As OrderTIFs)
@@ -717,7 +717,7 @@ TimeInForce = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IOrder_TimeInForce() As OrderTIFs
@@ -753,7 +753,7 @@ mRecoverableObjectListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
@@ -788,7 +788,7 @@ mNeedsRecovery = IsActive
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IRecoverable_ProgId() As String
@@ -812,7 +812,7 @@ mRecoverableObjectListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -835,7 +835,7 @@ mSummary.Action = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Action() As OrderActions
@@ -854,7 +854,7 @@ mSummary.AllOrNone = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get AllOrNone() As Boolean
@@ -881,7 +881,7 @@ mSummary.BlockOrder = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get BlockOrder() As Boolean
@@ -912,7 +912,7 @@ mSummary.DiscretionaryAmount = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DiscretionaryAmount() As Double
@@ -931,7 +931,7 @@ mSummary.DisplaySize = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DisplaySize() As Long
@@ -981,7 +981,7 @@ mSummary.GoodAfterTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get GoodAfterTime() As Date
@@ -1000,7 +1000,7 @@ mSummary.GoodAfterTimeTZ = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get GoodAfterTimeTZ() As String
@@ -1019,7 +1019,7 @@ mSummary.GoodTillDate = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get GoodTillDate() As Date
@@ -1038,7 +1038,7 @@ mSummary.GoodTillDateTZ = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get GoodTillDateTZ() As String
@@ -1067,7 +1067,7 @@ mSummary.Hidden = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Hidden() As Boolean
@@ -1094,7 +1094,7 @@ mSummary.IgnoreRegularTradingHours = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IgnoreRegularTradingHours() As Boolean
@@ -1140,7 +1140,7 @@ mSummary.LimitPrice = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LimitPrice() As Double
@@ -1158,7 +1158,7 @@ mSummary.LimitPriceSpec = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LimitPriceSpec() As PriceSpecifier
@@ -1188,7 +1188,7 @@ mSummary.MinimumQuantity = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get MinimumQuantity() As Long
@@ -1218,7 +1218,7 @@ mSummary.OrderType = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OrderType() As OrderTypes
@@ -1237,7 +1237,7 @@ mSummary.Origin = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Origin() As OrderOrigins
@@ -1256,7 +1256,7 @@ mSummary.OriginatorRef = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OriginatorRef() As String
@@ -1275,7 +1275,7 @@ mSummary.OverrideConstraints = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OverrideConstraints() As Boolean
@@ -1294,7 +1294,7 @@ mSummary.PercentOffset = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PercentOffset() As Double
@@ -1324,7 +1324,7 @@ mSummary.QuantityRemaining = mSummary.Quantity.Subtr(mSummary.QuantityFilled)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Quantity() As BoxedDecimal
@@ -1363,7 +1363,7 @@ mSummary.SettlingFirm = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SettlingFirm() As String
@@ -1389,7 +1389,7 @@ RaiseEvent StatusChanged
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Status() As OrderStatuses
@@ -1411,7 +1411,7 @@ mSummary.StopTriggerMethod = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StopTriggerMethod() As OrderStopTriggerMethods
@@ -1430,7 +1430,7 @@ mSummary.SweepToFill = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SweepToFill() As Boolean
@@ -1441,7 +1441,7 @@ Public Property Let TimeInForce(ByVal Value As OrderTIFs)
 Const ProcName As String = "TimeInForce"
 On Error GoTo Err
 
-AssertArgument gIsValidTIF(Value), "Value must be a member of the OrderTifs enum"
+AssertArgument isValidTIF(Value), "Value must be a member of the OrderTifs enum"
 
 If Not mOrderContext Is Nothing Then
     If Not mOrderContext.IsOrderTifSupported(Value) Then attributeValueNotSupported OrderAttributes.OrderAttTimeInForce, Value
@@ -1454,7 +1454,7 @@ mSummary.TimeInForce = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeInForce() As OrderTIFs
@@ -1473,7 +1473,7 @@ mSummary.TriggerPrice = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TriggerPrice() As Double
@@ -1491,7 +1491,7 @@ mSummary.TriggerPriceSpec = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TriggerPriceSpec() As PriceSpecifier
@@ -1512,7 +1512,7 @@ Dim lOrder As New Order
 lOrder.Initialise GroupName, mContractSpecifier, mOrderContext
 lOrder.RecoveryContextName = mRecoveryContextName
 lOrder.DontCheckAttributeModificationPermitted = True
-gSyncToOrder lOrder, Me
+SyncToOrder lOrder, Me
 lOrder.DontCheckAttributeModificationPermitted = False
 
 Set Clone = lOrder
@@ -1520,7 +1520,7 @@ Set Clone = lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -1539,7 +1539,7 @@ NotifyFillEx pExec, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1573,12 +1573,12 @@ If pLog Then
     lFillTime = ConvertDateTzToTz(lExec.FillTime, _
                                 GetTimeZone(lExec.TimezoneName), _
                                 GetTimeZone(lContract.TimezoneName))
-    gLogOrderDetail _
+    GOrderUtils.LogOrderDetail _
             mSummary.GroupName & "," & _
-            gGetContractName(mContractSpecifier) & "," & _
+            GOrderUtils.GetContractName(mContractSpecifier) & "," & _
             lExec.Quantity & "," & _
             lExec.Price & "," & _
-            gOrderActionToString(lExec.Action) & "," & _
+            OrderActionToString(lExec.Action) & "," & _
             FormatTimestamp(lFillTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             lContract.TimezoneName & "," & _
             lExec.Id & "," & _
@@ -1604,7 +1604,7 @@ If mSummary.Status = OrderStatusFilled Then RaiseEvent StatusChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -1618,7 +1618,7 @@ Set mOrderContext = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -1640,7 +1640,7 @@ mIsInitialised = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsAttributeModifiable( _
@@ -1759,7 +1759,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsModifiable() As Boolean
@@ -1774,7 +1774,7 @@ Then IsModifiable = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub NotifyError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -1804,7 +1804,7 @@ RaiseEvent Clean
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SyncToOrderReport( _
@@ -1852,7 +1852,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1866,12 +1866,12 @@ Const ProcName As String = "attributeValueNotSupported"
 
 On Error GoTo Err
 
-AssertArgument False, "Value " & CStr(Value) & " for attribute " & gOrderAttributeToString(pAttribute) & " is not supported by the service provider"
+AssertArgument False, "Value " & CStr(Value) & " for attribute " & orderAttributeToString(pAttribute) & " is not supported by the service provider"
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub checkInitialised()
@@ -1883,7 +1883,7 @@ Assert mIsInitialised, "Order has not been initialised"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub checkAttributeModificationPermitted( _
@@ -1893,12 +1893,12 @@ On Error GoTo Err
 
 checkInitialised
 
-Assert IsAttributeModifiable(attributeId), "The " & gOrderAttributeToString(attributeId) & " attribute is not currently modifiable"
+Assert IsAttributeModifiable(attributeId), "The " & orderAttributeToString(attributeId) & " attribute is not currently modifiable"
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireRecoveryDataChanged()
@@ -1930,8 +1930,98 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Private Function isValidTIF(ByVal Value As OrderTIFs) As Boolean
+Const ProcName As String = "isValidTIF"
+On Error GoTo Err
+
+Select Case Value
+Case OrderTIFDay
+    isValidTIF = True
+Case OrderTIFGoodTillCancelled
+    isValidTIF = True
+Case OrderTIFImmediateOrCancel
+    isValidTIF = True
+Case Else
+    isValidTIF = False
+End Select
+
+Exit Function
+
+Err:
+GOrders.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function orderAttributeToString(ByVal Value As OrderAttributes) As String
+Const ProcName As String = "orderAttributeToString"
+On Error GoTo Err
+
+Select Case Value
+    Case OrderAttOpenClose
+        orderAttributeToString = "OpenClose"
+    Case OrderAttOrigin
+        orderAttributeToString = "Origin"
+    Case OrderAttOriginatorRef
+        orderAttributeToString = "OriginatorRef"
+    Case OrderAttBlockOrder
+        orderAttributeToString = "BlockOrder"
+    Case OrderAttSweepToFill
+        orderAttributeToString = "SweepToFill"
+    Case OrderAttDisplaySize
+        orderAttributeToString = "DisplaySize"
+    Case OrderAttIgnoreRTH
+        orderAttributeToString = "IgnoreRTH"
+    Case OrderAttHidden
+        orderAttributeToString = "Hidden"
+    Case OrderAttDiscretionaryAmount
+        orderAttributeToString = "DiscretionaryAmount"
+    Case OrderAttGoodAfterTime
+        orderAttributeToString = "GoodAfterTime"
+    Case OrderAttGoodTillDate
+        orderAttributeToString = "GoodTillDate"
+    'Case OrderAttRTHOnly
+    '    orderAttributeToString = "RTHOnly"
+    Case OrderAttRule80A
+        orderAttributeToString = "Rule80A"
+    Case OrderAttSettlingFirm
+        orderAttributeToString = "SettlingFirm"
+    Case OrderAttAllOrNone
+        orderAttributeToString = "AllOrNone"
+    Case OrderAttMinimumQuantity
+        orderAttributeToString = "MinimumQuantity"
+    Case OrderAttPercentOffset
+        orderAttributeToString = "PercentOffset"
+    Case OrderAttOverrideConstraints
+        orderAttributeToString = "OverrideConstraints"
+    Case OrderAttAction
+        orderAttributeToString = "Action"
+    Case OrderAttLimitPrice
+        orderAttributeToString = "LimitPrice"
+    Case OrderAttOrderType
+        orderAttributeToString = "OrderType"
+    Case OrderAttQuantity
+        orderAttributeToString = "Quantity"
+    Case OrderAttTimeInForce
+        orderAttributeToString = "TimeInForce"
+    Case OrderAttTriggerPrice
+        orderAttributeToString = "TriggerPrice"
+    Case OrderAttGoodAfterTimeTZ
+        orderAttributeToString = "GoodAfterTimeTZ"
+    Case OrderAttGoodTillDateTZ
+        orderAttributeToString = "GoodTillDateTZ"
+    Case OrderAttStopTriggerMethod
+        orderAttributeToString = "StopTriggerMethod"
+    Case Else
+        orderAttributeToString = "***Unknown order attribute***"
+End Select
+
+Exit Function
+
+Err:
+GOrders.HandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function propertiesEqual( _
                 ByVal pParams1 As Parameters, _
@@ -1959,7 +2049,7 @@ mSummary.SetClean
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -1978,7 +2068,7 @@ RaiseEvent Dirty
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

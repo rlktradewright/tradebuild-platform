@@ -67,7 +67,7 @@ getCurrentPersistenceFile pScopeName
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderPersistenceDataStore_Finish()
@@ -84,7 +84,7 @@ mTextStreams.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IOrderPersistenceDataStore_GetEnumeratorForScope(ByVal pScopeName As String) As Enumerator
@@ -98,7 +98,7 @@ Set IOrderPersistenceDataStore_GetEnumeratorForScope = lOpEnumerator.getEnumerat
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IOrderPersistenceDataStore_SaveOrderInfo(ByVal pScopeName As String, ByVal pOrderInfo As String)
@@ -110,7 +110,7 @@ getCurrentPersistenceFile(pScopeName).WriteLine pOrderInfo
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -154,7 +154,7 @@ Set getCurrentPersistenceFile = mTextStreams.Item(pScopeName)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getPreviousPersistenceFile(ByVal pScopeName As String) As TextStream
@@ -172,7 +172,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getRecoveryFileName(ByVal pScopeName As String) As String

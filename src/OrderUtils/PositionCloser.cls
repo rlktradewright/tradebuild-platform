@@ -109,7 +109,7 @@ ensureAllBracketOrdersClosedOut
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -141,7 +141,7 @@ If Not cancelOrders Then ensureAllBracketOrdersClosedOut
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -186,7 +186,7 @@ RaiseEvent PositionClosed
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mBalancingBracketOrder_Execution(ev As ExecutionEventData)
@@ -198,7 +198,7 @@ Set mLastExecutionReport = ev.ExecutionReport
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -220,7 +220,7 @@ ElseIf mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) The
     mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
     mBalancingBracketOrderPlaced = True
 Else
-    gLog mBalancingBracketOrder.Key & _
+    GOrderUtils.Log mBalancingBracketOrder.Key & _
             ": Balancing order context: " & _
             mBalancingOrderContext.NotReadyMessage, _
             ProcName, ModuleName
@@ -229,7 +229,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -258,7 +258,7 @@ DeferAction Me
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub RecoverBalancingOrder( _
@@ -274,7 +274,7 @@ Set mOrderContexts = mPositionManager.OrderContexts
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -297,7 +297,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createLimitBalancingOrder( _
@@ -318,7 +318,7 @@ Set lBo = mBalancingOrderContext.CreateBracketOrder( _
                         pPriceSpec _
                     ))
 
-gLogBracketOrderMessage "Close position at limit: " & gPriceSpecifierToString(mPriceSpec, pContract), _
+LogBracketOrderMessage "Close position at limit: " & gPriceSpecifierToString(mPriceSpec, pContract), _
                 mPositionManager.DataSource, _
                 pContract, _
                 lBo.Key, _
@@ -330,7 +330,7 @@ Set createLimitBalancingOrder = lBo
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createMarketBalancingOrder( _
@@ -347,7 +347,7 @@ Set lBo = mBalancingOrderContext.CreateBracketOrder( _
                             OrderTypeMarket) _
                         )
 
-gLogBracketOrderMessage "Close position at market", _
+LogBracketOrderMessage "Close position at market", _
                 mPositionManager.DataSource, _
                 pContract, _
                 lBo.Key, _
@@ -359,7 +359,7 @@ Set createMarketBalancingOrder = lBo
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub doFinalActions()
@@ -368,14 +368,14 @@ On Error GoTo Err
 
 mOrderContexts.Enabled = mOrderContextsWasEnabled
 If mPositionManager.EndingSession Then
-    gLogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
+    GOrderUtils.LogMoneyManagement "Ending Session", mPositionManager.IsSimulated, Me
 End If
 Set mBalancingOrderContext = Nothing
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doMarkToMaketCloseout( _
@@ -398,7 +398,7 @@ lExec.FillingExchange = "*"
 lExec.FillTime = pOrderContext.Clock.Timestamp
 lExec.Id = "MarkToMarket:" & GenerateGUIDString
 lExec.Price = pTradePrice
-lExec.SecurityName = gGetContractName(mContract.Specifier)
+lExec.SecurityName = GOrderUtils.GetContractName(mContract.Specifier)
 lExec.TimezoneName = mContract.TimezoneName
 
 pBracketOrder.NotifyCloseout lExec
@@ -408,7 +408,7 @@ lExec.SaveRecoveryInfo
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doSettlingCloseout( _
@@ -445,7 +445,7 @@ pBracketOrder.NotifyCloseout lExec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ensureAllBracketOrdersClosedOut()
@@ -465,7 +465,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub markToMarket()
@@ -516,7 +516,7 @@ RaiseEvent PositionClosed
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub placeBalancingOrder()
@@ -540,7 +540,7 @@ If mBalancingOrderContext.IsReadyForBracketOrder(mBalancingBracketOrder) Then
     mBalancingOrderContext.ExecuteBracketOrderEx mBalancingBracketOrder, False, False
     mBalancingBracketOrderPlaced = True
 Else
-    gLog mBalancingBracketOrder.Key & _
+    GOrderUtils.Log mBalancingBracketOrder.Key & _
             ": Balancing order context: " & _
             mBalancingOrderContext.NotReadyMessage, _
             ProcName, ModuleName
@@ -549,7 +549,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

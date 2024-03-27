@@ -61,7 +61,7 @@ Set mOrderPersistenceItems = New EnumerableCollection
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GOrders.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -77,7 +77,7 @@ Set IEnumerable_Enumerator = mOrderPersistenceItems.Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IEnumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
@@ -110,7 +110,7 @@ Set Enumerator = mOrderPersistenceItems.Enumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -126,7 +126,7 @@ mOrderPersistenceItems.Add pItem
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

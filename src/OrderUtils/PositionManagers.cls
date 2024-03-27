@@ -69,7 +69,7 @@ Set mPositionManagers = New EnumerableCollection
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -85,7 +85,7 @@ Set IEnumerable_Enumerator = getEnumerator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IEnumerable_NextItem(Item As Variant, pCookie As Variant) As Boolean
@@ -118,7 +118,7 @@ fireCollectionChanged ev
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -134,7 +134,7 @@ Count = mPositionManagers.Count
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Enumerator() As Enumerator
@@ -155,7 +155,7 @@ Set Add = pPositionManager
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub AddCollectionChangeListener( _
@@ -168,7 +168,7 @@ mCollectionChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Clear()
@@ -180,7 +180,7 @@ mPositionManagers.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Contains(ByVal pName As String) As Boolean
@@ -192,7 +192,7 @@ Contains = mPositionManagers.Contains(UCase$(pName))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item(ByVal pName As String) As PositionManager
@@ -205,7 +205,7 @@ Set Item = mPositionManagers.Item(UCase$(pName))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -219,7 +219,7 @@ Set NewEnum = getEnumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub NotifyChange(pPositionManager As PositionManager)
@@ -231,7 +231,7 @@ mPositionManagers.NotifyChange UCase$(pPositionManager.Name)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Remove(ByVal pPositionManager As PositionManager)
@@ -243,7 +243,7 @@ mPositionManagers.Remove UCase$(pPositionManager.Name)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveCollectionChangeListener(ByVal pListener As ICollectionChangeListener)
@@ -255,7 +255,7 @@ mCollectionChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -288,7 +288,7 @@ RaiseEvent CollectionChanged(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getEnumerator() As Enumerator
@@ -300,7 +300,7 @@ Set getEnumerator = mPositionManagers.Enumerator
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

@@ -104,14 +104,14 @@ Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
 On Error GoTo Err
 
-gLog "Profit calculator: " & GetObjectKey(Me) & _
+GOrderUtils.Log "Profit calculator: " & GetObjectKey(Me) & _
         " terminated for bracket order: " & mBracketOrderKey, _
     ProcName, ModuleName, , LogLevelDetail
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -147,7 +147,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -174,7 +174,7 @@ calcProfitUsingLastReceivedPrices
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -208,7 +208,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -260,7 +260,7 @@ mChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddProfitListener(ByVal pListener As IProfitListener)
@@ -272,7 +272,7 @@ mProfitListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -288,7 +288,7 @@ mBracketOrderKey = mBracketOrder.Key
 mBracketOrder.AddExecutionListener Me
 mBracketOrder.AddChangeListener Me
 
-gLog "Profit calculator: " & GetObjectKey(Me) & _
+GOrderUtils.Log "Profit calculator: " & GetObjectKey(Me) & _
         " initialised for bracket order: " & mBracketOrderKey, _
     ProcName, ModuleName, , LogLevelDetail
 
@@ -307,7 +307,7 @@ Set mDataSource = pDataSource
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
@@ -319,7 +319,7 @@ mChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveProfitListener(ByVal pListener As IProfitListener)
@@ -331,7 +331,7 @@ mProfitListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -379,7 +379,7 @@ calcProfitUsingLastReceivedPrices
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub calcProfitLoss(ByVal pPrice As Double)
@@ -412,7 +412,7 @@ Dim lNotifyMaxProfit As Boolean
 If lProfit.GT(mMaxProfit) Then
     Set mMaxProfit = lProfit
     lNotifyMaxProfit = True
-    gLog mBracketOrder.Key & ": Max profit increased: " & mMaxProfit.ToString & "; Tick=" & GenericTickToString(mCurrentTick), ProcName, ModuleName, , LogLevels.LogLevelDetail
+    GOrderUtils.Log mBracketOrder.Key & ": Max profit increased: " & mMaxProfit.ToString & "; Tick=" & GenericTickToString(mCurrentTick), ProcName, ModuleName, , LogLevels.LogLevelDetail
 End If
 
 Dim lNotifyMaxLoss As Boolean
@@ -463,7 +463,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub calcProfitUsingLastReceivedPrices()
@@ -481,7 +481,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireChange( _
@@ -515,7 +515,7 @@ RaiseEvent Change(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireProfit( _
@@ -559,7 +559,7 @@ RaiseEvent Profit(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub listenToData()
@@ -571,7 +571,7 @@ mDataSource.AddGenericTickListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logBracketProfile()
@@ -608,17 +608,17 @@ With profile
     .TargetReason = mBracketOrder.TargetReason
     .TimezoneName = sContractTimezoneName
 End With
-gLogBracketOrderProfileObject profile, mBracketOrder.IsSimulated, Me
+GOrderUtils.LogBracketOrderProfileObject profile, mBracketOrder.IsSimulated, Me
 
-gLogBracketOrderProfileString _
+GOrderUtils.LogBracketOrderProfileString _
             mBracketOrder.GroupName & "," & _
-            gGetContractName(sContractSpec) & "," & _
+            GOrderUtils.GetContractName(sContractSpec) & "," & _
             FormatTimestamp(mBracketOrder.StartTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             FormatTimestamp(mBracketOrder.EndTime, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
             sContractTimezoneName & "," & _
             mBracketOrder.Description & "," & _
             mBracketOrder.Key & "," & _
-            gOrderActionToString(mBracketOrder.EntryOrder.Action) & "," & _
+            OrderActionToString(mBracketOrder.EntryOrder.Action) & "," & _
             mBracketOrder.EntryOrder.Quantity & "," & _
             mBracketOrder.EntryPrice & "," & _
             mBracketOrder.ExitPrice & "," & _
@@ -635,7 +635,7 @@ gLogBracketOrderProfileString _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessAskPrice(ByVal pPrice As Double)
@@ -649,7 +649,7 @@ mLastTrade = MaxDouble
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessBidPrice(ByVal pPrice As Double)
@@ -663,7 +663,7 @@ mLastTrade = MaxDouble
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ProcessTradePrice(ByVal pPrice As Double)
@@ -681,7 +681,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

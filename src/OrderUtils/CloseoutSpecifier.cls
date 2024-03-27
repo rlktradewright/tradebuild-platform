@@ -135,9 +135,9 @@ jb.EncodeValue ProjectName & "." & ModuleName
 jb.EncodeNameAndValue "OrderType", mOrderType, OrderTypeMarket
 jb.EncodeNameAndValue "OutsideRTH", mOutsideRTH, False
 jb.EncodeNameAndValue "ForceCloseAfterSecs", mForceCloseAfterSecs, 0
-If Not gIsNullPriceSpecifier(mLimitPriceSpec) Then _
+If Not IsNullPriceSpecifier(mLimitPriceSpec) Then _
     jb.EncodeNameAndValue "LimitPriceSpec", mLimitPriceSpec, Nothing
-If Not gIsNullPriceSpecifier(mTriggerPriceSpec) Then _
+If Not IsNullPriceSpecifier(mTriggerPriceSpec) Then _
     jb.EncodeNameAndValue "TriggerPriceSpec", mTriggerPriceSpec, Nothing
 
 jb.EndObject
@@ -147,7 +147,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

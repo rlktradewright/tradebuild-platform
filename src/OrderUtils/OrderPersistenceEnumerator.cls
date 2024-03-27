@@ -65,7 +65,7 @@ Set IEnumerable_Enumerator = getEnumerator(Me)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IEnumerable_NextItem(Item As Variant, cookie As Variant) As Boolean
@@ -85,7 +85,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IEnumerable_Remove(cookie As Variant)
@@ -97,7 +97,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Remove not supported"
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IEnumerable_Skip(ByVal numToSkip As Long, cookie As Variant) As Boolean
@@ -109,7 +109,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Skip not supported"
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IEnumerable_UpdateSequence() As Long
@@ -137,7 +137,7 @@ Set getEnumerator = CreateEnumerator(Me)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise(ByVal pTS As TextStream)
@@ -163,7 +163,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

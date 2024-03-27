@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   12615
@@ -61,13 +61,13 @@ Begin VB.Form Form1
       _ExtentY        =   6165
    End
    Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
-      Height          =   3510
+      Height          =   3870
       Left            =   120
       TabIndex        =   1
-      Top             =   840
+      Top             =   480
       Width           =   2535
       _ExtentX        =   4471
-      _ExtentY        =   6191
+      _ExtentY        =   6826
       ForeColor       =   -2147483640
       ModeAdvanced    =   -1  'True
    End
@@ -143,7 +143,7 @@ Private Const ModuleName                            As String = "Form1"
 
 Private Const ApiPort                               As Long = 7497
 Private Const ClientId                              As Long = 120961434
-Private Const TwsHost                               As String = "ESSY"
+Private Const TwsHost                               As String = "SAPPY"
 
 '@================================================================================
 ' Member variables
@@ -713,7 +713,7 @@ Else
     mPositionManagersLive.Remove pPositionManager
 End If
 
-pPositionManager.Finish
+If Not pPositionManager.IsActive Then pPositionManager.Finish
 
 Exit Sub
 

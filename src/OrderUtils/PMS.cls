@@ -269,7 +269,7 @@ TradingSessionStartTime = lTradingSessionStartTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetClean()

@@ -63,7 +63,7 @@ sNextApplicationIndex = sNextApplicationIndex + 1
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

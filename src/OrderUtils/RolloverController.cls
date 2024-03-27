@@ -119,7 +119,7 @@ If ev.Source Is mBracketOrder Then
         ' and is worthless, so IB sends a cancel notification for the
         ' closeout order, but this doesn't happen till the end of the
         ' trading day. We don't proceeed with the rollover.
-        gLog mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        GOrderUtils.Log mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
         setState RolloverControllerStateFailed
         mTaskContext.Finish Empty, False
     End Select
@@ -133,7 +133,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -156,12 +156,12 @@ Case RolloverControllerStateInitial
     failpoint = "RolloverControllerStateInitial"
     
     If IsContractExpired(mBracketOrder.Contract, mClock) Then
-        gLog mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        GOrderUtils.Log mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
         setState RolloverControllerStateFailed
         mTaskContext.Finish Empty, False
     Else
-        gLog mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-        gLogBracketOrderMessage "Initiating rollover", _
+        GOrderUtils.Log mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        LogBracketOrderMessage "Initiating rollover", _
                                 mBracketOrder.DataSource, _
                                 mBracketOrder.Contract, _
                                 mBracketOrder.Key, _
@@ -173,8 +173,8 @@ Case RolloverControllerStateClosingCurrentPosition
     failpoint = "RolloverControllerStateClosingCurrentPosition"
     
     If mBracketOrder.Size <> 0 Then
-        gLog mBracketOrder.Key & ": Closing out current position: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-        gLogBracketOrderMessage "Closing out current position", _
+        GOrderUtils.Log mBracketOrder.Key & ": Closing out current position: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        LogBracketOrderMessage "Closing out current position", _
                                 mBracketOrder.DataSource, _
                                 mBracketOrder.Contract, _
                                 mBracketOrder.Key, _
@@ -184,13 +184,13 @@ Case RolloverControllerStateClosingCurrentPosition
         initiateCloseout
         mTaskContext.Suspend -1
     Else
-        gLog mBracketOrder.Key & ": Current position already closed out: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+        GOrderUtils.Log mBracketOrder.Key & ": Current position already closed out: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
         setState RolloverControllerStateFindingNextContract
     End If
 Case RolloverControllerStateFindingNextContract
     failpoint = "RolloverControllerStateFindingNextContract"
     
-    gLog mBracketOrder.Key & ": Finding next contract: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+    GOrderUtils.Log mBracketOrder.Key & ": Finding next contract: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
     findNextContract mBracketOrder.RolloverSpecification.RolloverExpiryOffset, _
                     mBracketOrder.RolloverSpecification.RolloverDaysBeforeExpiryToSwitch
     mTaskContext.Suspend -1
@@ -213,11 +213,11 @@ Case RolloverControllerStateCreatingNextBracketOrder
     
     If mNextBracketOrder Is Nothing Then
         Dim lId As String: lId = GIdProvider.gNextId
-        gLog mBracketOrder.Key & ": Creating next bracket order: " & lId & "; " & mNextContract.Specifier.ToString, ProcName, ModuleName
+        GOrderUtils.Log mBracketOrder.Key & ": Creating next bracket order: " & lId & "; " & mNextContract.Specifier.ToString, ProcName, ModuleName
         Set mNextBracketOrder = createNextBracketOrder(lId, mUseMarketEntry, mNextContract.Specifier)
     End If
     If Not mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
-        gLog mBracketOrder.Key & _
+        GOrderUtils.Log mBracketOrder.Key & _
                 ": Waiting for next order context: " & _
                 mNextOrderContext.NotReadyMessage & ": " & _
                 mNextContract.Specifier.ToString, _
@@ -252,7 +252,7 @@ Case RolloverControllerStateCancellingNextBracketOrder
 Case RolloverControllerStateCompleted
     failpoint = "RolloverControllerStateCompleted"
     
-    gLog mBracketOrder.Key & " -> " & mNextBracketOrder.Key & ": Rollover completed: " & mNextBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+    GOrderUtils.Log mBracketOrder.Key & " -> " & mNextBracketOrder.Key & ": Rollover completed: " & mNextBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
     logRollover mBracketOrder, mNextBracketOrder
     mBracketOrder.RemoveChangeListener Me
     Set mOrderContext = Nothing
@@ -267,7 +267,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName, failpoint
+GOrders.HandleUnexpectedError ProcName, ModuleName, failpoint
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -292,8 +292,8 @@ Dim lContract As IContract: Set lContract = ev.Future.Value
 If lContract.ExpiryDate > mBracketOrder.Contract.ExpiryDate Then
     ' we've found the next contract
     Set mNextContract = lContract
-    gLog mBracketOrder.Key & ": Got rollover contract: " & mNextContract.Specifier.ToString, ProcName, ModuleName
-    gLogBracketOrderMessage "Found next contract", _
+    GOrderUtils.Log mBracketOrder.Key & ": Got rollover contract: " & mNextContract.Specifier.ToString, ProcName, ModuleName
+    LogBracketOrderMessage "Found next contract", _
                             Nothing, _
                             mNextContract, _
                             "", _
@@ -316,7 +316,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -336,7 +336,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -357,7 +357,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mNextBracketOrder_EntryOrderFilled()
@@ -369,7 +369,7 @@ If Not mNextBracketFillTLI Is Nothing Then mNextBracketFillTLI.Cancel
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -394,7 +394,7 @@ ElseIf mNextOrderContext.IsReadyForBracketOrder(mNextBracketOrder) Then
     setState RolloverControllerStateExecutingNextBracketOrder
     mTaskContext.Continue
 Else
-    gLog mBracketOrder.Key & _
+    GOrderUtils.Log mBracketOrder.Key & _
             ": Waiting for next order context: " & _
             mNextOrderContext.NotReadyMessage & ": " & _
             mNextContract.Specifier.ToString, _
@@ -404,7 +404,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -436,7 +436,7 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Cancel()
@@ -460,7 +460,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -481,7 +481,7 @@ Set mClock = mTimerList.Clock
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -493,7 +493,7 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -552,13 +552,13 @@ End If
 
 lBo.RolloverSpecification = createNextRolloverSpec
 
-gLog lBo.Key & ": Created next bracket order: " & lBo.Contract.Specifier.ToString, ProcName, ModuleName
+GOrderUtils.Log lBo.Key & ": Created next bracket order: " & lBo.Contract.Specifier.ToString, ProcName, ModuleName
 Set createNextBracketOrder = lBo
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createNextEntryOrder( _
@@ -594,7 +594,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createNextPositionManager( _
@@ -617,7 +617,7 @@ For Each lPm In lPositionManagersForGroup
 Next
 
 If Not lNextPm Is Nothing Then
-    gLog "Using existing position manager: name=" & lNextPm.Name, ProcName, ModuleName
+    GOrderUtils.Log "Using existing position manager: name=" & lNextPm.Name, ProcName, ModuleName
 Else
     Dim lDataSource As IMarketDataSource
     Set lDataSource = mOrderManager.MarketDataManager.CreateMarketDataSource( _
@@ -637,7 +637,7 @@ Else
                                     mOrderContext.CurrencyConverter)
     lNextPm.FixedAccountBalance = mOrderContext.FixedAccountBalance
     
-    gLog "Created next position manager: name=" & lNextPm.Name, ProcName, ModuleName
+    GOrderUtils.Log "Created next position manager: name=" & lNextPm.Name, ProcName, ModuleName
 End If
 
 Set createNextPositionManager = lNextPm
@@ -645,7 +645,7 @@ Set createNextPositionManager = lNextPm
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createNextRolloverSpec() As RolloverSpecification
@@ -677,7 +677,7 @@ Else
             lInitialStrikeParameter = mStrikeParameter
         End Select
                 
-        Set createNextRolloverSpec = gCreateOptionRolloverSpecification( _
+        Set createNextRolloverSpec = GOrderUtils.CreateOptionRolloverSpecification( _
                                             .Days, _
                                             .Time, _
                                             .InitialStrikeSelectionMode, _
@@ -710,7 +710,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createNextStoplossOrder() As IOrder
@@ -730,7 +730,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createNextTargetOrder() As IOrder
@@ -750,7 +750,7 @@ End With
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub findNextContract( _
@@ -787,7 +787,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function findNextContractForFuture( _
@@ -816,7 +816,7 @@ Set findNextContractForFuture = FetchContract( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function findNextContractForOption( _
@@ -838,10 +838,10 @@ Case RolloverStrikeModeNone, _
     mStrikeSelectionMode = lRolloverSpec.InitialStrikeSelectionMode
     mStrikeParameter = lRolloverSpec.InitialStrikeParameter
     mStrikeOperator = lRolloverSpec.InitialStrikeOperator
-    gLog "Rollover strike mode as previous: " & _
-        gOptionStrikeSelectionModeToString(mStrikeSelectionMode) & _
+    GOrderUtils.Log "Rollover strike mode as previous: " & _
+        OptionStrikeSelectionModeToString(mStrikeSelectionMode) & _
         "; parameter: " & mStrikeParameter & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeCurrentValue
     If Not isCurrentPriceAvailable Then
@@ -853,9 +853,9 @@ Case RolloverStrikeModeCurrentValue
     mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
     mStrikeParameter = getCurrentValue(pCurrentContractSpec.Multiplier)
     mStrikeOperator = lRolloverSpec.InitialStrikeOperator
-    gLog "Rollover strike mode current value" & _
+    GOrderUtils.Log "Rollover strike mode current value" & _
         "; max expenditure: " & mStrikeParameter & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeCurrentProfit
     If Not isCurrentPriceAvailable Then
@@ -874,27 +874,27 @@ Case RolloverStrikeModeCurrentProfit
     Else
         mStrikeParameter = CLng(lValue - (lValue * lProfit) / 100)
     End If
-    gLog "Rollover strike mode current profit" & _
+    GOrderUtils.Log "Rollover strike mode current profit" & _
         "; max expenditure: " & mStrikeParameter & _
         "; value: " & lValue & _
         "; profit: " & lProfit & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeMonetaryAmount
     mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
     mStrikeParameter = lRolloverSpec.RolloverStrikeParameter
     mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
-    gLog "Rollover strike mode amount" & _
+    GOrderUtils.Log "Rollover strike mode amount" & _
         "; max expenditure: " & mStrikeParameter & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModePreviousMonetaryAmount
     mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure
     mStrikeParameter = lRolloverSpec.InitialStrikeParameter
     mStrikeOperator = lRolloverSpec.InitialStrikeOperator
-    gLog "Rollover strike mode previous amount" & _
+    GOrderUtils.Log "Rollover strike mode previous amount" & _
         "; max expenditure: " & mStrikeParameter & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeIncrement
     Assert False, "Rollover via strike increment not supported", ErrorCodes.ErrUnsupportedOperationException
@@ -902,26 +902,26 @@ Case RolloverStrikeModeDelta
     mStrikeSelectionMode = OptionStrikeSelectionModeDelta
     mStrikeParameter = lRolloverSpec.RolloverStrikeParameter
     mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
-    gLog "Rollover strike mode delta" & _
+    GOrderUtils.Log "Rollover strike mode delta" & _
         "; delta: " & mStrikeParameter & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModePreviousDelta
     mStrikeSelectionMode = OptionStrikeSelectionModeDelta
     mStrikeParameter = lRolloverSpec.InitialStrikeParameter
     mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
-    gLog "Rollover strike mode previous delta" & _
+    GOrderUtils.Log "Rollover strike mode previous delta" & _
         "; delta: " & mStrikeParameter & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 Case RolloverStrikeModeDeltaIncrement
     mStrikeSelectionMode = OptionStrikeSelectionModeDelta
     mStrikeParameter = lRolloverSpec.InitialStrikeParameter + _
                         lRolloverSpec.RolloverStrikeParameter
     mStrikeOperator = lRolloverSpec.RolloverStrikeOperator
-    gLog "Rollover strike mode previous delta" & _
+    GOrderUtils.Log "Rollover strike mode previous delta" & _
         "; delta: " & mStrikeParameter & _
-        "; operator: " & gOptionStrikeSelectionOperatorToString(mStrikeOperator), _
+        "; operator: " & OptionStrikeSelectionOperatorToString(mStrikeOperator), _
         ProcName, ModuleName
 End Select
 
@@ -939,7 +939,7 @@ Set lNextContractSpec = CreateContractSpecifier("", _
                                 0), _
                             pCurrentContractSpec.Right)
 
-Set findNextContractForOption = gGetOptionContract( _
+Set findNextContractForOption = GetOptionContract( _
                                     lNextContractSpec, _
                                     mBracketOrder.EntryOrder.Action, _
                                     mOrderManager.ContractStorePrimary, _
@@ -949,12 +949,12 @@ Set findNextContractForOption = gGetOptionContract( _
                                     mBracketOrder.RolloverSpecification.UnderlyingExchangeName, _
                                     mOrderManager.MarketDataManager, _
                                     Nothing, _
-                                    Globals.MinDate)
+                                    GOrderUtils.MinDate)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub fireStateChange( _
@@ -986,7 +986,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub getQuantityParameters( _
@@ -1049,7 +1049,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getCurrentValue( _
@@ -1064,7 +1064,7 @@ getCurrentValue = CLng(getCurrentPrice * pMultiplier)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getCurrentProfit(ByVal pMultiplier As Double) As Long
@@ -1087,7 +1087,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub initiateCloseout()
@@ -1108,7 +1108,7 @@ mBracketOrder.DoCloseOut lCloseoutSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function isCurrentPriceAvailable() As Boolean
@@ -1130,7 +1130,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logRollover( _
@@ -1139,14 +1139,14 @@ Private Sub logRollover( _
 Const ProcName As String = "logRollover"
 On Error GoTo Err
 
-gLogBracketOrderRollover _
+GOrderUtils.LogBracketOrderRollover _
                 pBracketOrder.GroupName & "," & _
                 FormatTimestamp(mNextOrderContext.Clock.Timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "," & _
                 mNextOrderContext.Clock.TimeZone.StandardName & "," & _
                 pBracketOrder.Key & "," & _
-                gGetContractName(pBracketOrder.Contract.Specifier) & "," & _
+                GOrderUtils.GetContractName(pBracketOrder.Contract.Specifier) & "," & _
                 pNextBracketOrder.Key & "," & _
-                gGetContractName(pNextBracketOrder.Contract.Specifier), _
+                GOrderUtils.GetContractName(pNextBracketOrder.Contract.Specifier), _
                 pNextBracketOrder.IsSimulated, _
                 Me
 
@@ -1154,7 +1154,7 @@ gLogBracketOrderRollover _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setState(ByVal pState As RolloverControllerStates)
@@ -1169,6 +1169,6 @@ fireStateChange mState
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

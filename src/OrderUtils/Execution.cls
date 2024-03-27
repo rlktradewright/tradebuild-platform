@@ -156,7 +156,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
@@ -183,7 +183,7 @@ mIsDirty = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IRecoverable_ProgId() As String
@@ -208,7 +208,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -374,7 +374,7 @@ mRecoverableObjectListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveRecoverableObjectListener(ByVal pListener As IRecoverableObjectListener)
@@ -386,7 +386,7 @@ mRecoverableObjectListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SyncToExecutionReport( _
@@ -418,7 +418,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SaveRecoveryInfo()
@@ -433,7 +433,7 @@ mIsDirty = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetClean()
@@ -499,7 +499,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -533,7 +533,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setFieldValue(currentValue As Variant, newValue As Variant)
@@ -551,5 +551,5 @@ mIsDirty = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub

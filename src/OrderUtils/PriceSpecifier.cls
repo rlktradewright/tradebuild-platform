@@ -154,13 +154,13 @@ Then
     ' minimum tick had been determined
     mTickSize = pTickSize
     Dim lPrice As Double
-    AssertArgument parseprice(mPriceString, pSecType, mTickSize, lPrice), "Price not valid for this tick size"
+    AssertArgument ParsePrice(mPriceString, pSecType, mTickSize, lPrice), "Price not valid for this tick size"
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function Clone() As PriceSpecifier
@@ -227,7 +227,7 @@ ToJSON = jb.JSONString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

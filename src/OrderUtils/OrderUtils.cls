@@ -94,15 +94,15 @@ Private Const ModuleName                            As String = "OrderUtils"
 '@================================================================================
 
 Public Property Get EntryOrderTypes() As OrderTypes()
-EntryOrderTypes = gEntryOrderTypes
+EntryOrderTypes = GOrderUtils.EntryOrderTypes
 End Property
 
 Public Property Get StopLossOrderTypes() As OrderTypes()
-StopLossOrderTypes = gStopLossOrderTypes
+StopLossOrderTypes = GOrderUtils.StopLossOrderTypes
 End Property
 
 Public Property Get TargetOrderTypes() As OrderTypes()
-TargetOrderTypes = gTargetOrderTypes
+TargetOrderTypes = GOrderUtils.TargetOrderTypes
 End Property
 
 '@================================================================================
@@ -113,24 +113,24 @@ Public Function BracketOrderRoleToString(ByVal pOrderRole As BracketOrderRoles) 
 Const ProcName As String = "BracketOrderRoleToString"
 On Error GoTo Err
 
-BracketOrderRoleToString = gBracketOrderRoleToString(pOrderRole)
+BracketOrderRoleToString = GOrderUtils.BracketOrderRoleToString(pOrderRole)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function BracketOrderStateToString(ByVal pState As BracketOrderStates) As String
 Const ProcName As String = "BracketOrderStateToString"
 On Error GoTo Err
 
-BracketOrderStateToString = gBracketOrderStateToString(pState)
+BracketOrderStateToString = GOrderUtils.BracketOrderStateToString(pState)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateBracketProfitCalculator( _
@@ -139,118 +139,115 @@ Public Function CreateBracketProfitCalculator( _
 Const ProcName As String = "CreateBracketProfitCalculator"
 On Error GoTo Err
 
-Set CreateBracketProfitCalculator = gCreateBracketProfitCalculator(pBracketOrder, pDataSource)
+Set CreateBracketProfitCalculator = GOrderUtils.CreateBracketProfitCalculator(pBracketOrder, pDataSource)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateOrderPersistenceDataStore(ByVal pRecoveryFilePath As String) As IOrderPersistenceDataStore
 Const ProcName As String = "CreateOrderPersistenceDataStore"
 On Error GoTo Err
 
-Dim lDataStore As OrderPersistenceDataStore
-Set lDataStore = New OrderPersistenceDataStore
-lDataStore.Initialise pRecoveryFilePath
-Set CreateOrderPersistenceDataStore = lDataStore
+Set CreateOrderPersistenceDataStore = GOrderUtils.CreateOrderPersistenceDataStore(pRecoveryFilePath)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function IsEntryOrderType(ByVal pOrderType As OrderTypes) As Boolean
-IsEntryOrderType = gIsEntryOrderType(pOrderType)
+IsEntryOrderType = GOrderUtils.IsEntryOrderType(pOrderType)
 End Function
 
 Public Function IsNullPriceSpecifier(ByVal pPriceSpec As PriceSpecifier) As Boolean
-IsNullPriceSpecifier = gIsNullPriceSpecifier(pPriceSpec)
+IsNullPriceSpecifier = GOrderUtils.IsNullPriceSpecifier(pPriceSpec)
 End Function
 
 Public Function IsStopLossOrderType(ByVal pOrderType As OrderTypes) As Boolean
-IsStopLossOrderType = gIsStopLossOrderType(pOrderType)
+IsStopLossOrderType = GOrderUtils.IsStopLossOrderType(pOrderType)
 End Function
 
 Public Function IsTargetOrderType(ByVal pOrderType As OrderTypes) As Boolean
-IsTargetOrderType = gIsTargetOrderType(pOrderType)
+IsTargetOrderType = GOrderUtils.IsTargetOrderType(pOrderType)
 End Function
 
 Public Function NewPriceSpecifier( _
-                Optional ByVal pPrice As Double = MaxDoubleValue, _
+                Optional ByVal pPrice As Double = GOrderUtils.MaxDoubleValue, _
                 Optional ByVal pPriceString As String = "", _
                 Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
                 Optional ByVal pOffset As Double = 0#, _
                 Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone) As PriceSpecifier
-Set NewPriceSpecifier = gNewPriceSpecifier(pPrice, pPriceType, pOffset, pOffsetType)
+Set NewPriceSpecifier = GOrderUtils.NewPriceSpecifier(pPrice, pPriceType, pOffset, pOffsetType)
 End Function
 
 Public Function OptionStrikeSelectionModeFromString( _
                 ByVal Value As String) As OptionStrikeSelectionModes
-OptionStrikeSelectionModeFromString = gOptionStrikeSelectionModeFromString(Value)
+OptionStrikeSelectionModeFromString = GOrderUtils.OptionStrikeSelectionModeFromString(Value)
 End Function
 
 Public Function OptionStrikeSelectionModeToString( _
                 ByVal Value As OptionStrikeSelectionModes) As String
-OptionStrikeSelectionModeToString = gOptionStrikeSelectionModeToString(Value)
+OptionStrikeSelectionModeToString = GOrderUtils.OptionStrikeSelectionModeToString(Value)
 End Function
 
 Public Function OptionStrikeSelectionOperatorFromString(ByVal Value As String) As OptionStrikeSelectionOperators
-OptionStrikeSelectionOperatorFromString = gOptionStrikeSelectionOperatorFromString(Value)
+OptionStrikeSelectionOperatorFromString = GOrderUtils.OptionStrikeSelectionOperatorFromString(Value)
 End Function
 
 Public Function OptionStrikeSelectionOperatorToString(ByVal Value As OptionStrikeSelectionOperators) As String
-OptionStrikeSelectionOperatorToString = gOptionStrikeSelectionOperatorToString(Value)
+OptionStrikeSelectionOperatorToString = GOrderUtils.OptionStrikeSelectionOperatorToString(Value)
 End Function
 
 Public Function OrderActionFromString(ByVal Value As String) As OrderActions
 Const ProcName As String = "OrderActionFromString"
 On Error GoTo Err
 
-OrderActionFromString = gOrderActionFromString(Value)
+OrderActionFromString = GOrderUtils.OrderActionFromString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderActionToString(ByVal Value As OrderActions) As String
 Const ProcName As String = "OrderActionToString"
 On Error GoTo Err
 
-OrderActionToString = gOrderActionToString(Value)
+OrderActionToString = GOrderUtils.OrderActionToString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderTIFFromString(ByVal Value As String) As OrderTIFs
 Const ProcName As String = "OrderTIFFromString"
 On Error GoTo Err
 
-OrderTIFFromString = gOrderTIFFromString(Value)
+OrderTIFFromString = GOrderUtils.OrderTIFFromString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderTIFToString(ByVal Value As OrderTIFs) As String
 Const ProcName As String = "OrderTIFToString"
 On Error GoTo Err
 
-OrderTIFToString = gOrderTIFToString(Value)
+OrderTIFToString = GOrderUtils.OrderTIFToString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateOptionRolloverSpecification( _
@@ -277,7 +274,7 @@ Public Function CreateOptionRolloverSpecification( _
 Const ProcName As String = "CreateOptionRolloverSpecification"
 On Error GoTo Err
 
-Set CreateOptionRolloverSpecification = gCreateOptionRolloverSpecification( _
+Set CreateOptionRolloverSpecification = GOrderUtils.CreateOptionRolloverSpecification( _
                                                 pDays, _
                                                 pTime, _
                                                 pInitialStrikeSelectionMode, _
@@ -302,7 +299,7 @@ Set CreateOptionRolloverSpecification = gCreateOptionRolloverSpecification( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateRolloverSpecification( _
@@ -319,7 +316,7 @@ Public Function CreateRolloverSpecification( _
 Const ProcName As String = "CreateRolloverSpecification"
 On Error GoTo Err
 
-Set CreateRolloverSpecification = gCreateRolloverSpecification( _
+Set CreateRolloverSpecification = GOrderUtils.CreateRolloverSpecification( _
                                                 pDays, _
                                                 pTime, _
                                                 pCloseOrderType, _
@@ -334,11 +331,11 @@ Set CreateRolloverSpecification = gCreateRolloverSpecification( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GenerateBracketOrderId() As String
-GenerateBracketOrderId = GIdProvider.gNextId
+GenerateBracketOrderId = GOrderUtils.GenerateBracketOrderId
 End Function
 
 Public Function GetOptionContract( _
@@ -351,11 +348,11 @@ Public Function GetOptionContract( _
                 ByVal pUnderlyingExchangeName As String, _
                 ByVal pMarketDataManager As IMarketDataManager, _
                 Optional ByVal pListener As IStateChangeListener, _
-                Optional ByVal pReferenceDate As Date = Globals.MinDate) As IFuture
+                Optional ByVal pReferenceDate As Date = GOrderUtils.MinDate) As IFuture
 Const ProcName As String = "GetOptionContract"
 On Error GoTo Err
 
-Set GetOptionContract = gGetOptionContract( _
+Set GetOptionContract = GOrderUtils.GetOptionContract( _
                                 pContractSpec, _
                                 pAction, _
                                 pContractStore, _
@@ -370,67 +367,67 @@ Set GetOptionContract = gGetOptionContract( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderTypeFromString(ByVal Value As String) As OrderTypes
 Const ProcName As String = "OrderTypeFromString"
 On Error GoTo Err
 
-OrderTypeFromString = gOrderTypeFromString(Value)
+OrderTypeFromString = GOrderUtils.OrderTypeFromString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderTypeToString(ByVal Value As OrderTypes) As String
 Const ProcName As String = "OrderTypeToString"
 On Error GoTo Err
 
-OrderTypeToString = gOrderTypeToString(Value)
+OrderTypeToString = GOrderUtils.OrderTypeToString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderTypeToShortString(ByVal Value As OrderTypes) As String
 Const ProcName As String = "OrderTypeToShortString"
 On Error GoTo Err
 
-OrderTypeToShortString = gOrderTypeToShortString(Value)
+OrderTypeToShortString = GOrderUtils.OrderTypeToShortString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderStatusToString(ByVal pOrderStatus As OrderStatuses) As String
 Const ProcName As String = "OrderStatusToString"
 On Error GoTo Err
 
-OrderStatusToString = gOrderStatusToString(pOrderStatus)
+OrderStatusToString = GOrderUtils.OrderStatusToString(pOrderStatus)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function OrderStopTriggerMethodToString(ByVal Value As OrderStopTriggerMethods) As String
-Const ProcName As String = "gOrderStopTriggerMethodToString"
+Const ProcName As String = "OrderStopTriggerMethodToString"
 On Error GoTo Err
 
-OrderStopTriggerMethodToString = gOrderStopTriggerMethodToString(Value)
+OrderStopTriggerMethodToString = GOrderUtils.OrderStopTriggerMethodToString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ParsePriceAndOffset( _
@@ -440,15 +437,15 @@ Public Function ParsePriceAndOffset( _
                 ByVal pTickSize As Double, _
                 ByRef pMessage As String, _
                 Optional ByVal pUseCloseoutSemantics As Boolean = False) As Boolean
-Const ProcName As String = "gParsePriceAndOffset"
+Const ProcName As String = "ParsePriceAndOffset"
 On Error GoTo Err
 
-ParsePriceAndOffset = gParsePriceAndOffset(pPriceSpec, pValue, pSecType, pTickSize, pUseCloseoutSemantics, pMessage)
+ParsePriceAndOffset = GOrderUtils.ParsePriceAndOffset(pPriceSpec, pValue, pSecType, pTickSize, pMessage, pUseCloseoutSemantics)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 
@@ -458,12 +455,12 @@ Public Function PriceOffsetToString( _
 Const ProcName As String = "PriceOffsetToString"
 On Error GoTo Err
 
-PriceOffsetToString = gPriceOffsetToString(pOffset, pOffsetType)
+PriceOffsetToString = GOrderUtils.PriceOffsetToString(pOffset, pOffsetType)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function PriceOffsetTypeToString( _
@@ -471,12 +468,12 @@ Public Function PriceOffsetTypeToString( _
 Const ProcName As String = "PriceOffsetTypeToString"
 On Error GoTo Err
 
-PriceOffsetTypeToString = gPriceOffsetTypeToString(pOffsetType)
+PriceOffsetTypeToString = GOrderUtils.PriceOffsetTypeToString(pOffsetType)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function PriceSpecifierToString( _
@@ -485,29 +482,29 @@ Public Function PriceSpecifierToString( _
 Const ProcName As String = "PriceSpecifierToString"
 On Error GoTo Err
 
-PriceSpecifierToString = gPriceSpecifierToString(pPriceSpec, _
+PriceSpecifierToString = GOrderUtils.PriceSpecifierToString(pPriceSpec, _
                             pContract)
                             
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function TypedPriceToString( _
                 ByVal pPrice As Double, _
                 ByVal pPriceType As PriceValueTypes, _
                 ByVal pContract As IContract) As String
-Const ProcName As String = "gTypedPriceToString"
+Const ProcName As String = "TypedPriceToString"
 On Error GoTo Err
 
-TypedPriceToString = gTypedPriceToString(pPrice, pPriceType, pContract)
+TypedPriceToString = GOrderUtils.TypedPriceToString(pPrice, pPriceType, pContract)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

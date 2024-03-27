@@ -186,7 +186,7 @@ mSummary.State = State
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Class_Terminate()
@@ -230,7 +230,7 @@ AddChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_AddExecutionListener(ByVal pListener As IExecutionListener)
@@ -242,7 +242,7 @@ AddExecutionListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -254,7 +254,7 @@ AddStateChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_AdjustStop( _
@@ -268,7 +268,7 @@ AdjustStopLoss pStopTriggerPriceSpec, pQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_AdjustTarget( _
@@ -282,7 +282,7 @@ AdjustTarget pTargetPriceSpec, pQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBracketOrder_ApplicationIndex() As Long
@@ -298,7 +298,7 @@ IBracketOrder_Cancel = Cancel(pEvenIfFilled)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Let IBracketOrder_CancelAfter(ByVal Value As Long)
@@ -310,7 +310,7 @@ CancelAfter = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub IBracketOrder_CancelChanges()
@@ -322,7 +322,7 @@ CancelChanges
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IBracketOrder_CancelPrice(ByVal Value As Double)
@@ -334,7 +334,7 @@ CancelPrice = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IBracketOrder_CancelPrice() As Double
@@ -350,7 +350,7 @@ CancelTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IBracketOrder_CancelTime() As Date
@@ -366,7 +366,7 @@ Checkpoint
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_CloseOut( _
@@ -379,7 +379,7 @@ CloseOut pCloseoutSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBracketOrder_CloseoutOrder() As IOrder
@@ -395,7 +395,7 @@ IBracketOrder_ContainsOrder = ContainsOrder(pOrder)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IBracketOrder_ContextName() As String
@@ -455,7 +455,7 @@ Execute
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBracketOrder_ExitPrice() As Double
@@ -475,7 +475,7 @@ IBracketOrder_IsComplete = IsComplete
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IBracketOrder_IsDirty() As Boolean
@@ -504,7 +504,7 @@ NotifyCloseout pExec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBracketOrder_Order(ByVal pRole As BracketOrderRoles) As IOrder
@@ -516,7 +516,7 @@ Set IBracketOrder_Order = Order(pRole)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IBracketOrder_OrderContext() As OrderContext
@@ -532,7 +532,7 @@ Set IBracketOrder_PendingSize = PendingSize
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Let IBracketOrder_PreventUnprotectedPosition(ByVal Value As Boolean)
@@ -544,7 +544,7 @@ PreventUnprotectedPosition = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IBracketOrder_PreventUnprotectedPosition() As Boolean
@@ -568,7 +568,7 @@ RemoveChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_RemoveExecutionListener(ByVal pListener As IExecutionListener)
@@ -580,7 +580,7 @@ RemoveExecutionListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -592,7 +592,7 @@ RemoveStateChangeListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBracketOrder_Risk() As Currency
@@ -617,7 +617,7 @@ SetNewEntryLimitPrice pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewEntryTriggerPrice( _
@@ -631,7 +631,7 @@ SetNewEntryTriggerPrice pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewOrderLimitPrice( _
@@ -645,7 +645,7 @@ SetNewOrderLimitPrice pRole, pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewOrderTriggerPrice( _
@@ -659,7 +659,7 @@ SetNewOrderTriggerPrice pRole, pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewEntryQuantity(ByVal pNewQuantity As BoxedDecimal)
@@ -671,7 +671,7 @@ SetNewEntryQuantity pNewQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewStopLossLimitPrice( _
@@ -684,7 +684,7 @@ SetNewStopLossLimitPrice pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewStopLossQuantity(ByVal pNewQuantity As BoxedDecimal)
@@ -696,7 +696,7 @@ SetNewStopLossQuantity pNewQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewStopLossTriggerPrice( _
@@ -709,7 +709,7 @@ SetNewStopLossTriggerPrice pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewTargetLimitPrice( _
@@ -722,7 +722,7 @@ SetNewTargetLimitPrice pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewTargetQuantity(ByVal pNewQuantity As BoxedDecimal)
@@ -734,7 +734,7 @@ SetNewTargetQuantity pNewQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBracketOrder_SetNewTargetTriggerPrice( _
@@ -747,7 +747,7 @@ SetNewTargetTriggerPrice pPriceSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBracketOrder_Size() As BoxedDecimal
@@ -795,7 +795,7 @@ IBracketOrder_ToString = ToString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IBracketOrder_Update()
@@ -807,7 +807,7 @@ Update
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -827,7 +827,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -843,7 +843,7 @@ mRecoverableObjectListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverable_FinishProcessingOrderPersistenceData()
@@ -870,7 +870,7 @@ If placePeggedOrders Then CheckComplete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IRecoverable_LoadRecoveryData( _
@@ -926,7 +926,7 @@ mSummary.SetClean
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IRecoverable_ProgId() As String
@@ -950,7 +950,7 @@ mRecoverableObjectListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -994,7 +994,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1020,15 +1020,15 @@ fireBracketOrderError mCloseoutOrder, pErrorCode, pErrorMsg
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mCloseoutOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mCloseoutOrder_Fill"
 On Error GoTo Err
 
-gLogOrderMessage "Closeout order fill: " & _
-                    gOrderActionToString(mCloseoutOrder.Action) & " " & pExec.Quantity & " at " & _
+LogOrderMessage "Closeout order fill: " & _
+                    OrderActionToString(mCloseoutOrder.Action) & " " & pExec.Quantity & " at " & _
                     pExec.Price & "; remaining: " & mCloseoutOrder.QuantityRemaining, _
                 mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
@@ -1041,7 +1041,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mCloseoutOrder_Message(ByVal pMessage As String)
@@ -1053,7 +1053,7 @@ fireBracketOrderMessage mCloseoutOrder, pMessage
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mCloseoutOrder_PropertyChanged()
@@ -1066,7 +1066,7 @@ RaiseEvent CloseoutOrderChanged
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mCloseoutOrder_StatusChanged()
@@ -1075,8 +1075,8 @@ On Error GoTo Err
 
 Select Case mCloseoutOrder.Status
 Case OrderStatuses.OrderStatusFilled
-    gLogOrderMessage "Closeout order completed: " & _
-                        gOrderActionToString(mCloseoutOrder.Action) & " " & mCloseoutOrder.QuantityFilled & " at " & _
+    LogOrderMessage "Closeout order completed: " & _
+                        OrderActionToString(mCloseoutOrder.Action) & " " & mCloseoutOrder.QuantityFilled & " at " & _
                         mCloseoutOrder.AveragePrice, _
                     mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusPendingSubmit
@@ -1084,10 +1084,10 @@ Case OrderStatuses.OrderStatusCancelling
 Case OrderStatuses.OrderStatusPreSubmitted
 Case OrderStatuses.OrderStatusSubmitted
 Case OrderStatuses.OrderStatusCancelled
-    gLogOrderMessage "Closeout order cancelled", _
+    LogOrderMessage "Closeout order cancelled", _
                     mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusRejected
-    gLogOrderMessage "Closeout order rejected", _
+    LogOrderMessage "Closeout order rejected", _
                     mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
 End Select
 
@@ -1116,7 +1116,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1132,7 +1132,7 @@ setDirty
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mEntryOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -1150,15 +1150,15 @@ fireBracketOrderError mEntryOrder, pErrorCode, pErrorMsg
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mEntryOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mEntryOrder_Fill"
 On Error GoTo Err
 
-gLogOrderMessage "Entry order fill: " & _
-                    gOrderActionToString(mEntryOrder.Action) & " " & pExec.Quantity & " at " & _
+LogOrderMessage "Entry order fill: " & _
+                    OrderActionToString(mEntryOrder.Action) & " " & pExec.Quantity & " at " & _
                     pExec.Price & "; remaining: " & mEntryOrder.QuantityRemaining, _
                 mEntryOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
@@ -1213,7 +1213,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mEntryOrder_Message(ByVal pMessage As String)
@@ -1225,7 +1225,7 @@ fireBracketOrderMessage mEntryOrder, pMessage
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mEntryOrder_PropertyChanged()
@@ -1238,7 +1238,7 @@ RaiseEvent EntryOrderChanged
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mEntryOrder_StatusChanged()
@@ -1247,15 +1247,15 @@ On Error GoTo Err
 
 Select Case mEntryOrder.Status
 Case OrderStatuses.OrderStatusFilled
-    gLogOrderMessage "Entry order completed: " & _
-                        gOrderActionToString(mEntryOrder.Action) & " " & mEntryOrder.QuantityFilled & " at " & _
+    LogOrderMessage "Entry order completed: " & _
+                        OrderActionToString(mEntryOrder.Action) & " " & mEntryOrder.QuantityFilled & " at " & _
                         mEntryOrder.AveragePrice, _
                     mEntryOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusCancelled
-    gLogOrderMessage "Entry order cancelled", _
+    LogOrderMessage "Entry order cancelled", _
                     mEntryOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusRejected
-    gLogOrderMessage "Entry order rejected", _
+    LogOrderMessage "Entry order rejected", _
                     mEntryOrder, mDataSource, mContract, Key, mIsSimulated, Me
 End Select
 
@@ -1285,7 +1285,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1304,7 +1304,7 @@ placeCloseoutOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1323,7 +1323,7 @@ DoCloseOut
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1342,7 +1342,7 @@ setRolloverTLI
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1360,7 +1360,7 @@ handleStimulus OpStimuli.StimTimeoutExpired
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1376,7 +1376,7 @@ setDirty
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mStopLossOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -1389,15 +1389,15 @@ fireBracketOrderError mStopLossOrder, pErrorCode, pErrorMsg
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mStopLossOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mStopLossOrder_Fill"
 On Error GoTo Err
 
-gLogOrderMessage "Stop-loss order fill: " & _
-                    gOrderActionToString(mStopLossOrder.Action) & " " & pExec.Quantity & " at " & _
+LogOrderMessage "Stop-loss order fill: " & _
+                    OrderActionToString(mStopLossOrder.Action) & " " & pExec.Quantity & " at " & _
                     pExec.Price & "; remaining: " & mStopLossOrder.QuantityRemaining, _
                 mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
@@ -1417,7 +1417,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mStopLossOrder_Message(ByVal pMessage As String)
@@ -1429,7 +1429,7 @@ fireBracketOrderMessage mStopLossOrder, pMessage
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mStopLossOrder_PropertyChanged()
@@ -1442,7 +1442,7 @@ RaiseEvent StopLossOrderChanged
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mStopLossOrder_StatusChanged()
@@ -1451,15 +1451,15 @@ On Error GoTo Err
 
 Select Case mStopLossOrder.Status
 Case OrderStatuses.OrderStatusFilled
-    gLogOrderMessage "Stop-loss order completed: " & _
-                        gOrderActionToString(mStopLossOrder.Action) & " " & mStopLossOrder.QuantityFilled & " at " & _
+    LogOrderMessage "Stop-loss order completed: " & _
+                        OrderActionToString(mStopLossOrder.Action) & " " & mStopLossOrder.QuantityFilled & " at " & _
                         mStopLossOrder.AveragePrice, _
                     mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusCancelled
-    gLogOrderMessage "Stop-loss order cancelled", _
+    LogOrderMessage "Stop-loss order cancelled", _
                     mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusRejected
-    gLogOrderMessage "Stop-loss order rejected", _
+    LogOrderMessage "Stop-loss order rejected", _
                     mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
 End Select
 
@@ -1488,7 +1488,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1504,7 +1504,7 @@ setDirty
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mTargetOrder_Error(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -1517,15 +1517,15 @@ fireBracketOrderError mTargetOrder, pErrorCode, pErrorMsg
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mTargetOrder_Fill(ByVal pExec As IExecutionReport)
 Const ProcName As String = "mTargetOrder_Fill"
 On Error GoTo Err
 
-gLogOrderMessage "Target order fill: " & _
-                    gOrderActionToString(mTargetOrder.Action) & " " & pExec.Quantity & " at " & _
+LogOrderMessage "Target order fill: " & _
+                    OrderActionToString(mTargetOrder.Action) & " " & pExec.Quantity & " at " & _
                     pExec.Price & "; remaining: " & mTargetOrder.QuantityRemaining, _
                 mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
 
@@ -1544,7 +1544,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mTargetOrder_Message(ByVal pMessage As String)
@@ -1556,7 +1556,7 @@ fireBracketOrderMessage mTargetOrder, pMessage
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mTargetOrder_PropertyChanged()
@@ -1569,7 +1569,7 @@ RaiseEvent TargetOrderChanged
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mTargetOrder_StatusChanged()
@@ -1578,15 +1578,15 @@ On Error GoTo Err
 
 Select Case mTargetOrder.Status
 Case OrderStatuses.OrderStatusFilled
-    gLogOrderMessage "Target order completed: " & _
-                        gOrderActionToString(mTargetOrder.Action) & " " & mTargetOrder.QuantityFilled & " at " & _
+    LogOrderMessage "Target order completed: " & _
+                        OrderActionToString(mTargetOrder.Action) & " " & mTargetOrder.QuantityFilled & " at " & _
                         mTargetOrder.AveragePrice, _
                     mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusCancelled
-    gLogOrderMessage "Target order cancelled", _
+    LogOrderMessage "Target order cancelled", _
                     mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
 Case OrderStatuses.OrderStatusRejected
-    gLogOrderMessage "Target order rejected", _
+    LogOrderMessage "Target order rejected", _
                     mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
 End Select
 
@@ -1614,7 +1614,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1632,7 +1632,7 @@ SelfCancel "Cancel time expired"
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -1660,7 +1660,7 @@ mSummary.AutosizeType = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get AutosizeType() As BracketAutosizeTypes
@@ -1679,7 +1679,7 @@ mSummary.AutosizeValue = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get AutosizeValue() As Double
@@ -1700,7 +1700,7 @@ mCancelAfter = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let CancelPrice(ByVal Value As Double)
@@ -1716,7 +1716,7 @@ mSummary.CancelPrice = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CancelPrice() As Double
@@ -1737,7 +1737,7 @@ mSummary.CancelTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CancelTime() As Date
@@ -1757,7 +1757,7 @@ Set Contract = mContract
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Let CreationTime(ByVal Value As Date)
@@ -1769,7 +1769,7 @@ mSummary.CreationTime = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CreationTime() As Date
@@ -1793,7 +1793,7 @@ mSummary.CumSellPrice = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CumSellPrice() As BoxedDecimal
@@ -1810,7 +1810,7 @@ If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Description() As String
@@ -1834,7 +1834,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let EntryReason(ByVal Value As String)
@@ -1847,7 +1847,7 @@ If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get EntryReason() As String
@@ -1867,7 +1867,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get GroupName() As String
@@ -1887,7 +1887,7 @@ IsComplete = (mStateEngine.State = BracketOrderStates.BracketOrderStateClosed)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsDirty() As Boolean
@@ -1903,7 +1903,7 @@ IsRiskUnlimited = (Risk = MaxCurrency)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsRolloverInProgress() As Boolean
@@ -1927,7 +1927,7 @@ If Not mEntryOrder Is Nothing Then LongPosition = (mEntryOrder.Action = OrderAct
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LotSize(ByVal Value As Long)
@@ -1942,7 +1942,7 @@ mSummary.LotSize = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LotSize() As Long
@@ -1977,7 +1977,7 @@ End Select
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OrderContext() As OrderContext
@@ -1989,7 +1989,7 @@ Set OrderContext = mOrderContext
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get NumberOfOrders() As Long
@@ -2001,7 +2001,7 @@ NumberOfOrders = mNumberOfOrders
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PendingSize() As BoxedDecimal
@@ -2019,7 +2019,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let PreventUnprotectedPosition( _
@@ -2041,7 +2041,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get PreventUnprotectedPosition() As Boolean
@@ -2053,7 +2053,7 @@ PreventUnprotectedPosition = mSummary.PreventUnprotectedPosition
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Risk() As Currency
@@ -2119,7 +2119,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get RolloverDate() As Date
@@ -2169,7 +2169,7 @@ If mSummary.State = BracketOrderStateSubmitted Then setRolloverTLI
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Size() As BoxedDecimal
@@ -2208,10 +2208,10 @@ End Select
 Assert pOrder.Status <> OrderStatuses.OrderStatusFilled, Key & " Can't change " & pChangedFieldName & " - order " & pOrder.Id & " already filled"
 
 Assert ((pOrder.OrderType And pPermittedOrderTypes) = CLng(pOrder.OrderType)), _
-         Key & " Can't change " & pChangedFieldName & " for order type " & gOrderTypeToString(pOrder.OrderType)
+         Key & " Can't change " & pChangedFieldName & " for order type " & OrderTypeToString(pOrder.OrderType)
 
 If Not pNewPriceSpec.Equals(pPriceSpec) Then
-    gLogBracketOrderMessage "Set " & pChangedFieldName & "=" & gPriceSpecifierToString(pNewPriceSpec, mContract), _
+    LogBracketOrderMessage "Set " & pChangedFieldName & "=" & gPriceSpecifierToString(pNewPriceSpec, mContract), _
                     mDataSource, mContract, Key, mIsSimulated, Me
     Set pPriceSpec = pNewPriceSpec
     setDirty
@@ -2220,7 +2220,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setQuantity( _
@@ -2244,7 +2244,7 @@ End Select
 Assert pOrder.Status <> OrderStatuses.OrderStatusFilled, Key & " Can't change quantity - order " & pOrder.Id & " already filled"
 
 If Not pNewQuantity.EQ(pOrder.Quantity) Then
-    gLogBracketOrderMessage "Set quantity=" & DecimalToString(pNewQuantity), _
+    LogBracketOrderMessage "Set quantity=" & DecimalToString(pNewQuantity), _
                     mDataSource, mContract, Key, mIsSimulated, Me
     Set pField = pNewQuantity
     setDirty
@@ -2253,7 +2253,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setRolloverTLI()
@@ -2284,7 +2284,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setState(ByVal Value As BracketOrderStates)
@@ -2304,7 +2304,7 @@ If IsComplete Then doCompletionActions
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Property Get State() As BracketOrderStates
@@ -2316,7 +2316,7 @@ State = mStateEngine.State
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StopLossOrder() As IOrder
@@ -2333,7 +2333,7 @@ If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StopReason() As String
@@ -2354,7 +2354,7 @@ If State <> BracketOrderStateCreated Then SaveRecoveryInfo
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TargetReason() As String
@@ -2394,7 +2394,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
@@ -2406,7 +2406,7 @@ mBracketOrderErrorListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
@@ -2418,7 +2418,7 @@ mBracketOrderMessageListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddChangeListener(ByVal pListener As IChangeListener)
@@ -2436,7 +2436,7 @@ pListener.Change ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddExecutionListener(ByVal pListener As IExecutionListener)
@@ -2448,7 +2448,7 @@ mExecutionListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -2461,7 +2461,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AdjustStopLoss(ByVal stopTriggerPriceSpec As PriceSpecifier, _
@@ -2477,7 +2477,7 @@ Update
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AdjustTarget(ByVal targetPriceSpec As PriceSpecifier, _
@@ -2493,7 +2493,7 @@ Update
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Cancel(Optional ByVal evenIfFilled As Boolean = False) As Boolean
@@ -2524,7 +2524,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 ''
@@ -2553,11 +2553,11 @@ Set mNewTargetTriggerPriceSpec = gNewPriceSpecifier
 ' code may have references to the member orders which must
 ' remain valid
 '@/
-gSyncToOrder mEntryOrder, mEntryOrderCopy
+SyncToOrder mEntryOrder, mEntryOrderCopy
 mEntryOrder.SetClean
-gSyncToOrder mStopLossOrder, mStopOrderCopy
+SyncToOrder mStopLossOrder, mStopOrderCopy
 mStopLossOrder.SetClean
-gSyncToOrder mTargetOrder, mTargetOrderCopy
+SyncToOrder mTargetOrder, mTargetOrderCopy
 mTargetOrder.SetClean
 
 mIsDirty = False
@@ -2567,7 +2567,7 @@ RaiseEvent ChangesCancelled
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub CheckComplete()
@@ -2579,7 +2579,7 @@ checkAllOrdersComplete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -2605,7 +2605,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CloseOut( _
@@ -2625,7 +2625,7 @@ DoCloseOut pCloseoutSpec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ContainsOrder( _
@@ -2645,7 +2645,7 @@ ContainsOrder = False
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub DoCloseOut( _
@@ -2655,7 +2655,7 @@ On Error GoTo Err
 
 mSummary.CloseoutSpecifier = pCloseoutSpec
 
-gLogBracketOrderMessage "Closing out: " & _
+LogBracketOrderMessage "Closing out: " & _
                     "size=" & Size & _
                     "; pending size=" & PendingSize, _
                 mDataSource, mContract, Key, mIsSimulated, Me
@@ -2666,7 +2666,7 @@ handleStimulus OpStimuli.StimCloseout
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Execute()
@@ -2706,7 +2706,7 @@ If mSummary.RolloverDate <> 0 Then setRolloverTLI
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -2724,7 +2724,7 @@ If Not mCloseoutOrder Is Nothing Then mCloseoutOrder.Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -2755,7 +2755,7 @@ Set mClock = mTimerList.Clock
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyCloseout( _
@@ -2780,7 +2780,7 @@ RaiseEvent PositionCloseoutNotified
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveBracketOrderErrorListener(ByVal pListener As IBracketOrderErrorListener)
@@ -2792,7 +2792,7 @@ mBracketOrderErrorListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveBracketOrderMessageListener(ByVal pListener As IBracketOrderMsgListener)
@@ -2804,7 +2804,7 @@ mBracketOrderMessageListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveChangeListener(ByVal pListener As IChangeListener)
@@ -2816,7 +2816,7 @@ mChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveExecutionListener(ByVal pListener As IExecutionListener)
@@ -2828,7 +2828,7 @@ mExecutionListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -2840,11 +2840,11 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SelfCancel(ByVal pReason As String)
-gLogBracketOrderMessage "Cancel bracket order: " & pReason, _
+LogBracketOrderMessage "Cancel bracket order: " & pReason, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 Cancel
 fireChange BracketOrderSelfCancelled
@@ -2861,7 +2861,7 @@ mSummary.CloseoutOrderId = mCloseoutOrder.Id
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetEntryOrder(ByVal pOrder As Order)
@@ -2878,7 +2878,7 @@ mNumberOfOrders = mNumberOfOrders + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewEntryLimitPrice( _
@@ -2900,7 +2900,7 @@ setPrice mEntryOrder, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewEntryTriggerPrice( _
@@ -2923,7 +2923,7 @@ setPrice mEntryOrder, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewOrderLimitPrice( _
@@ -2946,7 +2946,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewOrderTriggerPrice( _
@@ -2969,7 +2969,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewEntryQuantity(ByVal pNewQuantity As BoxedDecimal)
@@ -2982,7 +2982,7 @@ setQuantity mEntryOrder, mNewEntryQuantity, pNewQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossLimitPrice( _
@@ -3003,7 +3003,7 @@ setPrice mStopLossOrder, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossQuantity(ByVal pNewQuantity As BoxedDecimal)
@@ -3016,7 +3016,7 @@ setQuantity mStopLossOrder, mNewStopLossQuantity, pNewQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewStopLossTriggerPrice( _
@@ -3037,7 +3037,7 @@ setPrice mStopLossOrder, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetLimitPrice( _
@@ -3058,7 +3058,7 @@ setPrice mTargetOrder, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetQuantity(ByVal pNewQuantity As BoxedDecimal)
@@ -3071,7 +3071,7 @@ setQuantity mTargetOrder, mNewTargetQuantity, pNewQuantity
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetNewTargetTriggerPrice( _
@@ -3090,7 +3090,7 @@ setPrice mTargetOrder, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetSize(ByVal Value As BoxedDecimal)
@@ -3108,7 +3108,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetStopLossOrder(ByVal pOrder As Order)
@@ -3127,7 +3127,7 @@ mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetTargetOrder(ByVal pOrder As Order)
@@ -3146,19 +3146,19 @@ mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ToString() As String
 Const ProcName As String = "ToString"
 On Error GoTo Err
 
-ToString = gBracketOrderToString(Me)
+ToString = BracketOrderToString(Me)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Update()
@@ -3184,7 +3184,7 @@ If (Not updateEntry) And (Not updateStop) And (Not updateTarget) Then
     Exit Sub
 End If
 
-gLogBracketOrderMessage "Update bracket order: " & vbCrLf & _
+LogBracketOrderMessage "Update bracket order: " & vbCrLf & _
                 ToString, _
                 mDataSource, mContract, Key, mIsSimulated, Me
 
@@ -3212,7 +3212,7 @@ RaiseEvent ChangesApplied
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -3232,7 +3232,7 @@ Case OrderStatuses.OrderStatusFilled, _
         OrderStatuses.OrderStatusCancelling, _
         OrderStatuses.OrderStatusCancelled
 Case Else
-    gLogOrderMessage "Cancel order", _
+    LogOrderMessage "Cancel order", _
                     mCloseoutOrder, mDataSource, mContract, Key, mIsSimulated, Me
     mOrderSubmitter.CancelCloseoutOrder Me
 End Select
@@ -3240,7 +3240,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function cancelOrders() As Boolean
@@ -3295,7 +3295,7 @@ If Not mStopLossOrder Is Nothing Then StopLossOrderId = mStopLossOrder.Id
 
 Dim TargetOrderId As String
 If Not mTargetOrder Is Nothing Then TargetOrderId = mTargetOrder.Id
-gLogBracketOrderMessage "Cancel orders: " & _
+LogBracketOrderMessage "Cancel orders: " & _
                     EntryOrder.Id & _
                     ", " & StopLossOrderId & _
                     ", " & TargetOrderId, _
@@ -3304,7 +3304,7 @@ gLogBracketOrderMessage "Cancel orders: " & _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -3317,7 +3317,7 @@ mStateTimeoutTLI.Cancel
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CancelStopOrder()
@@ -3333,7 +3333,7 @@ Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    gLogOrderMessage "Cancel order", _
+    LogOrderMessage "Cancel order", _
                     mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
     mOrderSubmitter.CancelStopOrder Me
 End Select
@@ -3341,7 +3341,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CancelTargetOrder()
@@ -3357,7 +3357,7 @@ Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    gLogOrderMessage "Cancel order", _
+    LogOrderMessage "Cancel order", _
                     mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
     mOrderSubmitter.CancelTargetOrder Me
 End Select
@@ -3365,7 +3365,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub checkAllOrdersComplete()
@@ -3395,7 +3395,7 @@ handleStimulus OpStimuli.StimAllOrdersComplete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -3413,7 +3413,7 @@ updateTarget = checkForPendingTargetUpdates
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function checkForPendingEntryUpdates() As Boolean
@@ -3461,7 +3461,7 @@ Set mNewEntryTriggerPriceSpec = gNewPriceSpecifier
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function checkForPendingStoplossUpdates() As Boolean
@@ -3511,7 +3511,7 @@ If orderRequiresDelayedPriceResolution(mStopLossOrder) Then checkForPendingStopl
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function checkForPendingTargetUpdates() As Boolean
@@ -3560,7 +3560,7 @@ If orderRequiresDelayedPriceResolution(mTargetOrder) Then checkForPendingTargetU
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function CreateAnOrder(ByVal pId As String) As IOrder
@@ -3577,7 +3577,7 @@ Set CreateAnOrder = lOrder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub createCloseoutOrder()
@@ -3612,7 +3612,7 @@ SaveRecoveryInfo
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function doActions( _
@@ -3651,7 +3651,7 @@ For Each lAction In pActions
     Case OpActions.ActCancelTimeout
         doActions = cancelStateTimeout
     Case OpActions.ActLog
-        gLog "Stimulus '" & gOpStimuliToString(pStimulus) & "' occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mSummary.Key & ")", ProcName, ModuleName, , LogLevelSevere
+        GOrderUtils.Log "Stimulus '" & gOpStimuliToString(pStimulus) & "' occurred in state " & gBracketOrderStatesToString(pPreviousState) & " (" & mSummary.Key & ")", ProcName, ModuleName, , LogLevelSevere
         doActions = Empty
     Case OpActions.ActCancelCloseoutOrder
         doActions = CancelCloseoutOrder
@@ -3665,7 +3665,7 @@ Next
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function doCompletionActions()
@@ -3690,7 +3690,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub fireBracketOrderError( _
@@ -3728,7 +3728,7 @@ RaiseEvent OrderError(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireBracketOrderMessage( _
@@ -3764,7 +3764,7 @@ RaiseEvent OrderMessage(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireChange( _
@@ -3798,7 +3798,7 @@ RaiseEvent Change(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireExecution( _
@@ -3832,7 +3832,7 @@ RaiseEvent Execution(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireStateChange( _
@@ -3866,7 +3866,7 @@ RaiseEvent StateChange(ev)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireRecoveryDataChanged()
@@ -3896,7 +3896,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function handleStimulus(ByVal pStimulus As OpStimuli) As Variant
@@ -3926,7 +3926,7 @@ For i = 0 To UBound(lActions)
     lActionsString = lActionsString & gOpActionsToString(lActions(i)) & IIf(i = UBound(lActions), "", ",")
 Next
 
-gLog s & "; new state=" & gBracketOrderStatesToString(mStateEngine.State) & _
+GOrderUtils.Log s & "; new state=" & gBracketOrderStatesToString(mStateEngine.State) & _
         "; actions=" & lActionsString, _
         ProcName, ModuleName
 
@@ -3941,8 +3941,8 @@ Exit Function
 Err:
 Dim lErr As Long: lErr = Err.Number
 Dim lDesc As String: lDesc = Err.Description
-gLog s, ProcName, ModuleName
-gHandleUnexpectedError ProcName, ModuleName, pErrorNumber:=lErr, pErrorDesc:=lDesc
+GOrderUtils.Log s, ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName, pErrorNumber:=lErr, pErrorDesc:=lDesc
 End Function
 
 Private Sub initiateRollover()
@@ -3960,7 +3960,7 @@ mRolloverController.AddStateChangeListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function hasPeggedOrder(ByVal pOrder As IOrder) As Boolean
@@ -4004,7 +4004,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function placeDelayedCloseoutOrder()
@@ -4018,7 +4018,7 @@ Set mDelayedCloseoutTLI = mTimerList.Add( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function placeOrders()
@@ -4032,7 +4032,7 @@ Checkpoint
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function placePeggedOrder( _
@@ -4052,7 +4052,7 @@ End If
 ' the stop-loss limit and/or trigger price are to be pegged to the entry price
 
 If pRole = BracketOrderRoleStopLoss Then
-    gLog "Updating pegged StopLoss order for " & mSummary.Key, ProcName, ModuleName
+    GOrderUtils.Log "Updating pegged StopLoss order for " & mSummary.Key, ProcName, ModuleName
     
     If Abs(mSummary.Size) <> pOrder.Quantity Then SetNewStopLossQuantity CreateBoxedDecimal(Abs(mSummary.Size))
     
@@ -4073,7 +4073,7 @@ If pRole = BracketOrderRoleStopLoss Then
                                                     pOrder.TriggerPriceSpec.OffsetType)
     End If
 Else
-    gLog "Updating pegged Target order for " & mSummary.Key, ProcName, ModuleName
+    GOrderUtils.Log "Updating pegged Target order for " & mSummary.Key, ProcName, ModuleName
     
     If Abs(mSummary.Size) <> pOrder.Quantity Then SetNewTargetQuantity CreateBoxedDecimal(Abs(mSummary.Size))
     
@@ -4100,7 +4100,7 @@ placePeggedOrder = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function placePeggedOrders() As Boolean
@@ -4128,7 +4128,7 @@ lUpdated = placePeggedOrder(mStopLossOrder, BracketOrderRoleStopLoss)
 lUpdated = lUpdated Or placePeggedOrder(mTargetOrder, BracketOrderRoleTarget)
 
 If lUpdated Then
-    gLog "Pegged orders placed for " & mSummary.Key, ProcName, ModuleName
+    GOrderUtils.Log "Pegged orders placed for " & mSummary.Key, ProcName, ModuleName
     mSummary.PeggedOrdersProcessed = True
     Update
     SaveRecoveryInfo
@@ -4141,7 +4141,7 @@ placePeggedOrders = False
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processExecution( _
@@ -4188,14 +4188,14 @@ RaiseEvent SizeChanged
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ResubmitStopOrder()
 Const ProcName As String = "resubmitStopOrder"
 On Error GoTo Err
 
-gLogOrderMessage "Resubmit stop-loss order", _
+LogOrderMessage "Resubmit stop-loss order", _
                 mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
 mOrderSubmitter.ResubmitStopOrder Me
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
@@ -4203,16 +4203,16 @@ mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ResubmitStopAndTargetOrders()
 Const ProcName As String = "resubmitStopAndTargetOrders"
 On Error GoTo Err
 
-gLogOrderMessage "Resubmit stop-loss order", _
+LogOrderMessage "Resubmit stop-loss order", _
                 mStopLossOrder, mDataSource, mContract, Key, mIsSimulated, Me
-gLogOrderMessage "Resubmit target order", _
+LogOrderMessage "Resubmit target order", _
                 mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
 mOrderSubmitter.ResubmitStopAndTargetOrders Me
 mStateEngine.ClearConditions OpConditions.CondStopOrderCancelled
@@ -4221,7 +4221,7 @@ mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -4229,7 +4229,7 @@ Private Function ResubmitTargetOrder()
 Const ProcName As String = "resubmitTargetOrder"
 On Error GoTo Err
 
-gLogOrderMessage "Resubmit target order", _
+LogOrderMessage "Resubmit target order", _
                 mTargetOrder, mDataSource, mContract, Key, mIsSimulated, Me
 mOrderSubmitter.ResubmitTargetOrder Me
 mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
@@ -4237,7 +4237,7 @@ mStateEngine.ClearConditions OpConditions.CondTargetOrderCancelled
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub SaveRecoveryInfo()
@@ -4256,7 +4256,7 @@ mSummary.SetClean
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 ''
@@ -4276,7 +4276,7 @@ RaiseEvent ChangesPending
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function setStateTimeout()
@@ -4288,7 +4288,7 @@ Set mStateTimeoutTLI = mTimerList.Add(Empty, 1)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub WriteRecoveryDataComment(ByVal pComment As String)
@@ -4319,7 +4319,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

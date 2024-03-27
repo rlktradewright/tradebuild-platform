@@ -104,12 +104,12 @@ Dim lRecoverable As IRecoverable
 Set lRecoverable = mBracketOrder
 lRecoverable.FinishRecovery
 
-gLog "Finished recovering bracket order", ProcName, ModuleName, mBracketOrder.Key, LogLevelDetail
+GOrderUtils.Log "Finished recovering bracket order", ProcName, ModuleName, mBracketOrder.Key, LogLevelDetail
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -120,7 +120,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLog "Recreating bracket order: " & pKey, ProcName, ModuleName, pKey, LogLevelDetail
+GOrderUtils.Log "Recreating bracket order: " & pKey, ProcName, ModuleName, pKey, LogLevelDetail
 
 Set mBracketOrder = New BracketOrder
 
@@ -145,7 +145,7 @@ lObj.AddRecoverableObjectListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyExecutionReport( _
@@ -163,7 +163,7 @@ mOrderSubmissionListener.NotifyExecutionReport pExecutionReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOrderReport( _
@@ -180,7 +180,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub UpdateExecution( _
@@ -193,7 +193,7 @@ mOrderSubmissionListener.NotifyExecutionReport pExec
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub updateOrder( _
@@ -219,7 +219,7 @@ lRecoverable.LoadRecoveryData pRecoveryContextName, pOs
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub UpdateBracketOrder( _
@@ -239,7 +239,7 @@ lRecoverable.LoadRecoveryData pRecoveryContextName, ops
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -258,7 +258,7 @@ orderIdIsForOrder = (pId = pOrder.Id)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setUnrecoveredOrderAsCancelled(ByVal pOrder As Order)
@@ -267,7 +267,7 @@ On Error GoTo Err
 
 If pOrder Is Nothing Then Exit Sub
 If pOrder.NeedsRecovery Then
-    gLog "Order has not been recovered - cancelling: broker id=" & pOrder.BrokerId, ProcName, ModuleName
+    GOrderUtils.Log "Order has not been recovered - cancelling: broker id=" & pOrder.BrokerId, ProcName, ModuleName
     pOrder.Status = OrderStatusCancelled
 Else
     Dim lRecoverable As IRecoverable
@@ -278,7 +278,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function syncOrderToOrderReport( _
@@ -297,6 +297,6 @@ syncOrderToOrderReport = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 

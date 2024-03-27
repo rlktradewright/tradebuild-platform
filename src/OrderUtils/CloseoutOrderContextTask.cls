@@ -74,7 +74,7 @@ lState = ev.State
 If lState = BracketOrderStateClosed Then
     mBracketOrdersToCloseout.Remove lBracketOrder
     If mBracketOrdersToCloseout.Count = 0 Then
-        gLog "Closeout completed for order context: " & mOrderContextName, ProcName, ModuleName
+        GOrderUtils.Log "Closeout completed for order context: " & mOrderContextName, ProcName, ModuleName
         mTaskContext.Finish Empty, False
     End If
 End If
@@ -82,7 +82,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -100,7 +100,7 @@ On Error GoTo Err
 Static sEn As Enumerator
 If sEn Is Nothing Then
     If mBracketOrdersToCloseout.Count = 0 Then
-        gLog "Closeout completed for order context: " & mOrderContextName, ProcName, ModuleName
+        GOrderUtils.Log "Closeout completed for order context: " & mOrderContextName, ProcName, ModuleName
         mTaskContext.Finish Empty, False
         Exit Sub
     End If
@@ -120,7 +120,7 @@ lBracketOrder.AddStateChangeListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -140,7 +140,7 @@ Next
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get ITask_TaskName() As String

@@ -111,7 +111,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IEnumerable_Remove(pCookie As Variant)
@@ -143,7 +143,7 @@ Set Enumerator = CreateEnumerator(Me)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Friend Property Get StoreIsEmpty() As Boolean
@@ -155,7 +155,7 @@ StoreIsEmpty = (mOrderPersistenceDataGroups.Count = 0)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -180,7 +180,7 @@ opg.Add pOpItem
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Delete(ByVal pOpItem As OPI)
@@ -192,7 +192,7 @@ If mOrderPersistenceDataGroups.Contains(pOpItem.RCN) Then mOrderPersistenceDataG
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

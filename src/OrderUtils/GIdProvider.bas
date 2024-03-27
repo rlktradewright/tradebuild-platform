@@ -65,7 +65,7 @@ allocatedIds.Add Nothing, pKey
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function gNextId() As String
@@ -85,7 +85,7 @@ allocatedIds.Add Nothing, gNextId
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -105,7 +105,7 @@ Set allocatedIds = sKeys
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub init()

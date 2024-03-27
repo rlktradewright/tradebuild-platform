@@ -115,12 +115,12 @@ Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
 On Error GoTo Err
 
-gLog "OptionContractResolver terminated for: " & ContractName, ProcName, ModuleName
+GOrderUtils.Log "OptionContractResolver terminated for: " & ContractName, ProcName, ModuleName
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -131,40 +131,40 @@ Private Sub IContractFetchListener_FetchCancelled(ByVal pCookie As Variant)
 'Const ProcName As String = "IContractFetchListener_FetchCancelled"
 'On Error GoTo Err
 '
-'gLog "Contract fetch was cancelled", ProcName, ModuleName
+'GOrderUtils.Log "Contract fetch was cancelled", ProcName, ModuleName
 'Set mSelfRef = Nothing
 '
 'Exit Sub
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
 'Const ProcName As String = "IContractFetchListener_FetchCompleted"
 'On Error GoTo Err
 '
-'gLog "Market data snapshots outstanding for " & _
+'GOrderUtils.Log "Market data snapshots outstanding for " & _
 '        mContractsAwaitingMarketData & _
 '        " contracts", ProcName, ModuleName, , LogLevelDetail
 '
 'Exit Sub
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
 'Const ProcName As String = "IContractFetchListener_FetchFailed"
 'On Error GoTo Err
 '
-'gLog pErrorMessage, ProcName, ModuleName
+'GOrderUtils.Log pErrorMessage, ProcName, ModuleName
 'Set mSelfRef = Nothing
 '
 'Exit Sub
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_NotifyContract( _
@@ -199,7 +199,7 @@ Private Sub IContractFetchListener_NotifyContract( _
 'Exit Sub
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -217,7 +217,7 @@ Dim lDataSource As IMarketDataSource: Set lDataSource = ev.Source
     
 If mCancelledByClient Then
     lDataSource.Finish
-    gLog "mState=" & mState, ProcName, ModuleName, , LogLevelDetail
+    GOrderUtils.Log "mState=" & mState, ProcName, ModuleName, , LogLevelDetail
     If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
         Set mSelfRef = Nothing
     ElseIf allContractsChecked Then
@@ -229,8 +229,8 @@ End If
 If mState = OptionContractResolverStateWaitingForUnderlyingMarketPrice Then
     If ev.Tick.TickType <> TickTypeTrade Then Exit Sub
     
-    gLogContractResolution "Underlying contract: " & _
-                            gGetContractName(mUnderlyingContract.Specifier) & _
+    GOrderUtils.LogContractResolution "Underlying contract: " & _
+                            GOrderUtils.GetContractName(mUnderlyingContract.Specifier) & _
                             "; price is: " & ev.Tick.Price
     
     ' now we want to find an option contract with the specified expiration (which
@@ -289,7 +289,7 @@ ElseIf mState = OptionContractResolverStateFindingRequiredContract Then
     End If
     
     mContractsAwaitingMarketData = mContractsAwaitingMarketData - 1
-    gLog "Snapshots remaining: " & mContractsAwaitingMarketData, ProcName, ModuleName, , LogLevelDetail
+    GOrderUtils.Log "Snapshots remaining: " & mContractsAwaitingMarketData, ProcName, ModuleName, , LogLevelDetail
     
     checkAllProcessingCompleted
 End If
@@ -297,7 +297,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -308,7 +308,7 @@ Private Sub mFutureBuilder_Cancelled(ev As CancelledEventData)
 Const ProcName As String = "mFutureBuilder_Cancelled"
 On Error GoTo Err
 
-gLog "Option contract resolution was cancelled for: " & ContractName, ProcName, ModuleName
+GOrderUtils.Log "Option contract resolution was cancelled for: " & ContractName, ProcName, ModuleName
 
 mCancelledByClient = True
 
@@ -318,7 +318,7 @@ mContractFutureWaiter.Cancel
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -340,13 +340,13 @@ Dim lDataSource As IMarketDataSource
 If ev.Future.IsCancelled Then
     If Not mCancelledByClient Then
         mCancelledBySystem = True
-        gLog "Contract fetch was cancelled for: " & _
+        GOrderUtils.Log "Contract fetch was cancelled for: " & _
                 lContractSpec.ToString, _
             ProcName, ModuleName, , LogLevelDetail
         Exit Sub
     End If
 ElseIf ev.Future.IsFaulted Then
-    gLog "Contract fetch failed for: " & _
+    GOrderUtils.Log "Contract fetch failed for: " & _
             lContractSpec.ToString & ": " & _
             ev.Future.ErrorMessage, _
         ProcName, ModuleName, , LogLevelDetail
@@ -416,7 +416,7 @@ Case OptionContractResolverStateFetchingCandidateContracts
         If lCandidateContractsEn.MoveNext Then
             Set mTargetContract = lCandidateContractsEn.Current
         Else
-            gLog "Unable to find contract with strike increment " & mSelectionParameter & _
+            GOrderUtils.Log "Unable to find contract with strike increment " & mSelectionParameter & _
                     ": actual increment was " & CStr(Sgn(mSelectionParameter) * (j - 1)), _
                     ProcName, ModuleName, , LogLevelDetail
             Exit For
@@ -432,7 +432,7 @@ End Select
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -449,13 +449,13 @@ Dim lContractSpec As IContractSpecifier: Set lContractSpec = ev.ContinuationData
 If ev.Future.IsCancelled Then
     If Not mCancelledByClient Then
         mCancelledBySystem = True
-        gLog "Option params fetch was cancelled for: " & _
+        GOrderUtils.Log "Option params fetch was cancelled for: " & _
                 lContractSpec.ToString, _
             ProcName, ModuleName, , LogLevelDetail
         Exit Sub
     End If
 ElseIf ev.Future.IsFaulted Then
-    gLog "OPtion paramsfetch failed for: " & _
+    GOrderUtils.Log "OPtion paramsfetch failed for: " & _
             lContractSpec.ToString & ": " & _
             ev.Future.ErrorMessage, _
         ProcName, ModuleName, , LogLevelDetail
@@ -475,7 +475,7 @@ Case OptionContractResolverStateFetchingStrikes
     Else
         mInitialStrike = findStrike(mStrikes, mHeuristicStrike, IIf(mContractSpec.Right = OptCall, False, True))
     End If
-    gLogContractResolution gGetContractName(mUnderlyingContract.Specifier) & _
+    GOrderUtils.LogContractResolution GOrderUtils.GetContractName(mUnderlyingContract.Specifier) & _
                             ": initial strike price is: " & mInitialStrike, LogLevelDetail
     
     
@@ -517,7 +517,7 @@ End Select
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -526,9 +526,9 @@ End Sub
 
 Friend Property Get ContractName() As String
 Dim lStrikeSelector As String
-lStrikeSelector = gOptionStrikeSelectionOperatorToString(mSelectionOperator) & _
+lStrikeSelector = OptionStrikeSelectionOperatorToString(mSelectionOperator) & _
                 mSelectionParameter & _
-                gOptionStrikeSelectionModeToString(mStrikeSelectionMode)
+                OptionStrikeSelectionModeToString(mStrikeSelectionMode)
 If mStrikeSelectionMode = OptionStrikeSelectionModeExpenditure And _
     mUnderlyingExchangeName <> "" Then
     lStrikeSelector = lStrikeSelector & "," & mUnderlyingExchangeName
@@ -645,7 +645,7 @@ Set ResolveContract = mFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -662,7 +662,7 @@ allContractsChecked = (mContractsAwaitingMarketData = 0) And _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function calcNumberOfStrikesToFetch() As Long
@@ -704,7 +704,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub checkIfTargetContractFound( _
@@ -749,7 +749,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fetchCandidateContracts( _
@@ -841,7 +841,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 'Private Sub fetchInitialContract()
@@ -866,7 +866,7 @@ End Sub
 'Exit Sub
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 'End Sub
 
 'Private Function fetchInitialContractWithLargerStrikeIncrement() As Boolean
@@ -894,7 +894,7 @@ End Sub
 'Exit Function
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 'End Function
 
 'Private Sub fetchOptionChain( _
@@ -961,7 +961,7 @@ End Sub
 'Exit Sub
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 'End Sub
 
 Private Function findStrike( _
@@ -1005,7 +1005,7 @@ mListener.Change ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getMarketData( _
@@ -1033,7 +1033,7 @@ Set getMarketData = lDataSource
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getValueName() As String
@@ -1071,8 +1071,8 @@ Private Sub logContractInfo( _
                 ByVal pText As String, _
                 ByVal pValue As String, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLogContractResolution pText & ": " & _
-                        gGetContractName(pContract.Specifier) & _
+GOrderUtils.LogContractResolution pText & ": " & _
+                        GOrderUtils.GetContractName(pContract.Specifier) & _
                         "; strike: " & _
                         pContract.Specifier.Strike & _
                         "; " & mStrikeSelectionValueName & _
@@ -1105,12 +1105,12 @@ On Error GoTo Err
 If Not mTargetContract Is Nothing Then
     ' we've found the target contract
     logContractInfo mTargetContract, "Target contract", mTargetContractSelectionParameter
-    gLogContractResolution "Contract is: " & mTargetContract.Specifier.ToString
+    GOrderUtils.LogContractResolution "Contract is: " & mTargetContract.Specifier.ToString
     mFutureBuilder.Value = mTargetContract
     mFutureBuilder.Complete
     fireStateChange OptionContractResolverStateGotTargetContract
 Else
-    gLogContractResolution "No target contract found"
+    GOrderUtils.LogContractResolution "No target contract found"
     mFutureBuilder.Value = Nothing
     mFutureBuilder.Complete
 End If
@@ -1118,7 +1118,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function lessOperator() As Boolean
@@ -1137,14 +1137,14 @@ End Function
 'Else
 '    lStrike = -Int(-mHeuristicStrike / pRoundTo) * pRoundTo
 'End If
-'gLogContractResolution gGetContractName(mUnderlyingContract.Specifier) & ": initial strike price is: " & lStrike
+'GOrderUtils.LogContractResolution gOrderUtils.GetContractName(mUnderlyingContract.Specifier) & ": initial strike price is: " & lStrike
 '
 'updateInitialStrike = lStrike
 '
 'Exit Function
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'Gorders.HandleUnexpectedError ProcName, ModuleName
 'End Function
 
 
