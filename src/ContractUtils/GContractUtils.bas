@@ -565,11 +565,11 @@ Dim lMatch As Match: Set lMatch = lMatches(0)
 Dim lLocalSymbol As String: lLocalSymbol = lMatch.SubMatches(0)
 
 Dim lSecTypeStr As String: lSecTypeStr = lMatch.SubMatches(1)
-Dim lSecType As SecurityTypes
+Dim lSectype As SecurityTypes
 
 If lSecTypeStr <> "" Then
-    lSecType = GContractUtils.SecTypeFromString(lSecTypeStr)
-    AssertArgument lSecType <> SecTypeNone, "A valid security type must be supplied"
+    lSectype = GContractUtils.SecTypeFromString(lSecTypeStr)
+    AssertArgument lSectype <> SecTypeNone, "A valid security type must be supplied"
 End If
 
 Dim lSymbolOrLocalSymbol As String
@@ -581,10 +581,10 @@ lTradingClass = lMatch.SubMatches(3)
 Dim lCallPutStr As String: lCallPutStr = lMatch.SubMatches(4)
 Dim lCallPut As OptionRights
 If lCallPutStr <> "" Then
-    If lSecType = SecTypeNone Then
-        lSecType = SecTypeOption
+    If lSectype = SecTypeNone Then
+        lSectype = SecTypeOption
     Else
-        AssertArgument lSecType = SecTypeOption Or lSecType = SecTypeFuturesOption, _
+        AssertArgument lSectype = SecTypeOption Or lSectype = SecTypeFuturesOption, _
                         "C(all) or P(ut) can only be supplied for options or futures options"
     End If
     lCallPut = GContractUtils.OptionRightFromString(lCallPutStr)
@@ -601,10 +601,10 @@ Dim lRelativeExpiry As String
 lRelativeExpiry = lMatch.SubMatches(7)
 
 AssertArgument (lDateExpiry = "" And lRelativeExpiry = "") Or _
-                lSecType = SecTypeFuture Or _
-                lSecType = SecTypeFuturesOption Or _
-                lSecType = SecTypeOption Or _
-                lSecType = SecTypeNone, _
+                lSectype = SecTypeFuture Or _
+                lSectype = SecTypeFuturesOption Or _
+                lSectype = SecTypeOption Or _
+                lSectype = SecTypeNone, _
                 lSecTypeStr & " contracts cannot have an expiry specification"
 AssertArgument lDateExpiry = "" Or lRelativeExpiry = "", "Supplying both date-based and relative expiry is not permitted"
 
@@ -619,10 +619,10 @@ Dim lMultiplier As String
 lMultiplier = lMatch.SubMatches(11)
 If lMultiplier = "" Then lMultiplier = "0"
 
-If (lSecType = SecTypeFuture Or _
-    lSecType = SecTypeFuturesOption Or _
-    lSecType = SecTypeOption Or _
-    lSecType = SecTypeWarrant) _
+If (lSectype = SecTypeFuture Or _
+    lSectype = SecTypeFuturesOption Or _
+    lSectype = SecTypeOption Or _
+    lSectype = SecTypeWarrant) _
 Then
     If lDateExpiry = "" And lRelativeExpiry = "" Then
         If lTradingClass = "" Then
@@ -633,7 +633,7 @@ Then
                                                             "", _
                                                             lTradingClass, _
                                                             lExchange, _
-                                                            lSecType, _
+                                                            lSectype, _
                                                             lCurrency, _
                                                             "", _
                                                             CDbl(lMultiplier), _
@@ -645,7 +645,7 @@ Then
                                                             lSymbolOrLocalSymbol, _
                                                             lTradingClass, _
                                                             lExchange, _
-                                                            lSecType, _
+                                                            lSectype, _
                                                             lCurrency, _
                                                             "", _
                                                             CDbl(lMultiplier), _
@@ -658,7 +658,7 @@ Then
                                                         lSymbolOrLocalSymbol, _
                                                         lTradingClass, _
                                                         lExchange, _
-                                                        lSecType, _
+                                                        lSectype, _
                                                         lCurrency, _
                                                         lDateExpiry & lRelativeExpiry, _
                                                         CDbl(lMultiplier), _
@@ -671,7 +671,7 @@ Else
                                                     lSymbolOrLocalSymbol, _
                                                     lTradingClass, _
                                                     lExchange, _
-                                                    lSecType, _
+                                                    lSectype, _
                                                     lCurrency, _
                                                     lDateExpiry & lRelativeExpiry, _
                                                     CDbl(lMultiplier), _
@@ -1006,7 +1006,7 @@ End Function
 
 Public Function IsContractExpired( _
                 ByVal pContract As IContract, _
-                ByVal pClock As Clock) As Boolean
+                Optional ByVal pClock As Clock) As Boolean
 Const ProcName As String = "IsContractExpired"
 On Error GoTo Err
 
