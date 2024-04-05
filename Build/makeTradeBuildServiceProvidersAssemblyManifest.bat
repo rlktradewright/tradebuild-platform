@@ -3,7 +3,7 @@ setlocal
 
 echo =================================
 echo Making assembly manifest for TradeWright.TradeBuild.ServiceProviders
-echo .
+echo.
 
 %TB-PLATFORM-PROJECTS-DRIVE%
 path %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Build\Subscripts;%PATH%
@@ -17,14 +17,14 @@ generateManifest /Ass:TradeWright.TradeBuild.ServiceProviders,%VB6-BUILD-MAJOR%.
 if errorlevel 1 goto :err
 
 echo Manifest generated
-echo .
+echo.
 
 popd
 exit /B
 
 :err
 echo Manifest generation failed
-echo .
+echo.
 
 popd
 exit /B 1

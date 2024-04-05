@@ -56,7 +56,7 @@ if "%~1" == "" (
 	echo Making components for TradeWright.TradeBuild.ServiceProviders
 	echo.
 
-	call :IBAPIV100 
+	call :IBAPI
 	call :IBEnhAPI
 	call :IBTwsSP 
 	call :TradingDO 
@@ -244,12 +244,12 @@ goto :EOF
 
 
 
-:IBAPIV100 
+:IBAPI 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 :: temporary fix for refusal of VB6 to compile this module if
 :: the output dll exists
-if exist %BIN-PATH%\IBApiV10027.dll del %BIN-PATH%\IBApiV10027.dll
-call makedll.bat IBAPIV100 IBAPIV100 /T:DLL /B:%BINARY_COMPAT%
+::if exist %BIN-PATH%\IBApiV10027.dll del %BIN-PATH%\IBApiV10027.dll
+call makedll.bat IBBaseAPI IBAPI /O:IBApi /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
