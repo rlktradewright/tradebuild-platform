@@ -397,9 +397,9 @@ GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function ContractHasExpired(ByVal pContractSpec As TwsContractSpecifier) As Boolean
-If pContractSpec.Sectype = TwsSecTypeCash Or _
-    pContractSpec.Sectype = TwsSecTypeIndex Or _
-    pContractSpec.Sectype = TwsSecTypeStock _
+If pContractSpec.SecType = TwsSecTypeCash Or _
+    pContractSpec.SecType = TwsSecTypeIndex Or _
+    pContractSpec.SecType = TwsSecTypeStock _
 Then
     ContractHasExpired = False
     Exit Function
@@ -747,9 +747,13 @@ Case "LOC"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeLimitOnClose
 Case "PEG MKT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToMarket
+Case "PEGMKT"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToMarket
 Case "STP"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStop
 Case "STP LMT"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopLimit
+Case "STPLMT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopLimit
 Case "TRAIL"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeTrail
@@ -771,7 +775,11 @@ Case "MIT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketIfTouched
 Case "TRAIL LIMIT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeTrailLimit
+Case "TRAILLIMIT"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeTrailLimit
 Case "MKT PROT"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketWithProtection
+Case "MKTPROT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketWithProtection
 Case "MKT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMarketOnOpen
@@ -783,23 +791,41 @@ Case "VOL"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeVol
 Case "PEG BENCH"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToBenchmark
+Case "PEGBENCH"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToBenchmark
 Case "AUC"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeAuction
 Case "PEG STK"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToStock
+Case "PEGSTK"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToStock
 Case "BOX TOP"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeBoxTop
+Case "BOXTOP"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeBoxTop
 Case "PASSV REL"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePassiveRelative
+Case "PASSVREL"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePassiveRelative
 Case "PEG MID"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToMidpoint
+Case "PEGMID"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToMidpoint
 Case "STP PRT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopWithProtection
+Case "STPPRT"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeStopWithProtection
 Case "REL + LMT"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeRelativeLimitCombo
+Case "REL+LMT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeRelativeLimitCombo
 Case "REL + MKT"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeRelativeMarketCombo
+Case "REL+MKT"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeRelativeMarketCombo
 Case "PEG BEST"
+    TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToBest
+Case "PEGBEST"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypePeggedToBest
 Case "MIDPRICE"
     TwsOrderTypeFromString = TwsOrderTypes.TwsOrderTypeMidprice
