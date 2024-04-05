@@ -82,7 +82,7 @@ Set mFutureWaiter = New FutureWaiter
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -99,7 +99,7 @@ If Not mListener Is Nothing Then mListener.FetchCancelled pCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
@@ -110,7 +110,7 @@ mNumOutstandingRequests = mNumOutstandingRequests - 1
 
 If mNumOutstandingRequests > 0 Then Exit Sub
 
-gLogger.Log "Received contract details for", ProcName, ModuleName, LogLevelDetail, mContractSpecifier.ToString
+GTradingDB.Logger.Log "Received contract details for", ProcName, ModuleName, LogLevelDetail, mContractSpecifier.ToString
 
 mContractsFutureBuilder.Value = mContractsBuilder.Contracts
 mContractsFutureBuilder.Complete
@@ -120,7 +120,7 @@ mFutureWaiter.Add mContractsFutureBuilder.Future
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
@@ -132,10 +132,14 @@ If Not mListener Is Nothing Then mListener.FetchFailed pCookie, pErrorCode, pErr
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
+#If SingleDll Then
+Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As TBFoundation.IContract)
+#Else
 Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As ContractUtils27.IContract)
+#End If
 Const ProcName As String = "IContractFetchListener_NotifyContract"
 On Error GoTo Err
 
@@ -145,7 +149,7 @@ If Not mListener Is Nothing Then mListener.NotifyContract pCookie, pContract
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -232,7 +236,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -256,7 +260,7 @@ doCancel
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -283,7 +287,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -299,7 +303,7 @@ Set ContractsFuture = mContractsFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -325,12 +329,12 @@ Set mListener = pListener
 
 mContractsBuilder.ContractSpecifier = mContractSpecifier
 
-gSetVariant mCookie, pCookie
+GTradingDB.SetVariant mCookie, pCookie
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub InitialiseSorted( _
@@ -352,7 +356,7 @@ Initialise pTradingDBFuture, pContractSpecifier, Nothing, pCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 '@================================================================================
 ' Helper Functions
@@ -373,7 +377,7 @@ mTaskContext.Finish Nothing, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doFail( _
@@ -391,21 +395,21 @@ mTaskContext.Error pErrorNumber, pErrorMessage, pErrorSource
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub requestContracts(ByVal pContractSpec As IContractSpecifier)
 Const ProcName As String = "requestContracts"
 On Error GoTo Err
 
-If gLogger.IsLoggable(LogLevelDetail) Then gLogger.Log "Request contract details for", ProcName, ModuleName, LogLevelDetail, pContractSpec.ToString
+If GTradingDB.Logger.IsLoggable(LogLevelDetail) Then GTradingDB.Logger.Log "Request contract details for", ProcName, ModuleName, LogLevelDetail, pContractSpec.ToString
 mFutureWaiter.Add mTradingDB.FetchContractsAsync(pContractSpec, Me, mCookie)
 mNumOutstandingRequests = mNumOutstandingRequests + 1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

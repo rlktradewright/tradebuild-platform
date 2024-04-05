@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "GTradingDBApi"
 Option Explicit
 
 ''
@@ -26,12 +26,13 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "TradingDBApi"
-Private Const ModuleName                            As String = "Globals"
+Private Const ModuleName                            As String = "GTradingDBApi"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mTradingDO                                  As New TradingDO
 
 '@================================================================================
 ' Class Event Handlers
@@ -49,57 +50,69 @@ Private Const ModuleName                            As String = "Globals"
 ' Properties
 '@================================================================================
 
-Public Property Get gLogger() As FormattingLogger
-Static sLogger As FormattingLogger
-If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("tradingdbapi", ProjectName)
-Set gLogger = sLogger
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Public Function CreateTradingDBClient( _
+                ByVal pDatabaseType As DatabaseTypes, _
+                ByVal pServer As String, _
+                ByVal pDatabaseName As String, _
+                Optional ByVal pUsername As String, _
+                Optional ByVal pPassword As String, _
+                Optional ByVal pUseSynchronousReads As Boolean, _
+                Optional ByVal pUseSynchronousWrites As Boolean) As DBClient
+Const ProcName As String = "CreateTradingDBClient"
+On Error GoTo Err
 
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
+Dim lDBClient As New DBClient
+lDBClient.Initialise CreateTradingDBFuture(CreateConnectionParams( _
+                                        pDatabaseType, _
+                                        pServer, _
+                                        pDatabaseName, _
+                                        pUsername, _
+                                        pPassword)), _
+                    pUseSynchronousReads, _
+                    pUseSynchronousWrites
 
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
+Set CreateTradingDBClient = lDBClient
+Exit Function
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
+Err:
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
+End Function
 
-Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
-If IsObject(pSource) Then
-    Set pTarget = pSource
-Else
-    pTarget = pSource
-End If
-End Sub
+Public Function DatabaseTypeFromString( _
+                ByVal Value As String) As DatabaseTypes
+Const ProcName As String = "DatabaseTypeFromString"
+On Error GoTo Err
+
+DatabaseTypeFromString = mTradingDO.DatabaseTypeFromString(Value)
+
+Exit Function
+
+Err:
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function DatabaseTypeToString( _
+                ByVal Value As DatabaseTypes) As String
+Const ProcName As String = "DatabaseTypeToString"
+On Error GoTo Err
+
+DatabaseTypeToString = mTradingDO.DatabaseTypeToString(Value)
+
+Exit Function
+
+Err:
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
+End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 
 

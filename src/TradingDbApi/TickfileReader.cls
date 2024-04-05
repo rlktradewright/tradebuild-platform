@@ -78,8 +78,14 @@ Private mTargetContractSpec         As IContractSpecifier
 
 Private WithEvents mFetchTicksTC    As TaskController
 Attribute mFetchTicksTC.VB_VarHelpID = -1
+
+#If SingleDll Then
+Private WithEvents mTickStream      As TBDatabase.TickStream
+Attribute mTickStream.VB_VarHelpID = -1
+#Else
 Private WithEvents mTickStream      As TradingDO27.TickStream
 Attribute mTickStream.VB_VarHelpID = -1
+#End If
 
 Private mTickCounter                As Long
 
@@ -118,7 +124,7 @@ NotifyEvent TickfileEventCodes.TickfileEventDataSourceNotAvailable, "Contract fe
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchCompleted(ByVal pCookie As Variant)
@@ -128,7 +134,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractFetchListener_FetchFailed(ByVal pCookie As Variant, ByVal pErrorCode As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
@@ -141,10 +147,14 @@ NotifyEvent TickfileEventCodes.TickfileEventDataSourceNotAvailable, pErrorMessag
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
+#If SingleDll Then
+Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As TBFoundation.IContract)
+#Else
 Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As ContractUtils27.IContract)
+#End If
 Const ProcName As String = "IContractFetchListener_NotifyContract"
 On Error GoTo Err
 
@@ -160,7 +170,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -178,7 +188,7 @@ Finish
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function ITickfileReader_FireNextTick() As Boolean
@@ -200,7 +210,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ITickfileReader_PrepareTickfile( _
@@ -225,7 +235,7 @@ ITickfileReader_PrepareTickfile = False
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get ITickfileReader_ReplayProgressPercent() As Long
@@ -267,7 +277,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -295,7 +305,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -320,7 +330,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -343,7 +353,7 @@ Set mParent = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -374,7 +384,7 @@ mUseSynchronousReads = pUseSynchronousReads
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -405,7 +415,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getTick() As Boolean
@@ -419,8 +429,8 @@ End If
 
 Dim tick As GenericTick
 Do While mTickStream.GetNextTick(tick)
-    If tick.TimeStamp >= mInputTickfileSpecifier.FromDate Then
-        If tick.TimeStamp >= mInputTickfileSpecifier.ToDate Then
+    If tick.timestamp >= mInputTickfileSpecifier.FromDate Then
+        If tick.timestamp >= mInputTickfileSpecifier.ToDate Then
             noMoreTicks
             Exit Function
         End If
@@ -430,8 +440,8 @@ Do While mTickStream.GetNextTick(tick)
             getTick = True
             Exit Function
         Else
-            mSessionBuilder.SetSessionCurrentTime tick.TimeStamp
-            If mSession.IsTimeInSession(tick.TimeStamp) Then
+            mSessionBuilder.SetSessionCurrentTime tick.timestamp
+            If mSession.IsTimeInSession(tick.timestamp) Then
                 processTick tick
                 getTick = True
                 Exit Function
@@ -450,7 +460,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logMessage( _
@@ -458,7 +468,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
+GTradingDB.Logger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 Private Sub noMoreTicks()
@@ -474,7 +484,7 @@ mReplayMonitor.NotifyReplayComplete Me, mTickCounter
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub NotifyEvent(ByVal pEventCode As Long, ByVal pEventMessage As String)
@@ -491,7 +501,7 @@ mReplayMonitor.NotifyEvent lEv
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyTick( _
@@ -508,7 +518,7 @@ mDataConsumer.notifyTick ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function processContracts() As Boolean
@@ -536,7 +546,7 @@ Set mContract = mContracts.ItemAtIndex(1)
 With mInputTickfileSpecifier
     .Contract = mContract
     If .EntireSession Then
-        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimezoneName))
+        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimeZoneName))
         Set mSession = mSessionBuilder.Session
         
         If .ToDate = 0# Then .ToDate = .FromDate
@@ -558,7 +568,7 @@ processContracts = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub processTick(ByRef pTick As GenericTick)
@@ -576,5 +586,5 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub

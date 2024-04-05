@@ -113,7 +113,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IBarWriter_IsReady() As Boolean
@@ -171,7 +171,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IBarWriter_WriteComment(ByVal pComment As String, ByVal pTimestamp As Date)
@@ -202,7 +202,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -223,13 +223,13 @@ End If
 
 If mTradingDB Is Nothing Or mContract Is Nothing Then Exit Sub
 
-If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:="Retrieving instrument object for " & mContract.Specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
+If GTradingDB.Logger.IsLoggable(LogLevelDetail) Then logMessage pMsg:="Retrieving instrument object for " & mContract.Specifier.ToString, pProcName:="initialise", pLogLevel:=LogLevelDetail
 Set mInstrumentTC = mTradingDB.InstrumentFactory.LoadBySpecifierAsync(mContract.Specifier)
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -268,7 +268,7 @@ Set mInstrumentTC = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -310,7 +310,7 @@ Set mParent = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -341,7 +341,7 @@ mFutureWaiter.Add mContractFuture
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -366,7 +366,7 @@ End Select
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logMessage( _
@@ -374,7 +374,7 @@ Private Sub logMessage( _
                 ByRef pProcName As String, _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
+GTradingDB.Logger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 Private Sub setupTimeframeTable()
@@ -394,6 +394,6 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

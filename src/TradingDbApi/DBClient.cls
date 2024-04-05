@@ -78,7 +78,7 @@ Set ContractStore = sContractStore
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HistoricalDataStore() As IHistoricalDataStore
@@ -95,7 +95,7 @@ Set HistoricalDataStore = sHistDataStore
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickfileStore() As ITickfileStore
@@ -112,7 +112,7 @@ Set TickfileStore = sTickfileStore
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TradingDBFuture() As IFuture
@@ -137,7 +137,7 @@ mUseSynchronousWrites = pUseSynchronousWrites
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

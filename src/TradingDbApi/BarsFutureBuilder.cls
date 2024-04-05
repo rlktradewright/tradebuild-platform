@@ -97,7 +97,7 @@ mFutureWaiter.Cancel
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -139,7 +139,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTradingDB.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -163,7 +163,7 @@ mFutureWaiter.Cancel
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -205,12 +205,12 @@ mSpecialToTime = pSpecialToTime
 mFutureBuilder.Cookie = pCookie
 
 Set mListener = pListener
-gSetVariant mCookie, pCookie
+GTradingDB.SetVariant mCookie, pCookie
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -253,7 +253,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fetchIfReady()
@@ -270,7 +270,7 @@ fetch
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub trySetContract()

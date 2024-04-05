@@ -80,7 +80,7 @@ Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IHistoricalDataStore_Capabilities() As HistDataStoreCapabilities
@@ -98,7 +98,7 @@ Set IHistoricalDataStore_CreateBarWriter = CreateBarWriter(pOutputMonitor, pCont
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IHistoricalDataStore_FetchBars( _
@@ -126,7 +126,7 @@ Set IHistoricalDataStore_FetchBars = FetchBars( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IHistoricalDataStore_Finish()
@@ -138,7 +138,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IHistoricalDataStore_RefreshScanData(ByVal pRefreshCookie As String) As IFuture
@@ -150,7 +150,7 @@ Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IHistoricalDataStore_ScanMarket( _
@@ -166,7 +166,7 @@ Assert False, "Not implemented", ErrorCodes.ErrUnsupportedOperationException
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IHistoricalDataStore_Supports(ByVal pCapability As HistDataStoreCapabilities) As Boolean
@@ -182,7 +182,7 @@ Set IHistoricalDataStore_TimePeriodValidator = TimePeriodValidator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IHistoricalDataStore_WriterTimeframes() As TimePeriod()
@@ -194,7 +194,7 @@ IHistoricalDataStore_WriterTimeframes = WriterTimeframes
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -239,7 +239,7 @@ mWriters.Remove pWriter
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function CreateBarWriter( _
@@ -256,7 +256,7 @@ Set CreateBarWriter = lWriter
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBars( _
@@ -290,7 +290,7 @@ Set FetchBars = lBuilder.BarsFuture
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub FetchBuilderFinished(ByVal pFetchBuilder As BarsFutureBuilder)
@@ -302,7 +302,7 @@ If mFetchBuilders.Contains(pFetchBuilder) Then mFetchBuilders.Remove pFetchBuild
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -326,7 +326,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _

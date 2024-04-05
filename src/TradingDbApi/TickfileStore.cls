@@ -79,7 +79,7 @@ Set ITickfileStore_CreateTickfileReader = CreateTickfileReader(pDataConsumer, pR
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function ITickfileStore_CreateTickfileWriter( _
@@ -95,7 +95,7 @@ Set ITickfileStore_CreateTickfileWriter = CreateTickfileWriter(pTickfileOutputMo
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub ITickfileStore_Finish()
@@ -107,7 +107,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickfileStore_SupportedFormats() As TickfileFormatSpecifier()
@@ -125,7 +125,7 @@ ITickfileStore_Supports = Supports(pCapabilities, pFormatIdentifier)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -167,7 +167,7 @@ mReaders.Add lReader
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickfileWriter( _
@@ -184,7 +184,7 @@ mWriters.Add lWriter
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Finish()
@@ -206,7 +206,7 @@ mWriters.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -233,7 +233,7 @@ mReaders.Remove pReader
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub TickfileWriterFinished(ByVal pWriter As TickfileWriter)
@@ -245,7 +245,7 @@ mWriters.Remove pWriter
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
