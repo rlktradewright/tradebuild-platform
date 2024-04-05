@@ -36,10 +36,10 @@ Private Const ModuleName                            As String = "IBAPI"
 ' Enums
 '@================================================================================
 
-Public Enum ApiMessageLoggingOptions
-    ApiMessageLoggingOptionNone
-    ApiMessageLoggingOptionDefault
-    ApiMessageLoggingOptionAlways
+Public Enum TwsApiMessageLoggingOptions
+    TwsApiMessageLoggingOptionNone
+    TWSApiMessageLoggingOptionDefault
+    TWSApiMessageLoggingOptionAlways
 End Enum
 
 Public Enum TwsAuctionStrategies
@@ -80,12 +80,12 @@ Public Enum TwsHedgeTypes
     TwsHedgeTypePair
 End Enum
 
-Public Enum TwsLogLevels
-    TwsLogLevelSystem = 1
-    TwsLogLevelError
-    TwsLogLevelWarning
-    TwsLogLevelInformation
-    TwsLogLevelDetail
+Public Enum TwsLoggingLevels
+    TwsLoggingLevelSystem = 1
+    TwsLoggingLevelError
+    TwsLoggingLevelWarning
+    TwsLoggingLevelInformation
+    TwsLoggingLevelDetail
 End Enum
 
 Public Enum TwsLegOpenCloseCodes
@@ -380,8 +380,8 @@ Public Function GetAPI( _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 10, _
-                Optional ByVal pLogApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
-                Optional ByVal pLogRawApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogApiMessages As TwsApiMessageLoggingOptions = TWSApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogRawApiMessages As TwsApiMessageLoggingOptions = TWSApiMessageLoggingOptionDefault, _
                 Optional ByVal pLogApiMessageStats As Boolean = False) As TwsAPI
 Const ProcName As String = "GetAPI"
 On Error GoTo Err

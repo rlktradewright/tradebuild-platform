@@ -198,7 +198,7 @@ Public Enum TwsSocketInMsgTypes
     TICK_SNAPSHOT_END = 57
     MARKET_DATA_TYPE = 58
     COMMISSION_REPORT = 59
-    POSITION = 61
+    Position = 61
     POSITION_END = 62
     ACCOUNT_SUMMARY = 63
     ACCOUNT_SUMMARY_END = 64
@@ -397,9 +397,9 @@ GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function ContractHasExpired(ByVal pContractSpec As TwsContractSpecifier) As Boolean
-If pContractSpec.SecType = TwsSecTypeCash Or _
-    pContractSpec.SecType = TwsSecTypeIndex Or _
-    pContractSpec.SecType = TwsSecTypeStock _
+If pContractSpec.Sectype = TwsSecTypeCash Or _
+    pContractSpec.Sectype = TwsSecTypeIndex Or _
+    pContractSpec.Sectype = TwsSecTypeStock _
 Then
     ContractHasExpired = False
     Exit Function
@@ -436,20 +436,20 @@ Err:
 GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Public Function GetApi( _
+Public Function GetAPI( _
                 ByVal pServer As String, _
                 ByVal pPort As String, _
                 ByVal pClientId As Long, _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 10, _
-                Optional ByVal pLogApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
-                Optional ByVal pLogRawApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogApiMessages As TwsApiMessageLoggingOptions = TWSApiMessageLoggingOptionDefault, _
+                Optional ByVal pLogRawApiMessages As TwsApiMessageLoggingOptions = TWSApiMessageLoggingOptionDefault, _
                 Optional ByVal pLogApiMessageStats As Boolean = False) As TwsAPI
 Const ProcName As String = "GetApi"
 On Error GoTo Err
 
-Set GetApi = New TwsAPI
-GetApi.Initialise pServer, pPort, pClientId, pLogApiMessages, pLogRawApiMessages, pLogApiMessageStats
-GetApi.ConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
+Set GetAPI = New TwsAPI
+GetAPI.Initialise pServer, pPort, pClientId, pLogApiMessages, pLogRawApiMessages, pLogApiMessageStats
+GetAPI.ConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
 
 Exit Function
 
@@ -584,7 +584,7 @@ Private Function TruncateTimeToNextMinute(ByVal pTimeStamp As Date) As Date
 Const ProcName As String = "TruncateTimeToNextMinute"
 On Error GoTo Err
 
-TruncateTimeToNextMinute = Int((pTimeStamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+TruncateTimeToNextMinute = Int((pTimeStamp + GIB.OneMinute - GIB.OneMicrosecond) / GIB.OneMinute) * GIB.OneMinute
 
 Exit Function
 
@@ -1113,7 +1113,7 @@ addInputMessageIdMapEntry pMap, DELTA_NEUTRAL_VALIDATION, "DELTANEUTRALVALIDN"
 addInputMessageIdMapEntry pMap, TICK_SNAPSHOT_END, "TICKSNAPSHOTEND"
 addInputMessageIdMapEntry pMap, MARKET_DATA_TYPE, "MARKETDATATYPE"
 addInputMessageIdMapEntry pMap, COMMISSION_REPORT, "COMMISSIONREPORT"
-addInputMessageIdMapEntry pMap, POSITION, "POSITION"
+addInputMessageIdMapEntry pMap, Position, "POSITION"
 addInputMessageIdMapEntry pMap, POSITION_END, "POSITIONEND"
 addInputMessageIdMapEntry pMap, ACCOUNT_SUMMARY, "ACCOUNTSUMMARY"
 addInputMessageIdMapEntry pMap, ACCOUNT_SUMMARY_END, "ACCOUNTSUMMARYEND"

@@ -74,8 +74,8 @@ Private Sub Class_Initialize()
 NumberOfRows = NO_ROW_NUMBER_SPECIFIED
 AbovePrice = MaxDouble
 BelowPrice = MaxDouble
-AboveVolume = MaxLong
-AverageOptionVolumeAbove = MaxLong
+AboveVolume = GIB.MaxLong
+AverageOptionVolumeAbove = GIB.MaxLong
 MarketCapAbove = MaxDouble
 MarketCapBelow = MaxDouble
 CouponRateAbove = MaxDouble

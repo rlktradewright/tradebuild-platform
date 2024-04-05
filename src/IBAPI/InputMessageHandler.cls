@@ -396,7 +396,7 @@ Const VERSION = 2
 
 mWriter.AddMessageId SET_SERVER_LOGLEVEL
 mWriter.AddString VERSION, "Version"
-mWriter.AddString TwsLogLevels.TwsLogLevelInformation, "Loglevel"
+mWriter.AddString TwsLoggingLevels.TwsLoggingLevelInformation, "Loglevel"
 mWriter.Send
 
 Exit Sub

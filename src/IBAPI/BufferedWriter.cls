@@ -131,7 +131,7 @@ On Error GoTo Err
 With pContractSpec
     AddString .ConId, "ConId"
     AddString UCase$(.Symbol), "Symbol"
-    AddString TwsSecTypeToShortString(.SecType), "Sec type"
+    AddString TwsSecTypeToShortString(.Sectype), "Sec type"
     AddString .Expiry, "Expiry"
     AddString .Strike, "Strike"
     AddString TwsOptionRightToString(.OptRight), "Right"
@@ -225,7 +225,7 @@ Friend Sub AddLongMax( _
 Const ProcName As String = "AddLongMax"
 On Error GoTo Err
 
-If data = MaxLong Then
+If data = GIB.MaxLong Then
     AddString "", fieldName
 Else
     AddString CStr(data), fieldName
@@ -309,21 +309,21 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pSocketHandler As SocketHandler, _
-                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
-                ByVal pLogRawApiMessages As ApiMessageLoggingOptions)
+                ByVal pLogApiMessages As TwsApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As TwsApiMessageLoggingOptions)
 Set mSocketHandler = pSocketHandler
 
-If pLogApiMessages = ApiMessageLoggingOptionAlways Then
+If pLogApiMessages = TWSApiMessageLoggingOptionAlways Then
     mApiMessageLogLevel = LogLevelNormal
-ElseIf pLogApiMessages = ApiMessageLoggingOptionDefault Then
+ElseIf pLogApiMessages = TWSApiMessageLoggingOptionDefault Then
     mApiMessageLogLevel = LogLevelHighDetail
 Else
     mApiMessageLogLevel = LogLevelNone
 End If
 
-If pLogRawApiMessages = ApiMessageLoggingOptionAlways Then
+If pLogRawApiMessages = TWSApiMessageLoggingOptionAlways Then
     mRawApiMessageLogLevel = LogLevelNormal
-ElseIf pLogRawApiMessages = ApiMessageLoggingOptionDefault Then
+ElseIf pLogRawApiMessages = TWSApiMessageLoggingOptionDefault Then
     mRawApiMessageLogLevel = LogLevelHighDetail
 Else
     mRawApiMessageLogLevel = LogLevelNone

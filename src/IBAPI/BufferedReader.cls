@@ -61,7 +61,7 @@ Private mMessageStartIndex                          As Long
 
 Private mInputMessageHandler                        As InputMessageHandler
 
-Private mLogApiMessages                             As ApiMessageLoggingOptions
+Private mLogApiMessages                             As TwsApiMessageLoggingOptions
 
 Private mApiMessageLogLevel                         As LogLevels
 Private mLogCurrentApiMessage                       As Boolean
@@ -201,9 +201,9 @@ On Error GoTo Err
 
 If pForceLog Then
     mApiMessageLogLevel = LogLevelSevere
-ElseIf mLogApiMessages = ApiMessageLoggingOptionAlways Then
+ElseIf mLogApiMessages = TWSApiMessageLoggingOptionAlways Then
     mApiMessageLogLevel = LogLevelNormal
-ElseIf mLogApiMessages = ApiMessageLoggingOptionDefault Then
+ElseIf mLogApiMessages = TWSApiMessageLoggingOptionDefault Then
     mApiMessageLogLevel = LogLevelHighDetail
 Else
     mApiMessageLogLevel = LogLevelNone
@@ -412,7 +412,7 @@ Friend Function GetLongMax( _
 Dim s As String
 s = GetString(pFieldName)
 If s = "" Then
-    GetLongMax = MaxLong
+    GetLongMax = GIB.MaxLong
 Else
     GetLongMax = CLng(s)
 End If
@@ -487,13 +487,13 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pInputMessageHandler As InputMessageHandler, _
-                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
-                ByVal pLogRawApiMessages As ApiMessageLoggingOptions)
+                ByVal pLogApiMessages As TwsApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As TwsApiMessageLoggingOptions)
 Set mInputMessageHandler = pInputMessageHandler
 mLogApiMessages = pLogApiMessages
-If pLogRawApiMessages = ApiMessageLoggingOptionAlways Then
+If pLogRawApiMessages = TWSApiMessageLoggingOptionAlways Then
     mRawApiMessageLogLevel = LogLevelNormal
-ElseIf pLogRawApiMessages = ApiMessageLoggingOptionDefault Then
+ElseIf pLogRawApiMessages = TWSApiMessageLoggingOptionDefault Then
     mRawApiMessageLogLevel = LogLevelHighDetail
 Else
     mRawApiMessageLogLevel = LogLevelNone

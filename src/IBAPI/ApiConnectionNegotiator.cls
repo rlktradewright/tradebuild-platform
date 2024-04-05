@@ -229,7 +229,7 @@ Do
         lServerTime = GetTwsDate(lString2, lTimezone)
         If lServerTime = 0# Then
             GIB.Log "lString2 is not a date and time: " & lString2, ModuleName, ProcName, , LogLevelSevere
-        ElseIf Abs(pTimeStamp - lServerTime) <= MaxDifferenceFromServerTime * OneSecond Then
+        ElseIf Abs(pTimeStamp - lServerTime) <= MaxDifferenceFromServerTime * GIB.OneSecond Then
             mServerVersion = CInt(lString1)
             Exit Do
         Else

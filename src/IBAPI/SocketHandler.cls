@@ -375,15 +375,15 @@ Friend Sub Initialise( _
                 ByVal pPort As Long, _
                 ByVal pBufferedReader As BufferedReader, _
                 ByVal pProgramErrorHandler As IProgramErrorListener, _
-                ByVal pLogRawApiMessages As ApiMessageLoggingOptions)
+                ByVal pLogRawApiMessages As TWSApiMessageLoggingOptions)
 If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer
 mPort = pPort
 Set mBufferedReader = pBufferedReader
 Set mProgramErrorHandler = pProgramErrorHandler
-If pLogRawApiMessages = ApiMessageLoggingOptionAlways Then
+If pLogRawApiMessages = TWSApiMessageLoggingOptionAlways Then
     mRawApiMessageLogLevel = LogLevelNormal
-ElseIf pLogRawApiMessages = ApiMessageLoggingOptionDefault Then
+ElseIf pLogRawApiMessages = TWSApiMessageLoggingOptionDefault Then
     mRawApiMessageLogLevel = LogLevelMediumDetail
 Else
     mRawApiMessageLogLevel = LogLevelNone

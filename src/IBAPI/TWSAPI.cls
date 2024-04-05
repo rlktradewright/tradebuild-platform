@@ -82,10 +82,10 @@ Private mStatsRecorder                              As PerformanceStatsRecorder
 
 Private mConnectionRetryIntervalSecs                As Long
 
-Private mLogLevel                                   As TwsLogLevels
+Private mLogLevel                                   As TwsLoggingLevels
 
-Private mLogApiMessages                             As ApiMessageLoggingOptions
-Private mLogRawApiMessages                          As ApiMessageLoggingOptions
+Private mLogApiMessages                             As TwsApiMessageLoggingOptions
+Private mLogRawApiMessages                          As TwsApiMessageLoggingOptions
 Private mLogApiMessageStats                         As Boolean
 
 '================================================================================
@@ -811,7 +811,7 @@ Err:
 GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub CancelRealTimeBars(ByVal pTickerId As Long)
+Public Sub CancelRealtimeBars(ByVal pTickerId As Long)
 Const ProcName As String = "CancelRealTimeBars"
 On Error GoTo Err
 
@@ -966,8 +966,8 @@ Friend Sub Initialise( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
                 ByVal pClientId As Long, _
-                ByVal pLogApiMessages As ApiMessageLoggingOptions, _
-                ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
+                ByVal pLogApiMessages As TwsApiMessageLoggingOptions, _
+                ByVal pLogRawApiMessages As TwsApiMessageLoggingOptions, _
                 ByVal pLogApiMessageStats As Boolean)
 AssertArgument pPort > 0, "Port must be > 0"
 
@@ -1000,13 +1000,13 @@ AssertArgument ServerVersion >= ApiServerVersions.CASH_QTY Or pOrder.CashQty = M
 AssertArgument ServerVersion >= ApiServerVersions.ORDER_CONTAINER Or Not pOrder.IsOmsContainer, "IsOmsContainer attribute not supported"
 AssertArgument ServerVersion >= ApiServerVersions.D_PEG_ORDERS Or Not pOrder.DiscretionaryUpToLimitPrice, "DiscretionaryUpToLimitPrice attribute not supported"
 AssertArgument ServerVersion >= ApiServerVersions.PRICE_MGMT_ALGO Or pOrder.UsePriceMgmtAlgo, "UsePriceMgmtAlgo attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.Duration Or Not pOrder.Duration = MaxLong, "Duration attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.POST_TO_ATS Or Not pOrder.PostToAts = MaxLong, "PostToAts attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.Duration Or Not pOrder.Duration = GIB.MaxLong, "Duration attribute not supported"
+AssertArgument ServerVersion >= ApiServerVersions.POST_TO_ATS Or Not pOrder.PostToAts = GIB.MaxLong, "PostToAts attribute not supported"
 AssertArgument ServerVersion >= ApiServerVersions.AUTO_CANCEL_PARENT Or Not pOrder.AutoCancelParent, "AutoCancelParent attribute not supported"
 AssertArgument ServerVersion >= ApiServerVersions.ADVANCED_ORDER_REJECT Or pOrder.AdvancedErrorOverride = "", "AdvancedErrorOverride attribute not supported"
 AssertArgument ServerVersion >= ApiServerVersions.MANUAL_ORDER_TIME Or pOrder.ManualOrderTime = "", "AdvancedErrorOverride attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.PEGBEST_PEGMID_OFFSETS Or (pOrder.MinimumTradeQuantity = MaxLong And _
-                                                                        pOrder.MinimumCompeteSize = MaxLong And _
+AssertArgument ServerVersion >= ApiServerVersions.PEGBEST_PEGMID_OFFSETS Or (pOrder.MinimumTradeQuantity = GIB.MaxLong And _
+                                                                        pOrder.MinimumCompeteSize = GIB.MaxLong And _
                                                                         pOrder.CompeteAgainstBestOffset = MaxDouble And _
                                                                         pOrder.MidOffsetAtWhole = MaxDouble And _
                                                                         pOrder.MidOffsetAtHalf = MaxDouble), "PEGBEST/PEGMID-related  attributes not supported"
@@ -1057,7 +1057,7 @@ With pOrder
     mWriter.AddBoolean .Hidden, "Hidden"
 
     ' send contract combo legs for BAG requests
-    If pContractSpec.SecType = TwsSecTypeCombo Then
+    If pContractSpec.Sectype = TwsSecTypeCombo Then
         With pContractSpec
             If .ComboLegs.Count = 0 Then
                 mWriter.AddLong 0, "Combo legs count"
@@ -1460,7 +1460,7 @@ On Error GoTo Err
 Const VERSION = 8
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument pContractSpec.SecType <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument pContractSpec.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
 
 Dim lApiId As Long
 lApiId = GIdManager.GetTwsId(pRequestId, IdTypeContractData)
@@ -1541,7 +1541,7 @@ With theFilter
         mWriter.AddString IIf(.Time <> MaxDate, Format(lFromTime, "yyyymmdd hh\:nn\:ss") & .Timezone, ""), "Fill Time"
     End If
     mWriter.AddString .Symbol, UCase$("Symbol")
-    mWriter.AddString TwsSecTypeToShortString(.SecType), "Sec type"
+    mWriter.AddString TwsSecTypeToShortString(.Sectype), "Sec type"
     mWriter.AddString .Exchange, "Exchange"
     mWriter.AddString TwsOrderActionToString(.Action), "Action"
 End With
@@ -1593,7 +1593,7 @@ mWriter.AddLong pReqId, "ReqId"
 
 mWriter.AddString pContractSpec.ConId, "ConId"
 mWriter.AddString pContractSpec.Symbol, "Symbol"
-mWriter.AddString TwsSecTypeToShortString(pContractSpec.SecType), "SecType"
+mWriter.AddString TwsSecTypeToShortString(pContractSpec.Sectype), "SecType"
 mWriter.AddString pContractSpec.Exchange, "Exchange"
 mWriter.AddString pContractSpec.PrimaryExch, "PrimaryExch"
 mWriter.AddString pContractSpec.CurrencyCode, "Currency"
@@ -1668,7 +1668,7 @@ mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
-If pRequest.ContractSpec.SecType = TwsSecTypeCombo Then
+If pRequest.ContractSpec.Sectype = TwsSecTypeCombo Then
     mWriter.AddLong pRequest.ContractSpec.ComboLegs.Count, "Combo legs count"
     Dim lComboLeg As TwsComboLeg
     Dim i As Long
@@ -1741,7 +1741,7 @@ mWriter.AddLong lApiId, "Ticker id"
 mWriter.AddContract pContractSpec
 With pContractSpec
     ' Add combo legs for BAG requests
-    If .SecType = TwsSecTypes.TwsSecTypeCombo Then
+    If .Sectype = TwsSecTypes.TwsSecTypeCombo Then
         mWriter.AddString .ComboLegs.Count, "Combolegs count"
         Dim comboLeg As TwsComboLeg
         Dim i As Long
@@ -1957,7 +1957,7 @@ Err:
 GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub RequestRealTimeBars( _
+Public Sub RequestRealtimeBars( _
                 ByVal pTickerId As Long, _
                 ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pBarSize As Long, _
@@ -2070,7 +2070,7 @@ Err:
 GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub SetTwsLogLevel(ByVal pLogLevel As TwsLogLevels)
+Public Sub SetTwsLoggingLevel(ByVal pLogLevel As TwsLoggingLevels)
 mLogLevel = pLogLevel
 End Sub
 
@@ -2126,7 +2126,7 @@ Const ProcName As String = "startPerformanceTLIPeriod"
 On Error GoTo Err
 
 Set mPerformanceTLIPeriod = GetGlobalTimerList.Add(Nothing, _
-                                        CDate(Int((GetTimestamp + OneMinute + OneSecond) / OneMinute) * OneMinute), _
+                                        CDate(Int((GetTimestamp + GIB.OneMinute + GIB.OneSecond) / GIB.OneMinute) * GIB.OneMinute), _
                                         ExpiryTimeUnitDateTime)
 Exit Sub
 
@@ -2139,7 +2139,7 @@ Const ProcName As String = "startPerformanceTLISecond"
 On Error GoTo Err
 
 Set mPerformanceTLISecond = GetGlobalTimerList.Add(Nothing, _
-                                        CDate(Int((GetTimestamp + 2 * OneSecond) / OneSecond) * OneSecond), _
+                                        CDate(Int((GetTimestamp + 2 * GIB.OneSecond) / GIB.OneSecond) * GIB.OneSecond), _
                                         ExpiryTimeUnitDateTime)
     
 Exit Sub
