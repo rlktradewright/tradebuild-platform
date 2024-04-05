@@ -175,16 +175,13 @@ If mBracketOrderSpec.Modify Then
     If lBO Is Nothing Then
         gWriteLineToConsole mBracketOrderSpec.ID & ": " & lMsg
         PlaceOrder = False
-        Exit Function
     End If
 Else
     Set lBO = placeNewOrder
+    If lBO.State = BracketOrderStateSubmitted Then CreateBracketProfitCalculator lBO, mOrderContext.DataSource
+    gLiveOrders.Item(lBO.Key).Order = lBO
+    PlaceOrder = True
 End If
-
-If lBO.State = BracketOrderStateSubmitted Then CreateBracketProfitCalculator lBO, mOrderContext.DataSource
-gLiveOrders.Item(lBO.Key).Order = lBO
-
-PlaceOrder = True
 
 mGroupResources.OrderPlacers.Remove mBracketOrderSpec.ID
 Set mGroupResources = Nothing

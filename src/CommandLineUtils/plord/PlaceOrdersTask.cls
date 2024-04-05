@@ -96,11 +96,12 @@ Dim lOrderPlacer As OrderPlacer
 Set lOrderPlacer = mOrderPlacers(mListHeadIndex).OrderPlacer
 releaseEntry mListHeadIndex
 
-If Not lOrderPlacer.PlaceOrder Then
-    ' the order context is not ready enough, so the
-    ' orderPlacer will now listen for changes to its readiness
+If lOrderPlacer.PlaceOrder Then
+    ' no need to space out orders
+    'mTaskContext.Suspend 25
 Else
-    mTaskContext.Suspend 25
+    ' the order context is not ready enough, or placing the order
+    ' has failed. Nothing for us to do in either case
 End If
 
 Exit Sub

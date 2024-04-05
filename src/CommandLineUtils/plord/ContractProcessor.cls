@@ -383,13 +383,13 @@ Set mInitialContractSpec = pInitialContractSpec
 mInitialStrikeSelectionMode = pInitialStrikeSelectionMode
 mInitialStrikeParameter = pInitialStrikeParameter
 mInitialStrikeOperator = pInitialStrikeOperator
-If IsContractSpecOffsetExpiry(mInitialContractSpec) Then
-    Dim lExpiryOffset As Long
-    ParseOffsetExpiry mInitialContractSpec.Expiry, lExpiryOffset, mRolloverDaysBeforeExpiryToSwitch
-    mRolloverExpiryOffset = lExpiryOffset + 1
-Else
+'If IsContractSpecOffsetExpiry(mInitialContractSpec) Then
+'    Dim lExpiryOffset As Long
+'    ParseOffsetExpiry mInitialContractSpec.Expiry, lExpiryOffset, mRolloverDaysBeforeExpiryToSwitch
+'    mRolloverExpiryOffset = lExpiryOffset + 1
+'Else
     mRolloverExpiryOffset = 1
-End If
+'End If
 mIdent = pID
 Set mContractResolver = pContractResolver
 Set mAccountDataProvider = pAccountDataProvider
@@ -518,7 +518,8 @@ If Not deferProcessing(gCommands.EndBracketCommand, "") Then
                         setStopLossTriggerPriceSpec(mBOSpec.StopLossTriggerPriceSpec). _
                         setTargetOrderType(mBOSpec.TargetType). _
                         setTargetLimitPriceSpec(mBOSpec.TargetLimitPriceSpec). _
-                        setTargetTriggerPriceSpec mBOSpec.TargetTriggerPriceSpec
+                        setTargetTriggerPriceSpec(mBOSpec.TargetTriggerPriceSpec). _
+                        setRolloverExpiryOffset mRolloverExpiryOffset
     End If
     
     If gErrorCount = 0 Then mBracketOrders.Add mBOSpec
@@ -817,13 +818,12 @@ Const ProcName As String = "SetDefaultRolloverSpec"
 On Error GoTo Err
 
 If pSpec Is Nothing Then Exit Sub
-Set mDefaultRolloverSpec = pSpec.Clone
-
-mDefaultRolloverSpec.setInitialStrikeSelectionMode(mInitialStrikeSelectionMode). _
+Set mDefaultRolloverSpec = pSpec. _
+                    setInitialStrikeSelectionMode(mInitialStrikeSelectionMode). _
                     setInitialStrikeParameter(mInitialStrikeParameter). _
                     setInitialStrikeOperator(mInitialStrikeOperator). _
                     setRolloverExpiryOffset(mRolloverExpiryOffset). _
-                    setRolloverDaysBeforeExpiryToSwitch mRolloverDaysBeforeExpiryToSwitch
+                    setRolloverDaysBeforeExpiryToSwitch(mRolloverDaysBeforeExpiryToSwitch)
 
 Exit Sub
 
