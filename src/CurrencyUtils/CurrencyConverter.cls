@@ -51,6 +51,8 @@ End Type
 
 Private Const ModuleName                            As String = "CurrencyConverter"
 
+Private Const NullIndex                             As Long = -1
+
 '@================================================================================
 ' Member variables
 '@================================================================================
