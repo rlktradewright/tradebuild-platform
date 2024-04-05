@@ -44,13 +44,10 @@ End Enum
 ' Member variables
 '================================================================================
 
-Private CompeteAgainstBestOffsetUpToMid             As Variant
-
 Private mServer                                     As String
 Private mPort                                       As String
 
 Private mClientID                                   As Long
-Private mOptionalCapabilities                       As String
 
 Private mProgramErrorHandler                        As IProgramErrorListener
 Private mErrorAndNotificationConsumer               As IErrorAndNotificationConsumer
@@ -96,8 +93,6 @@ Private Sub Class_Initialize()
 Const ProcName As String = "Class_Initialize"
 On Error GoTo Err
 
-CompeteAgainstBestOffsetUpToMid = MinDouble
-
 Set mInMessageHandler = New InputMessageHandler
 
 mConnectionState = TwsConnectionStates.TwsConnNotConnected
@@ -110,7 +105,7 @@ Set mPerformanceLogger = GetLogger("tradebuild.log.ibapi.performance")
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub Class_Terminate()
@@ -136,7 +131,7 @@ End If
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -160,7 +155,7 @@ setConnectionState TwsConnConnected, ConnectionString
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mInMessageHandler_PaperTradingDisclaimerNotAcknowledged()
@@ -184,7 +179,7 @@ startPerformanceTLIPeriod
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -201,7 +196,7 @@ startPerformanceTLISecond
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -215,12 +210,12 @@ On Error GoTo Err
 Set mConnectionEstablishedTLI = GetGlobalTimerList.Add(Nothing, 30, ExpiryTimeUnitSeconds)
 mInMessageHandler.Reset
 
-mConnectionNegotiator.NegotiateApiConnection
+mConnectionNegotiator.NegotiateApiConnection mClientID
 
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mSocketHandler_ConnectFailed( _
@@ -234,7 +229,7 @@ setConnectionState TwsConnectionStates.TwsConnFailed, pDescription & ": " & Conn
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mSocketHandler_Connecting()
@@ -246,7 +241,7 @@ setConnectionState TwsConnectionStates.TwsConnConnecting, ConnectionString
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mSocketHandler_ConnectionClosed( _
@@ -259,7 +254,7 @@ setConnectionState TwsConnectionStates.TwsConnNotConnected, pDescription & ": " 
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mSocketHandler_Disconnected(ByVal pReason As String)
@@ -272,7 +267,7 @@ stopPerformanceLogging
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -302,7 +297,7 @@ If Not mSocketHandler Is Nothing Then mSocketHandler.ConnectionRetryIntervalSecs
 Exit Property
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Property
 
 Public Property Get ConnectionRetryIntervalSecs() As Long
@@ -372,28 +367,24 @@ Public Property Get MarketDepthConsumer() As IMarketDepthConsumer
 Set MarketDepthConsumer = mInMessageHandler.MarketDepthConsumer
 End Property
 
-Public Property Get MaxAccountRequestId() As Long
-MaxAccountRequestId = GIdManager.MaxCallersAccountRequestId
-End Property
-
 Public Property Get MaxContractRequestId() As Long
-MaxContractRequestId = GIdManager.MaxCallersContractRequestId
+MaxContractRequestId = BaseOrderId - BaseContractRequestId - 1
 End Property
 
 Public Property Get MaxExecutionsRequestId() As Long
-MaxExecutionsRequestId = GIdManager.MaxCallersExecutionsRequestId
+MaxExecutionsRequestId = BaseContractRequestId - BaseExecutionsRequestId - 1
 End Property
 
 Public Property Get MaxHistoricalDataRequestId() As Long
-MaxHistoricalDataRequestId = GIdManager.MaxCallersHistoricalDataRequestId
+MaxHistoricalDataRequestId = BaseExecutionsRequestId - BaseHistoricalDataRequestId - 1
 End Property
 
 Public Property Get MaxMarketDataRequestId() As Long
-MaxMarketDataRequestId = GIdManager.MaxCallersMarketDataRequestId
+MaxMarketDataRequestId = BaseMarketDepthRequestId - 1
 End Property
 
 Public Property Get MaxMarketDepthRequestId() As Long
-MaxMarketDepthRequestId = GIdManager.MaxCallersMarketDepthRequestId
+MaxMarketDepthRequestId = BaseHistoricalDataRequestId - BaseMarketDepthRequestId - 1
 End Property
 
 Public Property Get MaxOrderId() As Long
@@ -401,7 +392,7 @@ MaxOrderId = &H7FFFFFFF
 End Property
 
 Public Property Get NextOrderId() As Long
-NextOrderId = GIdManager.GetNextOrderId
+NextOrderId = mInMessageHandler.NextOrderId
 End Property
 
 Public Property Let OrderInfoConsumer(ByVal Value As IOrderInfoConsumer)
@@ -450,63 +441,90 @@ End Property
 
 Public Sub CalculateImpliedVolatility( _
         ByVal pReqId As Long, _
-        ByVal pContractSpec As TwsContractSpecifier, _
+        ByVal pContract As TwsContract, _
         ByVal pOptionPrice As Double, _
         ByVal pUnderPrice As Double)
 Const ProcName As String = "CalculateImpliedVolatility"
 On Error GoTo Err
 
+AssertArgument mServerVersion < MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property in CalculateImpliedVolatility not supported"
+
 If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 
-Const VERSION = 3
+Const VERSION = 2
 
 mWriter.AddMessageId REQ_CALC_IMPLIED_VOLAT
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pReqId, "ReqId"
-mWriter.AddContract pContractSpec
-mWriter.AddDouble pOptionPrice, "OptionPrice"
-mWriter.AddDouble pUnderPrice, "UnderPrice"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pReqId, "ReqId"
 
-mWriter.AddString "0", "Options Count"
-mWriter.AddString "", "Options"
+With pContract
+    mWriter.AddString .ConId, "Contract id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
+    mWriter.AddString .PrimaryExch, "PrimaryExch"
+    mWriter.AddString .CurrencyCode, "Currency"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
+End With
+
+mWriter.AddString pOptionPrice, "OptionPrice"
+mWriter.AddString pUnderPrice, "UnderPrice"
 
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CalculateOptionPrice( _
         ByVal pReqId As Long, _
-        ByVal pContractSpec As TwsContractSpecifier, _
+        ByVal pContract As TwsContract, _
         ByVal pVolatility As Double, _
         ByVal pUnderPrice As Double)
 Const ProcName As String = "CalculateOptionPrice"
 On Error GoTo Err
 
+AssertArgument mServerVersion < MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property in CalculateImpliedVolatility not supported"
+
 If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 
-Const VERSION = 3
+Const VERSION = 2
 
 mWriter.AddMessageId REQ_CALC_OPTION_PRICE
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pReqId, "ReqId"
-mWriter.AddContract pContractSpec
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pReqId, "ReqId"
 
-mWriter.AddDouble pVolatility, "Volatility"
-mWriter.AddDouble pUnderPrice, "UnderPrice"
+With pContract
+    mWriter.AddString .ConId, "Contract id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString IIf(.Exchange = "", "*", .Exchange), "Exchange"
+    mWriter.AddString .PrimaryExch, "PrimaryExch"
+    mWriter.AddString .CurrencyCode, "Currency"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
+End With
 
-mWriter.AddLong 0, "Options Count"
-mWriter.AddString "", "Options"
+mWriter.AddString pVolatility, "Volatility"
+mWriter.AddString pUnderPrice, "UnderPrice"
 
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelAccountSummary( _
@@ -516,37 +534,18 @@ On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
+AssertArgument mServerVersion >= MIN_SERVER_VER_ACCT_SUMMARY, "Account summary request cancellation not supported"
+
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_ACCOUNT_SUMMARY
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelAccountUpdatesMulti(ByVal pRequestId As Long)
-Const ProcName As String = "CancelAccountUpdatesMulti"
-On Error GoTo Err
-
-Const VERSION = 1
-
-If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.CancelAccountUpdatesMulti
-mWriter.AddLong VERSION, "Version"
-
-mWriter.AddLong pRequestId, "RequestId"
-
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelCalculateImpliedVolatility(ByVal pReqId As Long)
@@ -558,14 +557,14 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_CALC_IMPLIED_VOLAT
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pReqId, "ReqId"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pReqId, "ReqId"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelCalculateOptionPrice(ByVal pReqId As Long)
@@ -577,69 +576,14 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_CALC_OPTION_PRICE
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pReqId, "ReqId"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pReqId, "ReqId"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelFundamentalData(ByVal pReqId As Long)
-Const ProcName As String = "CancelFundamentalData"
-On Error GoTo Err
-
-If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
-
-Const VERSION = 1
-
-mWriter.AddMessageId CANCEL_FUNDAMENTAL_DATA
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pReqId, "ReqId"
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelHeadTimestamp(ByVal pRequestId As Long)
-Const ProcName As String = "CancelHeadTimestamp"
-On Error GoTo Err
-
-If ConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
-AssertArgument ServerVersion > ApiServerVersions.CANCEL_HEADTIMESTAMP, "CancelHeadTimestamp not supported"
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.CancelHeadTimestamp
-
-mWriter.AddLong pRequestId, "Request Id"
-
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelHistogramData(ByVal pRequestId As Long)
-Const ProcName As String = "CancelHistogramData"
-On Error GoTo Err
-
-If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
-AssertArgument ServerVersion > ApiServerVersions.REQ_HISTOGRAM_DATA, "CancelHistogramData not supported"
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.CancelHistogramData
-mWriter.AddLong pRequestId, "Request Id"
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelHistoricalData( _
@@ -651,15 +595,15 @@ If mConnectionState = TwsConnConnected Then
     Const VERSION As Long = 1
 
     mWriter.AddMessageId CANCEL_HISTORICAL_DATA
-    mWriter.AddLong VERSION, "Version"
-    mWriter.AddString GIdManager.GetTwsId(pRequestId, IdTypeHistoricalData), "RequestID"
+    mWriter.AddString VERSION, "Version"
+    mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pRequestId), "Request id"
     mWriter.Send
 End If
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelMarketData(ByVal pTickerId As Long)
@@ -671,35 +615,52 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 2
 
 mWriter.AddMessageId CANCEL_MKT_DATA
-mWriter.AddLong VERSION, "Version"
-mWriter.AddString GIdManager.GetTwsId(pTickerId, IdTypeMarketData), "TickerId"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub CancelMarketDepth(ByVal pTickerId As Long, pIsSmartDepth As Boolean)
+Public Sub CancelFundamentalData(ByVal pReqId As Long)
+Const ProcName As String = "CancelFundamentalData"
+On Error GoTo Err
+
+If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
+
+Const VERSION = 1
+
+mWriter.AddMessageId CANCEL_FUNDAMENTAL_DATA
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pReqId, "ReqId"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub CancelMarketDepth(ByVal pTickerId As Long)
 Const ProcName As String = "CancelMarketDepth"
 On Error GoTo Err
 
 If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
-AssertArgument Not (pIsSmartDepth And ServerVersion < ApiServerVersions.SMART_DEPTH), "SMART depth cancel is not supported"
 
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_MKT_DEPTH
-mWriter.AddLong VERSION, "Version"
-mWriter.AddString GIdManager.GetTwsId(pTickerId, IdTypeMarketDepth), "Ticker id"
-If ServerVersion >= ApiServerVersions.SMART_DEPTH Then mWriter.AddBoolean pIsSmartDepth, "IsSmartDepth"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
+gHandleUnexpectedError mErrorAndNotificationConsumer, pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Public Sub CancelNewsBulletins()
@@ -711,16 +672,16 @@ If mConnectionState <> TwsConnectionStates.TwsConnConnected Then Exit Sub
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_NEWS_BULLETINS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub CancelOrder(ByVal pOrderId As Long, pManualOrderCancelTime As String)
+Public Sub CancelOrder(ByVal pOrderId As Long)
 Const ProcName As String = "CancelOrder"
 On Error GoTo Err
 
@@ -728,49 +689,14 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 mWriter.AddMessageId CANCEL_ORDER
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pOrderId, "Order id"
-If ServerVersion >= ApiServerVersions.MANUAL_ORDER_TIME Then mWriter.AddString pManualOrderCancelTime, "manualOrderCancelTime"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pOrderId, "Order id"
 mWriter.Send True
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelPnL(ByVal pRequestId As Long)
-Const ProcName As String = "CancelPnL"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion >= ApiServerVersions.PNL, "CancelPnL not supported"
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.CancelPnL
-mWriter.AddLong pRequestId, "Request Id"
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelPnLSingle(ByVal pRequestId As Long)
-Const ProcName As String = "CancelPnLSingle"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion >= ApiServerVersions.PNL, "CancelPnLSingle not supported"
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.CancelPnLSingle
-mWriter.AddLong pRequestId, "Request Id"
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelPositions()
@@ -779,36 +705,18 @@ On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
+AssertArgument mServerVersion >= MIN_SERVER_VER_ACCT_SUMMARY, "Cancel position requests not supported"
+
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_POSITIONS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelPositionsMulti(ByVal pRequestId As Long)
-Const ProcName As String = "CancelPositionsMulti"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion >= ApiServerVersions.MODELS_SUPPORT, "CancelPositionsMulti not supported"
-
-Const VERSION = 1
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.CancelPositionsMulti
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pRequestId, "Request Id)"
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub CancelRealTimeBars(ByVal pTickerId As Long)
@@ -820,17 +728,17 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_REAL_TIME_BARS
-mWriter.AddLong VERSION, "Version"
-mWriter.AddString GIdManager.GetTwsId(pTickerId, IdTypeHistoricalData), "Ticker id"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString gGetTwsHistRequestIdFromCallersRequestId(pTickerId), "Ticker id"
 mWriter.Send True
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub CancelScannerSubscription(ByVal pRequestId As Long)
+Public Sub CancelScannerSubscription(ByVal pTickerId As Long)
 Const ProcName As String = "CancelScannerSubscription"
 On Error GoTo Err
 
@@ -839,32 +747,14 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId CANCEL_SCANNER_SUBSCRIPTION
-mWriter.AddLong VERSION, "Version"
-
-mWriter.AddLong GIdManager.GetTwsId(pRequestId, IdTypeScanner), "Request Id"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pTickerId, "Ticker Id"
 mWriter.Send True
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub CancelTickByTickData(ByVal pRequestId As Long)
-Const ProcName As String = "CancelTickByTickData"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion >= ApiServerVersions.TICK_BY_TICK, "CancelTickByTickData not supported"
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.CancelTickByTickData
-mWriter.AddLong pRequestId, "Request Id"
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub Connect()
@@ -884,9 +774,7 @@ mWriter.Initialise mSocketHandler, mLogApiMessages, mLogRawApiMessages
 Set mConnectionNegotiator = New ApiConnectionNegotiator
 mConnectionNegotiator.Initialise lReader, mWriter
 
-mInMessageHandler.Initialise mClientID, _
-                            mOptionalCapabilities, _
-                            mConnectionNegotiator, _
+mInMessageHandler.Initialise mConnectionNegotiator, _
                             lReader, _
                             mWriter, _
                             mStatsRecorder, _
@@ -899,7 +787,7 @@ mSocketHandler.Connect
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub Disconnect( _
@@ -915,16 +803,16 @@ stopPerformanceLogging
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub ExerciseOptions( _
                 ByVal pTickerId As Long, _
-                ByVal pContractSpec As TwsContractSpecifier, _
+                ByVal pContract As TwsContract, _
                 ByVal pExerciseAction As Long, _
                 ByVal pExerciseQuantity As Long, _
                 ByVal pAccount As String, _
-                ByVal pOverride As Boolean)
+                ByVal pOverride As Long)
 Const ProcName As String = "ExerciseOptions"
 On Error GoTo Err
 
@@ -932,22 +820,35 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 2
 
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.TradingClass = "" And pContract.ConId = 0), "ConId and TradingClass properties in ExerciseOptions not supported"
+
 mWriter.AddMessageId EXERCISE_OPTIONS
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pTickerId, "TickerId"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pTickerId, "TickerId"
 
-mWriter.AddContract pContractSpec, True
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "ConId"
 
-mWriter.AddLong pExerciseAction, "ExerciseAction"
-mWriter.AddLong pExerciseQuantity, "ExerciseQuantity"
+mWriter.AddString pContract.Symbol, "Symbol"
+mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
+mWriter.AddString pContract.Expiry, "Expiry"
+mWriter.AddString pContract.Strike, "Strike"
+mWriter.AddString gTwsOptionRightToString(pContract.OptRight), "Right"
+mWriter.AddString IIf(pContract.Multiplier = 1, "", pContract.Multiplier), "Multiplier"
+mWriter.AddString pContract.Exchange, "Exchange"
+mWriter.AddString pContract.CurrencyCode, "Currency"
+mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "TradingClass"
+
+mWriter.AddString pExerciseAction, "ExerciseAction"
+mWriter.AddString pExerciseQuantity, "ExerciseQuantity"
 mWriter.AddString pAccount, "Account"
-mWriter.AddBoolean pOverride, "Override"
+mWriter.AddString pOverride, "Override"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Function GetRawTwsMessage() As Byte()
@@ -959,7 +860,7 @@ GetRawTwsMessage = mInMessageHandler.BufferedReader.GetRawMessage
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -971,7 +872,10 @@ Friend Sub Initialise( _
                 ByVal pLogApiMessageStats As Boolean)
 AssertArgument pPort > 0, "Port must be > 0"
 
-AssertArgument pClientId >= 0 And pClientId <= &H7FFFFFFF, "ClientID must be >= 0 and <= &h7fffffff"
+' We check the clientId is at most 9 digits when converted to a string, so that
+' we can append a "1" at the start of the clientId string to get round the
+' bug in TWS - see the comment in ApiConnectionNegotiator.NegotiateApiConnection()
+AssertArgument pClientId >= 0 And pClientId < 1000000000, "ClientID must be >= 0 and < 1000000000"
 
 If pServer = "" Then pServer = "127.0.0.1"
 mServer = pServer
@@ -984,152 +888,211 @@ End Sub
 
 Public Sub PlaceOrder( _
                 ByVal pOrder As TwsOrder, _
-                ByVal pContractSpec As TwsContractSpecifier, _
-                Optional ByVal pSecIdType As String, _
-                Optional ByVal pSecId As String)
+                ByVal pContract As TwsContract)
 Const ProcName As String = "PlaceOrder"
 On Error GoTo Err
 
 Dim i As Long
+Dim lOrderComboLegsCount As Long
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-AssertArgument ServerVersion >= ApiServerVersions.EXT_OPERATOR Or pOrder.ExtOperator = "", "ExtOperator parameter not supported"
-AssertArgument ServerVersion >= ApiServerVersions.CASH_QTY Or pOrder.CashQty = MaxDouble, "CashQty parameter not supported"
+AssertArgument mServerVersion >= MIN_SERVER_VER_DELTA_NEUTRAL_OPEN_CLOSE Or _
+    (pOrder.DeltaNeutralOpenClose = "" And _
+        Not pOrder.DeltaNeutralShortSale And _
+        pOrder.DeltaNeutralShortSaleSlot = 0 And _
+        pOrder.DeltaNeutralDesignatedLocation = ""), _
+    "deltaNeutral parameters: OpenClose, ShortSale, ShortSaleSlot, DesignatedLocation not supported"
 
-AssertArgument ServerVersion >= ApiServerVersions.ORDER_CONTAINER Or Not pOrder.IsOmsContainer, "IsOmsContainer attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.D_PEG_ORDERS Or Not pOrder.DiscretionaryUpToLimitPrice, "DiscretionaryUpToLimitPrice attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.PRICE_MGMT_ALGO Or pOrder.UsePriceMgmtAlgo, "UsePriceMgmtAlgo attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.Duration Or Not pOrder.Duration = MaxLong, "Duration attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.POST_TO_ATS Or Not pOrder.PostToAts = MaxLong, "PostToAts attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.AUTO_CANCEL_PARENT Or Not pOrder.AutoCancelParent, "AutoCancelParent attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.ADVANCED_ORDER_REJECT Or pOrder.AdvancedErrorOverride = "", "AdvancedErrorOverride attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.MANUAL_ORDER_TIME Or pOrder.ManualOrderTime = "", "AdvancedErrorOverride attribute not supported"
-AssertArgument ServerVersion >= ApiServerVersions.PEGBEST_PEGMID_OFFSETS Or (pOrder.MinimumTradeQuantity = MaxLong And _
-                                                                        pOrder.MinimumCompeteSize = MaxLong And _
-                                                                        pOrder.CompeteAgainstBestOffset = MaxDouble And _
-                                                                        pOrder.MidOffsetAtWhole = MaxDouble And _
-                                                                        pOrder.MidOffsetAtHalf = MaxDouble), "PEGBEST/PEGMID-related  attributes not supported"
-Const VERSION = 45
+AssertArgument mServerVersion >= MIN_SERVER_VER_SCALE_ORDERS3 Or _
+    ((pOrder.ScalePriceIncrement = 0 And pOrder.ScalePriceIncrement = MaxDouble) And _
+        pOrder.ScalePriceAdjustValue = MaxDouble And _
+        pOrder.ScalePriceAdjustInterval = MaxLong And _
+        pOrder.ScaleProfitOffset = MaxDouble And _
+        Not pOrder.ScaleAutoReset And _
+        pOrder.ScaleInitPosition = MaxLong And _
+        pOrder.ScaleInitFillQty = MaxLong And _
+        Not pOrder.ScaleRandomPercent), _
+    "Scale order parameters: PriceAdjustValue, PriceAdjustInterval, ProfitOffset, AutoReset, InitPosition, InitFillQty and RandomPercent not supported"
+
+If mServerVersion < MIN_SERVER_VER_ORDER_COMBO_LEGS_PRICE And pContract.Sectype = TwsSecTypes.TwsSecTypeCombo Then
+    On Error Resume Next
+    lOrderComboLegsCount = UBound(pOrder.OrderComboLegs) + 1
+    On Error GoTo Err
+    
+    If lOrderComboLegsCount > 0 Then
+        Dim lEntry As Variant
+        For Each lEntry In pOrder.OrderComboLegs
+            Dim lComboLeg As TwsOrderComboLeg
+            Set lComboLeg = lEntry
+            AssertArgument lComboLeg.Price = MaxDouble, "Per-leg prices for order combo legs not supported"
+        Next
+    End If
+End If
+
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRAILING_PERCENT Or pOrder.TrailingPercent = MaxDouble, "Trailing percent property not supported"
+
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not suppoerted"
+
+AssertArgument mServerVersion >= MIN_SERVER_VER_SCALE_TABLE Or (pOrder.ScaleTable = "" And pOrder.ActiveStartTime = "" And pOrder.ActiveStopTime = ""), "ScaleTable, ActiveStartTime and ActiveStopTime properties not supported"
+
+Const VERSION = 41
 
 mWriter.AddMessageId PLACE_ORDER
-If ServerVersion < ApiServerVersions.ORDER_CONTAINER Then mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 
-If pOrder.OrderId = 0 Then pOrder.OrderId = GIdManager.GetNextOrderId
-AssertArgument pOrder.OrderId >= GIdManager.BaseOrderId, "Order id must not be less than " & GIdManager.BaseOrderId
-If pOrder.OrderId > GIdManager.GetNextOrderId Then GIdManager.SetNextOrderId pOrder.OrderId + 1
+If pOrder.OrderId = 0 Then pOrder.OrderId = NextOrderId
+Assert pOrder.OrderId >= BaseOrderId, "Order id must not be less than " & BaseOrderId
+If pOrder.OrderId > mInMessageHandler.NextOrderId Then mInMessageHandler.NextOrderId = pOrder.OrderId + 1
 
-mWriter.AddLong pOrder.OrderId, "Order id"
+mWriter.AddString pOrder.OrderId, "Order id"
 
-mWriter.AddContract pContractSpec
-
-mWriter.AddString pSecIdType, "Sec id type"
-mWriter.AddString pSecId, "Sec id"
+' mwriter.send contract fields
+With pContract
+    mWriter.AddString .ConId, "Con id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sectype"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"  ' multiplier - this is the number of units of the underlying
+                                                            ' delivered per contract - see http://www.interactivebrokers.com/discus/messages/2/27413.html
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString .PrimaryExch, "Primary Exchange"    ' only relevant when
+                                                        ' Exchange is SMART and there are SMART routers in more
+                                                        ' than one country (eg try IBM in Tws)
+    mWriter.AddString .CurrencyCode, "Currency"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
+    mWriter.AddString .SecIdType, "Sec id type"
+    mWriter.AddString .SecId, "Sec id"
+End With
 
 With pOrder
     
     ' mwriter.send main Order fields
-    mWriter.AddString TwsOrderActionToString(.Action), "Action"
-    mWriter.AddDecimal .TotalQuantity, "Quantity"
-    mWriter.AddString TwsOrderTypeToString(.OrderType), "Order type"
+    mWriter.AddString gTwsOrderActionToString(.Action), "Action"
+    mWriter.AddString .TotalQuantity, "Quantity"
+    mWriter.AddString gTwsOrderTypeToString(.OrderType), "Order type"
     
-    mWriter.AddDoubleMax .LmtPrice, "Price"
-    mWriter.AddDoubleMax .AuxPrice, "Aux price"
+    If mServerVersion < MIN_SERVER_VER_ORDER_COMBO_LEGS_PRICE Then
+        mWriter.AddDouble IIf(.LmtPrice = MaxDouble, 0, .LmtPrice), "Price"
+    Else
+        mWriter.AddDoubleMax .LmtPrice, "Price"
+    End If
+    If mServerVersion < MIN_SERVER_VER_TRAILING_PERCENT Then
+        mWriter.AddDouble IIf(.AuxPrice = MaxDouble, 0, .AuxPrice), "Aux price"
+    Else
+        mWriter.AddDoubleMax .AuxPrice, "Aux price"
+    End If
     
     ' mwriter.send extended Order fields
-    If .OrderType = TwsOrderTypes.TwsOrderTypeMarketOnOpen Or .OrderType = TwsOrderTypes.TwsOrderTypeLimitOnOpen Then
-        mWriter.AddString "OPG", "TIF"
-    Else
-        mWriter.AddString TwsOrderTIFToString(.Tif), "TIF"
-    End If
+    mWriter.AddString gTwsOrderTIFToString(.Tif), "TIF"
     mWriter.AddString .OcaGroup, "Oca Group"
     mWriter.AddString .Account, "Account"
     mWriter.AddString .OpenClose, "OpenClose"
-    mWriter.AddLong .Origin, "Origin"
+    mWriter.AddString .Origin, "Origin"
     mWriter.AddString .OrderRef, "Order ref"
     mWriter.AddBoolean .Transmit, "Transmit"
-    mWriter.AddLong .ParentId, "Parent id"
+    mWriter.AddString .ParentId, "Parent id"
     mWriter.AddBoolean .BlockOrder, "Block Order"
     mWriter.AddBoolean .SweepToFill, "Sweep to fill"
-    mWriter.AddLong .DisplaySize, "Display Size"
+    mWriter.AddString .DisplaySize, "Display Size"
     mWriter.AddString stopTriggerMethodToString(.TriggerMethod), "Trigger method"
     mWriter.AddBoolean .OutsideRth, "Outside RTH"
     mWriter.AddBoolean .Hidden, "Hidden"
+End With
 
-    ' send contract combo legs for BAG requests
-    If pContractSpec.SecType = TwsSecTypeCombo Then
-        With pContractSpec
-            If .ComboLegs.Count = 0 Then
-                mWriter.AddLong 0, "Combo legs count"
-            Else
-                mWriter.AddLong .ComboLegs.Count, "Combo legs count"
-                Dim comboLeg As TwsComboLeg
-                For Each comboLeg In .ComboLegs
-                    With comboLeg
-                        mWriter.AddLong .ConId, "Leg " & i & " Con id"
-                        mWriter.AddLong .Ratio, "Leg " & i & " Ratio"
-                        mWriter.AddString TwsOrderActionToString(.Action), "Leg " & i & " Action"
-                        mWriter.AddString .Exchange, "Leg " & i & " Exchange"
-                        mWriter.AddString legOpenCloseToString(.OpenClose), "Leg " & i & " Open/close"
-                    
-                        mWriter.AddLong comboLeg.ShortSaleSlot, "Short Sale Slot"
-                        mWriter.AddString comboLeg.DesignatedLocation, "Designated Location"
-                        mWriter.AddLong comboLeg.ExemptCode, "Exempt Code"
-                    End With
-                Next
-            End If
-        End With
-
-        ' Send order combo legs for BAG requests
-        Dim lOrderComboLegsCount As Long
-        On Error Resume Next
-        lOrderComboLegsCount = UBound(pOrder.ComboLegs) + 1
-        On Error GoTo Err
-        
-        If lOrderComboLegsCount = 0 Then
-            mWriter.AddLong 0, "Order Combo Legs Count"
+' send combo legs for BAG requests
+With pContract
+    If .Sectype = TwsSecTypeCombo Then
+        If .ComboLegs.Count = 0 Then
+            mWriter.AddString 0, "Combo legs count"
         Else
-            Dim lOrderComboLegs() As TwsOrderComboLeg
-            lOrderComboLegs = pOrder.ComboLegs
-            mWriter.AddLong lOrderComboLegsCount, "Order Combo Legs Count"
-    
-            For i = 0 To lOrderComboLegsCount - 1
-                Dim lOrderComboLeg  As TwsOrderComboLeg
-                Set lOrderComboLeg = lOrderComboLegs(i)
-                mWriter.AddDoubleMax lOrderComboLeg.Price, "Leg" & i & " Price"
+            mWriter.AddString .ComboLegs.Count, "Combo legs count"
+            Dim comboLeg As TwsComboLeg
+            For Each comboLeg In .ComboLegs
+                With comboLeg
+                    mWriter.AddString .ConId, "Leg " & i & " Con id"
+                    mWriter.AddString .Ratio, "Leg " & i & " Ration"
+                    mWriter.AddString gTwsOrderActionToString(.Action), "Leg " & i & " Action"
+                    mWriter.AddString .Exchange, "Leg " & i & " Exchange"
+                    mWriter.AddString legOpenCloseToString(.OpenClose), "Leg " & i & " Open/close"
+                
+                    mWriter.AddString comboLeg.ShortSaleSlot, "Short Sale Slot"
+                    mWriter.AddString comboLeg.DesignatedLocation, "Designated Location"
+                    mWriter.AddString comboLeg.ExemptCode, "Exempt Code"
+                End With
             Next
         End If
-        
-        mWriter.AddTagValues pOrder.SmartComboRoutingParams, "Smart Combo Routing Params"
     End If
+End With
 
+' Send order combo legs for BAG requests
+If mServerVersion >= MIN_SERVER_VER_ORDER_COMBO_LEGS_PRICE And pContract.Sectype = TwsSecTypeCombo Then
+    If lOrderComboLegsCount = 0 Then
+        mWriter.AddString 0, "Order Combo Legs Count"
+    Else
+        Dim lOrderComboLegs() As TwsOrderComboLeg
+        lOrderComboLegs = pOrder.OrderComboLegs
+        mWriter.AddString lOrderComboLegsCount, "Order Combo Legs Count"
+
+        For i = 0 To lOrderComboLegsCount - 1
+            Dim lOrderComboLeg  As TwsOrderComboLeg
+            Set lOrderComboLeg = lOrderComboLegs(i)
+            mWriter.AddDoubleMax lOrderComboLeg.Price, "Leg" & i & " Price"
+        Next
+    End If
+End If
+
+If pContract.Sectype = TwsSecTypeCombo Then
+    Dim lSmartComboRoutingParamsCount As Long
+    On Error Resume Next
+    lSmartComboRoutingParamsCount = UBound(pOrder.SmartComboRoutingParams) + 1
+    On Error GoTo Err
+    
+    If lSmartComboRoutingParamsCount = 0 Then
+        mWriter.AddString 0, "Smart Combo Routing Params Count"
+    Else
+        mWriter.AddString lSmartComboRoutingParamsCount, "Smart Combo Routing Params Count"
+        
+        Dim lSmartComboRoutingParams() As TwsTagValue
+        lSmartComboRoutingParams = pOrder.SmartComboRoutingParams
+        For i = 0 To lSmartComboRoutingParamsCount - 1
+            Dim l As TwsTagValue
+            l = lSmartComboRoutingParams(i)
+            mWriter.AddString l.Tag, "Param" & i & " Tag"
+            mWriter.AddString l.Value, "Param" & i & " Value"
+        Next
+    End If
+End If
+
+With pOrder
     mWriter.AddString "", "Shares Allocation"
-    mWriter.AddDouble .DiscretionaryAmt, "Discretionary amount"
+    mWriter.AddString .DiscretionaryAmt, "Discretionary amount"
     mWriter.AddString .GoodAfterTime, "Good after Time"
     mWriter.AddString .GoodTillDate, "Good till date"
     
     mWriter.AddString .FaGroup, "FAGroup"
     mWriter.AddString .FaMethod, "FAMethod"
     mWriter.AddString .FaPercentage, "FAPercentage"
-    If ServerVersion < ApiServerVersions.FA_PROFILE_DESUPPORT Then mWriter.AddString "", "FAProfile"
+    mWriter.AddString .FaProfile, "FAProfile"
     
-    If ServerVersion >= ApiServerVersions.MODELS_SUPPORT Then mWriter.AddString .ModelCode, "Model Code"
-
     'institutional short sale slot fields.
-    mWriter.AddLong .ShortSaleSlot, " Short Sale Slot"           ' 0 only for retail, 1 or 2 only for institution.
+    mWriter.AddString .ShortSaleSlot, " Short Sale Slot"           ' 0 only for retail, 1 or 2 only for institution.
     mWriter.AddString .DesignatedLocation, "Designated Location"       ' only populate when shortSaleSlot = 2.
     
-    mWriter.AddLong .ExemptCode, "Exempt Code"
+    mWriter.AddString .ExemptCode, "Exempt Code"
     
-    mWriter.AddLong .OcaType, "Oca type"
+    mWriter.AddString .OcaType, "Oca type"
     mWriter.AddString .Rule80A, "Rule 80A"
     mWriter.AddString .SettlingFirm, "Settling firm"
     mWriter.AddBoolean .AllOrNone, "All or none"
     mWriter.AddLongMax .MinQty, "Minimum quantity"
     mWriter.AddDoubleMax .PercentOffset, "Percent Offset"
-    mWriter.AddBoolean False, "E-trade only"
-    mWriter.AddBoolean False, "Firm quote only"
-    mWriter.AddDoubleMax MaxDouble, "NBBO price cap"
+    mWriter.AddBoolean .ETradeOnly, "E-trade only"
+    mWriter.AddBoolean .FirmQuoteOnly, "Firm quote only"
+    mWriter.AddDoubleMax .NbboPriceCap, "NBBO price cap"
     mWriter.AddLongMax .AuctionStrategy, "Auction strategy"
     mWriter.AddDoubleMax .StartingPrice, "Starting price"
     mWriter.AddDoubleMax .StockRefPrice, "Stock ref price"
@@ -1143,31 +1106,34 @@ With pOrder
     ' Volatility orders
     mWriter.AddDoubleMax .Volatility, "Volatility"
     mWriter.AddLongMax .VolatilityType, "Volatility type"
-    mWriter.AddString TwsOrderTypeToString(.DeltaNeutralOrderType), "Delta neutral Order type"
+    mWriter.AddString gTwsOrderTypeToString(.DeltaNeutralOrderType), "Delta neutral Order type"
     mWriter.AddDoubleMax .DeltaNeutralAuxPrice, "Delta neutral aux price"
     If .DeltaNeutralOrderType <> TwsOrderTypeNone Then
-        mWriter.AddLong .DeltaNeutralConId, "Delta Neutral Con Id"
+        mWriter.AddString .DeltaNeutralConId, "Delta Neutral Con Id"
         mWriter.AddString .DeltaNeutralSettlingFirm, "Delta Neutral Settling Firm"
         mWriter.AddString .DeltaNeutralClearingAccount, "Delta Neutral Clearing Account"
         mWriter.AddString .DeltaNeutralClearingIntent, "Delta Neutral Clearing Intent"
+    End If
+
+    If mServerVersion >= MIN_SERVER_VER_DELTA_NEUTRAL_OPEN_CLOSE And .DeltaNeutralOrderType <> TwsOrderTypeNone Then
         mWriter.AddString .DeltaNeutralOpenClose, "Delta Neutral Open Close"
-        mWriter.AddBoolean .DeltaNeutralShortSale, "Delta Neutral Short Sale"
-        mWriter.AddLong .DeltaNeutralShortSaleSlot, "Delta Neutral Short Sale Slot"
+        mWriter.AddString .DeltaNeutralShortSale, "Delta Neutral Short Sale"
+        mWriter.AddString .DeltaNeutralShortSaleSlot, "Delta Neutral Short Sale Slot"
         mWriter.AddString .DeltaNeutralDesignatedLocation, "Delta Neutral Designated Location"
     End If
     
-    mWriter.AddLong .ContinuousUpdate, "Continuous update"
+    mWriter.AddBoolean .ContinuousUpdate, "Continuous update"
     
     mWriter.AddLongMax .ReferencePriceType, "Reference price type"
     
     mWriter.AddDoubleMax .TrailStopPrice, "Trail stop price"
-    mWriter.AddDoubleMax .TrailingPercent, "Trailing Percent"
+    If mServerVersion >= MIN_SERVER_VER_TRAILING_PERCENT Then mWriter.AddDoubleMax .TrailingPercent, "Trailing Percent"
     
     mWriter.AddLongMax .ScaleInitLevelSize, "ScaleInitLevelSize"
     mWriter.AddLongMax .ScaleSubsLevelSize, "ScaleSubsLevelSize"
     mWriter.AddDoubleMax .ScalePriceIncrement, "ScalePriceIncrement"
     
-    If .ScalePriceIncrement > 0# And .ScalePriceIncrement <> MaxDouble Then
+    If mServerVersion >= MIN_SERVER_VER_SCALE_ORDERS3 And .ScalePriceIncrement > 0# And .ScalePriceIncrement <> MaxDouble Then
         mWriter.AddDoubleMax .ScalePriceAdjustValue, "Scale Price Adjust Value"
         mWriter.AddLongMax .ScalePriceAdjustInterval, "Scale Price Adjust Interval"
         mWriter.AddDoubleMax .ScaleProfitOffset, "Scale Profit Offset"
@@ -1177,11 +1143,13 @@ With pOrder
         mWriter.AddBoolean .ScaleRandomPercent, "Scale Random Percent"
     End If
 
-    mWriter.AddString .ScaleTable, "Scale Table"
-    mWriter.AddString .ActiveStartTime, "Active Start Time"
-    mWriter.AddString .ActiveStopTime, "Active Stop Time"
+    If mServerVersion >= MIN_SERVER_VER_SCALE_TABLE Then
+        mWriter.AddString .ScaleTable, "Scale Table"
+        mWriter.AddString .ActiveStartTime, "Active Start Time"
+        mWriter.AddString .ActiveStopTime, "Active Stop Time"
+    End If
 
-    mWriter.AddString TwsHedgeTypeToString(.HedgeType), "Hedge Type"
+    mWriter.AddString gTwsHedgeTypeToString(.HedgeType), "Hedge Type"
     If .HedgeType <> TwsHedgeTypeNone Then mWriter.AddString .HedgeParam, "Hedge Param"
 
     mWriter.AddBoolean .OptOutSmartRouting, "Opt Out Smart Routing"
@@ -1189,141 +1157,38 @@ With pOrder
     mWriter.AddString .ClearingAccount, "Clearing account"
     mWriter.AddString .ClearingIntent, "Clearing intent"
 
-    If .OrderType = TwsOrderTypes.TwsOrderTypePeggedToBest Or .OrderType = TwsOrderTypes.TwsOrderTypePeggedToMidpoint Then
-        mWriter.AddBoolean True, "Not held"
+    mWriter.AddBoolean .NotHeld, "Not held"
+
+    If pContract.UnderComp.ConId <> 0 Then
+        mWriter.AddBoolean True, "Under comp"
+        mWriter.AddString pContract.UnderComp.ConId, "Under comp conid"
+        mWriter.AddDouble pContract.UnderComp.Delta, "Under comp delta"
+        mWriter.AddDouble pContract.UnderComp.Price, "Under comp price"
     Else
-        mWriter.AddBoolean .NotHeld, "Not held"
-    End If
-    
-    If pContractSpec.DeltaNeutralContract.ConId <> 0 Then
-        mWriter.AddBoolean True, "Delta Neutral"
-        mWriter.AddLong pContractSpec.DeltaNeutralContract.ConId, "Delta Neutral conid"
-        mWriter.AddDouble pContractSpec.DeltaNeutralContract.Delta, "Delta Neutral delta"
-        mWriter.AddDouble pContractSpec.DeltaNeutralContract.Price, "Delta Neutral price"
-    Else
-        mWriter.AddBoolean False, "Delta Neutral"
+        mWriter.AddBoolean False, "Under comp"
     End If
 
     mWriter.AddString .AlgoStrategy, "Algo strategy"
     If .AlgoStrategy <> "" Then
-        mWriter.AddTagValues .AlgoParams, "Algo params"
+        Dim algoParamsCount  As Long
+        
+        On Error Resume Next
+        algoParamsCount = UBound(.AlgoParams) + 1
+        On Error GoTo Err
+         
+        mWriter.AddString algoParamsCount, "Algo params count"
+        If algoParamsCount > 0 Then
+            Dim lAlgoParams() As TwsTagValue
+            lAlgoParams = .AlgoParams
+            
+            For i = 0 To algoParamsCount - 1
+                mWriter.AddString lAlgoParams(i).Tag, "Tag" & i
+                mWriter.AddString lAlgoParams(i).Value, "value" & i
+            Next
+        End If
     End If
 
-    mWriter.AddString .AlgoId, "Algo Id"
-    
     mWriter.AddBoolean .WhatIf, "WhatIf"
-    mWriter.AddTagValues .Options, "Misc options"
-    mWriter.AddBoolean .Solicited, "Solicited"
-    mWriter.AddBoolean .RandomizeSize, "Randomize size"
-    mWriter.AddBoolean .RandomizePrice, "Randomize price"
-
-    If (ServerVersion >= ApiServerVersions.PEGGED_TO_BENCHMARK) Then
-        If .OrderType = TwsOrderTypes.TwsOrderTypePeggedToBenchmark Then
-            mWriter.AddLong .ReferenceContractId, "ReferenceContractId"
-            mWriter.AddBoolean .IsPeggedChangeAmountDecrease, "IsPeggedChangeAmountDecrease"
-            mWriter.AddDoubleMax .PeggedChangeAmount, "PeggedChangeAmount"
-            mWriter.AddDoubleMax .ReferenceChangeAmount, "ReferenceChangeAmount"
-            mWriter.AddString .ReferenceExchange, "ReferenceExchange"
-        End If
-
-        mWriter.AddLong 0, "Conditions Count" '  .Conditions.Count
-
-'       Conditions not implemented
-'        If .Conditions.Count > 0 Then
-'            For Each Item In .Conditions
-'                mWriter.AddLong Item.Type, "Type"
-'                Item.Serialize lWriter
-'            Next
-'
-'            mWriter.AddBoolean .ConditionsIgnoreRth, "ConditionsIgnoreRth"
-'            mWriter.AddBoolean .ConditionsCancelOrder, "ConditionsCancelOrder"
-'        End If
-
-        mWriter.AddString TwsOrderTypeToString(.AdjustedOrderType), "AdjustedOrderType"
-        mWriter.AddDoubleMax .TriggerPrice, "TriggerPrice"
-        mWriter.AddDoubleMax .LmtPriceOffset, "LmtPriceOffset"
-        mWriter.AddDoubleMax .AdjustedStopPrice, "AdjustedStopPrice"
-        mWriter.AddDoubleMax .AdjustedStopLimitPrice, "AdjustedStopLimitPrice"
-        mWriter.AddDoubleMax .AdjustedTrailingAmount, "AdjustedTrailingAmount"
-        mWriter.AddLong .AdjustableTrailingUnit, "AdjustableTrailingUnit"
-    End If
-
-    If ServerVersion >= ApiServerVersions.EXT_OPERATOR Then
-        mWriter.AddString .ExtOperator, "ExtOperator"
-    End If
-
-    If ServerVersion >= ApiServerVersions.SOFT_DOLLAR_TIER Then
-        mWriter.AddString .Tier.Name, "Tier Name"
-        mWriter.AddString .Tier.Value, "Tier Value"
-    End If
-
-    If ServerVersion >= ApiServerVersions.CASH_QTY Then
-        mWriter.AddDoubleMax .CashQty, "Cash Qty"
-    End If
-
-    If ServerVersion >= ApiServerVersions.DECISION_MAKER Then
-        mWriter.AddString .Mifid2DecisionMaker, "Mifid2DecisionMaker"
-        mWriter.AddString .Mifid2DecisionAlgo, "Mifid2DecisionAlgo"
-    End If
-
-    If ServerVersion >= ApiServerVersions.MIFID_EXECUTION Then
-        mWriter.AddString .Mifid2ExecutionTrader, "Mifid2ExecutionTrader"
-        mWriter.AddString .Mifid2ExecutionAlgo, "Mifid2ExecutionAlgo"
-    End If
-
-    If ServerVersion >= ApiServerVersions.AUTO_PRICE_FOR_HEDGE Then
-        mWriter.AddBoolean .DontUseAutoPriceForHedge, "DontUseAutoPriceForHedge"
-    End If
-
-    If ServerVersion >= ApiServerVersions.ORDER_CONTAINER Then
-        mWriter.AddBoolean .IsOmsContainer, "IsOmsContainer"
-    End If
-
-    If ServerVersion >= ApiServerVersions.D_PEG_ORDERS Then
-        mWriter.AddBoolean .DiscretionaryUpToLimitPrice, "DiscretionaryUpToLimitPrice"
-    End If
-
-    If ServerVersion >= ApiServerVersions.PRICE_MGMT_ALGO Then
-        mWriter.AddBoolean .UsePriceMgmtAlgo, "UsePriceMgmtAlgo"
-    End If
-
-    If ServerVersion >= ApiServerVersions.Duration Then
-        mWriter.AddLongMax .Duration, "Duration"
-    End If
-
-    If ServerVersion >= ApiServerVersions.POST_TO_ATS Then
-        mWriter.AddLongMax .PostToAts, "PostToAts"
-    End If
-
-    If ServerVersion >= ApiServerVersions.AUTO_CANCEL_PARENT Then
-        mWriter.AddBoolean .AutoCancelParent, "AutoCancelParent"
-    End If
-
-    If ServerVersion >= ApiServerVersions.ADVANCED_ORDER_REJECT Then
-        mWriter.AddString .AdvancedErrorOverride, "AdvancedErrorOverride"
-    End If
-
-    If ServerVersion >= ApiServerVersions.MANUAL_ORDER_TIME Then
-        mWriter.AddString .ManualOrderTime, "ManualOrderTime"
-    End If
-
-    If ServerVersion >= ApiServerVersions.PEGBEST_PEGMID_OFFSETS Then
-        If UCase$(pContractSpec.Exchange) = "IBKRATS" Then
-            mWriter.AddDoubleMax .MinimumTradeQuantity, "MinimumTradeQuantity"
-        End If
-        If .OrderType = TwsOrderTypes.TwsOrderTypePeggedToBest Then
-            mWriter.AddLongMax .MinimumCompeteSize, "MinimumCompeteSize"
-            mWriter.AddDoubleMax .CompeteAgainstBestOffset, "CompeteAgainstBestOffset"
-            If .CompeteAgainstBestOffset = CompeteAgainstBestOffsetUpToMid Then
-                mWriter.AddDoubleMax .MidOffsetAtWhole, "MidOffsetAtWhole"
-                mWriter.AddDoubleMax .MidOffsetAtHalf, "MidOffsetAtHalf"
-            End If
-        ElseIf .OrderType = TwsOrderTypes.TwsOrderTypePeggedToMidpoint Then
-            mWriter.AddDoubleMax .MidOffsetAtWhole, "MidOffsetAtWhole"
-            mWriter.AddDoubleMax .MidOffsetAtHalf, "MidOffsetAtHalf"
-        End If
-    End If
-
 End With
 
 mWriter.Send True
@@ -1331,10 +1196,10 @@ mWriter.Send True
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
                     
-Public Sub ReplaceFA(requestId As Integer, ByVal DataType As TwsFADataTypes, ByVal xml As String)
+Public Sub ReplaceFA(ByVal DataType As TwsFADataTypes, ByVal xml As String)
 Const ProcName As String = "ReplaceFA"
 On Error GoTo Err
 
@@ -1342,20 +1207,19 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
+Assert mServerVersion >= 13, "Server version does not support ReplaceFA", ErrorCodes.ErrUnsupportedOperationException
+
 mWriter.AddMessageId REPLACE_FA
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong DataType, "Data type"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString DataType, "Data type"
 mWriter.AddString xml, "XML"
-If ServerVersion >= ApiServerVersions.REPLACE_FA_END Then
-    mWriter.AddLong GIdManager.GetTwsId(requestId, IdTypes.IdTypeAccount), "Request id"
-End If
 
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestAccountSummary( _
@@ -1367,13 +1231,15 @@ On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
+AssertArgument mServerVersion >= MIN_SERVER_VER_ACCT_SUMMARY, "Account summary requests not supported"
+
 Const VERSION = 1
 
-GIB.Log "Requesting account summary: requester id=" & pReqId, ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting account summary: requester id=" & pReqId, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_ACCOUNT_SUMMARY
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pReqId, "ReqId"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pReqId, "ReqId"
 mWriter.AddString pGroup, "Group"
 mWriter.AddString pTags, "Tags"
 mWriter.Send
@@ -1381,7 +1247,7 @@ mWriter.Send
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestAccountUpdates(ByVal subscribe As Boolean, ByVal acctCode As String)
@@ -1392,10 +1258,10 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 2
 
-GIB.Log "Requesting account updates", ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting account updates", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_ACCT_DATA
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.AddBoolean subscribe, "Subscribe"
 
 mWriter.AddString acctCode, "Account code"
@@ -1405,7 +1271,7 @@ mWriter.Send
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestAllOpenOrders()
@@ -1416,16 +1282,16 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-GIB.Log "Requesting all open orders", ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting all open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_ALL_OPEN_ORDERS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestAutoOpenOrders(ByVal autoBind As Boolean)
@@ -1436,54 +1302,66 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-GIB.Log "Requesting auto open orders", ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting auto open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_AUTO_OPEN_ORDERS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.AddBoolean autoBind, "Autobind"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestContractDetails( _
                 ByVal pRequestId As Long, _
-                ByVal pContractSpec As TwsContractSpecifier, _
-                Optional ByVal pSecIdType As String, _
-                Optional ByVal pSecId As String)
+                ByVal pContract As TwsContract)
 Const ProcName As String = "RequestContractDetails"
 On Error GoTo Err
 
 Const VERSION = 8
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument pContractSpec.SecType <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument pContract.Sectype <> TwsSecTypeCombo, "Combo contracts are not supported"
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
 
 Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pRequestId, IdTypeContractData)
+lApiId = gGetTwsContractRequestIdFromCallersRequestId(pRequestId)
 
-GIB.Log "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting contract details: requester id=" & pRequestId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_CONTRACT_DATA
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 
-mWriter.AddLong lApiId, "Request id"
-mWriter.AddContract pContractSpec
-mWriter.AddBoolean True, "Include expired"
-mWriter.AddString pSecIdType, "SecIdType"
-mWriter.AddString pSecId, "SecId"
+mWriter.AddString lApiId, "Request id"
 
-If ServerVersion >= ApiServerVersions.BOND_ISSUERID Then mWriter.AddString "", "IssuerId"
-
+With pContract
+    mWriter.AddString .ConId, "Contract id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    If .Exchange = "" Then .Exchange = "*"
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString .PrimaryExch, "PrimaryExchange"
+    mWriter.AddString .CurrencyCode, "Currency"
+    
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
+    mWriter.AddBoolean True, "Include expired"
+    mWriter.AddString .SecIdType, "SecIdType"
+    mWriter.AddString .SecId, "SecId"
+End With
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestCurrentTime()
@@ -1495,13 +1373,13 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 3
 
 mWriter.AddMessageId REQ_CURRENT_TIME
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestExecutions( _
@@ -1515,14 +1393,14 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 3
 
 Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pRequestId, IdTypeExecution)
+lApiId = gGetTwsExecutionsRequestIdFromCallersRequestId(pRequestId)
 
-GIB.Log "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting executions: requester id=" & pRequestId & "; api id=" & lApiId, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_EXECUTIONS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 
-mWriter.AddLong lApiId, "ReqId"
+mWriter.AddString lApiId, "ReqId"
 
 Dim theFilter As TwsExecutionFilter
 If filter Is Nothing Then
@@ -1535,15 +1413,11 @@ With theFilter
     mWriter.AddString .ClientID, "Client id"
     mWriter.AddString .AccountCode, "Account code"
     Dim lFromTime As Date: lFromTime = ConvertDateLocalToUTC(.Time)
-    If .Timezone = "" Then
-        mWriter.AddString IIf(.Time <> MaxDate, Format(lFromTime, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
-    Else
-        mWriter.AddString IIf(.Time <> MaxDate, Format(lFromTime, "yyyymmdd hh\:nn\:ss") & .Timezone, ""), "Fill Time"
-    End If
-    mWriter.AddString .Symbol, UCase$("Symbol")
-    mWriter.AddString TwsSecTypeToShortString(.SecType), "Sec type"
+    mWriter.AddString IIf(CLng(lFromTime) <> 0, Format(lFromTime, "yyyymmdd-hh\:nn\:ss"), ""), "Fill Time"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
     mWriter.AddString .Exchange, "Exchange"
-    mWriter.AddString TwsOrderActionToString(.Action), "Action"
+    mWriter.AddString gTwsOrderActionToString(.Action), "Action"
 End With
 
 mWriter.Send True
@@ -1551,7 +1425,7 @@ mWriter.Send True
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestFA(ByVal DataType As TwsFADataTypes)
@@ -1563,49 +1437,48 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_FA
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong DataType, "Data type"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString DataType, "Data type"
 
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestFundamentalData( _
                 ByVal pReqId As Long, _
-                ByVal pContractSpec As TwsContractSpecifier, _
+                ByVal pContract As TwsContract, _
                 ByVal pReportType As String)
 Const ProcName As String = "RequestFundamentalData"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-Const VERSION = 3
+Const VERSION = 2
 
-GIB.Log "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting fundamental data: requester id=" & pReqId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_FUNDAMENTAL_DATA
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pReqId, "ReqId"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pReqId, "ReqId"
 
-mWriter.AddString pContractSpec.ConId, "ConId"
-mWriter.AddString pContractSpec.Symbol, "Symbol"
-mWriter.AddString TwsSecTypeToShortString(pContractSpec.SecType), "SecType"
-mWriter.AddString pContractSpec.Exchange, "Exchange"
-mWriter.AddString pContractSpec.PrimaryExch, "PrimaryExch"
-mWriter.AddString pContractSpec.CurrencyCode, "Currency"
-mWriter.AddString UCase$(pContractSpec.LocalSymbol), "LocalSymbol"
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "ConId"
+mWriter.AddString pContract.Symbol, "Symbol"
+mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
+mWriter.AddString pContract.Exchange, "Exchange"
+mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
+mWriter.AddString pContract.CurrencyCode, "Currency"
+mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
 mWriter.AddString UCase$(pReportType), "ReportType"
-mWriter.AddString "0", "Options count"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestGlobalCancel()
@@ -1616,32 +1489,33 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-GIB.Log "Requesting global cancel", ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting global cancel", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_GLOBAL_CANCEL
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestHistoricalData( _
                 ByVal pRequestId As Long, _
-                ByRef pRequest As TwsHistoricalDataRequest, _
-                Optional ByVal pKeepUpToDate As Boolean)
+                ByRef pRequest As TwsHistoricalDataRequest)
 Const ProcName As String = "RequestHistoricalData"
 On Error GoTo Err
 
+Const VERSION = 5
+
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-AssertArgument ServerVersion >= ApiServerVersions.HISTORICAL_SCHEDULE Or UCase$(pRequest.WhatToShow) <> "SCHEDULE", "Historical schedule requests not supported"
+Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pRequest.Contract.TradingClass = "" And pRequest.Contract.ConId = 0), "ConId and TradingClass properties not supported"
 
 Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pRequestId, IdTypeHistoricalData)
+lApiId = gGetTwsHistRequestIdFromCallersRequestId(pRequestId)
 
-GIB.Log "Requesting historical data for: " & UCase$(pRequest.ContractSpec.LocalSymbol) & _
+gLog "Requesting historical data for: " & UCase$(pRequest.Contract.LocalSymbol) & _
             "; requester id=" & pRequestId & _
             "; api id=" & lApiId & _
             "; barsize=" & pRequest.BarSizeSetting & _
@@ -1649,49 +1523,81 @@ GIB.Log "Requesting historical data for: " & UCase$(pRequest.ContractSpec.LocalS
             "; duration=" & pRequest.Duration & _
             "; whattoshow=" & pRequest.WhatToShow & _
             "; use rth=" & IIf(pRequest.MainSessionOnly, 1, 0), _
-            ModuleName, ProcName, , LogLevelDetail
+            ModuleName, ProcName
 
 mWriter.AddMessageId REQ_HISTORICAL_DATA
-mWriter.AddLong lApiId, "Request id"
-mWriter.AddContract pRequest.ContractSpec
+mWriter.AddString VERSION, "Version"
+mWriter.AddString lApiId, "Request id"
 
-Dim lExpired  As Boolean
-lExpired = ContractHasExpired(pRequest.ContractSpec)
-mWriter.AddBoolean lExpired, "Include expired"   ' can't include expired for non-expiring contracts
+With pRequest.Contract
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .ConId, "Contract id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString .PrimaryExch, "Primary Exchange"
+    mWriter.AddString .CurrencyCode, "Currency"
+    
+    Dim lExpired  As Boolean
+    lExpired = gContractHasExpired(pRequest.Contract)
+    mWriter.AddString IIf(lExpired, "", UCase$(.LocalSymbol)), "Local Symbol"
+    mWriter.AddString .TradingClass, "Trading Class"
+    mWriter.AddString IIf(lExpired, 1, 0), "Include expired"   ' can't include expired for non-expiring contracts
+    
+End With
 
 mWriter.AddString pRequest.EndDateTime, "End date"
 mWriter.AddString pRequest.BarSizeSetting, "Bar Size"
 
 mWriter.AddString pRequest.Duration, "Duration"
-mWriter.AddBoolean pRequest.MainSessionOnly, "Use RTH"
+mWriter.AddString IIf(pRequest.MainSessionOnly, 1, 0), "Use RTH"
 mWriter.AddString pRequest.WhatToShow, "What to show"
 
 mWriter.AddString TwsHistDataDateFormats.DateFormatString, "Date format"
 
-If pRequest.ContractSpec.SecType = TwsSecTypeCombo Then
-    mWriter.AddLong pRequest.ContractSpec.ComboLegs.Count, "Combo legs count"
+If pRequest.Contract.Sectype = TwsSecTypeCombo Then
+    mWriter.AddString pRequest.Contract.ComboLegs.Count, "Combo legs count"
     Dim lComboLeg As TwsComboLeg
     Dim i As Long
-    For Each lComboLeg In pRequest.ContractSpec.ComboLegs
+    For Each lComboLeg In pRequest.Contract.ComboLegs
         With lComboLeg
             i = i + 1
             mWriter.AddString .ConId, "ConId" & i
             mWriter.AddString .Ratio, "Ratio" & i
-            mWriter.AddString TwsOrderActionToString(.Action), "Action" & i
+            mWriter.AddString gTwsOrderActionToString(.Action), "Action" & i
             mWriter.AddString .Exchange, "Exchange" & i
         End With
     Next
 End If
-
-If ServerVersion >= ApiServerVersions.SYNT_REALTIME_BARS Then mWriter.AddBoolean pKeepUpToDate, "KeepUpToDate"
-mWriter.AddString "", "Options"
 
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+End Sub
+
+Public Sub RequestIds(ByVal pNumIds As Long)
+Const ProcName As String = "RequestIds"
+On Error GoTo Err
+
+Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
+
+Const VERSION = 1
+
+mWriter.AddMessageId REQ_IDS
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pNumIds, "NumIds"
+mWriter.Send
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestManagedAccounts()
@@ -1703,45 +1609,58 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_MANAGED_ACCTS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestMarketData( _
                 ByVal pTickerId As Long, _
-                ByVal pContractSpec As TwsContractSpecifier, _
+                ByVal pContract As TwsContract, _
                 ByVal pGenericTicks As String, _
-                ByVal pSnapshot As Boolean, _
-                ByVal pRegulatorySnapshot As Boolean)
+                ByVal pSnapshot As Boolean)
 Const ProcName As String = "RequestMarketData"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-Const VERSION = 11
+Const VERSION = 10
 
 Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pTickerId, IdTypeMarketData)
+lApiId = gGetTwsMarketDataRequestIdFromCallersRequestId(pTickerId)
 
-GIB.Log "Requesting market data" & _
+gLog "Requesting market data" & _
         IIf(pSnapshot, " (snapshot)", "") & _
         ": requester id=" & pTickerId & _
         "; api id=" & lApiId & _
-        "; contract=" & pContractSpec.ToString, _
-        ModuleName, ProcName, , LogLevelDetail
+        "; contract=" & pContract.ToString, _
+        ModuleName, ProcName
+
+Assert mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or pContract.TradingClass = "", "TradingClass property not supported"
 
 mWriter.AddMessageId REQ_MKT_DATA
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong lApiId, "Ticker id"
-mWriter.AddContract pContractSpec
-With pContractSpec
+mWriter.AddString VERSION, "Version"
+mWriter.AddString lApiId, "Ticker id"
+With pContract
+    mWriter.AddString .ConId, "Con id"
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString .PrimaryExch, "Primary Exchange"
+    mWriter.AddString .CurrencyCode, "Currency"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString .TradingClass, "Trading Class"
+    
     ' Add combo legs for BAG requests
-    If .SecType = TwsSecTypes.TwsSecTypeCombo Then
+    If .Sectype = TwsSecTypes.TwsSecTypeCombo Then
         mWriter.AddString .ComboLegs.Count, "Combolegs count"
         Dim comboLeg As TwsComboLeg
         Dim i As Long
@@ -1750,28 +1669,24 @@ With pContractSpec
                 i = i + 1
                 mWriter.AddString .ConId, "ConId" & i
                 mWriter.AddString .Ratio, "Ratio" & i
-                mWriter.AddString TwsOrderActionToString(.Action), "Action" & i
+                mWriter.AddString gTwsOrderActionToString(.Action), "Action" & i
                 mWriter.AddString .Exchange, "Exchange" & i
             End With
         Next
     End If
     
-    If .DeltaNeutralContract.ConId <> 0 Then
-        mWriter.AddBoolean True, "Delta neutral"
-        mWriter.AddLong .DeltaNeutralContract.ConId, "Delta neutral conid"
-        mWriter.AddDouble .DeltaNeutralContract.Delta, "Delta neutral delta"
-        mWriter.AddDouble .DeltaNeutralContract.Price, "Delta neutral price"
+    If .UnderComp.ConId <> 0 Then
+        mWriter.AddBoolean True, "Under comp"
+        mWriter.AddString .UnderComp.ConId, "Under comp conid"
+        mWriter.AddString .UnderComp.Delta, "Under comp delta"
+        mWriter.AddString .UnderComp.Price, "Under comp price"
     Else
-        mWriter.AddBoolean False, "Delta neutral"
+        mWriter.AddBoolean False, "Under comp"
     End If
     
     mWriter.AddString pGenericTicks, "Generic tick list"
     
     mWriter.AddBoolean pSnapshot, "Snapshot"
-    
-    If ServerVersion >= ApiServerVersions.SMART_COMPONENTS Then mWriter.AddBoolean pRegulatorySnapshot, "Regulatory Snapshot"
-
-    mWriter.AddString "", "Options"
     
     mWriter.Send
 End With
@@ -1779,7 +1694,7 @@ End With
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestMarketDataType(ByVal pMarketDataType As Long)
@@ -1791,71 +1706,59 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_MARKET_DATA_TYPE
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong pMarketDataType, "MarketDataType"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pMarketDataType, "MarketDataType"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestMarketDepth( _
                 ByVal pTickerId As Long, _
-                ByVal pContractSpec As TwsContractSpecifier, _
-                Optional ByVal pIsSmartDepth As Boolean, _
+                ByVal pContract As TwsContract, _
                 Optional ByVal pNumberOfRows As Long = 20)
 Const ProcName As String = "RequestMarketDepth"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-Const VERSION = 5
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.TradingClass = "" And pContract.ConId = 0), "ContractId and TradingClass properties are not supported"
 
-AssertArgument ServerVersion >= ApiServerVersions.SMART_DEPTH Or (Not pIsSmartDepth), "SMART depth request is not supported"
-AssertArgument ServerVersion >= ApiServerVersions.MKT_DEPTH_PRIM_EXCHANGE Or pContractSpec.PrimaryExch = "", "PrimaryExch parameter is not supported"
+Const VERSION = 4
 
 Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pTickerId, IdTypeMarketDepth)
+lApiId = gGetTwsMarketDepthRequestIdFromCallersRequestId(pTickerId)
 
-GIB.Log "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting market depth: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_MKT_DEPTH
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong lApiId, "Request id"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString lApiId, "Request id"
 
-mWriter.AddContract pContractSpec, pIgnorePrimaryExchange:=(ServerVersion < ApiServerVersions.MKT_DEPTH_PRIM_EXCHANGE)
-mWriter.AddLong pNumberOfRows, "Num rows"
-If ServerVersion >= ApiServerVersions.SMART_DEPTH Then mWriter.AddBoolean pIsSmartDepth, "IsSmartDepth"
-mWriter.AddString "", "Options"
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "Contract Id"
 
+With pContract
+    mWriter.AddString .Symbol, "Symbol"
+    mWriter.AddString gTwsSecTypeToShortString(.Sectype), "Sec type"
+    mWriter.AddString .Expiry, "Expiry"
+    mWriter.AddDouble .Strike, "Strike"
+    mWriter.AddString gTwsOptionRightToString(.OptRight), "Right"
+    mWriter.AddString IIf(.Multiplier = 1, "", CStr(.Multiplier)), "Multiplier"
+    mWriter.AddString .Exchange, "Exchange"
+    mWriter.AddString .CurrencyCode, "Currency"
+    mWriter.AddString UCase$(.LocalSymbol), "Local Symbol"
+    If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "Trading Class"
+    mWriter.AddString pNumberOfRows, "Num rows"
+End With
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestMarketRule(ByVal pMarketRuleId As Long)
-Const ProcName As String = "RequestMarketRule"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-Assert ServerVersion >= ApiServerVersions.MARKET_RULES, "Market rule requests not supported"
-
-GIB.Log "Requesting market rule: id=" & pMarketRuleId, ModuleName, ProcName, , LogLevelDetail
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.RequestMarketRule
-mWriter.AddLong pMarketRuleId, "Market Rule ID"
-
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestNewsBulletins(allMsgs As Boolean)
@@ -1867,14 +1770,14 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 Const VERSION = 1
 
 mWriter.AddMessageId REQ_NEWS_BULLETINS
-mWriter.AddLong VERSION, "Version"
-mWriter.AddBoolean allMsgs, "All messages"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString allMsgs, "All messages"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestOpenOrders()
@@ -1885,56 +1788,16 @@ Const VERSION = 1
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-GIB.Log "Requesting open orders", ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting open orders", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_OPEN_ORDERS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send True
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
-End Sub
-
-Public Sub RequestOptionParameters( _
-                ByVal pRequestId As Long, _
-                ByVal pUnderlyingSymbol As String, _
-                ByVal pExchange As String, _
-                ByVal pUnderlyingSecType As TwsSecTypes, _
-                ByVal pUnderlyingConId As Long)
-Const ProcName As String = "RequestOptionParameters"
-On Error GoTo Err
-
-Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
-
-Assert ServerVersion >= ApiServerVersions.SEC_DEF_OPT_PARAMS_REQ, "Option parameters requests not supported"
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.RequestOptionParameters
-
-Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pRequestId, IdTypeContractData)
-
-GIB.Log "Requesting option parameters: " & _
-        "requester id=" & pRequestId & _
-        "; api id=" & lApiId & _
-        "; symbol=" & pUnderlyingSymbol & _
-        "; exchange=" & pExchange & _
-        "; underlying sectype=" & TwsSecTypeToShortString(pUnderlyingSecType) & _
-        "; underlying conid=" & pUnderlyingConId, _
-        ModuleName, ProcName, , LogLevelDetail
-
-mWriter.AddLong lApiId, "Request Id"
-mWriter.AddString pUnderlyingSymbol, "Underlying Symbol"
-mWriter.AddString pExchange, "Exchange"
-mWriter.AddString TwsSecTypeToShortString(pUnderlyingSecType), "Underlying SecType"
-mWriter.AddLong pUnderlyingConId, "Underlying ConId"
-mWriter.Send
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestPositions()
@@ -1943,23 +1806,25 @@ On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
+AssertArgument mServerVersion >= MIN_SERVER_VER_ACCT_SUMMARY, "Position requests not supported"
+
 Const VERSION = 1
 
-GIB.Log "Requesting positions", ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting positions", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_POSITIONS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestRealTimeBars( _
                 ByVal pTickerId As Long, _
-                ByVal pContractSpec As TwsContractSpecifier, _
+                ByVal pContract As TwsContract, _
                 ByVal pBarSize As Long, _
                 ByVal pWhatToShow As String, _
                 ByVal pUseRTH As Boolean)
@@ -1968,28 +1833,41 @@ On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-Const VERSION = 3
+AssertArgument mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Or (pContract.TradingClass = "" And pContract.ConId = 0), "ConId and TradingClass properties in RequestRealTimeBars not supported"
+
+Const VERSION = 2
 
 Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pTickerId, IdTypeHistoricalData)
+lApiId = gGetTwsHistRequestIdFromCallersRequestId(pTickerId)
 
-GIB.Log "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContractSpec.ToString, ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting realtime bars: requester id=" & pTickerId & "; api id=" & lApiId & "; contract=" & pContract.ToString, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_REAL_TIME_BARS
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong lApiId, "TickerId"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString lApiId, "TickerId"
 
-mWriter.AddContract pContractSpec
-mWriter.AddLong pBarSize, "BarSize"   ' this parameter is not currently used
+' send contract fields
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.ConId, "ConId"
+mWriter.AddString pContract.Symbol, "Symbol"
+mWriter.AddString gTwsSecTypeToShortString(pContract.Sectype), "Sectype"
+mWriter.AddString pContract.Expiry, "Expiry"
+mWriter.AddString pContract.Strike, "Strike"
+mWriter.AddString gTwsOptionRightToString(pContract.OptRight), "Right"
+mWriter.AddString IIf(pContract.Multiplier = 1, "", pContract.Multiplier), "Multiplier"
+mWriter.AddString pContract.Exchange, "Exchange"
+mWriter.AddString pContract.PrimaryExch, "PrimaryExch"
+mWriter.AddString pContract.CurrencyCode, "Currency"
+mWriter.AddString UCase$(pContract.LocalSymbol), "LocalSymbol"
+If mServerVersion >= MIN_SERVER_VER_TRADING_CLASS Then mWriter.AddString pContract.TradingClass, "TradingClass"
+mWriter.AddString pBarSize, "BarSize"   ' this parameter is not currently used
 mWriter.AddString pWhatToShow, "WhatToShow"
 mWriter.AddBoolean pUseRTH, "UseRTH"
-mWriter.AddString "", "Options"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub RequestScannerParameters()
@@ -2000,40 +1878,31 @@ Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
 Const VERSION = 1
 
-GIB.Log "Requesting scanner parameters", ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting scanner parameters", ModuleName, ProcName
 
 mWriter.AddMessageId REQ_SCANNER_PARAMETERS
-mWriter.AddLong VERSION, "Version"
+mWriter.AddString VERSION, "Version"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub RequestScannerSubscription( _
-                ByVal pRequestId As Long, _
-                ByVal pSubscription As TwsScannerSubscription, _
-                ByVal pSubscriptionOptions As Parameters, _
-                ByVal pFilterOptions As Parameters)
+Public Sub RequestScannerSubscription(ByVal pTickerId As Long, ByVal pSubscription As TwsScannerSubscription)
 Const ProcName As String = "RequestScannerSubscription"
 On Error GoTo Err
 
 Assert mConnectionState = TwsConnectionStates.TwsConnConnected, "Not connected"
 
-Const VERSION = 4
+Const VERSION = 3
 
-Dim lApiId As Long
-lApiId = GIdManager.GetTwsId(pRequestId, IdTypeScanner)
-
-GIB.Log "Requesting scanner subscription: requester id=" & pRequestId & _
-        "; api id=" & lApiId, _
-        ModuleName, ProcName, , LogLevelDetail
+gLog "Requesting scanner subscription: requester id=" & pTickerId, ModuleName, ProcName
 
 mWriter.AddMessageId REQ_SCANNER_SUBSCRIPTION
-If mServerVersion < SCANNER_GENERIC_OPTS Then mWriter.AddLong VERSION, "Version"
-mWriter.AddLong lApiId, "Request Id"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString pTickerId, "Ticker Id"
 mWriter.AddLongMax pSubscription.NumberOfRows, "NumberOfRows"
 mWriter.AddString pSubscription.Instrument, "Instrument"
 mWriter.AddString pSubscription.LocationCode, "LocationCode"
@@ -2047,27 +1916,20 @@ mWriter.AddString pSubscription.MoodyRatingAbove, "MoodyRatingAbove"
 mWriter.AddString pSubscription.MoodyRatingBelow, "MoodyRatingBelow"
 mWriter.AddString pSubscription.SpRatingAbove, "SpRatingAbove"
 mWriter.AddString pSubscription.SpRatingBelow, "SpRatingBelow"
-mWriter.AddString pSubscription.MaturityDateAbove, "MaturityDateAbove"
+mWriter.AddString pSubscription.MaturityDateAbove, ""
 mWriter.AddString pSubscription.MaturityDateBelow, "MaturityDateBelow"
 mWriter.AddDoubleMax pSubscription.CouponRateAbove, "CouponRateAbove"
 mWriter.AddDoubleMax pSubscription.CouponRateBelow, "CouponRateBelow"
-mWriter.AddBoolean pSubscription.ExcludeConvertible, "ExcludeConvertible"
+mWriter.AddString pSubscription.ExcludeConvertible, "ExcludeConvertible"
 mWriter.AddLongMax pSubscription.AverageOptionVolumeAbove, "AverageOptionVolumeAbove"
-mWriter.AddString pSubscription.ScannerSettingPairs, "SettingPairs"
+mWriter.AddString pSubscription.ScannerSettingPairs, "ScannerSettingPairs"
 mWriter.AddString pSubscription.StockTypeFilter, "StockTypeFilter"
-
-If ServerVersion >= ApiServerVersions.SCANNER_GENERIC_OPTS Then
-    mWriter.AddTagValues pFilterOptions, "FilterOptions"
-End If
-
-mWriter.AddTagValues pSubscriptionOptions, "SubscriptionOptions"
-
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
+gHandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Public Sub SetTwsLogLevel(ByVal pLogLevel As TwsLogLevels)
@@ -2097,14 +1959,14 @@ On Error GoTo Err
 Const VERSION = 1
 
 mWriter.AddMessageId SET_SERVER_LOGLEVEL
-mWriter.AddLong VERSION, "Version"
-mWriter.AddLong mLogLevel, "Loglevel"
+mWriter.AddString VERSION, "Version"
+mWriter.AddString mLogLevel, "Loglevel"
 mWriter.Send
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Sub setConnectionState(ByVal pState As TwsConnectionStates, ByVal pMessage As String)
@@ -2118,7 +1980,7 @@ If Not mConnectionStatusConsumer Is Nothing Then mConnectionStatusConsumer.Notif
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Sub startPerformanceTLIPeriod()
@@ -2131,7 +1993,7 @@ Set mPerformanceTLIPeriod = GetGlobalTimerList.Add(Nothing, _
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Sub startPerformanceTLISecond()
@@ -2145,7 +2007,7 @@ Set mPerformanceTLISecond = GetGlobalTimerList.Add(Nothing, _
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Sub startPerformanceLogging()
@@ -2153,14 +2015,14 @@ Const ProcName As String = "startPerformanceLogging"
 On Error GoTo Err
 
 If Not mLogApiMessageStats Then Exit Sub
-If Not GIB.Logger.IsLoggable(LogLevelNormal) Then Exit Sub
+If Not gLogger.IsLoggable(LogLevelNormal) Then Exit Sub
 startPerformanceTLISecond
 startPerformanceTLIPeriod
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Sub stopPerformanceLogging()

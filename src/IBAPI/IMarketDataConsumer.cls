@@ -109,14 +109,22 @@ Public Sub NotifyTickPrice( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As TwsTickTypes, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long, _
-                ByVal pCanAutoExecute As Boolean)
+                ByVal pSize As BoxedDecimal, _
+                ByRef pAttributes As TwsTickAttributes)
+End Sub
+
+Public Sub NotifyTickRequestParams( _
+                ByVal pTickerId As Long, _
+                ByVal pMinTick As Double, _
+                ByVal pBboExchange As String, _
+                ByVal pSnapshotPermissions As Long)
+
 End Sub
 
 Public Sub NotifyTickSize( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As Long, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
 End Sub
 
 Public Sub NotifyTickString( _

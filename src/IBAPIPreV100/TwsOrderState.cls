@@ -46,17 +46,9 @@ Private Const ModuleName                            As String = "TwsOrderState"
 
 Private mStatus                                     As String
 
-Public InitMarginBefore As Double
-Public MaintMarginBefore As Double
-Public EquityWithLoanBefore As Double
-
-Public InitMarginChange As Double
-Public MaintMarginChange As Double
-Public EquityWithLoanChange As Double
-
-Public InitMarginAfter As Double
-Public MaintMarginAfter As Double
-Public EquityWithLoanAfter As Double
+Private mInitMargin                                 As String
+Private mMaintMargin                                As String
+Private mEquityWithLoan                             As String
 
 Private mCommission                                 As Double
 Private mMinCommission                              As Double
@@ -87,6 +79,30 @@ End Property
 
 Public Property Get Status() As String
 Status = mStatus
+End Property
+
+Public Property Let InitMargin(ByVal Value As String)
+mInitMargin = Value
+End Property
+
+Public Property Get InitMargin() As String
+InitMargin = mInitMargin
+End Property
+
+Public Property Let MaintMargin(ByVal Value As String)
+mMaintMargin = Value
+End Property
+
+Public Property Get MaintMargin() As String
+MaintMargin = mMaintMargin
+End Property
+
+Public Property Let EquityWithLoan(ByVal Value As String)
+mEquityWithLoan = Value
+End Property
+
+Public Property Get EquityWithLoan() As String
+EquityWithLoan = mEquityWithLoan
 End Property
 
 Public Property Let Commission(ByVal Value As Double)

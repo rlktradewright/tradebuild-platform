@@ -77,7 +77,7 @@ Public Sub NotifyMarketDepth( _
                 ByVal pOperation As TwsDOMOperations, _
                 ByVal pSide As TwsDOMSides, _
                 ByVal pPrice As Double, _
-                ByVal pSize As Long)
+                ByVal pSize As BoxedDecimal)
                 
 End Sub
 

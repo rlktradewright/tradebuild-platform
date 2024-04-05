@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TwsOrderState"
+Attribute VB_Name = "TwsExecution"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -38,32 +38,28 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TwsOrderState"
+Private Const ModuleName                            As String = "TwsExecution"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mStatus                                     As String
-
-Public InitMarginBefore As Double
-Public MaintMarginBefore As Double
-Public EquityWithLoanBefore As Double
-
-Public InitMarginChange As Double
-Public MaintMarginChange As Double
-Public EquityWithLoanChange As Double
-
-Public InitMarginAfter As Double
-Public MaintMarginAfter As Double
-Public EquityWithLoanAfter As Double
-
-Private mCommission                                 As Double
-Private mMinCommission                              As Double
-Private mMaxCommission                              As Double
-Private mCommissionCurrency                         As String
-    
-Private mWarningText                                As String
+Public OrderId                                    As Long
+Public ClientID                                   As Long
+Public ExecId                                     As String
+Public Time                                       As String
+Public AcctNumber                                 As String
+Public Exchange                                   As String
+Public Side                                       As String
+Public Shares                                     As Long
+Public Price                                      As Double
+Public PermId                                     As Long
+Public Liquidation                                As Boolean
+Public CumQty                                     As Long
+Public AvgPrice                                   As Double
+Public OrderRef                                   As String
+Public EvRule                                     As String
+Public EvMultiplier                               As Double
 
 '@================================================================================
 ' Class Event Handlers
@@ -80,54 +76,6 @@ Private mWarningText                                As String
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Public Property Let Status(ByVal Value As String)
-mStatus = Value
-End Property
-
-Public Property Get Status() As String
-Status = mStatus
-End Property
-
-Public Property Let Commission(ByVal Value As Double)
-mCommission = Value
-End Property
-
-Public Property Get Commission() As Double
-Commission = mCommission
-End Property
-
-Public Property Let MinCommission(ByVal Value As Double)
-mMinCommission = Value
-End Property
-
-Public Property Get MinCommission() As Double
-MinCommission = mMinCommission
-End Property
-
-Public Property Let MaxCommission(ByVal Value As Double)
-mMaxCommission = Value
-End Property
-
-Public Property Get MaxCommission() As Double
-MaxCommission = mMaxCommission
-End Property
-
-Public Property Let CommissionCurrency(ByVal Value As String)
-mCommissionCurrency = Value = Value
-End Property
-
-Public Property Get CommissionCurrency() As String
-CommissionCurrency = mCommissionCurrency
-End Property
-
-Public Property Let WarningText(ByVal Value As String)
-mWarningText = Value
-End Property
-
-Public Property Get WarningText() As String
-WarningText = mWarningText
-End Property
 
 '@================================================================================
 ' Methods

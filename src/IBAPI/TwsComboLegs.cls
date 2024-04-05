@@ -83,7 +83,7 @@ mComboLegs.Add pComboLeg
 Exit Sub
 
 Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Public Function Item(ByVal pIndex As Long) As TwsComboLeg
@@ -96,7 +96,7 @@ Set Item = mComboLegs(pIndex)
 Exit Function
 
 Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function NewEnum() As IUnknown

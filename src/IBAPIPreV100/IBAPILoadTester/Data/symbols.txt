@@ -7,9 +7,6 @@
 // options are not supported.
 //
 // Lines beginning with // and blank lines are ignored.
-//
-// A line beginning EXIT causes no further tickers to be 
-// started.
 
 // NB: fields on each line are separated by commas. Tabs can
 // be used for alignment. You may omit blank fields that have
@@ -24,17 +21,13 @@ GBP		,CASH	,	,IDEALPRO	,USD
 USD		,CASH	,	,IDEALPRO	,JPY
 
 // Futures
-ES		,FUT	,202012	,GLOBEX		,		,		,		,true
-YM		,FUT	,202012	,ECBOT		,		,		,		,true
-Z		,FUT	,202012	,ICEEU		,		,		,		,true
-GBL		,FUT	,202012	,DTB
-DAX		,FUT	,202012	,DTB		,EUR		,		,25
-ESTX50		,FUT	,202012	,DTB
-EUR		,FUT	,202012	,GLOBEX
-
-//////////////////////////////////////////////////
-EXIT
-//////////////////////////////////////////////////
+ES		,FUT	,201709	,GLOBEX		,		,		,		,true
+YM		,FUT	,201709	,ECBOT		,		,		,		,true
+Z		,FUT	,201709	,ICEEU		,		,		,		,true
+GBL		,FUT	,201709	,DTB
+DAX		,FUT	,201709	,DTB		,EUR		,		,25
+ESTX50		,FUT	,201709	,DTB
+EUR		,FUT	,201709	,GLOBEX
 
 
 // NASDAQ stocks

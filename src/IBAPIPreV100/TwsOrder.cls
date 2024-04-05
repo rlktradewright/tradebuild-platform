@@ -40,6 +40,10 @@ Option Explicit
 
 Private Const ModuleName                            As String = "TwsOrder"
 
+'@================================================================================
+' Member variables
+'@================================================================================
+
 Private Const CUSTOMER = 0
 Private Const FIRM = 1
 Private Const OPT_UNKNOWN = "?"
@@ -52,17 +56,14 @@ Private Const OPT_SPECIALIST = "y"
 Private Const AUCTION_MATCH = 1
 Private Const AUCTION_IMPROVEMENT = 2
 Private Const AUCTION_TRANSPARENT = 3
-
-'@================================================================================
-' Member variables
-'@================================================================================
+Private Const EMPTY_STR = ""
 
 ' main Order fields
 Public OrderId                                      As Long
 Public ClientID                                     As Long
 Public PermId                                       As Long
 Public Action                                       As TwsOrderActions
-Public TotalQuantity                                As BoxedDecimal
+Public TotalQuantity                                As Long
 Public OrderType                                    As TwsOrderTypes
 Public LmtPrice                                     As Double
 Public AuxPrice                                     As Double
@@ -94,6 +95,7 @@ Public TrailingPercent                              As Double ' specify the perc
 
 ' Financial advisors only
 Public FaGroup                                      As String
+Public FaProfile                                    As String
 Public FaMethod                                     As String
 Public FaPercentage                                 As String
 
@@ -106,7 +108,9 @@ Public ExemptCode                                   As Long
 
 ' SMART routing only
 Public DiscretionaryAmt                             As Double
-
+Public ETradeOnly                                   As Boolean
+Public FirmQuoteOnly                                As Boolean
+Public NbboPriceCap                                 As Double
 Public OptOutSmartRouting                           As Boolean
 
 ' BOX or VOL ORDERS ONLY
@@ -166,166 +170,19 @@ Public ClearingIntent                               As String ' "" (Default), "I
 
 ' ALGO ORDERS ONLY
 Public AlgoStrategy                                 As String
-Private mAlgoParams                                 As Parameters
+Private mAlgoParams()                               As TwsTagValue
 
 ' What-if
 Public WhatIf                                       As Boolean
-
-Public AlgoId                                       As String
-
+        
 ' Not Held
 Public NotHeld                                      As Boolean
 
 ' Smart combo routing params
-Private mSmartComboRoutingParams                    As Parameters
+Private mSmartComboRoutingParams()                  As TwsTagValue
 
 ' order combo legs
-Private mComboLegs()                                As TwsOrderComboLeg
-
-Private mOptions                                    As Parameters
-
-Public Solicited As Boolean
-Public ModelCode As String
-
-''' <summary>
-''' A regulatory attribute that applies to all US Commodity (Futures) Exchanges,
-''' provided to allow client to comply with CFTC Tag 50 Rules
-''' </summary>
-''' <returns></returns>
-Public ExtOperator As String
-Public CashQty As Double
-Public Mifid2DecisionMaker As String
-Public Mifid2DecisionAlgo As String
-Public Mifid2ExecutionTrader As String
-Public Mifid2ExecutionAlgo As String
-
-Public DontUseAutoPriceForHedge As Boolean
-Public RandomizeSize As Boolean
-Public RandomizePrice As Boolean
-    
-Public AutoCancelDate As String
-Public FilledQuantity As BoxedDecimal
-
-Public ReferenceFutureContractId As Long
-Public AutoCancelParent As Boolean
-Public Shareholder As String
-Public ImbalanceOnly As Boolean
-Public RouteMarketableToBbo As Boolean
-Public ParentPermanentId As BoxedDecimal
-Public AdvancedErrorOverride As String
-Public ManualOrderTime As String
-Public MinimumTradeQuantity As Long
-Public MinimumCompeteSize As Long
-Public CompeteAgainstBestOffset As Double
-Public MidOffsetAtWhole As Double
-Public MidOffsetAtHalf As Double
-
-''' <summary>
-''' For Pegged-to-benchmark orders, contains the Contract Id Of the contract against which the order will be pegged.
-''' </summary>
-''' <returns></returns>
-Public ReferenceContractId As Long
-
-''' <summary>
-''' For Pegged-to-benchmark orders, indicates whether the order's pegged price should increase or decreases.
-''' </summary>
-''' <returns></returns>
-Public IsPeggedChangeAmountDecrease As Boolean
-
-''' <summary>
-''' For Pegged-to-benchmark orders, specifies the amount by which the order's pegged price should move.
-''' </summary>
-''' <returns></returns>
-Public PeggedChangeAmount As Double
-
-''' <summary>
-''' For Pegged-to-benchmark orders, specifies the amount the reference contract needs to move to adjust the pegged order.
-''' </summary>
-''' <returns></returns>
-Public ReferenceChangeAmount As Double
-
-''' <summary>
-''' for Pegged-to-benchmark orders, specifies the exchange for the reference contract.
-''' </summary>
-''' <returns></returns>
-Public ReferenceExchange As String
-
-''' <summary>
-''' For Adjusted Stop orders, the parent order will be adjusted to the specified type When the adjusted trigger price is penetrated.
-''' </summary>
-''' <returns></returns>
-Public AdjustedOrderType As TwsOrderTypes
-
-''' <summary>
-''' - DOC_TODO
-''' </summary>
-''' <returns></returns>
-Public TriggerPrice As Double
-
-''' <summary>
-''' - DOC_TODO
-''' </summary>
-''' <returns></returns>
-Public LmtPriceOffset As Double
-
-''' <summary>
-''' For Adjusted Stop orders, specifies the Stop price Of the adjusted (STP) parent.
-''' </summary>
-''' <returns></returns>
-Public AdjustedStopPrice As Double
-
-''' <summary>
-''' For Adjusted Stop orders, specifies the Stop limit price Of the adjusted (STPL LMT) parent.
-''' </summary>
-''' <returns></returns>
-Public AdjustedStopLimitPrice As Double
-
-''' <summary>
-''' For Adjusted Stop orders, specifies the trailing amount Of the adjusted (TRAIL) parent.
-''' </summary>
-''' <returns></returns>
-Public AdjustedTrailingAmount As Double
-
-''' <summary>
-''' For Adjusted Stop orders, specifies whether the trailing unit is an amount (set To 0) or a percentage (set To 1).
-''' </summary>
-''' <returns></returns>
-Public AdjustableTrailingUnit As Long
-
-' Conditions not implemented
-'''' <summary>
-'''' Conditions that determine when the order will be activated or canceled.
-'''' </summary>
-'''' <returns></returns>
-'Private mConditions() As Object ' TwsOrderCondition
-'
-'''' <summary>
-'''' Indicates whether conditions will also be valid outside Regular Trading Hours.
-'''' </summary>
-'''' <returns></returns>
-'Public ConditionsIgnoreRth As Boolean
-'
-'''' <summary>
-'''' Specifies whether conditions determine if the order should become active or be canceled.
-'''' </summary>
-'''' <returns></returns>
-'Public ConditionsCancelOrder As Boolean
-
-''' <summary>
-''' Define the Soft Dollar Tier used for the order. Only provided for registered professional advisors And hedge And mutual funds.
-''' </summary>
-''' <returns></returns>
-Public Tier As New TwsSoftDollarTier
-
-Public IsOmsContainer As Boolean
-
-Public DiscretionaryUpToLimitPrice As Boolean
-
-Public UsePriceMgmtAlgo As Boolean
-
-Public Duration As Long
-
-Public PostToAts As Long
+Private mOrderComboLegs()                           As TwsOrderComboLeg
 
 '@================================================================================
 ' Class Event Handlers
@@ -334,12 +191,18 @@ Public PostToAts As Long
 Private Sub Class_Initialize()
 LmtPrice = MaxDouble
 AuxPrice = MaxDouble
+ActiveStartTime = EMPTY_STR
+ActiveStopTime = EMPTY_STR
 OutsideRth = False
+OpenClose = "O"
 Origin = CUSTOMER
 Transmit = True
+DesignatedLocation = ""
 ExemptCode = -1
 MinQty = MaxLong
 PercentOffset = MaxDouble
+NbboPriceCap = MaxDouble
+OptOutSmartRouting = False
 StartingPrice = MaxDouble
 StockRefPrice = MaxDouble
 Delta = MaxDouble
@@ -349,6 +212,14 @@ Volatility = MaxDouble
 VolatilityType = MaxLong
 DeltaNeutralOrderType = TwsOrderTypeNone
 DeltaNeutralAuxPrice = MaxDouble
+DeltaNeutralConId = 0
+DeltaNeutralSettlingFirm = EMPTY_STR
+DeltaNeutralClearingAccount = EMPTY_STR
+DeltaNeutralClearingIntent = EMPTY_STR
+DeltaNeutralOpenClose = EMPTY_STR
+DeltaNeutralShortSale = False
+DeltaNeutralShortSaleSlot = 0
+DeltaNeutralDesignatedLocation = EMPTY_STR
 ReferencePriceType = MaxLong
 TrailStopPrice = MaxDouble
 TrailingPercent = MaxDouble
@@ -360,22 +231,13 @@ ScalePriceIncrement = MaxDouble
 ScalePriceAdjustValue = MaxDouble
 ScalePriceAdjustInterval = MaxLong
 ScaleProfitOffset = MaxDouble
+ScaleAutoReset = False
 ScaleInitPosition = MaxLong
 ScaleInitFillQty = MaxLong
-TriggerPrice = MaxDouble
-LmtPriceOffset = MaxDouble
-AdjustedStopPrice = MaxDouble
-AdjustedStopLimitPrice = MaxDouble
-AdjustedTrailingAmount = MaxDouble
-CashQty = MaxDouble
-ReferenceFutureContractId = MaxLong
-Duration = MaxLong
-PostToAts = MaxLong
-MinimumTradeQuantity = MaxLong
-MinimumCompeteSize = MaxLong
-CompeteAgainstBestOffset = MaxDouble
-MidOffsetAtWhole = MaxDouble
-MidOffsetAtHalf = MaxDouble
+ScaleRandomPercent = False
+ScaleTable = EMPTY_STR
+WhatIf = False
+NotHeld = False
 End Sub
 
 '@================================================================================
@@ -446,11 +308,11 @@ End Sub
 'PermId = mPermId
 'End Property
 '
-'Public Property Let TotalQuantity(ByVal Value As Double)
+'Public Property Let TotalQuantity(ByVal Value As Long)
 'mTotalQuantity = Value
 'End Property
 '
-'Public Property Get TotalQuantity() As Double
+'Public Property Get TotalQuantity() As Long
 'TotalQuantity = mTotalQuantity
 'End Property
 '
@@ -886,12 +748,12 @@ End Sub
 'AlgoStrategy = mAlgoStrategy
 'End Property
 '
-Public Property Let AlgoParams(ByVal Value As Parameters)
-Set mAlgoParams = Value
+Public Property Let AlgoParams(ByRef Value() As TwsTagValue)
+mAlgoParams = Value
 End Property
 
-Public Property Get AlgoParams() As Parameters
-Set AlgoParams = mAlgoParams
+Public Property Get AlgoParams() As TwsTagValue()
+AlgoParams = mAlgoParams
 End Property
 
 'Public Property Let WhatIf(ByVal Value As Boolean)
@@ -910,28 +772,20 @@ End Property
 'NotHeld = mNotHeld
 'End Property
 
-Public Property Let ComboLegs(ByRef Value() As TwsOrderComboLeg)
-mComboLegs = Value
+Public Property Let SmartComboRoutingParams(ByRef Value() As TwsTagValue)
+mSmartComboRoutingParams = Value
 End Property
 
-Public Property Get ComboLegs() As TwsOrderComboLeg()
-ComboLegs = mComboLegs
+Public Property Get SmartComboRoutingParams() As TwsTagValue()
+SmartComboRoutingParams = mSmartComboRoutingParams
 End Property
 
-Public Property Let Options(ByVal Value As Parameters)
-Set mOptions = Value
+Public Property Let OrderComboLegs(ByRef Value() As TwsOrderComboLeg)
+mOrderComboLegs = Value
 End Property
 
-Public Property Get Options() As Parameters
-Set Options = mOptions
-End Property
-
-Public Property Let SmartComboRoutingParams(ByVal Value As Parameters)
-Set mSmartComboRoutingParams = Value
-End Property
-
-Public Property Get SmartComboRoutingParams() As Parameters
-Set SmartComboRoutingParams = mSmartComboRoutingParams
+Public Property Get OrderComboLegs() As TwsOrderComboLeg()
+OrderComboLegs = mOrderComboLegs
 End Property
 
 '@================================================================================

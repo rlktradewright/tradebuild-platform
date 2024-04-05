@@ -80,14 +80,14 @@ End Sub
 
 Public Sub NotifyExecution( _
                 ByVal pReqId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pExecution As TwsExecution)
 
 End Sub
 
 Public Sub NotifyOpenOrder( _
                 ByVal pOrderId As Long, _
-                ByVal pContract As TwsContract, _
+                ByVal pContractSpec As TwsContractSpecifier, _
                 ByVal pOrder As TwsOrder, _
                 ByVal pOrderState As TwsOrderState)
 
@@ -96,14 +96,15 @@ End Sub
 Public Sub NotifyOrderStatus( _
                 ByVal pOrderId As Long, _
                 ByVal pStatus As String, _
-                ByVal pFilled As Long, _
-                ByVal pRemaining As Long, _
+                ByVal pFilled As BoxedDecimal, _
+                ByVal pRemaining As BoxedDecimal, _
                 ByVal pAvgFillPrice As Double, _
                 ByVal pPermId As Long, _
                 ByVal pParentId As Long, _
                 ByVal pLastFillPrice As Double, _
                 ByVal pClientId As Long, _
-                ByVal pWhyHeld As String)
+                ByVal pWhyHeld As String, _
+                ByVal pMarketCapPrice As Double)
 
 End Sub
 

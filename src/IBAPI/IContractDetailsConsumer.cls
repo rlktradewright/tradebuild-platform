@@ -64,16 +64,34 @@ Private Const ModuleName                            As String = "IContractDetail
 ' Methods
 '@================================================================================
 
-Public Sub EndContractDetails(ByVal pRequestId As Long)
+Public Sub EndContracts(ByVal pRequestId As Long)
 End Sub
 
-Public Sub NotifyContract(ByVal pRequestId As Long, ByRef pContractDetails As TwsContractDetails)
+Public Sub EndOptionParameters(ByVal pRequestIs As Long)
+End Sub
+
+Public Sub NotifyContract(ByVal pRequestId As Long, ByVal pTwsContract As TwsContract)
 End Sub
 
 Public Sub NotifyError( _
                 ByVal pRequestId As Long, _
                 ByVal pErrorCode As Long, _
                 ByVal pErrorMsg As String)
+End Sub
+
+Sub NotifyMarketRule( _
+                ByVal pMarketRuleId As Long, _
+                ByRef pPriceIncrement() As TwsPriceIncrement)
+End Sub
+
+Public Sub NotifyOptionParameter( _
+                ByVal pRequestId As Long, _
+                ByVal pExchange As String, _
+                ByVal pUnderlyingContractId As Long, _
+                ByVal pTradingClass As String, _
+                ByVal pMultiplier As Double, _
+                ByRef pExpirations() As String, _
+                ByRef pStrikes() As Double)
 End Sub
 
 '@================================================================================

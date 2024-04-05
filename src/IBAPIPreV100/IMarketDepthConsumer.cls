@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TwsOrderState"
+Attribute VB_Name = "IMarketDepthConsumer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,32 +38,11 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TwsOrderState"
+Private Const ModuleName                            As String = "IMarketDepthConsumer"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private mStatus                                     As String
-
-Public InitMarginBefore As Double
-Public MaintMarginBefore As Double
-Public EquityWithLoanBefore As Double
-
-Public InitMarginChange As Double
-Public MaintMarginChange As Double
-Public EquityWithLoanChange As Double
-
-Public InitMarginAfter As Double
-Public MaintMarginAfter As Double
-Public EquityWithLoanAfter As Double
-
-Private mCommission                                 As Double
-Private mMinCommission                              As Double
-Private mMaxCommission                              As Double
-Private mCommissionCurrency                         As String
-    
-Private mWarningText                                As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -81,57 +60,30 @@ Private mWarningText                                As String
 ' Properties
 '@================================================================================
 
-Public Property Let Status(ByVal Value As String)
-mStatus = Value
-End Property
-
-Public Property Get Status() As String
-Status = mStatus
-End Property
-
-Public Property Let Commission(ByVal Value As Double)
-mCommission = Value
-End Property
-
-Public Property Get Commission() As Double
-Commission = mCommission
-End Property
-
-Public Property Let MinCommission(ByVal Value As Double)
-mMinCommission = Value
-End Property
-
-Public Property Get MinCommission() As Double
-MinCommission = mMinCommission
-End Property
-
-Public Property Let MaxCommission(ByVal Value As Double)
-mMaxCommission = Value
-End Property
-
-Public Property Get MaxCommission() As Double
-MaxCommission = mMaxCommission
-End Property
-
-Public Property Let CommissionCurrency(ByVal Value As String)
-mCommissionCurrency = Value = Value
-End Property
-
-Public Property Get CommissionCurrency() As String
-CommissionCurrency = mCommissionCurrency
-End Property
-
-Public Property Let WarningText(ByVal Value As String)
-mWarningText = Value
-End Property
-
-Public Property Get WarningText() As String
-WarningText = mWarningText
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub NotifyError( _
+                ByVal pTickerId As Long, _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMsg As String)
+End Sub
+
+Public Sub NotifyMarketDepth( _
+                ByVal pTickerId As Long, _
+                ByVal pPosition As Long, _
+                ByVal pMarketMaker As String, _
+                ByVal pOperation As TwsDOMOperations, _
+                ByVal pSide As TwsDOMSides, _
+                ByVal pPrice As Double, _
+                ByVal pSize As Long)
+                
+End Sub
+
+Public Sub ResetMarketDepth(ByVal pReEstablish As Boolean)
+
+End Sub
 
 '@================================================================================
 ' Helper Functions

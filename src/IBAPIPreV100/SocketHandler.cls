@@ -108,7 +108,7 @@ ElseIf ev.State = TimerListItemStates.TimerListItemStateCancelled Then
 End If
 Exit Sub
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -122,7 +122,7 @@ ReleaseSocket
 handleTwsDisconnection "closed by peer", False
 Exit Sub
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mSocket_Connect()
@@ -147,7 +147,7 @@ result = WSAIoctl(mSocket.SocketHandle, _
         0, _
         bytesReturned, _
         ov, _
-        AddressOf WSAIoctlCompletionRoutine)
+        AddressOf gWSAIoctlCompletionRoutine)
 If result <> 0 Then
     result = Err.LastDllError
     Assert result <> WSA_IO_PENDING, "WSAIoctl returned " & result
@@ -163,7 +163,7 @@ RaiseEvent Connected
 Exit Sub
 
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mSocket_DataArrival( _
@@ -179,15 +179,15 @@ mSocket.GetData lSocketInputData, vbArray + vbByte
 Dim lBytesReceived As Long
 lBytesReceived = UBound(lSocketInputData) + 1
 
-If GIB.SocketLogger.IsLoggable(mRawApiMessageLogLevel) Then
-    GIB.SocketLogger.Log ByteBufferToString("In buf: ", lSocketInputData), ProcName, ModuleName, mRawApiMessageLogLevel
+If gSocketLogger.IsLoggable(mRawApiMessageLogLevel) Then
+    gSocketLogger.Log showBuffer("In buf: ", lSocketInputData), ProcName, ModuleName, mRawApiMessageLogLevel
 End If
 
 mBufferedReader.AddData lSocketInputData
 
 Exit Sub
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 Private Sub mSocket_Error(ByVal pNumber As Integer, _
@@ -257,7 +257,7 @@ Case sckAddressNotAvailable, _
     ReleaseSocket
     If Not mIsConnected Then
         mIsConnecting = False
-        GIB.Log "Failed to connect to Tws" & _
+        gLog "Failed to connect to Tws" & _
             IIf(mConnectionRetryIntervalSecs <> 0, " - retrying in " & mConnectionRetryIntervalSecs & " seconds ", " ") & _
             pDescription & ": " & getConnectionString, _
             ModuleName, ProcName
@@ -266,7 +266,7 @@ Case sckAddressNotAvailable, _
         If mConnectionRetryIntervalSecs <> 0 Then retryConnection
     Else
         mIsConnected = False
-        GIB.Log "Socket error " & pNumber & ": " & _
+        gLog "Socket error " & pNumber & ": " & _
                     pDescription & ": " & _
                     getConnectionString, _
                     ModuleName, ProcName
@@ -294,7 +294,7 @@ End Select
 
 Exit Sub
 Err:
-GIB.NotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
+gNotifyUnhandledError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -331,7 +331,7 @@ createsocket
 
 Dim s As String
 s = "Connecting to Tws: " & getConnectionString
-GIB.Log s, ModuleName, ProcName
+gLog s, ModuleName, ProcName
 
 mSocket.Connect mServer, mPort
 mIsConnecting = True
@@ -341,7 +341,7 @@ RaiseEvent Connecting
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub Disconnect( _
@@ -361,13 +361,13 @@ End If
 
 ReleaseSocket
 
-GIB.Log "Disconnected from: " & getConnectionString & ": " & pReason, ModuleName, ProcName
+gLog "Disconnected from: " & getConnectionString & ": " & pReason, ModuleName, ProcName
 handleTwsDisconnection pReason, pClosedByApplication
 RaiseEvent Disconnected(pReason)
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -390,28 +390,19 @@ Else
 End If
 End Sub
 
-Friend Sub SendBytes(ByRef pData() As Byte)
-Const ProcName As String = "SendBytes"
+Friend Sub Send(ByRef pData() As Byte)
+Const ProcName As String = "Send"
 On Error GoTo Err
 
+If gSocketLogger.IsLoggable(mRawApiMessageLogLevel) Then
+    gSocketLogger.Log showBuffer("Out buf: ", pData), ProcName, ModuleName, mRawApiMessageLogLevel
+End If
 mSocket.SendData pData
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Friend Sub SendLong(ByVal pData As Long)
-Const ProcName As String = "SendLong"
-On Error GoTo Err
-
-mSocket.SendData pData
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -428,7 +419,7 @@ Set mSocket = mWinsockForm.Winsock1
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Function getConnectionString() As String
@@ -440,18 +431,18 @@ Private Sub handleTwsDisconnection(ByVal pMessage As String, ByVal pClosedByAppl
 Const ProcName As String = "handleTwsDisconnection"
 On Error GoTo Err
 
-GIB.Log "Connection to Tws closed: " & pMessage & ": " & getConnectionString, ModuleName, ProcName
+gLog "Connection to Tws closed: " & pMessage & ": " & getConnectionString, ModuleName, ProcName
 
 Set mSocket = Nothing
 mIsConnected = False
 
 RaiseEvent ConnectionClosed(pMessage)
-If Not pClosedByApplication Then retryConnection    ' 60
+If Not pClosedByApplication Then retryConnection
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Private Sub ReleaseSocket()
@@ -459,7 +450,7 @@ Const ProcName As String = "ReleaseSocket"
 On Error GoTo Err
 
 If Not mSocket Is Nothing Then
-    GIB.Log "Releasing socket: " & getConnectionString, ModuleName, ProcName
+    gLog "Releasing socket: " & getConnectionString, ModuleName, ProcName
     mSocket.Close
     Set mSocket = Nothing
     Unload mWinsockForm
@@ -469,20 +460,19 @@ End If
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Private Sub retryConnection(Optional ByVal pRetryInterval As Long = 0)
+Private Sub retryConnection()
 Const ProcName As String = "retryConnection"
 On Error GoTo Err
 
 Dim lRetryInterval As Long
 If mConnectionRetryIntervalSecs <> 0 Then lRetryInterval = mConnectionRetryIntervalSecs
-If pRetryInterval <> 0 Then lRetryInterval = pRetryInterval
 If mTempConnectionRetryIntervalSecs <> 0 And mTempConnectionRetryIntervalSecs < lRetryInterval Then lRetryInterval = mTempConnectionRetryIntervalSecs
 
 If lRetryInterval <> 0 Then
-    GIB.Log "Reconnecting in " & lRetryInterval & " seconds", ModuleName, ProcName
+    gLog "Reconnecting in " & lRetryInterval & " seconds", ModuleName, ProcName
     Set mConnectionTLI = GetGlobalTimerList.Add(Nothing, lRetryInterval, ExpiryTimeUnitSeconds)
     mRetryingConnection = True
     mTempConnectionRetryIntervalSecs = 0
@@ -491,9 +481,22 @@ End If
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
+Private Function showBuffer( _
+                ByRef pHeader As String, _
+                ByRef pBuffer() As Byte) As String
+Const ProcName As String = "showBuffer"
+On Error GoTo Err
+
+showBuffer = pHeader & Replace(StrConv(pBuffer, vbUnicode), Chr$(0), "_")
+
+Exit Function
+
+Err:
+gHandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
 
 
 

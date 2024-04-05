@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin VB.Form MainForm 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "API  Load Tester V100"
+   Caption         =   "API  Load Tester"
    ClientHeight    =   8055
    ClientLeft      =   360
    ClientTop       =   435
@@ -16,7 +16,7 @@ Begin VB.Form MainForm
       Height          =   285
       Left            =   1800
       TabIndex        =   2
-      Text            =   "645326819"
+      Text            =   "341952037"
       Top             =   840
       Width           =   1095
    End
@@ -456,7 +456,7 @@ Private mIBAPI                  As TwsAPI
 Private Sub Form_Load()
 InitialiseCommonControls
 ApplicationGroupName = "TradeWright"
-ApplicationName = "ApiLoadTesterV100"
+ApplicationName = "ApiLoadTester"
 
 SetupDefaultLogging Command
 
@@ -483,7 +483,7 @@ End Sub
 
 Private Sub ConnectButton_Click()
 If ConnectButton.Caption = "Connect" Then
-    Set mIBAPI = GetApi(ServerText, CLng(PortText), CLng(ClientIdText), pLogApiMessageStats:=True)
+    Set mIBAPI = GetAPI(ServerText, CLng(PortText), CLng(ClientIdText), , pLogApiMessageStats:=True)
     mIBAPI.ConnectionStatusConsumer = Me
     mIBAPI.ErrorAndNotificationConsumer = Me
     mIBAPI.MarketDataConsumer = Me
@@ -543,7 +543,7 @@ Next
 mNextTickerId = 0
 
 For i = 0 To mNextDepthTickerId - 1
-    mIBAPI.CancelMarketDepth i, False
+    mIBAPI.CancelMarketDepth i
     logMessage "Stopping market depth ticker " & i
 Next
 mNextDepthTickerId = 0
@@ -573,9 +573,7 @@ End Sub
 ' IConnectionStatusConsumer Members
 '================================================================================
 
-Private Sub IConnectionStatusConsumer_NotifyAPIConnectionStateChange( _
-                ByVal pState As IBBaseAPI.TwsConnectionStates, _
-                ByVal pMessage As String)
+Private Sub IConnectionStatusConsumer_NotifyAPIConnectionStateChange(ByVal pState As IBAPI970.TwsConnectionStates, ByVal pMessage As String)
 Select Case pState
 Case TwsConnNotConnected
     logMessage "Disconnected from TWS"
@@ -637,31 +635,27 @@ Private Sub IMarketDataConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErro
 logMessage "Market data error " & pErrorCode & "(" & pTickerId & "): " & pErrorMsg
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
+Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As IBAPI970.TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
 
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pValue As Double)
+Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal pTickType As IBAPI970.TwsTickTypes, ByVal pValue As Double)
 incrementTotalTicks
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pImpliedVol As Double, ByVal pDelta As Double, ByVal pOptPrice As Double, ByVal pPvDividend As Double, ByVal pGamma As Double, ByVal pVega As Double, ByVal pTheta As Double, ByVal pUndPrice As Double)
+Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As Long, ByVal pTickType As IBAPI970.TwsTickTypes, ByVal pImpliedVol As Double, ByVal pDelta As Double, ByVal pOptPrice As Double, ByVal pPvDividend As Double, ByVal pGamma As Double, ByVal pVega As Double, ByVal pTheta As Double, ByVal pUndPrice As Double)
 
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickPrice(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pPrice As Double, ByVal pSize As BoxedDecimal, ByRef pAttributes As TwsTickAttributes)
+Private Sub IMarketDataConsumer_NotifyTickPrice(ByVal pTickerId As Long, ByVal pTickType As IBAPI970.TwsTickTypes, ByVal pPrice As Double, ByVal pSize As Long, ByVal pCanAutoExecute As Boolean)
 incrementTotalTicks
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickRequestParams(ByVal pTickerId As Long, ByVal pMinTick As Double, ByVal pBboExchange As String, ByVal pSnapshotPermissions As Long)
+Private Sub IMarketDataConsumer_NotifyTickSize(ByVal pTickerId As Long, ByVal pTickType As Long, ByVal pSize As Long)
 incrementTotalTicks
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickSize(ByVal pTickerId As Long, ByVal pTickType As Long, ByVal pSize As BoxedDecimal)
-incrementTotalTicks
-End Sub
-
-Private Sub IMarketDataConsumer_NotifyTickString(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pValue As String)
+Private Sub IMarketDataConsumer_NotifyTickString(ByVal pTickerId As Long, ByVal pTickType As IBAPI970.TwsTickTypes, ByVal pValue As String)
 incrementTotalTicks
 End Sub
 
@@ -673,7 +667,7 @@ Private Sub IMarketDepthConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErr
 logMessage "Market depth error " & pErrorCode & "(" & pTickerId & "): " & pErrorMsg
 End Sub
 
-Private Sub IMarketDepthConsumer_NotifyMarketDepth(ByVal pTickerId As Long, ByVal pPosition As Long, ByVal pMarketMaker As String, ByVal pOperation As IBBaseAPI.TwsDOMOperations, ByVal pSide As IBBaseAPI.TwsDOMSides, ByVal pPrice As Double, ByVal pSize As BoxedDecimal)
+Private Sub IMarketDepthConsumer_NotifyMarketDepth(ByVal pTickerId As Long, ByVal pPosition As Long, ByVal pMarketMaker As String, ByVal pOperation As IBAPI970.TwsDOMOperations, ByVal pSide As IBAPI970.TwsDOMSides, ByVal pPrice As Double, ByVal pSize As Long)
 incrementTotalTicks
 End Sub
 
@@ -814,7 +808,7 @@ Private Sub startTicker(ByVal symbol As String, _
                 Optional ByVal primaryExchange As String, _
                 Optional ByVal multiplier As String, _
                 Optional marketDepth As String)
-Dim lContract As New TwsContractSpecifier
+Dim lContract As New TwsContract
 With lContract
     .symbol = symbol
     .sectype = TwsSecTypeFromString(sectype)
@@ -830,7 +824,7 @@ With lContract
 End With
 
 logMessage "Starting market data ticker for " & symbol & ": id=" & mNextTickerId
-mIBAPI.RequestMarketData mNextTickerId, lContract, "", False, False
+mIBAPI.RequestMarketData mNextTickerId, lContract, "", False
 mNextTickerId = mNextTickerId + 1
 
 If marketDepth = "" Then

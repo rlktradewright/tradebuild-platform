@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TwsOrderState"
+Attribute VB_Name = "IOrderInfoConsumer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -38,32 +38,11 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TwsOrderState"
+Private Const ModuleName                            As String = "IOrderInfoConsumer"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private mStatus                                     As String
-
-Public InitMarginBefore As Double
-Public MaintMarginBefore As Double
-Public EquityWithLoanBefore As Double
-
-Public InitMarginChange As Double
-Public MaintMarginChange As Double
-Public EquityWithLoanChange As Double
-
-Public InitMarginAfter As Double
-Public MaintMarginAfter As Double
-Public EquityWithLoanAfter As Double
-
-Private mCommission                                 As Double
-Private mMinCommission                              As Double
-Private mMaxCommission                              As Double
-Private mCommissionCurrency                         As String
-    
-Private mWarningText                                As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -81,57 +60,52 @@ Private mWarningText                                As String
 ' Properties
 '@================================================================================
 
-Public Property Let Status(ByVal Value As String)
-mStatus = Value
-End Property
-
-Public Property Get Status() As String
-Status = mStatus
-End Property
-
-Public Property Let Commission(ByVal Value As Double)
-mCommission = Value
-End Property
-
-Public Property Get Commission() As Double
-Commission = mCommission
-End Property
-
-Public Property Let MinCommission(ByVal Value As Double)
-mMinCommission = Value
-End Property
-
-Public Property Get MinCommission() As Double
-MinCommission = mMinCommission
-End Property
-
-Public Property Let MaxCommission(ByVal Value As Double)
-mMaxCommission = Value
-End Property
-
-Public Property Get MaxCommission() As Double
-MaxCommission = mMaxCommission
-End Property
-
-Public Property Let CommissionCurrency(ByVal Value As String)
-mCommissionCurrency = Value = Value
-End Property
-
-Public Property Get CommissionCurrency() As String
-CommissionCurrency = mCommissionCurrency
-End Property
-
-Public Property Let WarningText(ByVal Value As String)
-mWarningText = Value
-End Property
-
-Public Property Get WarningText() As String
-WarningText = mWarningText
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub EndExecutions(ByVal pRequestId As Long)
+
+End Sub
+
+Public Sub EndOpenOrders()
+
+End Sub
+
+Public Sub NotifyError( _
+                ByVal pOrderId As Long, _
+                ByVal pErrorCode As Long, _
+                ByVal pErrorMsg As String)
+End Sub
+
+Public Sub NotifyExecution( _
+                ByVal pReqId As Long, _
+                ByVal pContract As TwsContract, _
+                ByVal pExecution As TwsExecution)
+
+End Sub
+
+Public Sub NotifyOpenOrder( _
+                ByVal pOrderId As Long, _
+                ByVal pContract As TwsContract, _
+                ByVal pOrder As TwsOrder, _
+                ByVal pOrderState As TwsOrderState)
+
+End Sub
+
+Public Sub NotifyOrderStatus( _
+                ByVal pOrderId As Long, _
+                ByVal pStatus As String, _
+                ByVal pFilled As Long, _
+                ByVal pRemaining As Long, _
+                ByVal pAvgFillPrice As Double, _
+                ByVal pPermId As Long, _
+                ByVal pParentId As Long, _
+                ByVal pLastFillPrice As Double, _
+                ByVal pClientId As Long, _
+                ByVal pWhyHeld As String)
+
+End Sub
 
 '@================================================================================
 ' Helper Functions

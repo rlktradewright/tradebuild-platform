@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TwsOrderState"
+Attribute VB_Name = "TwsScannerSubscription"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -38,36 +38,49 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "TwsOrderState"
+Private Const ModuleName                            As String = "TwsScannerSubscription"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mStatus                                     As String
-
-Public InitMarginBefore As Double
-Public MaintMarginBefore As Double
-Public EquityWithLoanBefore As Double
-
-Public InitMarginChange As Double
-Public MaintMarginChange As Double
-Public EquityWithLoanChange As Double
-
-Public InitMarginAfter As Double
-Public MaintMarginAfter As Double
-Public EquityWithLoanAfter As Double
-
-Private mCommission                                 As Double
-Private mMinCommission                              As Double
-Private mMaxCommission                              As Double
-Private mCommissionCurrency                         As String
-    
-Private mWarningText                                As String
+Public NumberOfRows                                 As Long
+Public Instrument                                   As String
+Public LocationCode                                 As String
+Public ScanCode                                     As String
+Public AbovePrice                                   As Double
+Public BelowPrice                                   As Double
+Public AboveVolume                                  As Long
+Public AverageOptionVolumeAbove                     As Long
+Public MarketCapAbove                               As Double
+Public MarketCapBelow                               As Double
+Public MoodyRatingAbove                             As String
+Public MoodyRatingBelow                             As String
+Public SpRatingAbove                                As String
+Public SpRatingBelow                                As String
+Public MaturityDateAbove                            As String
+Public MaturityDateBelow                            As String
+Public CouponRateAbove                              As Double
+Public CouponRateBelow                              As Double
+Public ExcludeConvertible                           As String
+Public ScannerSettingPairs                          As String
+Public StockTypeFilter                              As String
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+NumberOfRows = NO_ROW_NUMBER_SPECIFIED
+AbovePrice = MaxDouble
+BelowPrice = MaxDouble
+AboveVolume = MaxLong
+AverageOptionVolumeAbove = MaxLong
+MarketCapAbove = MaxDouble
+MarketCapBelow = MaxDouble
+CouponRateAbove = MaxDouble
+CouponRateBelow = MaxDouble
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -81,52 +94,8 @@ Private mWarningText                                As String
 ' Properties
 '@================================================================================
 
-Public Property Let Status(ByVal Value As String)
-mStatus = Value
-End Property
-
-Public Property Get Status() As String
-Status = mStatus
-End Property
-
-Public Property Let Commission(ByVal Value As Double)
-mCommission = Value
-End Property
-
-Public Property Get Commission() As Double
-Commission = mCommission
-End Property
-
-Public Property Let MinCommission(ByVal Value As Double)
-mMinCommission = Value
-End Property
-
-Public Property Get MinCommission() As Double
-MinCommission = mMinCommission
-End Property
-
-Public Property Let MaxCommission(ByVal Value As Double)
-mMaxCommission = Value
-End Property
-
-Public Property Get MaxCommission() As Double
-MaxCommission = mMaxCommission
-End Property
-
-Public Property Let CommissionCurrency(ByVal Value As String)
-mCommissionCurrency = Value = Value
-End Property
-
-Public Property Get CommissionCurrency() As String
-CommissionCurrency = mCommissionCurrency
-End Property
-
-Public Property Let WarningText(ByVal Value As String)
-mWarningText = Value
-End Property
-
-Public Property Get WarningText() As String
-WarningText = mWarningText
+Public Property Get NO_ROW_NUMBER_SPECIFIED() As Long
+NO_ROW_NUMBER_SPECIFIED = -1
 End Property
 
 '@================================================================================

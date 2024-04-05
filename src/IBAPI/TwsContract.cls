@@ -44,38 +44,45 @@ Private Const ModuleName                            As String = "TwsContract"
 ' Member variables
 '@================================================================================
 
-Private mConId                                      As Long
-Private mSymbol                                     As String
-Private mSecType                                    As TwsSecTypes
-Private mExpiry                                     As String
-Private mStrike                                     As Double
-Private mOptRight                                   As TwsOptionRights
-Private mMultiplier                                 As Long
-Private mExchange                                   As String
+Private mSpecifier                                  As TwsContractSpecifier
+Private mMarketName                                 As String
+Private mMinTick                                    As Double
+Private mPriceMagnifier                             As Long
+Private mOrderTypes                                 As String
+Private mValidExchanges                             As String
+Private mUnderConId                                 As Long
+Private mLongName                                   As String
+Private mContractMonth                              As String
+Private mIndustry                                   As String
+Private mCategory                                   As String
+Private mSubcategory                                As String
+Private mTimeZoneId                                 As String
+Private mTradingHours                               As String
+Private mLiquidHours                                As String
 
-Private mCurrencyCode                               As String
-Private mLocalSymbol                                As String
-Private mTradingClass                               As String
-Private mPrimaryExch                                As String   ' pick a non-aggregate (ie not the SMART Exchange) Exchange that the contract trades on.  DO NOT SET TO SMART.
+Private mEvRule                                     As String
+Private mEvMultiplier                               As Double
+Public AggGroup                                     As Long
+Public UnderSymbol                                  As String
+Public UnderSecType                                 As TwsSecTypes
+Public MarketRuleIds                                As String
+Public RealExpirationDate                           As String
+Public LastTradeTime                                As Date
 
-Private mIncludeExpired                             As Boolean  ' can not be set to true for orders.
+Private mStockType                                  As String
+Private mMinimumSize                                As BoxedDecimal
+Private mSizeIncrement                              As BoxedDecimal
+Private mSuggestedSizeIncrement                     As BoxedDecimal
 
-Private mSecIdType                                  As String   ' CUSIP;SEDOL;ISIN;RIC
-Private mSecId                                      As String
-
-' COMBOS
-Private mComboLegsDescription                       As String   ' received in open Order version 14 and up for all combos
-Private mComboLegs                                  As New TwsComboLegs
-
-' delta neutral
-Private mUnderComp                                  As TwsUnderComp
-
-Private mAr()                                       As String
-Private mArIndex                                    As Long
+Private mSecIdList                                  As Parameters  ' CUSIP/ISIN/etc.
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+PriceMagnifier = 1
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -89,222 +96,190 @@ Private mArIndex                                    As Long
 ' Properties
 '@================================================================================
 
-Public Property Get ComboLegs() As TwsComboLegs
-Set ComboLegs = mComboLegs
+Public Property Let Category(ByVal Value As String)
+mCategory = Value
 End Property
 
-Public Property Let ComboLegsDescription(ByVal Value As String)
-mComboLegsDescription = Value
+Public Property Get Category() As String
+Category = mCategory
 End Property
 
-Public Property Get ComboLegsDescription() As String
-ComboLegsDescription = mComboLegsDescription
+Public Property Let ContractMonth(ByVal Value As String)
+mContractMonth = Value
 End Property
 
-Public Property Let ConId(ByVal Value As Long)
-mConId = Value
+Public Property Get ContractMonth() As String
+ContractMonth = mContractMonth
 End Property
 
-Public Property Get ConId() As Long
-ConId = mConId
+Public Property Let EvRule(ByVal Value As String)
+mEvRule = Value
 End Property
 
-Public Property Let CurrencyCode(ByVal Value As String)
-mCurrencyCode = Value
+Public Property Get EvRule() As String
+EvRule = mEvRule
 End Property
 
-Public Property Get CurrencyCode() As String
-CurrencyCode = mCurrencyCode
+Public Property Let EvMultiplier(ByVal Value As Double)
+mEvMultiplier = Value
 End Property
 
-Public Property Let Expiry(ByVal Value As String)
-mExpiry = Value
+Public Property Get EvMultiplier() As Double
+EvMultiplier = mEvMultiplier
 End Property
 
-Public Property Get Expiry() As String
-Expiry = mExpiry
+Public Property Let Industry(ByVal Value As String)
+mIndustry = Value
 End Property
 
-Public Property Let Exchange(ByVal Value As String)
-mExchange = Value
+Public Property Get Industry() As String
+Industry = mIndustry
 End Property
 
-Public Property Get Exchange() As String
-Exchange = mExchange
+Public Property Let LiquidHours(ByVal Value As String)
+mLiquidHours = Value
 End Property
 
-Public Property Let IncludeExpired(ByVal Value As Boolean)
-mIncludeExpired = Value
+Public Property Get LiquidHours() As String
+LiquidHours = mLiquidHours
 End Property
 
-Public Property Get IncludeExpired() As Boolean
-IncludeExpired = mIncludeExpired
+Public Property Let LongName(ByVal Value As String)
+mLongName = Value
 End Property
 
-Public Property Let LocalSymbol(ByVal Value As String)
-mLocalSymbol = Value
+Public Property Get LongName() As String
+LongName = mLongName
 End Property
 
-Public Property Get LocalSymbol() As String
-LocalSymbol = mLocalSymbol
+Public Property Let MarketName(ByVal Value As String)
+mMarketName = Value
 End Property
 
-Public Property Let Multiplier(ByVal Value As Long)
-mMultiplier = Value
+Public Property Get MarketName() As String
+MarketName = mMarketName
 End Property
 
-Public Property Get Multiplier() As Long
-Multiplier = mMultiplier
+Public Property Let MinTick(ByVal Value As Double)
+mMinTick = Value
 End Property
 
-Public Property Let OptRight(ByVal Value As TwsOptionRights)
-mOptRight = Value
+Public Property Get MinTick() As Double
+MinTick = mMinTick
 End Property
 
-Public Property Get OptRight() As TwsOptionRights
-OptRight = mOptRight
+Public Property Let OrderTypes(ByVal Value As String)
+mOrderTypes = Value
 End Property
 
-Public Property Let PrimaryExch(ByVal Value As String)
-mPrimaryExch = Value
+Public Property Get OrderTypes() As String
+OrderTypes = mOrderTypes
 End Property
 
-Public Property Get PrimaryExch() As String
-PrimaryExch = mPrimaryExch
+Public Property Let PriceMagnifier(ByVal Value As Long)
+mPriceMagnifier = Value
 End Property
 
-Public Property Let SecId(ByVal Value As String)
-mSecId = Value
+Public Property Get PriceMagnifier() As Long
+PriceMagnifier = mPriceMagnifier
 End Property
 
-Public Property Get SecId() As String
-SecId = mSecId
+Public Property Let SecIdList(ByVal Value As Parameters)
+Set mSecIdList = Value
 End Property
 
-Public Property Let SecIdType(ByVal Value As String)
-mSecIdType = Value
+Public Property Get SecIdList() As Parameters
+Set SecIdList = mSecIdList
 End Property
 
-Public Property Get SecIdType() As String
-SecIdType = mSecIdType
+Public Property Let Specifier(ByVal Value As TwsContractSpecifier)
+Set mSpecifier = Value
 End Property
 
-Public Property Let Sectype(ByVal Value As TwsSecTypes)
-mSecType = Value
+Public Property Get Specifier() As TwsContractSpecifier
+Set Specifier = mSpecifier
 End Property
 
-Public Property Get Sectype() As TwsSecTypes
-Sectype = mSecType
+Public Property Let Subcategory(ByVal Value As String)
+mSubcategory = Value
 End Property
 
-Public Property Let Strike(ByVal Value As Double)
-mStrike = Value
+Public Property Get Subcategory() As String
+Subcategory = mSubcategory
 End Property
 
-Public Property Get Strike() As Double
-Strike = mStrike
+Public Property Let TimeZoneId(ByVal Value As String)
+mTimeZoneId = Value
 End Property
 
-Public Property Let Symbol(ByVal Value As String)
-mSymbol = Value
+Public Property Get TimeZoneId() As String
+TimeZoneId = mTimeZoneId
 End Property
 
-Public Property Get Symbol() As String
-Symbol = mSymbol
+Public Property Let TradingHours(ByVal Value As String)
+mTradingHours = Value
 End Property
 
-Public Property Let TradingClass(ByVal Value As String)
-mTradingClass = Value
+Public Property Get TradingHours() As String
+TradingHours = mTradingHours
 End Property
 
-Public Property Get TradingClass() As String
-TradingClass = mTradingClass
+Public Property Let UnderConId(ByVal Value As Long)
+mUnderConId = Value
 End Property
 
-Public Property Let UnderComp(ByRef Value As TwsUnderComp)
-mUnderComp = Value
+Public Property Get UnderConId() As Long
+UnderConId = mUnderConId
 End Property
 
-Public Property Get UnderComp() As TwsUnderComp
-UnderComp = mUnderComp
+Public Property Let ValidExchanges(ByVal Value As String)
+mValidExchanges = Value
+End Property
+
+Public Property Get ValidExchanges() As String
+ValidExchanges = mValidExchanges
+End Property
+
+Public Property Let StockType(ByVal Value As String)
+mStockType = Value
+End Property
+
+Public Property Get StockType() As String
+StockType = mStockType
+End Property
+
+Public Property Let MinimumSize(ByVal Value As BoxedDecimal)
+Set mMinimumSize = Value
+End Property
+
+Public Property Get MinimumSize() As BoxedDecimal
+Set MinimumSize = mMinimumSize
+End Property
+
+Public Property Let SizeIncrement(ByVal Value As BoxedDecimal)
+Set mSizeIncrement = Value
+End Property
+
+Public Property Get SizeIncrement() As BoxedDecimal
+Set SizeIncrement = mSizeIncrement
+End Property
+
+Public Property Let SuggestedSizeIncrement(ByVal Value As BoxedDecimal)
+Set mSuggestedSizeIncrement = Value
+End Property
+
+Public Property Get SuggestedSizeIncrement() As BoxedDecimal
+Set SuggestedSizeIncrement = mSuggestedSizeIncrement
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function ToString() As String
-Const ProcName As String = "ToString"
-On Error GoTo Err
-
-ReDim mAr(3) As String
-mArIndex = 0
-
-addField "Local symbol", mLocalSymbol
-addField "Exchange", mExchange
-addField "Sec type", gTwsSecTypeToShortString(mSecType)
-addField "Expiry", mExpiry
-addField "Trading class", mTradingClass
-addField "Con id", CStr(mConId)
-addField "Symbol", mSymbol
-addField "Currency", mCurrencyCode
-If mStrike <> 0# Then addField "Strike", mStrike
-addField "Right", gTwsOptionRightToString(mOptRight)
-addField "Multiplier", mMultiplier
-addField "Primary exch", mPrimaryExch
-addField "Sec id type", mSecIdType
-addField "Sec id", mSecId
-
-If mComboLegs.Count > 0 Then
-    addField "Como legs count", mComboLegs.Count
-    Dim lLeg As TwsComboLeg
-    Dim i As Long
-    For Each lLeg In mComboLegs
-        i = i + 1
-        addField "Con id " & i, lLeg.ConId
-        addField "Exchange " & i, lLeg.Exchange
-        addField "Action " & i, gTwsOrderActionToString(lLeg.Action)
-        addField "Ratio " & i, lLeg.Ratio
-        addField "Open/close " & i, IIf(lLeg.OpenClose = TwsLegOpenCloseSame, "", CStr(lLeg.OpenClose))
-        addField "Designated location " & i, lLeg.DesignatedLocation
-        addField "Short sale slot " & i, IIf(lLeg.ShortSaleSlot = TwsShortSaleSlotNotApplicable, "", CStr(lLeg.ShortSaleSlot))
-    Next
-End If
-
-If mUnderComp.ConId <> 0 Then
-    addField "Under con id", mUnderComp.ConId
-    addField "Under delta", mUnderComp.Delta
-    addField "Under price", mUnderComp.Price
-End If
-
-ReDim Preserve mAr(mArIndex - 1) As String
-ToString = Join(mAr, "")
-
-Erase mAr
-
-Exit Function
-
-Err:
-gHandleUnexpectedError Nothing, ProcName, ModuleName
-End Function
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub addField(ByVal pName As String, ByVal pValue As String)
-If pValue = "" Then Exit Sub
-If mArIndex <> 0 Then addItem "; "
-addItem pName
-addItem ": "
-addItem pValue
-End Sub
-
-Private Sub addItem(ByVal pItem As String)
-If mArIndex > UBound(mAr) Then ReDim Preserve mAr(2 * (UBound(mAr) + 1) - 1) As String
-mAr(mArIndex) = pItem
-mArIndex = mArIndex + 1
-End Sub
 
 
 

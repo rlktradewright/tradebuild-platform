@@ -67,7 +67,7 @@ Private Const ModuleName                            As String = "IAccountDataCon
 Public Sub EndAccountSummary(ByVal pRequestId As Long)
 End Sub
 
-Public Sub EndAcccountValue(ByVal pAccountName As String)
+Public Sub EndAccountValue(ByVal pAccountName As String)
 End Sub
 
 Public Sub EndPosition()
@@ -94,14 +94,14 @@ End Sub
 
 Public Sub NotifyPosition( _
                 ByVal pAccount As String, _
-                ByVal pContract As TwsContract, _
-                ByVal pPosition As Long, _
+                ByVal pContractSpec As TwsContractSpecifier, _
+                ByVal pPosition As BoxedDecimal, _
                 ByVal pAverageCost As Double)
 End Sub
 
 Public Sub NotifyPortfolioUpdate( _
-                ByVal pContract As TwsContract, _
-                ByVal pPosition As Long, _
+                ByVal pContractSpec As TwsContractSpecifier, _
+                ByVal pPosition As BoxedDecimal, _
                 ByVal pMarketPrice As Double, _
                 ByVal pMarketValue As Double, _
                 ByVal pAverageCost As Double, _

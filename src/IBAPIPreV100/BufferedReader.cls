@@ -131,33 +131,33 @@ Static sProcessingMessages As Boolean
 
 Dim lBytesReceived As Long: lBytesReceived = UBound(pData) + 1
 
-GIB.Logger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, mRawApiMessageLogLevel
+gLogger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, mRawApiMessageLogLevel
 
 If (mBufferNextFreeIndex = mInputParseIndex) And _
     mMessageStartIndex < 0 _
 Then
     ' no unprocessed data so start at the beginning of the buffer again
-    GIB.Logger.Log "Reusing buffer from start", ProcName, ModuleName, mRawApiMessageLogLevel
+    gLogger.Log "Reusing buffer from start", ProcName, ModuleName, mRawApiMessageLogLevel
     mBufferNextFreeIndex = 0
     mInputParseIndex = 0
     mInputParseIndexChk = 0
 End If
 
 If mBufferNextFreeIndex + lBytesReceived <= UBound(mBuffer) + 1 Then
-    GIB.Logger.Log "Appending data to buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+    gLogger.Log "Appending data to buffer", ProcName, ModuleName, mRawApiMessageLogLevel
 Else
     If lBytesReceived <= getFreeBufferSpaceSize Then
         ' copy the existing contents (from the start of the current message) down to the start of the buffer
         If mMessageStartIndex < 0 Then
-            GIB.Logger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+            gLogger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
             moveBufferContents 0, mInputParseIndex, mBufferNextFreeIndex - mInputParseIndex
         Else
-            GIB.Logger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+            gLogger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
             moveBufferContents 0, mMessageStartIndex, mBufferNextFreeIndex - mMessageStartIndex
         End If
     Else
         Dim lNewBound As Long: lNewBound = 2 * (UBound(mBuffer) + 1) - 1
-        GIB.Logger.Log "Extending buffer to " & CStr(lNewBound) & " bytes", ProcName, ModuleName, mRawApiMessageLogLevel
+        gLogger.Log "Extending buffer to " & CStr(lNewBound) & " bytes", ProcName, ModuleName, mRawApiMessageLogLevel
         ReDim Preserve mBuffer(lNewBound) As Byte
     End If
 End If
@@ -170,7 +170,7 @@ If mBufferNextFreeIndex <> mInputParseIndex Then
         ' this is a re-entrant call to AddData. We don't want to call ProcessData()
         ' here, because the current call to it will process the new data that has been
         ' added to the buffer
-        GIB.Logger.Log "Re-entrant call to " & ProcName, ProcName, ModuleName
+        gLogger.Log "Re-entrant call to " & ProcName, ProcName, ModuleName
     Else
         sProcessingMessages = True
         mInputMessageHandler.ProcessData GetTimestamp
@@ -181,7 +181,7 @@ End If
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub BeginCheckpointScope()
@@ -208,20 +208,18 @@ ElseIf mLogApiMessages = ApiMessageLoggingOptionDefault Then
 Else
     mApiMessageLogLevel = LogLevelNone
 End If
-If Not GIB.SocketLogger.IsLoggable(mApiMessageLogLevel) Then
+If Not gSocketLogger.IsLoggable(mApiMessageLogLevel) Then
     mLogCurrentApiMessage = False
 Else
     mLogCurrentApiMessage = True
     If Not mMessageBuildStarted Then
         mMessageBuildStarted = True
         mInMessageBuilder.Append "IN: Msg id ("
-        mInMessageBuilder.Append InputMessageIdToString(mMessageId)
+        mInMessageBuilder.Append gInputMessageIdToString(mMessageId)
         mInMessageBuilder.Append ")="
         mInMessageBuilder.Append mMessageId
-        If mVersion <> &H7FFFFFFF Then
-            mInMessageBuilder.Append ";Version="
-            mInMessageBuilder.Append mVersion
-        End If
+        mInMessageBuilder.Append ";Version="
+        mInMessageBuilder.Append mVersion
         mInMessageBuilder.Append ";"
     End If
 End If
@@ -229,7 +227,7 @@ End If
 Exit Sub
 
 Err:
-'gIB.HandleUnexpectedError ProcName, ModuleName
+'gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub BeginMessage()
@@ -244,7 +242,7 @@ Checkpoint
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub ClearBuffer()
@@ -254,26 +252,6 @@ mInputParseIndexChk = 0
 ReDim mNextCheckpointToProcess(7) As Long
 ReDim mCurrCheckpointNumber(7) As Long
 mCheckpointScopeIndex = 0
-End Sub
-
-Friend Sub DiscardMessageLength()
-If alreadyProcessedItem Then Exit Sub
-
-Dim i As Long
-Dim j As Long
-For i = mInputParseIndex To mBufferNextFreeIndex - 1
-    j = j + 1
-    If j = 4 Then
-        mInputParseIndex = i + 1
-        Checkpoint
-        Exit Sub
-    End If
-Next
-
-' we've got to the end of the current data, so raise an error to abort
-' this attempt to assemble a message
-'Debug.Print "Failed to get string"
-Err.Raise DataIncomplete
 End Sub
 
 Friend Sub EndCheckpointScope()
@@ -287,7 +265,7 @@ Const ProcName As String = "EndLogMessage"
 On Error GoTo Err
 
 If mLogCurrentApiMessage Then
-    GIB.SocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, mApiMessageLogLevel
+    gSocketLogger.Log mInMessageBuilder.ToString, ProcName, ModuleName, mApiMessageLogLevel
     mInMessageBuilder.Clear
 End If
 mMessageBuildStarted = False
@@ -298,7 +276,7 @@ mMessageId = 0
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub EndMessage()
@@ -309,7 +287,7 @@ Friend Function GetBoolean( _
                 ByRef pFieldName As String) As Boolean
 Dim s As String
 s = GetString(pFieldName)
-If CLng(s) <> 0 Then
+If s = "1" Then
     GetBoolean = True
 Else
     GetBoolean = False
@@ -323,26 +301,6 @@ If alreadyProcessedItem Then Exit Function
 pValue = GetBoolean(pFieldName)
 Checkpoint
 GetBooleanCheckpointed = True
-End Function
-
-Friend Function GetDecimal( _
-                ByRef pFieldName As String) As BoxedDecimal
-Dim s As String
-s = GetString(pFieldName)
-If s = "" Then
-    Set GetDecimal = DecimalZero
-Else
-    Set GetDecimal = CreateBoxedDecimal(DecimalFromString(s))
-End If
-End Function
-
-Friend Function GetDecimalCheckpointed( _
-                ByRef pValue As BoxedDecimal, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-Set pValue = GetDecimal(pFieldName)
-Checkpoint
-GetDecimalCheckpointed = True
 End Function
 
 Friend Function GetDouble( _
@@ -371,10 +329,8 @@ Dim s As String
 s = GetString(pFieldName)
 If s = "" Then
     GetDoubleMax = MaxDouble
-ElseIf s = Infinity Then
-    GetDoubleMax = MinDouble
 Else
-    GetDoubleMax = DoubleFromString(s)
+    GetDoubleMax = val(s)
 End If
 End Function
 
@@ -425,19 +381,6 @@ If alreadyProcessedItem Then Exit Function
 pValue = GetLongMax(pFieldName)
 Checkpoint
 GetLongMaxCheckpointed = True
-End Function
-
-Friend Function GetParameters( _
-                ByVal pCount As Long, _
-                ByRef pFieldName As String) As Parameters
-Dim lParams As Parameters: Set lParams = New Parameters
-Dim i As Long
-
-For i = 1 To pCount
-    lParams.SetParameterValue GetString(pFieldName & ".Name" & i), _
-                            GetString(pFieldName & ".Value" & i)
-Next
-Set GetParameters = lParams
 End Function
 
 Friend Function GetRawMessage() As Byte()

@@ -120,6 +120,10 @@ Private Const ModuleName                            As String = "ApiConnectionNe
 '      can receive tradingClass in openOrder, updatePortfolio, execDetails and POSITION
 ' 62 = can receive avgCost in POSITION message
 
+Private Const ClientVersion                         As Long = 62
+
+Private Const ReqdServerVersion                     As Long = MIN_SERVER_VER_SCALE_TABLE
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -161,36 +165,36 @@ Set mReader = pReader
 Set mWriter = pWriter
 End Sub
 
-Friend Sub NegotiateApiConnection()
+Friend Sub NegotiateApiConnection(ByVal pClientId As Long)
 Const ProcName As String = "NegotiateApiConnection"
 On Error GoTo Err
 
-GIB.Log "Connecting to Tws: negotiating API connection", ModuleName, ProcName
-mWriter.StartMessage "API"
-mWriter.AddRawString "v" & _
-                        ApiServerVersions.MinV100Plus & _
-                        ".." & _
-                        ApiServerVersions.Max & _
-                        " +PACEAPI", _
-                    "SupportedServerVersions"
+gLog "Connecting to Tws: negotiating versions and client id", ModuleName, ProcName
+mWriter.AddString ClientVersion, "Client version"
+mWriter.Send forceLogMessage:=True
+
+' We add a 1 to the front of the cientId because
+' TWS, when dealing with a client of this version, ignores
+' the first character of the clientID string: the result is
+' that OPEN_ORDER. ORDER_STATUS and EXECUTION messages are
+' are returned with a different clientId to what the client
+' expects
+mWriter.AddString "1" & CStr(pClientId), "Client id"
 mWriter.Send forceLogMessage:=True
 
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
-Friend Function ProcessInitialData( _
-                ByVal pClientId As Long, _
-                ByVal pOptionalCapabilities As String, _
-                ByVal pTimeStamp As Date) As Long
+Friend Sub ProcessInitialData(ByVal pTimeStamp As Date)
 Const ProcName As String = "ProcessInitialData"
 On Error GoTo Err
 
-GIB.Log "Processing initial data for API connection", ModuleName, ProcName, , LogLevelSevere
+gLog "Processing initial data for API connection", ModuleName, ProcName, , LogLevelSevere
 
-GIB.Log "Buffer contents: " & vbCrLf & FormatBuffer(mReader.Buffer, mReader.BufferNextFreeIndex), ModuleName, ProcName, , LogLevelSevere
+gLog "Buffer contents: " & vbCrLf & gFormatBuffer(mReader.Buffer, mReader.BufferNextFreeIndex), ModuleName, ProcName, , LogLevelSevere
 
 Dim lString1 As String
 Dim lString2 As String
@@ -210,8 +214,6 @@ mReader.BeginMessage
 ' Note that if there is incomplete data, then a call to GetString() will result in
 ' processing being aborted and then retried when more data arrives.
 
-mReader.DiscardMessageLength
-
 lString1 = mReader.GetString("Field 1")
 
 Dim lServerTime As Date
@@ -223,20 +225,20 @@ Do
     lFieldNumber = lFieldNumber + 1
     lString2 = mReader.GetString("Field " & lFieldNumber)
     
-    If IsInteger(lString1, ApiServerVersions.MinV100Plus, ApiServerVersions.Max) Then
-        GIB.Log "lString1 is potentially the server version: " & lString1, ModuleName, ProcName, , LogLevelSevere
+    If IsInteger(lString1, MIN_SERVER_VER_SCALE_TABLE) Then
+        gLog "lString1 is potentially the server version: " & lString1, ModuleName, ProcName, , LogLevelSevere
         
-        lServerTime = GetTwsDate(lString2, lTimezone)
+        lServerTime = gGetDate(lString2, lTimezone)
         If lServerTime = 0# Then
-            GIB.Log "lString2 is not a date and time: " & lString2, ModuleName, ProcName, , LogLevelSevere
+            gLog "lString2 is not a date and time: " & lString2, ModuleName, ProcName, , LogLevelSevere
         ElseIf Abs(pTimeStamp - lServerTime) <= MaxDifferenceFromServerTime * OneSecond Then
             mServerVersion = CInt(lString1)
             Exit Do
         Else
-            GIB.Log "lString2 is not within " & MaxDifferenceFromServerTime & " seconds of receipt time (" & FormatTimestamp(pTimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "): " & lString2, ModuleName, ProcName, , LogLevelSevere
+            gLog "lString2 is not within " & MaxDifferenceFromServerTime & " seconds of receipt time (" & FormatTimestamp(pTimeStamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & "): " & lString2, ModuleName, ProcName, , LogLevelSevere
         End If
     Else
-        GIB.Log "lString1 is not the server version which must be an integer <= " & ApiServerVersions.Max & ": " & lString1, ModuleName, ProcName, , LogLevelSevere
+        gLog "lString1 is not the server version which must be an integer >= " & MIN_SERVER_VER_SCALE_TABLE & ": " & lString1, ModuleName, ProcName, , LogLevelSevere
     End If
     lString1 = lString2
     
@@ -245,44 +247,31 @@ Loop
 
 mReader.EndMessage
 
-GIB.Log "Server version", ModuleName, ProcName, CStr(mServerVersion), LogLevelSevere
-GIB.Log "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & " " & lTimezone, LogLevelSevere
+gLog "Server version", ModuleName, ProcName, CStr(mServerVersion), LogLevelSevere
+gLog "TWS Time at connection", ModuleName, ProcName, FormatTimestamp(lServerTime, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs) & " " & lTimezone, LogLevelSevere
 
-StartAPI pClientId, pOptionalCapabilities
+Assert mServerVersion >= ReqdServerVersion, "TWS is out of date and needs to be upgraded"
 
-GIB.Log "API connection negotiated - awaiting nextValidId", ModuleName, ProcName
+gLog "API connection negotiated - awaiting nextValidId", ModuleName, ProcName
 
-ProcessInitialData = mServerVersion
-
-Exit Function
+Exit Sub
 
 Err:
 If Err.Number = DataIncomplete Then
     Dim errNum As Long: errNum = Err.Number
     Dim errDesc As String: errDesc = Err.Description
     Dim errSource As String: errSource = Err.source
-    GIB.Log "Expected initial data from TWS not found: awaiting more data", ModuleName, ProcName, , LogLevelSevere
-    GIB.HandleUnexpectedError Nothing, ProcName, ModuleName, pErrorNumber:=errNum, pErrorDesc:=errDesc, pErrorSource:=errSource
+    gLog "Expected initial data from TWS not found: awaiting more data", ModuleName, ProcName, , LogLevelSevere
+    gHandleUnexpectedError Nothing, ProcName, ModuleName, pErrorNumber:=errNum, pErrorDesc:=errDesc, pErrorSource:=errSource
 Else
-    GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+    gHandleUnexpectedError Nothing, ProcName, ModuleName
 End If
-End Function
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub StartAPI(ByVal pClientId As Long, pOptionalCapabilities As String)
-Const VERSION = 2
-
-mWriter.AddMessageId TwsSocketOutMsgTypes.StartAPI
-mWriter.AddString VERSION, "Version"
-mWriter.AddLong pClientId, "Client id"
-
-mWriter.AddString pOptionalCapabilities, "Optional Capabilities"
-
-mWriter.Send True
-End Sub
 
 
 

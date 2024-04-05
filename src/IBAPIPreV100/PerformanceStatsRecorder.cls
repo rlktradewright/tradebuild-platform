@@ -58,15 +58,9 @@ Private Const ModuleName                            As String = "PerformanceStat
 
 Private mPerformanceStats(MAX_SOCKET_INMSG)         As StatsEntry
 
-Private mInputMessageName                           As String
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-mInputMessageName = String$(25, " ")
-End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -104,18 +98,18 @@ Next
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Function GenerateStats() As String
 Const ProcName As String = "GenerateStats"
 On Error GoTo Err
 
-Dim lSb As StringBuilder
-Set lSb = CreateStringBuilder("Message type               Last  Last avg    Total  Total avg Max/sec   Longest  Shortest" & vbCrLf)
-
 Dim i As Long
-Dim b As String
+Dim lSb As StringBuilder
+
+Set lSb = CreateStringBuilder("Message type          Last  Last avg    Total  Total avg Max/sec   Longest  Shortest" & vbCrLf)
+
 For i = 0 To TwsSocketInMsgTypes.MAX_SOCKET_INMSG
     With mPerformanceStats(i)
         .LastPeriodCount = .LastPeriodCount + .LastSecondCount
@@ -124,23 +118,22 @@ For i = 0 To TwsSocketInMsgTypes.MAX_SOCKET_INMSG
         .TotalTime = .TotalTime + .LastSecondTime
         
         If .TotalCount <> 0 Then
-            LSet mInputMessageName = InputMessageIdToString(i)
-            lSb.Append mInputMessageName
-            lSb.Append formatField(.LastPeriodCount, "0", 6)
+            lSb.Append gSocketInMsgTypeToString(i)
+            lSb.Append Format(.LastPeriodCount, " 00000")
             If .LastPeriodCount <> 0 Then
-                lSb.Append formatField(.LastPeriodTime / .LastPeriodCount, "0.0", 10)
+                lSb.Append Format(.LastPeriodTime / .LastPeriodCount, " 0000000.0")
             Else
                 lSb.Append "       0.0"
             End If
-            lSb.Append formatField(.TotalCount, "0", 9)
+            lSb.Append Format(.TotalCount, " 00000000")
             If .TotalCount <> 0 Then
-                lSb.Append formatField(.TotalTime / .TotalCount, "0.0", 11)
+                lSb.Append Format(.TotalTime / .TotalCount, "  0000000.0")
             Else
                 lSb.Append "        0.0"
             End If
-            lSb.Append formatField(.MaxSecondCount, "0", 8)
-            lSb.Append formatField(.LongestTime, "0.0", 10)
-            lSb.AppendLine formatField(.ShortestTime, "0.0", 10)
+            lSb.Append Format(.MaxSecondCount, "    0000")
+            lSb.Append Format(.LongestTime, " 0000000.0")
+            lSb.AppendLine Format(.ShortestTime, " 0000000.0")
         End If
         
         .LastPeriodCount = 0
@@ -156,7 +149,7 @@ GenerateStats = lSb.ToString
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Friend Sub UpdateMessageTypeStats( _
@@ -175,21 +168,13 @@ End With
 Exit Sub
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function formatField( _
-                ByVal pValue As Variant, _
-                ByRef pFormat As String, _
-                ByVal pFieldLength As Long) As String
-Dim b As String: b = String(pFieldLength, " ")
-RSet b = Format(pValue, pFormat)
-formatField = b
-End Function
 
 
 

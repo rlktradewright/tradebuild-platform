@@ -16,15 +16,10 @@ Option Explicit
 Private mClientID       As Long
 Private mAccountCode    As String
 Private mTime           As Date
-Private mTimezone       As String
 Private mSymbol         As String
 Private mSecType        As TwsSecTypes
 Private mExchange       As String
 Private mAction         As TwsOrderActions
-
-Private Sub Class_Initialize()
-Time = MaxDate
-End Sub
 
 Public Property Let AccountCode(ByVal Value As String)
 mAccountCode = Value
@@ -82,11 +77,5 @@ Public Property Get Time() As Date
 Time = mTime
 End Property
 
-Public Property Let Timezone(ByVal Value As String)
-mTimezone = Value
-End Property
 
-Public Property Get Timezone() As String
-Timezone = mTimezone
-End Property
 

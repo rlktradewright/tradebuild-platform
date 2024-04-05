@@ -32,6 +32,54 @@ Option Explicit
 
 Private Const ModuleName                            As String = "IBAPI"
 
+Private Const TICK_BID_SIZE                      As Long = 0
+Private Const TICK_BID                           As Long = 1
+Private Const TICK_ASK                           As Long = 2
+Private Const TICK_ASK_SIZE                      As Long = 3
+Private Const TICK_LAST                          As Long = 4
+Private Const TICK_LAST_SIZE                     As Long = 5
+Private Const TICK_High                          As Long = 6
+Private Const TICK_LOW                           As Long = 7
+Private Const TICK_VOLUME                        As Long = 8
+Private Const TICK_CLOSE                         As Long = 9
+Private Const TICK_BID_OPTION                    As Long = 10
+Private Const TICK_ASK_OPTION                    As Long = 11
+Private Const TICK_LAST_OPTION                   As Long = 12
+Private Const TICK_MODEL_OPTION                  As Long = 13
+Private Const TICK_OPEN                          As Long = 14
+Private Const TICK_LOW_13_WEEK                   As Long = 15
+Private Const TICK_HIGH_13_WEEK                  As Long = 16
+Private Const TICK_LOW_26_WEEK                   As Long = 17
+Private Const TICK_HIGH_26_WEEK                  As Long = 18
+Private Const TICK_LOW_52_WEEK                   As Long = 19
+Private Const TICK_HIGH_52_WEEK                  As Long = 20
+Private Const TICK_AVG_VOLUME                    As Long = 21
+Private Const TICK_OPEN_INTEREST                 As Long = 22
+Private Const TICK_OPTION_HISTORICAL_VOL         As Long = 23
+Private Const TICK_OPTION_IMPLIED_VOL            As Long = 24
+Private Const TICK_OPTION_BID_EXCH               As Long = 25
+Private Const TICK_OPTION_ASK_EXCH               As Long = 26
+Private Const TICK_OPTION_CALL_OPEN_INTEREST     As Long = 27
+Private Const TICK_OPTION_PUT_OPEN_INTEREST      As Long = 28
+Private Const TICK_OPTION_CALL_VOLUME            As Long = 29
+Private Const TICK_OPTION_PUT_VOLUME             As Long = 30
+Private Const TICK_INDEX_FUTURE_PREMIUM          As Long = 31
+Private Const TICK_BID_EXCH                      As Long = 32
+Private Const TICK_ASK_EXCH                      As Long = 33
+Private Const TICK_AUCTION_VOLUME                As Long = 34
+Private Const TICK_AUCTION_PRICE                 As Long = 35
+Private Const TICK_AUCTION_IMBALANCE             As Long = 36
+Private Const TICK_MARK_PRICE                    As Long = 37
+Private Const TICK_BID_EFP_COMPUTATION           As Long = 38
+Private Const TICK_ASK_EFP_COMPUTATION           As Long = 39
+Private Const TICK_LAST_EFP_COMPUTATION          As Long = 40
+Private Const TICK_OPEN_EFP_COMPUTATION          As Long = 41
+Private Const TICK_HIGH_EFP_COMPUTATION          As Long = 42
+Private Const TICK_LOW_EFP_COMPUTATION           As Long = 43
+Private Const TICK_CLOSE_EFP_COMPUTATION         As Long = 44
+Private Const TICK_LAST_TIMESTAMP                As Long = 45
+Private Const TICK_SHORTABLE                     As Long = 46
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -95,13 +143,6 @@ Public Enum TwsLegOpenCloseCodes
     TwsLegOpenCloseUnknown = 3
 End Enum
 
-Public Enum TwsLiquidityTypes
-    TwsLiquidityTypeNone
-    TwsLiquidityTypeAddedLiquidity
-    TwsLiquidityTypeRemovedLiquidity
-    TwsLiquidityTypeLiquidityRoutedOut
-End Enum
-
 Public Enum TwsOcaTypes
     TwsOcaTypeCancelWithBlock = 1
     TwsOcaTypeReduceWithBlock = 2
@@ -126,10 +167,6 @@ Public Enum TwsOrderTIFs
     TwsOrderTIFDay
     TwsOrderTIFGoodTillCancelled
     TwsOrderTIFImmediateOrCancel
-    TwsOrderTIFGoodTillDate
-    TwsOrderTIFFillOrKill
-    TwsOrderTIFDayTillCancelled
-    TwsOrderTIFAuction
 End Enum
 
 Public Enum TwsOrderTypes
@@ -156,17 +193,6 @@ Public Enum TwsOrderTypes
     TwsOrderTypeLimitOnOpen
     TwsOrderTypePeggedToPrimary
     TwsOrderTypeVol
-    TwsOrderTypePeggedToBenchmark
-    TwsOrderTypeAuction
-    TwsOrderTypePeggedToStock
-    TwsOrderTypeBoxTop
-    TwsOrderTypePassiveRelative
-    TwsOrderTypePeggedToBest
-    TwsOrderTypePeggedToMidpoint
-    TwsOrderTypeStopWithProtection
-    TwsOrderTypeRelativeLimitCombo
-    TwsOrderTypeRelativeMarketCombo
-    TwsOrderTypeMidprice
 End Enum
 
 Public Enum TwsSecTypes
@@ -178,7 +204,6 @@ Public Enum TwsSecTypes
     TwsSecTypeCash
     TwsSecTypeCombo
     TwsSecTypeIndex
-    TwsSecTypeWarrant
 End Enum
 
 Public Enum TwsShortSaleSlotCodes
@@ -198,113 +223,53 @@ Public Enum TwsStopTriggerMethods
 End Enum
 
 Public Enum TwsTickTypes
-    TwsTickBidSize
-    TwsTickBid
-    TwsTickAsk
-    TwsTickAskSize
-    TwsTickLast
-    TwsTickLastSize
-    TwsTickHigh
-    TwsTickLow
-    TwsTickVolume
-    TwsTickClose
-    TwsTickBidOption
-    TwsTickAskOption
-    TwsTickLastOption
-    TwsTickModelOption
-    TwsTickOpen
-    TwsTickLow13Week
-    TwsTickHigh13Week
-    TwsTickLow26Week
-    TwsTickHigh26Week
-    TwsTickLow52Week
-    TwsTickHigh52Week
-    TwsTickAvgVolume
-    TwsTickOpenInterest
-    TwsTickOptionHistoricalVol
-    TwsTickOptionImpliedVol
-    TwsTickOptionBidExch
-    TwsTickOptionAskExch
-    TwsTickOptionCallOpenInterest
-    TwsTickOptionPutOpenInterest
-    TwsTickOptionCallVolume
-    TwsTickOptionPutVolume
-    TwsTickIndexFuturePremium
-    TwsTickBidExch
-    TwsTickAskExch
-    TwsTickAuctionVolume
-    TwsTickAuctionPrice
-    TwsTickAuctionImbalance
-    TwsTickMarkPrice
-    TwsTickBidEfpComputation
-    TwsTickAskEfpComputation
-    TwsTickLastEfpComputation
-    TwsTickHighEfpComputation
-    TwsTickLowEfpComputation
-    TwsTickOpenEfpComputation
-    TwsTickCloseEfpComputation
-    TwsTickLastTimestamp
-    TwsTickShortable
-    TwsTickFundamentals
-    TwsTickRTVolume
-    TwsTickHalted
-    TwsTickBidYield
-    TwsTickAskYield
-    TwsTickLastYield
-    TwsTickCustOptComp
-    TwsTickTrades
-    TwsTickTradesPerMin
-    TwsTickVolumePerMin
-    TwsTickLastRTHTrade
-    TwsTickRTHistoricalVol
-    TwsTickIBDividends
-    TwsTickBondFactorMultiplier
-    TwsTickRegulatoryImbalance
-    TwsTickNewsTick
-    TwsTickShortTermVolume3Min
-    TwsTickShortTermVolume5Min
-    TwsTickShortTermVolume10Min
-    TwsTickDelayedBid
-    TwsTickDelayedAsk
-    TwsTickDelayedLast
-    TwsTickDelayedBidSize
-    TwsTickDelayedAskSize
-    TwsTickDelayedLastSize
-    TwsTickDelayedHigh
-    TwsTickDelayedLow
-    TwsTickDelayedVolume
-    TwsTickDelayedClose
-    TwsTickDelayedOpen
-    TwsTickRTTrdVolume
-    TwsTickCreditmanMarkPrice
-    TwsTickCreditmanSlowMarkPrice
-    TwsTickDelayedBidOption
-    TwsTickDelayedAskOption
-    TwsTickDelayedLastOption
-    TwsTickDelayedModelOption
-    TwsTickLastExchange
-    TwsTickLastRegulatoryTime
-    TwsTickFuturesOpenInterest
-    TwsTickAverageOptionVolume
-    TwsTickDelayedLastTimestamp
-    TwsTickShortableShares
-    TwsTickDelayedHalted
-    TwsTickReuters2MutualFunds
-    TwsTickEtfNavClose
-    TwsTickEtfNavPriorClose
-    TwsTickEtfNavBid
-    TwsTickEtfNavAsk
-    TwsTickEtfNavLast
-    TwsTickEtfFrozenNavLast
-    TwsTickEtfNavHigh
-    TwsTickEtfNavLow
-    TwsTickSocialMarketAnalytics
-    TwsTickEstimatedIpoMidpoint
-    TwsTickFinalIpoLast
-    TwsTickDelayedYieldBid
-    TwsTickDelayedYieldAsk
-    
-    TwsTickMax = TwsTickDelayedYieldAsk
+    TwsTickAsk = TICK_ASK
+    TwsTickAskSize = TICK_ASK_SIZE
+    TwsTickBid = TICK_BID
+    TwsTickBidSize = TICK_BID_SIZE
+    TwsTickLast = TICK_LAST
+    TwsTickLastSize = TICK_LAST_SIZE
+    TwsTickHigh = TICK_High
+    TwsTickLow = TICK_LOW
+    TwsTickVolume = TICK_VOLUME
+    TwsTickOpen = TICK_OPEN
+    TwsTickClose = TICK_CLOSE
+    TwsTickBidOption = TICK_BID_OPTION
+    TwsTickAskOption = TICK_ASK_OPTION
+    TwsTickLastOption = TICK_LAST_OPTION
+    TwsTickModelOption = TICK_MODEL_OPTION
+    TwsTickLow13Week = TICK_LOW_13_WEEK
+    TwsTickHigh13Week = TICK_HIGH_13_WEEK
+    TwsTickLow26Week = TICK_LOW_26_WEEK
+    TwsTickHigh26Week = TICK_HIGH_26_WEEK
+    TwsTickLow52Week = TICK_LOW_52_WEEK
+    TwsTickHigh52Week = TICK_HIGH_52_WEEK
+    TwsTickAvgVolume = TICK_AVG_VOLUME
+    TwsTickOpenInterest = TICK_OPEN_INTEREST
+    TwsTickOptionHistoricalVol = TICK_OPTION_HISTORICAL_VOL
+    TwsTickOptionImpliedVol = TICK_OPTION_IMPLIED_VOL
+    TwsTickOptionBidExch = TICK_OPTION_BID_EXCH
+    TwsTickOptionAskExch = TICK_OPTION_ASK_EXCH
+    TwsTickOptionCallOpenInterest = TICK_OPTION_CALL_OPEN_INTEREST
+    TwsTickOptionPutOpenInterest = TICK_OPTION_PUT_OPEN_INTEREST
+    TwsTickOptionCallVolume = TICK_OPTION_CALL_VOLUME
+    TwsTickOptionPutVolume = TICK_OPTION_PUT_VOLUME
+    TwsTickIndexFuturePremium = TICK_INDEX_FUTURE_PREMIUM
+    TwsTickBidExch = TICK_BID_EXCH
+    TwsTickAskExch = TICK_ASK_EXCH
+    TwsTickAuctionVolume = TICK_AUCTION_VOLUME
+    TwsTickAuctionPrice = TICK_AUCTION_PRICE
+    TwsTickAuctionImbalance = TICK_AUCTION_IMBALANCE
+    TwsTickMarkPrice = TICK_MARK_PRICE
+    TwsTickBidEfpComputation = TICK_BID_EFP_COMPUTATION
+    TwsTickAskEfpComputation = TICK_ASK_EFP_COMPUTATION
+    TwsTickLastEfpComputation = TICK_LAST_EFP_COMPUTATION
+    TwsTickHighEfpComputation = TICK_HIGH_EFP_COMPUTATION
+    TwsTickLowEfpComputation = TICK_LOW_EFP_COMPUTATION
+    TwsTickOpenEfpComputation = TICK_OPEN_EFP_COMPUTATION
+    TwsTickCloseEfpComputation = TICK_CLOSE_EFP_COMPUTATION
+    TwsTickLastTimestamp = TICK_LAST_TIMESTAMP
+    TwsTickShortable = TICK_SHORTABLE
 End Enum
 
 '@================================================================================
@@ -312,7 +277,7 @@ End Enum
 '@================================================================================
 
 Public Type TwsHistoricalDataRequest
-    ContractSpec            As TwsContractSpecifier
+    Contract                As TwsContract
     EndDateTime             As String
     BarSizeSetting          As String
     Duration                As String
@@ -326,26 +291,29 @@ Public Type TwsBar
     HighValue               As Double
     LowValue                As Double
     CloseValue              As Double
-    Volume                  As BoxedDecimal
+    Volume                  As Long
     TickVolume              As Long
-    WAP                     As BoxedDecimal
+    WAP                     As Double
+    HasGaps                 As Boolean
 End Type
 
-Public Type TwsPriceIncrement
-    LowEdge                 As Double
-    Increment               As Double
+Public Type TwsRealtimeBar
+    Timestamp               As String
+    OpenValue               As Double
+    HighValue               As Double
+    LowValue                As Double
+    CloseValue              As Double
+    Volume                  As Long
+    TickVolume              As Long
+    WAP                     As Double
 End Type
 
-Public Type TwsTickAttributes
-    CanAutoExecute          As Boolean
-    PastLimit               As Boolean
-    PreOpen                 As Boolean
-    Unreported              As Boolean
-    BidPastLow              As Boolean
-    AskPastHigh             As Boolean
+Public Type TwsTagValue
+    Tag                     As String
+    Value                   As String
 End Type
 
-Public Type TwsDeltaNeutralContract
+Public Type TwsUnderComp
     ConId                   As Long
     Delta                   As Double
     Price                   As Double
@@ -386,12 +354,12 @@ Public Function GetAPI( _
 Const ProcName As String = "GetAPI"
 On Error GoTo Err
 
-Set GetAPI = GIBApi.GetAPI(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogApiMessages, pLogRawApiMessages, pLogApiMessageStats)
+Set GetAPI = gGetApi(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogApiMessages, pLogRawApiMessages, pLogApiMessageStats)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsDateStringToDate( _
@@ -400,36 +368,36 @@ Public Function TwsDateStringToDate( _
 Const ProcName As String = "TwsDateStringToDate"
 On Error GoTo Err
 
-TwsDateStringToDate = GIBApi.TwsDateStringToDate(pDateString, pTimezoneName)
+TwsDateStringToDate = gGetDate(pDateString, pTimezoneName)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsHedgeTypeFromString(ByVal pValue As String) As TwsHedgeTypes
 Const ProcName As String = "TwsHedgeTypeFromString"
 On Error GoTo Err
 
-TwsHedgeTypeFromString = GIBApi.TwsHedgeTypeFromString(pValue)
+TwsHedgeTypeFromString = gTwsHedgeTypeFromString(pValue)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsHedgeTypeToString(ByVal pValue As TwsHedgeTypes) As String
 Const ProcName As String = "TwsHedgeTypeToString"
 On Error GoTo Err
 
-TwsHedgeTypeToString = GIBApi.TwsHedgeTypeToString(pValue)
+TwsHedgeTypeToString = gTwsHedgeTypeToString(pValue)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOptionRightFromString( _
@@ -438,12 +406,12 @@ Const ProcName As String = "TwsOptionRightFromString"
 
 On Error GoTo Err
 
-TwsOptionRightFromString = GIBApi.TwsOptionRightFromString(Value)
+TwsOptionRightFromString = gTwsOptionRightFromString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOptionRightToString( _
@@ -452,12 +420,12 @@ Const ProcName As String = "TwsOptionRightToString"
 
 On Error GoTo Err
 
-TwsOptionRightToString = GIBApi.TwsOptionRightToString(Value)
+TwsOptionRightToString = gTwsOptionRightToString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOrderActionFromString( _
@@ -465,12 +433,12 @@ Public Function TwsOrderActionFromString( _
 Const ProcName As String = "TwsOrderActionFromString"
 On Error GoTo Err
 
-TwsOrderActionFromString = GIBApi.TwsOrderActionFromString(Value)
+TwsOrderActionFromString = gTwsOrderActionFromString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOrderActionToString( _
@@ -478,36 +446,36 @@ Public Function TwsOrderActionToString( _
 Const ProcName As String = "TwsOrderActionToString"
 On Error GoTo Err
 
-TwsOrderActionToString = GIBApi.TwsOrderActionToString(Value)
+TwsOrderActionToString = gTwsOrderActionToString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOrderTypeFromString(ByVal Value As String) As TwsOrderTypes
 Const ProcName As String = "TwsOrderTypeFromString"
 On Error GoTo Err
 
-TwsOrderTypeFromString = GIBApi.TwsOrderTypeFromString(Value)
+TwsOrderTypeFromString = gTwsOrderTypeFromString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsOrderTypeToString(ByVal Value As TwsOrderTypes) As String
 Const ProcName As String = "TwsOrderTypeToString"
 On Error GoTo Err
 
-TwsOrderTypeToString = GIBApi.TwsOrderTypeToString(Value)
+TwsOrderTypeToString = gTwsOrderTypeToString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsSecTypeFromString( _
@@ -516,12 +484,12 @@ Const ProcName As String = "TwsSecTypeFromString"
 
 On Error GoTo Err
 
-TwsSecTypeFromString = GIBApi.TwsSecTypeFromString(Value)
+TwsSecTypeFromString = gTwsSecTypeFromString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsSecTypeToShortString( _
@@ -530,12 +498,12 @@ Const ProcName As String = "TwsSecTypeToShortString"
 
 On Error GoTo Err
 
-TwsSecTypeToShortString = GIBApi.TwsSecTypeToShortString(Value)
+TwsSecTypeToShortString = gTwsSecTypeToShortString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsSecTypeToString( _
@@ -544,12 +512,12 @@ Const ProcName As String = "TwsSecTypeToString"
 
 On Error GoTo Err
 
-TwsSecTypeToString = GIBApi.TwsSecTypeToString(Value)
+TwsSecTypeToString = gTwsSecTypeToString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Public Function TwsShortSaleSlotFromString( _
@@ -557,12 +525,12 @@ Public Function TwsShortSaleSlotFromString( _
 Const ProcName As String = "TwsSortSaleSlotFromString"
 On Error GoTo Err
 
-TwsShortSaleSlotFromString = GIBApi.TwsShortSaleSlotFromString(Value)
+TwsShortSaleSlotFromString = gTwsShortSaleSlotFromString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 ''
@@ -583,12 +551,12 @@ Public Function TwsShortSaleSlotToString( _
 Const ProcName As String = "TwsSortSaleSlotToString"
 On Error GoTo Err
 
-TwsShortSaleSlotToString = GIBApi.TwsShortSaleSlotToString(Value)
+TwsShortSaleSlotToString = gTwsShortSaleSlotToString(Value)
 
 Exit Function
 
 Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+gHandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 '@================================================================================
