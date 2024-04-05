@@ -120,7 +120,7 @@ call :TlbImp TBDataCollector27
 
 set SOURCE=%BIN%\TradeWright.TradeBuild.ServiceProviders
 
-call :TlbImp IBAPIV10027
+call :TlbImp IBAPI
 call :TlbImp IBENHAPI27
 call :TlbImp IBTWSSP27
 call :TlbImp TradingDO27
