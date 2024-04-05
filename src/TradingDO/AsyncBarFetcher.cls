@@ -119,7 +119,7 @@ doCancel
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITask_run()
@@ -133,7 +133,7 @@ End If
 
 Select Case mAsyncState
 Case Started
-    gLogger.Log "BarFetcher started for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
+    GTDO.Logger.Log "BarFetcher started for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
     mRSFetcher.Initialise mDB
     Set mFutureWaiter = New FutureWaiter
     mAsyncState = Fetching
@@ -154,7 +154,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -178,14 +178,14 @@ ElseIf ev.Future.IsFaulted Then
     fireFetchFailed ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf TypeOf ev.Future.Value Is Recordset Then
-    gLogger.Log "BarFetcher received " & _
+    GTDO.Logger.Log "BarFetcher received " & _
                 mSpecifier.BarTimePeriod.ToShortString & _
                 " recordset for " & mInstrument.ShortName, _
                 ProcName, ModuleName, LogLevelDetail
     mTaskContext.Continue
     mAsyncState = Fetched
 ElseIf TypeOf ev.Future.Value Is Bars Then
-    gLogger.Log "BarFetcher fetched " & _
+    GTDO.Logger.Log "BarFetcher fetched " & _
                 mTargetBarsBuilder.Bars.Count & _
                 " " & mSpecifier.BarTimePeriod.ToShortString & _
                 " bars for " & mInstrument.ShortName, _
@@ -197,7 +197,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -215,7 +215,7 @@ Set mCurrentBar = pBar
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -241,7 +241,7 @@ On Error GoTo Err
 
 mAsyncState = Started
 Set mBarListener = pListener
-gSetVariant mCookie, cookie
+GTDO.SetVariant mCookie, cookie
 
 Set mSpecifier = pSpecifier
 mUseTickdata = gUseTickData(mSpecifier.BarTimePeriod.Units)
@@ -255,13 +255,13 @@ Set mTargetBarsBuilder = CreateBarsBuilder(mSpecifier.BarTimePeriod, _
 
 mSessionTimes = gCalcSessionTimes(mSpecifier, mInstrument)
 
-If taskName = "" Then taskName = "BarFetcher/" & mInstrument.ShortName & "(" & mSpecifier.BarTimePeriod.ToString & ")" & FormatTimestamp(mSpecifier.FromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(mSpecifier.ToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+If taskName = "" Then taskName = "BarFetcher/" & mInstrument.ShortName & "(" & mSpecifier.BarTimePeriod.ToString & ")" & FormatTimestamp(mSpecifier.FromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(mSpecifier.ToDate, TimestampNoMillisecs) & "(" & GetSequenceNumber & ")"
 Set FetchBarsAsync = StartTask(Me, PriorityNormal, taskName, cookie)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -284,7 +284,7 @@ Set createNewSessionBuilder = CreateSessionBuilder(pInstrument.SessionStartTime,
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub doCancel()
@@ -292,19 +292,19 @@ Const ProcName As String = "doCancel"
 On Error GoTo Err
 
 If Not mRS Is Nothing Then
-    If Not gIsStateSet(mRS.State, adStateOpen) Then mRS.Cancel
+    If Not IsStateSet(mRS.State, adStateOpen) Then mRS.Cancel
 End If
 
 If Not mFutureWaiter Is Nothing Then mFutureWaiter.Cancel
 
-gLogger.Log "BarFetcher cancelled for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
+GTDO.Logger.Log "BarFetcher cancelled for " & mInstrument.ShortName, ProcName, ModuleName, LogLevelDetail
 mTaskContext.Finish Empty, True
 fireFetchCancelled
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function doFetchBarsAsync( _
@@ -326,7 +326,7 @@ Set doFetchBarsAsync = rsFetcher.FetchRecordsetAsync( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function doFetchTicksAsync( _
@@ -349,7 +349,7 @@ Set doFetchTicksAsync = rsFetcher.FetchRecordsetAsync( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function filterByTime( _
@@ -368,7 +368,7 @@ mBarListener.FetchCancelled mCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireFetchCompleted()
@@ -382,7 +382,7 @@ mBarListener.FetchCompleted mCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireFetchFailed(ByVal pErrorNumber As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
@@ -396,7 +396,7 @@ mBarListener.FetchFailed mCookie, pErrorNumber, pErrorMessage, pErrorSource
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireNotifyBar(ByVal pBar As Bar)
@@ -410,7 +410,7 @@ mBarListener.NotifyBar mCookie, pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
@@ -431,7 +431,7 @@ mBarsFutureBuilder.Complete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub taskRunUsingBardata()
@@ -462,7 +462,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub taskRunUsingTickdata()
@@ -543,7 +543,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
