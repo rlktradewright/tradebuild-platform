@@ -1,4 +1,4 @@
-Attribute VB_Name = "Globals"
+Attribute VB_Name = "GTradingDO"
 Option Explicit
 
 ''
@@ -29,10 +29,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                        As String = "TradingDO27"
-Private Const ModuleName                        As String = "Globals"
-
-Public Const ConnectCompletionTimeoutMillisecs  As Long = 5000
+Private Const ModuleName As String = "GTradingDO"
 
 Public Const GenericColumnId                    As String = "ID"
 Public Const GenericColumnName                  As String = "NAME"
@@ -141,13 +138,6 @@ Public Const InstrumentClassColumnTickSize      As String = "TICKSIZE"
 Public Const InstrumentClassColumnTickValue     As String = "TICKVALUE"
 Public Const InstrumentClassColumnTimeZone      As String = "TIMEZONENAME"
 
-Public Const MaxDateValue                       As Date = #12/31/9999#
-Public Const MaxLong                            As Long = &H7FFFFFFF
-
-Public Const OneSecond                          As Double = 1# / 86400#
-Public Const OneMicrosecond                     As Double = 1# / 86400000000#
-Public Const OneMinute                          As Double = 1# / 1440#
-
 Public Const TimeZoneColumnCanonicalId          As String = "CANONICALID"
 Public Const TimeZoneColumnCanonicalName        As String = "CANONICALNAME"
 Public Const TimeZoneColumnName                 As String = GenericColumnName
@@ -155,8 +145,6 @@ Public Const TimeZoneColumnName                 As String = GenericColumnName
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private mSqlBadWords()                          As Variant
 
 '@================================================================================
 ' Class Event Handlers
@@ -174,120 +162,92 @@ Private mSqlBadWords()                          As Variant
 ' Properties
 '@================================================================================
 
-Public Property Get gLogger() As FormattingLogger
-Static sLogger As FormattingLogger
-If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger(InfoTypeTradingDO, ProjectName)
-Set gLogger = sLogger
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function gCategoryFromSecType( _
+Public Function CategoryFromSecType( _
                 ByVal Value As SecurityTypes) As InstrumentCategories
 Select Case Value
 Case SecurityTypes.SecTypeStock
-    gCategoryFromSecType = InstrumentCategoryStock
+    CategoryFromSecType = InstrumentCategoryStock
 Case SecurityTypes.SecTypeFuture
-    gCategoryFromSecType = InstrumentCategoryFuture
+    CategoryFromSecType = InstrumentCategoryFuture
 Case SecurityTypes.SecTypeOption
-    gCategoryFromSecType = InstrumentCategoryOption
+    CategoryFromSecType = InstrumentCategoryOption
 Case SecurityTypes.SecTypeFuturesOption
-    gCategoryFromSecType = InstrumentCategoryFuturesOption
+    CategoryFromSecType = InstrumentCategoryFuturesOption
 Case SecurityTypes.SecTypeCash
-    gCategoryFromSecType = InstrumentCategoryCash
+    CategoryFromSecType = InstrumentCategoryCash
 'Case SecurityTypes.SecTypeCombo
-'    gCategoryFromSecType = InstrumentCategoryBag
+'    CategoryFromSecType = InstrumentCategoryBag
 Case SecurityTypes.SecTypeIndex
-    gCategoryFromSecType = InstrumentCategoryIndex
+    CategoryFromSecType = InstrumentCategoryIndex
 End Select
 End Function
 
-Public Function gCategoryToSecType( _
+Public Function CategoryToSecType( _
                 ByVal Value As InstrumentCategories) As SecurityTypes
 Select Case Value
 Case InstrumentCategoryStock
-    gCategoryToSecType = SecurityTypes.SecTypeStock
+    CategoryToSecType = SecurityTypes.SecTypeStock
 Case InstrumentCategoryFuture
-    gCategoryToSecType = SecurityTypes.SecTypeFuture
+    CategoryToSecType = SecurityTypes.SecTypeFuture
 Case InstrumentCategoryOption
-    gCategoryToSecType = SecurityTypes.SecTypeOption
+    CategoryToSecType = SecurityTypes.SecTypeOption
 Case InstrumentCategoryFuturesOption
-    gCategoryToSecType = SecurityTypes.SecTypeFuturesOption
+    CategoryToSecType = SecurityTypes.SecTypeFuturesOption
 Case InstrumentCategoryCash
-    gCategoryToSecType = SecurityTypes.SecTypeCash
+    CategoryToSecType = SecurityTypes.SecTypeCash
 'Case InstrumentCategoryBag
 '    gCategoryToSecType= SecurityTypes.SecTypeCombo
 Case InstrumentCategoryIndex
-    gCategoryToSecType = SecurityTypes.SecTypeIndex
+    CategoryToSecType = SecurityTypes.SecTypeIndex
 End Select
 End Function
 
-Public Function gCategoryFromString(ByVal Value As String) As InstrumentCategories
+Public Function CategoryFromString(ByVal Value As String) As InstrumentCategories
 Value = Trim$(Value)
 Select Case UCase$(Value)
 Case "STOCK", "STK"
-    gCategoryFromString = InstrumentCategoryStock
+    CategoryFromString = InstrumentCategoryStock
 Case "FUTURE", "FUT"
-    gCategoryFromString = InstrumentCategoryFuture
+    CategoryFromString = InstrumentCategoryFuture
 Case "OPTION", "OPT"
-    gCategoryFromString = InstrumentCategoryOption
+    CategoryFromString = InstrumentCategoryOption
 Case "FUTURES OPTION", "FOP"
-    gCategoryFromString = InstrumentCategoryFuturesOption
+    CategoryFromString = InstrumentCategoryFuturesOption
 Case "CASH"
-    gCategoryFromString = InstrumentCategoryCash
+    CategoryFromString = InstrumentCategoryCash
 'Case "BAG"
-'    gCategoryFromString = InstrumentCategoryBag
+'    CategoryFromString = InstrumentCategoryBag
 Case "INDEX", "IND"
-    gCategoryFromString = InstrumentCategoryIndex
+    CategoryFromString = InstrumentCategoryIndex
 End Select
 End Function
 
-Public Function gCategoryToString(ByVal Value As InstrumentCategories) As String
+Public Function CategoryToString(ByVal Value As InstrumentCategories) As String
 Select Case Value
 Case InstrumentCategoryStock
-    gCategoryToString = "STK"
+    CategoryToString = "STK"
 Case InstrumentCategoryFuture
-    gCategoryToString = "FUT"
+    CategoryToString = "FUT"
 Case InstrumentCategoryOption
-    gCategoryToString = "OPT"
+    CategoryToString = "OPT"
 Case InstrumentCategoryFuturesOption
-    gCategoryToString = "FOP"
+    CategoryToString = "FOP"
 Case InstrumentCategoryCash
-    gCategoryToString = "CASH"
+    CategoryToString = "CASH"
 'Case InstrumentCategoryBag
-'    gCategoryToString = "BAG"
+'    CategoryToString = "BAG"
 Case InstrumentCategoryIndex
-    gCategoryToString = "IND"
+    CategoryToString = "IND"
 End Select
 End Function
 
-Public Function gCleanQueryArg( _
-                ByRef inString) As String
-
-Dim i As Long
-
-On Error GoTo Err
-
-gCleanQueryArg = inString
-
-For i = 0 To UBound(mSqlBadWords)
-    gCleanQueryArg = Replace(gCleanQueryArg, mSqlBadWords(i), "")
-Next
-
-Exit Function
-
-Err:
-
-mSqlBadWords = Array("'", "select", "drop", ";", "--", "insert", "delete", "xp_")
-Resume
-End Function
-
-
-Public Function gContractFromInstrument( _
+Public Function ContractFromInstrument( _
                 ByVal instrument As instrument) As IContract
-Const ProcName As String = "gContractFromInstrument"
+Const ProcName As String = "ContractFromInstrument"
 On Error GoTo Err
 
 Dim contractSpec As IContractSpecifier
@@ -327,15 +287,66 @@ If False Then 'fix this up using hierarchical recordsets !!!!!!!!!!!!!!!!!!!!!!!
 End If
     
 End With
-Set gContractFromInstrument = lContractBuilder.Contract
+Set ContractFromInstrument = lContractBuilder.Contract
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gDatabaseTypeFromString( _
+Public Function CreateConnectionParams( _
+                ByVal dbType As DatabaseTypes, _
+                ByVal server As String, _
+                ByVal databaseName As String, _
+                Optional ByVal username As String, _
+                Optional ByVal password As String) As ConnectionParams
+Const ProcName As String = "CreateConnectionParams"
+On Error GoTo Err
+
+Set CreateConnectionParams = New ConnectionParams
+CreateConnectionParams.Initialise dbType, server, databaseName, username, password
+
+Exit Function
+
+Err:
+GTDO.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateTradingDB( _
+                ByVal pConnectionParams As ConnectionParams) As TradingDB
+Const ProcName As String = "CreateTradingDB"
+On Error GoTo Err
+
+Dim lTradingDB As New TradingDB
+lTradingDB.Initialise pConnectionParams
+
+Set CreateTradingDB = lTradingDB
+
+Exit Function
+
+Err:
+GTDO.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function CreateTradingDBFuture( _
+                ByVal pConnectionParams As ConnectionParams, _
+                Optional ByVal pCookie As Variant) As IFuture
+Const ProcName As String = "CreateTradingDBFuture"
+On Error GoTo Err
+
+Dim lTradingDBFutureBuilder As New TradingDBFutureBuilder
+lTradingDBFutureBuilder.Initialise pConnectionParams, pCookie
+
+Set CreateTradingDBFuture = lTradingDBFutureBuilder.Future
+
+Exit Function
+
+Err:
+GTDO.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Public Function DatabaseTypeFromString( _
                 ByVal Value As String) As DatabaseTypes
 Value = Trim$(Value)
 Select Case UCase$(Value)
@@ -347,54 +358,54 @@ Case "SQLSERVER", _
         "SQL SERVER 2000", _
         "SQLSERVER2005", _
         "SQL SERVER 2005"
-    gDatabaseTypeFromString = DbSQLServer
+    DatabaseTypeFromString = DbSQLServer
 Case "MYSQL5", "MYSQL 5", "MYSQL"
-    gDatabaseTypeFromString = DbMySQL5
+    DatabaseTypeFromString = DbMySQL5
 End Select
 End Function
 
-Public Function gDatabaseTypeToString( _
+Public Function DatabaseTypeToString( _
                 ByVal Value As DatabaseTypes) As String
 Select Case Value
 Case DbSQLServer, _
         DbSQLServer7, _
         DbSQLServer2000, _
         DbSQLServer2005
-    gDatabaseTypeToString = "SQL Server"
+    DatabaseTypeToString = "SQL Server"
 Case DbMySQL5
-    gDatabaseTypeToString = "MySQL 5"
+    DatabaseTypeToString = "MySQL 5"
 End Select
 End Function
 
-Public Function gGenerateConnectionErrorMessages( _
+Public Function GenerateConnectionErrorMessages( _
                 ByVal pConnection As ADODB.Connection) As String
 Dim lError As ADODB.Error
 Dim errMsg As String
 
-Const ProcName As String = "gGenerateConnectionErrorMessages"
+Const ProcName As String = "GenerateConnectionErrorMessages"
 
 On Error GoTo Err
 
 For Each lError In pConnection.Errors
     errMsg = "--------------------" & vbCrLf & _
-            gGenerateErrorMessage(lError)
+            GenerateErrorMessage(lError)
 Next
 pConnection.Errors.Clear
-gGenerateConnectionErrorMessages = errMsg
+GenerateConnectionErrorMessages = errMsg
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gGenerateErrorMessage( _
+Public Function GenerateErrorMessage( _
                 ByVal pError As ADODB.Error)
-Const ProcName As String = "gGenerateErrorMessage"
+Const ProcName As String = "GenerateErrorMessage"
 
 On Error GoTo Err
 
-gGenerateErrorMessage = _
+GenerateErrorMessage = _
         "Error " & pError.Number & ": " & pError.Description & vbCrLf & _
         "    Source: " & pError.Source & vbCrLf & _
         "    SQL state: " & pError.SQLState & vbCrLf & _
@@ -403,74 +414,21 @@ gGenerateErrorMessage = _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Function gGetSequenceNumber() As Long
+Public Function GetSequenceNumber() As Long
 Static seq As Long
 seq = seq + 1
-gGetSequenceNumber = seq
-End Function
-
-Public Sub gHandleUnexpectedError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pReRaise As Boolean = True, _
-                Optional ByVal pLog As Boolean = False, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
-
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
-End Sub
-
-Public Sub gNotifyUnhandledError( _
-                ByRef pProcedureName As String, _
-                ByRef pModuleName As String, _
-                Optional ByRef pFailpoint As String, _
-                Optional ByVal pErrorNumber As Long, _
-                Optional ByRef pErrorDesc As String, _
-                Optional ByRef pErrorSource As String)
-Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.Source)
-Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
-Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
-
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
-End Sub
-
-Public Function gIsStateSet( _
-                ByVal Value As Long, _
-                ByVal stateToTest As ADODB.ObjectStateEnum) As Boolean
-gIsStateSet = ((Value And stateToTest) = stateToTest)
-End Function
-
-Public Function gRoundTimeToSecond( _
-                ByVal timestamp As Date) As Date
-gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
-End Function
-
-Public Sub gSetVariant(ByRef pTarget As Variant, ByRef pSource As Variant)
-If IsObject(pSource) Then
-    Set pTarget = pSource
-Else
-    pTarget = pSource
-End If
-End Sub
-
-Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
-gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
-End Function
-
-Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
-gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinute
+GetSequenceNumber = seq
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
+
+
 
 

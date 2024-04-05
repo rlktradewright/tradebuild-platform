@@ -101,7 +101,7 @@ fireFetchCompleted
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -120,7 +120,7 @@ Set mCurrentBar = pBar
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -165,7 +165,7 @@ If mNotifyAtEnd Then
 Else
     fireNotifyBar mCurrentBar
 End If
-gLogger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
+GTDO.Logger.Log "BarFetcher fetched " & mTargetBarsBuilder.Bars.Count & " bars for " & mInstrument.ShortName, ProcName, ModuleName
 
 Set FetchBars = mTargetBarsBuilder.Bars
 DeferAction Me
@@ -173,7 +173,7 @@ DeferAction Me
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -199,7 +199,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function createNewSessionBuilder(ByVal pInstrument As instrument) As SessionBuilder
@@ -211,7 +211,7 @@ Set createNewSessionBuilder = CreateSessionBuilder(pInstrument.SessionStartTime,
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function doFetchBars( _
@@ -233,7 +233,7 @@ Set doFetchBars = pRsFetcher.FetchRecordset( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function doFetchTicks( _
@@ -256,7 +256,7 @@ Set doFetchTicks = pRsFetcher.FetchRecordset( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub fetchBarsUsingBardata()
@@ -292,7 +292,7 @@ lBDP.ProcessBars
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -364,7 +364,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -384,7 +384,7 @@ mBarListener.FetchCancelled mCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireFetchCompleted()
@@ -398,7 +398,7 @@ mBarListener.FetchCompleted mCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireFetchFailed(ByVal pErrorNumber As Long, ByVal pErrorMessage As String, ByVal pErrorSource As String)
@@ -412,7 +412,7 @@ mBarListener.FetchFailed mCookie, pErrorNumber, pErrorMessage, pErrorSource
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireNotifyBar(ByVal pBar As Bar)
@@ -426,7 +426,7 @@ mBarListener.NotifyBar mCookie, pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function needMoreTicks(ByVal pTotalBars As Long, ByVal pSpecifier As BarDataSpecifier) As Boolean
@@ -446,7 +446,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

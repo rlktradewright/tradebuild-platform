@@ -86,7 +86,7 @@ LocalSymbol = Trim$(mRS("LocalSymbol"))
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let LocalSymbol( _
@@ -101,7 +101,7 @@ mRS("LocalSymbol") = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ProviderKey() As String
@@ -114,7 +114,7 @@ ProviderKey = Trim$(mRS("providerkey"))
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ProviderKey( _
@@ -129,7 +129,7 @@ mRS("providerkey") = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@===============================================================================

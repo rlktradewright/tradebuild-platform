@@ -98,15 +98,15 @@ If ev.Cancelled Then
 ElseIf ev.ErrorNumber <> 0 Then
     RaiseEvent Error(ev.ErrorNumber, ev.ErrorMessage)
 Else
-    If gLogger.IsLoggable(LogLevelMediumDetail) Then
-        gLogger.Log "successfully wrote data for " & mInstrument.ShortName & ": period " & FormatTimestamp(CDate(ev.cookie), TimestampDateAndTimeISO8601), ProcName, ModuleName, LogLevelMediumDetail
+    If GTDO.Logger.IsLoggable(LogLevelMediumDetail) Then
+        GTDO.Logger.Log "successfully wrote data for " & mInstrument.ShortName & ": period " & FormatTimestamp(CDate(ev.cookie), TimestampDateAndTimeISO8601), ProcName, ModuleName, LogLevelMediumDetail
     End If
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -124,7 +124,7 @@ Set mTickWriter = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mTickWriter_DataWritten()
@@ -152,7 +152,7 @@ startWriteTimer
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -184,7 +184,7 @@ startWriteTimer
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -198,7 +198,7 @@ writePeriodData
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteAsk( _
@@ -218,7 +218,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteBid( _
@@ -238,7 +238,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteClose( _
@@ -257,7 +257,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteHigh( _
@@ -276,7 +276,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteLow( _
@@ -295,7 +295,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteMarketDepthData( _
@@ -319,7 +319,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteMarketDepthReset( _
@@ -336,7 +336,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteOpen( _
@@ -354,7 +354,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteOpenInterest( _
@@ -372,7 +372,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteTick( _
@@ -413,7 +413,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrOverflow Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteTrade( _
@@ -433,7 +433,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteVolume( _
@@ -451,7 +451,7 @@ mDataAdded = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -464,7 +464,7 @@ Const ProcName As String = "checkIfNewPeriod"
 On Error GoTo Err
 
 Dim barTime As Date
-barTime = gTruncateTimeToMinute(timestamp)
+barTime = TruncateTimeToMinute(timestamp)
 If barTime = mOpeningTimestamp Then Exit Sub
 
 If Not mTde Is Nothing Then
@@ -481,7 +481,7 @@ mOpeningTimestamp = barTime
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -494,7 +494,7 @@ Set mWriteTLI = mTimerList.Add(Empty, 4000 + (Int(2000 * Rnd) + 1), ExpiryTimeUn
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub writePeriodData()
@@ -529,7 +529,7 @@ mDataAdded = False
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 

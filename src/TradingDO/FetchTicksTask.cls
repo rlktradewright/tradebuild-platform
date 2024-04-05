@@ -82,7 +82,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITask_run()
@@ -97,13 +97,13 @@ End If
 Set mInstrumentTaskController = mDB.InstrumentFactory.LoadBySpecifierAsync( _
                                                 mSpecifier, _
                                                 , _
-                                                "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
+                                                "LoadBySpecifier/" & mSpecifier.ToString & "(" & GetSequenceNumber & ")")
 mTaskContext.Suspend -1
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -138,7 +138,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================

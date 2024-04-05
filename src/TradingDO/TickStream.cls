@@ -97,15 +97,15 @@ On Error GoTo Err
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
                     ModuleName & ": fetch error " & vbCrLf & _
-                    gGenerateErrorMessage(pError) & _
-                    gGenerateConnectionErrorMessages(mConnection))
+                    GenerateErrorMessage(pError) & _
+                    GenerateConnectionErrorMessages(mConnection))
     If mAsynchronous Then
-        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+        If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     End If
 Else
     If mAsynchronous Then
         Set mRS.ActiveConnection = Nothing
-        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+        If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     Else
         mFetchComplete = True
     End If
@@ -114,7 +114,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -132,7 +132,7 @@ If mAsynchronous Then doFetchTicks
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mConnector_ConnectFailed( _
@@ -155,8 +155,8 @@ On Error GoTo Err
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
                     ModuleName & ": fetch error " & vbCrLf & _
-                    gGenerateErrorMessage(pError) & _
-                    gGenerateConnectionErrorMessages(mConnection))
+                    GenerateErrorMessage(pError) & _
+                    GenerateConnectionErrorMessages(mConnection))
     Exit Sub
 End If
 
@@ -167,7 +167,7 @@ RaiseEvent DataAvailable
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mRs_FetchProgress( _
@@ -184,7 +184,7 @@ If Not mAsynchronous Then Exit Sub
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -204,7 +204,7 @@ Const ProcName As String = "Cancel"
 On Error GoTo Err
 
 If Not mRS Is Nothing Then
-    If gIsStateSet(mRS.State, adStateOpen) Then
+    If IsStateSet(mRS.State, adStateOpen) Then
         mRS.Close
     Else
         mRS.Cancel
@@ -213,7 +213,7 @@ If Not mRS Is Nothing Then
 End If
 
 If Not mConnection Is Nothing Then
-    If gIsStateSet(mConnection.State, adStateOpen) Then
+    If IsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.Cancel
@@ -224,7 +224,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetNextTick( _
@@ -250,7 +250,7 @@ GetNextTick = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -263,13 +263,13 @@ On Error GoTo Err
 
 Set mDB = db
 mInstrumentID = instrumentID
-mFromDate = gTruncateTimeToMinute(FromDate)
-mToDate = gTruncateTimeToNextMinute(ToDate)
+mFromDate = TruncateTimeToMinute(FromDate)
+mToDate = TruncateTimeToNextMinute(ToDate)
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StartStream( _
@@ -289,7 +289,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -301,7 +301,7 @@ Const ProcName As String = "createNewTickDecoder"
 On Error GoTo Err
 
 Dim PeriodStartTime As Date
-PeriodStartTime = gRoundTimeToSecond(mRS("DateTime"))
+PeriodStartTime = RoundTimeToSecond(mRS("DateTime"))
 
 Dim format As String
 format = mRS("Version")
@@ -321,7 +321,7 @@ Debug.Print "createNewTickDecoder: " & FormatTimestamp(PeriodStartTime, Timestam
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub doFetchTicks()
@@ -348,7 +348,7 @@ Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            gRoundTimeToSecond(mFromDate))
+                            RoundTimeToSecond(mFromDate))
 cmd.Parameters.Append param
 
 ' @To
@@ -356,7 +356,7 @@ Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            gRoundTimeToSecond(mToDate))
+                            RoundTimeToSecond(mToDate))
 cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection
@@ -383,7 +383,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getNextDecoder() As Boolean
@@ -392,8 +392,8 @@ On Error GoTo Err
 
 Set mDecoder = Nothing
 
-If Not gIsStateSet(mRS.State, adStateOpen) Then
-    gLogger.Log "recordset state is " & mRS.State, ProcName, ModuleName, LogLevelDetail
+If Not IsStateSet(mRS.State, adStateOpen) Then
+    GTDO.Logger.Log "recordset state is " & mRS.State, ProcName, ModuleName, LogLevelDetail
     Debug.Print "Recordset state is " & mRS.State
 ElseIf mRS.EOF Then
     If Not mFetchComplete Then
@@ -412,7 +412,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

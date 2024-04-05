@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BarWriter"
+Attribute VB_Name = "DbBarWriter"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 '@===============================================================================
@@ -41,7 +41,7 @@ Implements ITask
 '@===============================================================================
 
 
-Private Const ModuleName                        As String = "BarWriter"
+Private Const ModuleName                        As String = "DbBarWriter"
 
 '@===============================================================================
 ' Enums
@@ -89,8 +89,8 @@ Private mSuppliedTaskName                       As String
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-'Debug.Print "BarWriter terminated"
-'If gLogger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
+'Debug.Print "DbBarWriter terminated"
+'If GTDO.Logger.IsLoggable(LogLevelHighDetail) Then logMessage pMsg:=taskName & ": terminated", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 End Sub
 
 '@===============================================================================
@@ -105,19 +105,19 @@ If Not mCmd Is Nothing Then
     mCmd.Cancel
     mConnection.Close
 ElseIf Not mConnection Is Nothing Then
-    If gIsStateSet(mConnection.State, adStateOpen) Then
+    If IsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.Cancel
     End If
 End If
-If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:=taskName & ": cancelled", pProcName:=ProcName, pLogLevel:=LogLevelDetail
+If GTDO.Logger.IsLoggable(LogLevelDetail) Then logMessage pMsg:=taskName & ": cancelled", pProcName:=ProcName, pLogLevel:=LogLevelDetail
 mTaskContext.Finish Empty, True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITask_run()
@@ -130,7 +130,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -179,7 +179,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         logMessage pMsg:="OS timeout while writing to transaction log detected", pProcName:=ProcName
         
         If mAsynchronous Then
-            If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+            If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
             mTaskContext.Finish 0, False
         End If
        
@@ -197,12 +197,12 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     
     Dim s As String
     s = "Bar Writer: execution error " & vbCrLf & _
-        gGenerateErrorMessage(pError) & _
-        gGenerateConnectionErrorMessages(pConnection)
+        GenerateErrorMessage(pError) & _
+        GenerateConnectionErrorMessages(pConnection)
     logMessage pMsg:=taskName & ": " & s, pProcName:=ProcName
     
-    If gIsStateSet(mConnection.State, adStateOpen) Then
-        'Debug.Print "BarWriter: close connection(error)"
+    If IsStateSet(mConnection.State, adStateOpen) Then
+        'Debug.Print "DbBarWriter: close connection(error)"
         mConnection.Close
     End If
     
@@ -212,14 +212,14 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         Err.Raise pError.Number, , s
     End If
 Else
-    If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": bar written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+    If GTDO.Logger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": bar written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
-    'if gisstateset(mConnection.State,adStateOpen) Then mConnection.Close
+    'if IsStateSet(mConnection.State,adStateOpen) Then mConnection.Close
     
     If mAsynchronous Then
-        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+        If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
         mTaskContext.Finish 0, False
     End If
 End If
@@ -227,7 +227,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -245,7 +245,7 @@ If mAsynchronous Then doWriteBar
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mConnector_ConnectFailed( _
@@ -264,7 +264,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -311,18 +311,18 @@ mVolume = volume
 mTickVolume = tickVolume
 mOpenInterest = openInterest
 
-If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write bar", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+If GTDO.Logger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write bar", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
 
 connectToDB
 
 doWriteBar
 
-If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function WriteBarAsync( _
@@ -355,7 +355,7 @@ mOpenInterest = openInterest
 
 mSuppliedTaskName = pTaskName
 
-If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write bar (async)", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+If GTDO.Logger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write bar (async)", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
 
 Set WriteBarAsync = StartTask(Me, _
                             PriorityNormal, _
@@ -365,7 +365,7 @@ Set WriteBarAsync = StartTask(Me, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@===============================================================================
@@ -376,7 +376,7 @@ Private Sub connectToDB()
 Const ProcName As String = "connectToDB"
 On Error GoTo Err
 
-'Debug.Print "BarWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
+'Debug.Print "DbBarWriter: Connect to DB " & IIf(mAsynchronous, "(async)", "")
 Set mCmd = Nothing
 If mConnector Is Nothing Then Set mConnector = mDB.GetConnector
 If mAsynchronous Then
@@ -388,7 +388,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doWriteBar()
@@ -496,7 +496,7 @@ Execute
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Execute()
@@ -517,7 +517,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logMessage( _
@@ -526,7 +526,7 @@ Private Sub logMessage( _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Const ProcName As String = "logMessage"
-gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
+GTDO.Logger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 Private Function taskName() As String
@@ -537,10 +537,10 @@ If lTaskName = "" Then
     If mSuppliedTaskName <> "" Then
         lTaskName = mSuppliedTaskName
     Else
-        lTaskName = "BarWriter/" & mShortName & _
+        lTaskName = "DbBarWriter/" & mShortName & _
                                 "(" & mBarLength & ")" & _
                                 FormatTimestamp(mTimestamp, TimestampNoMillisecs) & _
-                                "(" & gGetSequenceNumber & ")"
+                                "(" & GetSequenceNumber & ")"
     End If
 End If
 taskName = lTaskName

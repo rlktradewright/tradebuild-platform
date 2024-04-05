@@ -114,7 +114,7 @@ ProcessNextBar = True
 Exit Function
 
 Err:
-gHandleUnexpectedError "ProcName", ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub ProcessBars()
@@ -127,7 +127,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -192,7 +192,7 @@ mAccumulatedVolume = mAccumulatedVolume + pVolume
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getNumberOfPrices( _
@@ -232,7 +232,7 @@ mTargetBarsBuilder.NotifyVolume lValue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSessionTime( _
@@ -249,7 +249,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

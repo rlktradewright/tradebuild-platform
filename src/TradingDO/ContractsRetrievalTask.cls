@@ -93,7 +93,7 @@ doCancel
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITask_run()
@@ -109,7 +109,7 @@ If mInstrEnumerator Is Nothing Then
     Set mFetchInstrumentsTC = mDB.InstrumentFactory.QueryObjectsBySpecAsync( _
                                                 mContractSpec, _
                                                 , _
-                                                "LoadBySpecifier/" & mContractSpec.ToString & "(" & gGetSequenceNumber & ")")
+                                                "LoadBySpecifier/" & mContractSpec.ToString & "(" & GetSequenceNumber & ")")
     mTaskContext.Suspend -1
 Else
     If Not mInstrEnumerator.MoveNext Then
@@ -122,7 +122,7 @@ Else
         Set lInstrument = mInstrEnumerator.Current
         
         Dim lContract As IContract
-        Set lContract = gContractFromInstrument(lInstrument)
+        Set lContract = ContractFromInstrument(lInstrument)
         
         mBuilder.Add lContract
         If Not mListener Is Nothing Then mListener.NotifyContract mFutureBuilder.cookie, lContract
@@ -137,7 +137,7 @@ If Err.Number = 3265 Then
     ' to the requested Name or ordinal'. It occurs the first time this object
     ' runs after the database has not been used for some time (hours?). The
     ' instrument objects are correctly constructed, but when the first one is
-    ' accessed (in gContractFromInstrument) the recordset has mysteriously been closed
+    ' accessed (in ContractFromInstrument) the recordset has mysteriously been closed
     '
     ' So just try it again!
     
@@ -148,7 +148,7 @@ If Err.Number = 3265 Then
     Exit Sub
 End If
     
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext( _
@@ -174,7 +174,7 @@ doCancel
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -203,7 +203,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -220,7 +220,7 @@ mTaskContext.Finish Empty, False
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -265,7 +265,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logMessage( _
@@ -274,7 +274,7 @@ Private Sub logMessage( _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Const ProcName As String = "logMessage"
-gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
+GTDO.Logger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 

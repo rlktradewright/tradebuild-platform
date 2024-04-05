@@ -45,8 +45,9 @@ Event ConnectFailed( _
 ' Constants
 '@================================================================================
 
-
 Private Const ModuleName                    As String = "Connector"
+
+Private Const ConnectCompletionTimeoutMillisecs                                As Long = 5000
 
 '@================================================================================
 ' Member variables
@@ -77,7 +78,7 @@ Private mFutureBuilder                      As FutureBuilder
 Private Sub Class_Terminate()
 On Error Resume Next
 If Not mConnection Is Nothing Then
-    If gIsStateSet(mConnection.State, adStateOpen) Then
+    If IsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.Cancel
@@ -101,20 +102,20 @@ If mCancelled Then Exit Sub
 
 If Not mConnectionTLI Is Nothing Then mConnectionTLI.Cancel
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    gLogger.Log "Connector: connection error occurred" & vbCrLf & _
-                                gGenerateErrorMessage(pError) & _
-                                gGenerateConnectionErrorMessages(pConnection), _
+    GTDO.Logger.Log "Connector: connection error occurred" & vbCrLf & _
+                                GenerateErrorMessage(pError) & _
+                                GenerateConnectionErrorMessages(pConnection), _
                 ProcName, ModuleName, LogLevelSevere
     Dim s As String
     s = ModuleName & ": connection error " & vbCrLf & _
-        gGenerateErrorMessage(pError) & _
-        gGenerateConnectionErrorMessages(pConnection)
+        GenerateErrorMessage(pError) & _
+        GenerateConnectionErrorMessages(pConnection)
     RaiseEvent ConnectFailed(pError.Number, s)
     If Not mFutureBuilder Is Nothing Then
         mFutureBuilder.Fail pError.Number, s, ProjectName & "." & ModuleName & ":" & ProcName
     End If
 Else
-    gLogger.Log "Connector: connection succeeded", ProcName, ModuleName, LogLevelHighDetail
+    GTDO.Logger.Log "Connector: connection succeeded", ProcName, ModuleName, LogLevelHighDetail
     mConnected = True
     RaiseEvent Connected(mConnection)
     If Not mFutureBuilder Is Nothing Then
@@ -126,22 +127,22 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mConnection_InfoMessage(ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnection_InfoMessage"
 On Error GoTo Err
 
-gLogger.Log "Connector: InfoMessage event received" & vbCrLf & _
-                            gGenerateErrorMessage(pError) & _
-                            gGenerateConnectionErrorMessages(pConnection), _
+GTDO.Logger.Log "Connector: InfoMessage event received" & vbCrLf & _
+                            GenerateErrorMessage(pError) & _
+                            GenerateConnectionErrorMessages(pConnection), _
             ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -152,10 +153,10 @@ Private Sub mConnectionTLI_StateChange(ev As StateChangeEventData)
 Const ProcName As String = "mConnectionTLI_StateChange"
 On Error GoTo Err
 
-If mConnected Or gIsStateSet(mConnection.State, adStateOpen) Then Exit Sub
+If mConnected Or IsStateSet(mConnection.State, adStateOpen) Then Exit Sub
 If ev.State <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
 
-gLogger.Log "Connect timed out: cancelling connection", ProcName, ModuleName, LogLevelNormal
+GTDO.Logger.Log "Connect timed out: cancelling connection", ProcName, ModuleName, LogLevelNormal
 
 ' note that mConnection.Cancel causes mConnection_ConnectComplete to be called
 ' immediately (ie synchronously)
@@ -165,13 +166,13 @@ mCancelled = False
 
 Set mConnection = Nothing
 
-gLogger.Log "reconnecting", ProcName, ModuleName, LogLevelNormal
+GTDO.Logger.Log "reconnecting", ProcName, ModuleName, LogLevelNormal
 connectToDB True, True
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -190,7 +191,7 @@ Set Connection = mConnection
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -207,7 +208,7 @@ Set Connect = mConnection
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub ConnectAsync(Optional ByVal pUseTimeout As Boolean = True)
@@ -219,7 +220,7 @@ connectToDB True, pUseTimeout
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ConnectFuture(Optional ByVal pUseTimeout As Boolean = True) As IFuture
@@ -233,7 +234,7 @@ Set ConnectFuture = mFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -254,7 +255,7 @@ On Error GoTo Err
 
 If Not mConnection Is Nothing Then
     failpoint = "100"
-    If gIsStateSet(mConnection.State, adStateOpen) Then
+    If IsStateSet(mConnection.State, adStateOpen) Then
         failpoint = "200"
         mConnection.Close
     Else
@@ -279,6 +280,6 @@ If pAsync And pUseTimeout Then Set mConnectionTLI = GetGlobalTimerList.Add(Empty
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName, failpoint
+GTDO.HandleUnexpectedError ProcName, ModuleName, failpoint
 End Sub
 

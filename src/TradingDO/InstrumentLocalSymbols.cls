@@ -102,7 +102,7 @@ mCol.Add Add
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Cancel()
@@ -115,7 +115,7 @@ mRS.CancelBatch
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Count() As Long
@@ -128,7 +128,7 @@ Count = mCol.Count
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Item( _
@@ -142,7 +142,7 @@ Set Item = mCol(index)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Load( _
@@ -188,7 +188,7 @@ mInstrumentID = instrumentID
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -211,7 +211,7 @@ mCol.Remove index
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveAll()
@@ -230,7 +230,7 @@ Set mCol = New Collection
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Save()
@@ -243,7 +243,7 @@ mRS.UpdateBatch
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================

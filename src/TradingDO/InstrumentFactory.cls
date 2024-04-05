@@ -71,7 +71,7 @@ mBaseFactory.Delete Id
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get DataObjectFactory_FieldSpecifiers() As FieldSpecifiers
@@ -83,7 +83,7 @@ Set DataObjectFactory_FieldSpecifiers = FieldSpecifiers
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function DataObjectFactory_LoadByID( _
@@ -96,7 +96,7 @@ Set DataObjectFactory_LoadByID = LoadByID(Id)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_LoadByIDAsync( _
@@ -111,7 +111,7 @@ Set DataObjectFactory_LoadByIDAsync = LoadByIDAsync(Id, cookie, taskName)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_LoadByName( _
@@ -124,7 +124,7 @@ Set DataObjectFactory_LoadByName = LoadByName(Trim$(pName))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_LoadByNameAsync( _
@@ -139,7 +139,7 @@ Set DataObjectFactory_LoadByNameAsync = LoadByNameAsync(pName, cookie, taskName)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_LoadByQuery( _
@@ -152,7 +152,7 @@ Set DataObjectFactory_LoadByQuery = LoadByQuery(whereCondition)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_LoadByQueryAsync( _
@@ -167,7 +167,7 @@ Set DataObjectFactory_LoadByQueryAsync = LoadByQueryAsync(whereCondition, cookie
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_MakeNew() As BusinessDataObject
@@ -179,7 +179,7 @@ Set DataObjectFactory_MakeNew = MakeNew
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_MakeNewAsync( _
@@ -193,7 +193,7 @@ Set DataObjectFactory_MakeNewAsync = MakeNewAsync(cookie)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_makeNewFromRecordset( _
@@ -208,7 +208,7 @@ Set DataObjectFactory_makeNewFromRecordset = obj
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_Query( _
@@ -222,7 +222,7 @@ Set DataObjectFactory_Query = Query(whereCondition, fieldNames)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_QueryAsync( _
@@ -238,7 +238,7 @@ Set DataObjectFactory_QueryAsync = QueryAsync(whereCondition, fieldNames, cookie
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_QueryObjects( _
@@ -251,7 +251,7 @@ Set DataObjectFactory_QueryObjects = QueryObjects(whereCondition)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_QueryObjectsAsync( _
@@ -266,7 +266,7 @@ Set DataObjectFactory_QueryObjectsAsync = QueryObjectsAsync(whereCondition, cook
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub DataObjectFactory_Refresh( _
@@ -279,7 +279,7 @@ Refresh dataObj
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function DataObjectFactory_Search( _
@@ -293,7 +293,7 @@ Set DataObjectFactory_Search = Search(criterion, fieldNames)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_SearchAsync( _
@@ -309,7 +309,7 @@ Set DataObjectFactory_SearchAsync = SearchAsync(criterion, fieldNames, cookie, t
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_SearchObjects( _
@@ -322,7 +322,7 @@ Set DataObjectFactory_SearchObjects = SearchObjects(criterion)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function DataObjectFactory_SearchObjectsAsync( _
@@ -337,7 +337,7 @@ Set DataObjectFactory_SearchObjectsAsync = SearchObjectsAsync(criterion, cookie,
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -357,7 +357,7 @@ Set FieldSpecifiers = mBaseFactory.FieldSpecifiers
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -392,7 +392,7 @@ mBaseFactory.AddField FieldNameNotes, InstrumentColumnNotes, FieldWidthNotes, Fi
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 
 End Sub
 
@@ -411,7 +411,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadByIDAsync( _
@@ -426,7 +426,7 @@ Set LoadByIDAsync = mBaseFactory.LoadByIDAsync(Id, cookie, taskName)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadByName( _
@@ -444,7 +444,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadByNameAsync( _
@@ -459,7 +459,7 @@ Set LoadByNameAsync = mBaseFactory.LoadByQueryAsync(getNameWhereCondition(Trim$(
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadByQuery( _
@@ -477,7 +477,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadByQueryAsync( _
@@ -492,7 +492,7 @@ Set LoadByQueryAsync = mBaseFactory.LoadByQueryAsync(whereCondition, cookie, tas
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadBySpecifier( _
@@ -516,7 +516,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadBySpecifierAsync( _
@@ -531,7 +531,7 @@ Set LoadBySpecifierAsync = mBaseFactory.LoadByQueryAsync(conditionStringFromSpec
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadSummariesByClass( _
@@ -549,7 +549,7 @@ Set LoadSummariesByClass = mBaseFactory.Query(cond.conditionString, fieldNames)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadSummariesByClassAsync( _
@@ -569,7 +569,7 @@ Set LoadSummariesByClassAsync = mBaseFactory.QueryAsync(cond.conditionString, fi
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadSummariesBySpec( _
@@ -583,7 +583,7 @@ Set LoadSummariesBySpec = mBaseFactory.Query(conditionStringFromSpec(contractSpe
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function LoadSummariesBySpecAsync( _
@@ -599,7 +599,7 @@ Set LoadSummariesBySpecAsync = mBaseFactory.QueryAsync(conditionStringFromSpec(c
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function MakeNew() As instrument
@@ -612,7 +612,7 @@ MakeNew.Initialise mDB, mBaseFactory.MakeNew
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function MakeNewAsync( _
@@ -626,7 +626,7 @@ Set MakeNewAsync = mBaseFactory.MakeNewAsync(cookie, taskName)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Query( _
@@ -640,7 +640,7 @@ Set Query = mBaseFactory.Query(whereCondition, fieldNames)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function QueryAsync( _
@@ -656,7 +656,7 @@ Set QueryAsync = mBaseFactory.QueryAsync(whereCondition, fieldNames, cookie, tas
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function QueryObjects( _
@@ -669,7 +669,7 @@ Set QueryObjects = mBaseFactory.QueryObjects(whereCondition)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function QueryObjectsAsync( _
@@ -684,7 +684,7 @@ Set QueryObjectsAsync = mBaseFactory.QueryObjectsAsync(whereCondition, cookie, t
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function QueryObjectsBySpec( _
@@ -697,7 +697,7 @@ Set QueryObjectsBySpec = mBaseFactory.QueryObjects(conditionStringFromSpec(contr
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function QueryObjectsBySpecAsync( _
@@ -712,7 +712,7 @@ Set QueryObjectsBySpecAsync = mBaseFactory.QueryObjectsAsync(conditionStringFrom
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Refresh( _
@@ -729,7 +729,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Search( _
@@ -743,7 +743,7 @@ Set Search = mBaseFactory.Search(criterion, fieldNames)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SearchAsync( _
@@ -759,7 +759,7 @@ Set SearchAsync = mBaseFactory.SearchAsync(criterion, fieldNames, cookie, taskNa
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SearchObjects( _
@@ -772,7 +772,7 @@ Set SearchObjects = mBaseFactory.SearchObjects(criterion)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function SearchObjectsAsync( _
@@ -787,7 +787,7 @@ Set SearchObjectsAsync = mBaseFactory.SearchObjectsAsync(criterion, cookie, task
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -813,7 +813,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function conditionStringFromSpec( _
@@ -826,7 +826,7 @@ With contractSpec
     addTerm cond, InstrumentColumnShortName, CondOpEqual, .LocalSymbol
     addTerm cond, InstrumentColumnSymbol, CondOpEqual, .Symbol
     addTerm cond, InstrumentColumnExchangeName, CondOpEqual, .Exchange
-    addTerm cond, InstrumentColumnSecType, CondOpEqual, gCategoryToString(gCategoryFromSecType(.SecType))
+    addTerm cond, InstrumentColumnSecType, CondOpEqual, CategoryToString(CategoryFromSecType(.SecType))
     addTerm cond, InstrumentColumnCurrencyE, CondOpEqual, .CurrencyCode
     If .Multiplier <> 0 Then addTerm cond, InstrumentColumnTickValueE & "/" & InstrumentColumnTickSizeE, CondOpEqual, .Multiplier
     
@@ -842,12 +842,12 @@ End With
 
 conditionStringFromSpec = cond.conditionString
 
-gLogger.Log "Query condition = " & conditionStringFromSpec, ProcName, ModuleName, LogLevelDetail
+GTDO.Logger.Log "Query condition = " & conditionStringFromSpec, ProcName, ModuleName, LogLevelDetail
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -876,7 +876,7 @@ getNameWhereCondition = cond.conditionString
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

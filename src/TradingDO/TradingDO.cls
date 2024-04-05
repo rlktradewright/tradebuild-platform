@@ -141,15 +141,12 @@ Public Function CreateTradingDB( _
 Const ProcName As String = "CreateTradingDB"
 On Error GoTo Err
 
-Dim lTradingDB As New TradingDB
-lTradingDB.Initialise pConnectionParams
-
-Set CreateTradingDB = lTradingDB
+Set CreateTradingDB = GTradingDO.CreateTradingDB(pConnectionParams)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTradingDBFuture( _
@@ -158,57 +155,51 @@ Public Function CreateTradingDBFuture( _
 Const ProcName As String = "CreateTradingDBFuture"
 On Error GoTo Err
 
-Dim lTradingDBFutureBuilder As New TradingDBFutureBuilder
-lTradingDBFutureBuilder.Initialise pConnectionParams, pCookie
-
-Set CreateTradingDBFuture = lTradingDBFutureBuilder.Future
+Set CreateTradingDBFuture = GTradingDO.CreateTradingDBFuture(pConnectionParams, pCookie)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ContractFromInstrument( _
                 ByVal instrument As instrument) As IContract
 Const ProcName As String = "ContractFromInstrument"
-
 On Error GoTo Err
 
-Set ContractFromInstrument = gContractFromInstrument(instrument)
+Set ContractFromInstrument = GTradingDO.ContractFromInstrument(instrument)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DatabaseTypeFromString( _
                 ByVal Value As String) As DatabaseTypes
 Const ProcName As String = "DatabaseTypeFromString"
-
 On Error GoTo Err
 
-DatabaseTypeFromString = gDatabaseTypeFromString(Value)
+DatabaseTypeFromString = GTradingDO.DatabaseTypeFromString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function DatabaseTypeToString( _
                 ByVal Value As DatabaseTypes) As String
 Const ProcName As String = "DatabaseTypeToString"
-
 On Error GoTo Err
 
-DatabaseTypeToString = gDatabaseTypeToString(Value)
+DatabaseTypeToString = GTradingDO.DatabaseTypeToString(Value)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateConnectionParams( _
@@ -220,13 +211,12 @@ Public Function CreateConnectionParams( _
 Const ProcName As String = "CreateConnectionParams"
 On Error GoTo Err
 
-Set CreateConnectionParams = New ConnectionParams
-CreateConnectionParams.Initialise dbType, server, databaseName, username, password
+Set CreateConnectionParams = GTradingDO.CreateConnectionParams(dbType, server, databaseName, username, password)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

@@ -174,7 +174,7 @@ gGenerateBarRequestDetails = lReqDetails
 Exit Function
 
 Err:
-gHandleUnexpectedError "ProcName", ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gGenerateNextTickDataRequest( _
@@ -196,7 +196,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub gGenerateTickRequestDetails( _
@@ -246,7 +246,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function gGetFetchOffset(ByVal pTimePeriod As TimePeriod) As Long
@@ -307,8 +307,8 @@ Set param = lCmd.CreateParameter(, _
                             pReqDetails.NumberOfBars)
 lCmd.Parameters.Append param
 
-Dim lFromTime As Date: lFromTime = gRoundTimeToSecond(pReqDetails.FromDate)
-Dim lToTime As Date: lToTime = gRoundTimeToSecond(pReqDetails.ToDate)
+Dim lFromTime As Date: lFromTime = RoundTimeToSecond(pReqDetails.FromDate)
+Dim lToTime As Date: lToTime = RoundTimeToSecond(pReqDetails.ToDate)
 
 If lFromTime < #1/1/1900# Then lFromTime = #1/1/1900# ' don't exceed range of SmallDateTime
 If lToTime < #1/1/1900# Then lToTime = #1/1/1900# ' don't exceed range of SmallDateTime
@@ -365,7 +365,7 @@ Set gSetupFetchBarsCommand = lCmd
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gSetupFetchTicksCommand( _
@@ -376,8 +376,8 @@ Public Function gSetupFetchTicksCommand( _
 Const ProcName As String = "gSetupFetchTicksCommand"
 On Error GoTo Err
 
-pFromTime = gRoundTimeToSecond(pFromTime)
-pToTime = gRoundTimeToSecond(pToTime)
+pFromTime = RoundTimeToSecond(pFromTime)
+pToTime = RoundTimeToSecond(pToTime)
 
 Dim lCmd As New ADODB.Command
 lCmd.CommandType = adCmdStoredProc
@@ -431,7 +431,7 @@ Set gSetupFetchTicksCommand = lCmd
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function gUseTickData(ByVal pUnits As TimePeriodUnits) As Boolean

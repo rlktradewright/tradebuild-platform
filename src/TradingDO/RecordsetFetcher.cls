@@ -93,8 +93,8 @@ On Error GoTo Err
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     Dim s As String
     s = "Fetch error " & vbCrLf & _
-        gGenerateErrorMessage(pError) & _
-        gGenerateConnectionErrorMessages(pConnection)
+        GenerateErrorMessage(pError) & _
+        GenerateConnectionErrorMessages(pConnection)
         
     If mAsynchronous Then
         mFutureBuilder.Fail pError.Number, s, ProjectName & "." & ModuleName & ":" & ProcName
@@ -107,7 +107,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -128,7 +128,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -145,11 +145,11 @@ On Error GoTo Err
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     Dim s As String
     s = "Fetch error " & vbCrLf & _
-        gGenerateErrorMessage(pError) & _
-        gGenerateConnectionErrorMessages(mConnection)
+        GenerateErrorMessage(pError) & _
+        GenerateConnectionErrorMessages(mConnection)
     
     Debug.Print "RecordsetFetcher: close connection(error)"
-    If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+    If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     If mAsynchronous Then
         mFutureBuilder.Fail pError.Number, _
                             s, _
@@ -168,7 +168,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -199,7 +199,7 @@ Set FetchRecordset = Execute(mConnection, mCommand, mCommandType, mCursorType, F
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function FetchRecordsetAsync( _
@@ -228,7 +228,7 @@ Set FetchRecordsetAsync = mFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise(ByVal pDB As TradingDB)
@@ -248,7 +248,7 @@ Private Function Execute( _
 Const ProcName As String = "Execute"
 On Error GoTo Err
 
-'gLogger.Log "RecordsetFetcher initiating fetch for " & mInstrument.ShortName, ProcName, ModuleName
+'GTDO.Logger.Log "RecordsetFetcher initiating fetch for " & mInstrument.ShortName, ProcName, ModuleName
 
 pCmd.ActiveConnection = pConnection
 
@@ -278,7 +278,7 @@ Set Execute = lRS
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

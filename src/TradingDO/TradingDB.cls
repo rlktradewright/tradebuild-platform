@@ -78,12 +78,12 @@ Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
 On Error GoTo Err
 
-gLogger.Log "TradingDB terminated: number of connection requests serviced: " & mNumberOfConnections, ProcName, ModuleName, LogLevelDetail
+GTDO.Logger.Log "TradingDB terminated: number of connection requests serviced: " & mNumberOfConnections, ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -103,27 +103,27 @@ Private Sub mConnector_Connected( _
 Const ProcName As String = "mConnector_Connected"
 On Error GoTo Err
 
-gLogger.Log "TradingDB " & mDbID & ": initial Connect succeeded", ProcName, ModuleName
+GTDO.Logger.Log "TradingDB " & mDbID & ": initial Connect succeeded", ProcName, ModuleName
 pConnection.Close
 RaiseEvent Connected
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 Private Sub mConnector_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 Const ProcName As String = "mConnector_ConnectFailed"
 On Error GoTo Err
 
-gLogger.Log "TradingDB " & mDbID & ": initial Connect failed", ProcName, ModuleName, LogLevelSevere
+GTDO.Logger.Log "TradingDB " & mDbID & ": initial Connect failed", ProcName, ModuleName, LogLevelSevere
 RaiseEvent ConnectFailed(errorCode, errorDesc)
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -199,7 +199,7 @@ Set FetchBars = lInstrument.FetchBars(pBarTimePeriod, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBarsAsync( _
@@ -242,7 +242,7 @@ fbt.Initialise Me, _
                 pDontReturnBars, _
                 pCookie
                 
-If pTaskName = "" Then pTaskName = "FetchBarsAsync/" & pSpecifier.LocalSymbol & "(" & pBarTimePeriod.ToString & ")" & FormatTimestamp(pFromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(pToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+If pTaskName = "" Then pTaskName = "FetchBarsAsync/" & pSpecifier.LocalSymbol & "(" & pBarTimePeriod.ToString & ")" & FormatTimestamp(pFromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(pToDate, TimestampNoMillisecs) & "(" & GetSequenceNumber & ")"
 StartTask fbt, PriorityNormal, pTaskName, pCookie
 
 Set FetchBarsAsync = fbt.BarsFuture
@@ -250,7 +250,7 @@ Set FetchBarsAsync = fbt.BarsFuture
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchContracts( _
@@ -267,7 +267,7 @@ builder.ContractSpecifier = contractSpec
 
 Dim instrument As BusinessDataObject
 For Each instrument In instruments
-    builder.Add gContractFromInstrument(instrument)
+    builder.Add ContractFromInstrument(instrument)
 Next
 
 Set FetchContracts = builder.Contracts
@@ -275,7 +275,7 @@ Set FetchContracts = builder.Contracts
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchContractsAsync( _
@@ -288,7 +288,7 @@ On Error GoTo Err
 
 Dim crt As New ContractsRetrievalTask
 crt.Initialise Me, pContractSpec, pListener, pCookie
-If pTaskName = "" Then pTaskName = "LoadContractsAsync/" & pContractSpec.ToString & "(" & gGetSequenceNumber & ")"
+If pTaskName = "" Then pTaskName = "LoadContractsAsync/" & pContractSpec.ToString & "(" & GetSequenceNumber & ")"
 StartTask crt, PriorityNormal, pTaskName, pCookie
                             
 Set FetchContractsAsync = crt.ContractsFuture
@@ -296,7 +296,7 @@ Set FetchContractsAsync = crt.ContractsFuture
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchTicks( _
@@ -315,7 +315,7 @@ Set FetchTicks = lInstrument.CreateTickStream(FromDate, ToDate)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchTicksAsync( _
@@ -329,13 +329,13 @@ On Error GoTo Err
 
 Dim ftt As New FetchTicksTask
 ftt.Initialise Me, Specifier, FromDate, ToDate
-If taskName = "" Then taskName = "FetchTicksAsync/" & Specifier.LocalSymbol & "/" & FormatTimestamp(FromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(ToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+If taskName = "" Then taskName = "FetchTicksAsync/" & Specifier.LocalSymbol & "/" & FormatTimestamp(FromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(ToDate, TimestampNoMillisecs) & "(" & GetSequenceNumber & ")"
 Set FetchTicksAsync = StartTask(ftt, PriorityNormal, taskName, cookie)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetConnector( _
@@ -350,7 +350,7 @@ mNumberOfConnections = mNumberOfConnections + 1
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -373,14 +373,14 @@ Set mTimeZoneFactory = New TimeZoneFactory
 mTimeZoneFactory.Initialise Me
 
 mDbID = GenerateGUIDString
-gLogger.Log "TradingDB " & mDbID & ": initial Connect", ProcName, ModuleName, LogLevelNormal, mConnectionParams.ToString
+GTDO.Logger.Log "TradingDB " & mDbID & ": initial Connect", ProcName, ModuleName, LogLevelNormal, mConnectionParams.ToString
 Set mConnector = GetConnector(CursorLocationEnum.adUseClient)
 mConnector.ConnectAsync False
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function ToString() As String

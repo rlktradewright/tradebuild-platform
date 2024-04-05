@@ -101,7 +101,7 @@ mTaskContext.Finish Empty, True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITask_run()
@@ -115,11 +115,11 @@ If mTaskContext.CancelPending Then
 End If
 
 If mInstrument Is Nothing Then
-    gLogger.Log "FetchBarsTask started for " & mSpecifier.ToString, ProcName, ModuleName
+    GTDO.Logger.Log "FetchBarsTask started for " & mSpecifier.ToString, ProcName, ModuleName
     Set mInstrumentTaskController = mDB.InstrumentFactory.LoadBySpecifierAsync( _
                                             mSpecifier, _
                                             , _
-                                            "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
+                                            "LoadBySpecifier/" & mSpecifier.ToString & "(" & GetSequenceNumber & ")")
     mTaskContext.Suspend -1
 Else
     mFutureWaiter.Add mInstrument.FetchBarsAsync(mBarTimePeriod, _
@@ -152,7 +152,7 @@ If Err.Number = 3265 Then   ' "Item cannot be found in the collection correspond
         Exit Sub
     End If
 End If
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -177,21 +177,21 @@ ElseIf ev.Future.IsCancelled Then
     mFutureBuilder.Cancel
     mTaskContext.Finish Empty, True
 ElseIf ev.Future.IsFaulted Then
-    gLogger.Log "FetchBarsTask failed for " & mSpecifier.ToString & vbCrLf & _
+    GTDO.Logger.Log "FetchBarsTask failed for " & mSpecifier.ToString & vbCrLf & _
                                 "Error " & ev.Future.ErrorNumber & ": " & ev.Future.ErrorMessage, ProcName, ModuleName, LogLevelSevere
     mFutureBuilder.Fail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 Else
     mFutureBuilder.Value = ev.Future.Value
     mFutureBuilder.Complete
-    gLogger.Log "FetchBarsTask retrieved bars for " & mSpecifier.ToString, ProcName, ModuleName
+    GTDO.Logger.Log "FetchBarsTask retrieved bars for " & mSpecifier.ToString, ProcName, ModuleName
     mTaskContext.Finish Empty, False
 End If
 
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GTDO.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -209,12 +209,12 @@ ElseIf ev.ErrorNumber <> 0 Then
     mFutureBuilder.Fail ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
     mTaskContext.Error ev.ErrorNumber, ev.ErrorMessage, ev.ErrorSource
 ElseIf IsEmpty(ev.Result) Then
-    gLogger.Log "FetchBarsTask cannot retrieve instrument object for " & mSpecifier.ToString, ProcName, ModuleName
+    GTDO.Logger.Log "FetchBarsTask cannot retrieve instrument object for " & mSpecifier.ToString, ProcName, ModuleName
     mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Specified object does not exist", ""
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, "Specified object does not exist"
 Else
     Set mInstrument = ev.Result
-    gLogger.Log "FetchBarsTask retrieved instrument object for " & mSpecifier.ToString, ProcName, ModuleName
+    GTDO.Logger.Log "FetchBarsTask retrieved instrument object for " & mSpecifier.ToString, ProcName, ModuleName
     mTaskContext.Continue
 End If
 Set mInstrumentTaskController = Nothing
@@ -222,7 +222,7 @@ Set mInstrumentTaskController = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@================================================================================
@@ -238,7 +238,7 @@ Set BarsFuture = mFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -274,12 +274,12 @@ mIncludeBarsOutsideSession = IncludeBarsOutsideSession
 mBarType = BarType
 Set mListener = pListener
 mDontReturnBars = pDontReturnBars
-gSetVariant mCookie, pCookie
+GTDO.SetVariant mCookie, pCookie
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

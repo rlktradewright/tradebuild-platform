@@ -68,7 +68,7 @@ Private Const ModuleName                As String = "PeriodTickDataWriter"
 Private mDB                             As TradingDB
 Private WithEvents mConnector           As Connector
 Attribute mConnector.VB_VarHelpID = -1
-Private WithEvents mConnection          As ADODB.connection
+Private WithEvents mConnection          As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
 
 Private mInstrumentID                   As Long
@@ -109,19 +109,19 @@ If Not mCmd Is Nothing Then
     mCmd.Cancel
     mConnection.Close
 ElseIf Not mConnection Is Nothing Then
-    If gIsStateSet(mConnection.State, adStateOpen) Then
+    If IsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.Cancel
     End If
 End If
-If gLogger.IsLoggable(LogLevelDetail) Then logMessage pMsg:=taskName & ": cancelled", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
+If GTDO.Logger.IsLoggable(LogLevelDetail) Then logMessage pMsg:=taskName & ": cancelled", pProcName:=ProcName, pLogLevel:=LogLevelHighDetail
 mTaskContext.Finish Empty, True
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITask_run()
@@ -135,7 +135,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
@@ -156,7 +156,7 @@ Private Sub mConnection_ExecuteComplete( _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pCommand As ADODB.Command, _
                 ByVal pRecordset As ADODB.Recordset, _
-                ByVal pConnection As ADODB.connection)
+                ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnection_ExecuteComplete"
 Dim errorMsg As String
 
@@ -186,7 +186,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         logMessage pMsg:="OS timeout while writing to transaction log detected", pProcName:=ProcName
         
         If mAsynchronous Then
-            If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+            If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
             mTaskContext.Finish 0, False
         End If
        
@@ -203,11 +203,11 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     End If
     
     errorMsg = "PeriodTickDataWriter: execution error " & vbCrLf & _
-                gGenerateErrorMessage(pError) & _
-                gGenerateConnectionErrorMessages(pConnection)
+                GenerateErrorMessage(pError) & _
+                GenerateConnectionErrorMessages(pConnection)
     logMessage pMsg:=taskName & ": " & errorMsg, pProcName:=ProcName
     
-    If gIsStateSet(mConnection.State, adStateOpen) Then
+    If IsStateSet(mConnection.State, adStateOpen) Then
         'Debug.Print "PeriodTickDataWriter: close connection(error)"
         mConnection.Close
     End If
@@ -217,14 +217,14 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         RaiseEvent Error(pError.Number, errorMsg)
     End If
 Else
-    If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": tick data written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+    If GTDO.Logger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": tick data written", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
-    'if gisstateset(mConnection.State,adStateOpen) Then mConnection.Close
+    'if IsStateSet(mConnection.State,adStateOpen) Then mConnection.Close
     
     If mAsynchronous Then
-        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+        If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
         mTaskContext.Finish 0, False
     Else
         RaiseEvent DataWritten
@@ -234,7 +234,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 
 End Sub
 
@@ -243,7 +243,7 @@ End Sub
 '@===============================================================================
 
 Private Sub mConnector_Connected( _
-                ByVal pConnection As ADODB.connection)
+                ByVal pConnection As ADODB.Connection)
 Const ProcName As String = "mConnector_Connected"
 
 On Error GoTo Err
@@ -254,7 +254,7 @@ If mAsynchronous Then DoWriteTickData
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mConnector_ConnectFailed( _
@@ -272,7 +272,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 '@===============================================================================
@@ -297,7 +297,7 @@ mShortName = ShortName
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub WriteData( _
@@ -305,7 +305,7 @@ Friend Sub WriteData( _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
                         ByVal TickSize As Double, _
-                        ByRef Data() As Byte)
+                        ByRef data() As Byte)
 Const ProcName As String = "WriteData"
 On Error GoTo Err
 
@@ -317,18 +317,18 @@ mVersion = Version
 mPeriodStartTime = PeriodStartTime
 mBasePrice = BasePrice
 mTickSize = TickSize
-mData = Data
+mData = data
 
-If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write tick data", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+If GTDO.Logger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write tick data", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
 
 connectToDB
 DoWriteTickData
-If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+If IsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function WriteDataAsync( _
@@ -336,7 +336,7 @@ Friend Function WriteDataAsync( _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
                         ByVal TickSize As Double, _
-                        ByRef Data() As Byte) As TaskController
+                        ByRef data() As Byte) As TaskController
 Const ProcName As String = "WriteDataAsync"
 On Error GoTo Err
 
@@ -348,9 +348,9 @@ mVersion = Version
 mPeriodStartTime = PeriodStartTime
 mBasePrice = BasePrice
 mTickSize = TickSize
-mData = Data
+mData = data
 
-If gLogger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write tick data (async)", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
+If GTDO.Logger.IsLoggable(LogLevelMediumDetail) Then logMessage pMsg:=taskName & ": about to write tick data (async)", pProcName:=ProcName, pLogLevel:=LogLevelMediumDetail
 
 ' we pass the periodstarttime as the cookie for use by the
 ' TickWriter object when the task completes
@@ -362,7 +362,7 @@ Set WriteDataAsync = StartTask(Me, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 
 End Function
 
@@ -385,7 +385,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub DoWriteTickData()
@@ -452,7 +452,7 @@ Execute
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub Execute()
@@ -473,7 +473,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub logMessage( _
@@ -482,7 +482,7 @@ Private Sub logMessage( _
                 Optional ByRef pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
 Const ProcName As String = "logMessage"
-gLogger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
+GTDO.Logger.Log pMsg, pProcName, ModuleName, pLogLevel, pMsgQualifier
 End Sub
 
 Private Function taskName() As String
@@ -490,7 +490,7 @@ Const ProcName As String = "taskName"
 Static lTaskName
 If lTaskName = "" Then lTaskName = "PeriodTickDataWriter/" & mShortName & "-" & _
                                 FormatTimestamp(mPeriodStartTime, TimestampNoMillisecs) & _
-                                "(" & gGetSequenceNumber & ")"
+                                "(" & GetSequenceNumber & ")"
 taskName = lTaskName
 End Function
 

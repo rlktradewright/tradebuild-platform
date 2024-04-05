@@ -110,7 +110,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrencyCode() As String
@@ -126,7 +126,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrencyCodeInheritedFromClass() As Boolean
@@ -138,7 +138,7 @@ CurrencyCodeInheritedFromClass = (mDataObj.GetColumnValue(InstrumentColumnCurren
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get DaysBeforeExpiryToSwitch() As Long
@@ -150,7 +150,7 @@ DaysBeforeExpiryToSwitch = mDataObj.GetColumnValue(InstrumentColumnSwitchDay, 0)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExchangeName() As String
@@ -169,7 +169,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ExpiryDate() As Date
@@ -181,7 +181,7 @@ ExpiryDate = mDataObj.GetColumnValue(InstrumentColumnExpiry, 0#)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ExpiryDate(ByVal Value As Date)
@@ -193,7 +193,7 @@ mDataObj.ColumnValue(InstrumentColumnExpiry) = Int(Value)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ExpiryDateString(ByVal Value As String)
@@ -210,7 +210,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HasBarData() As Boolean
@@ -226,7 +226,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get HasTickData() As Boolean
@@ -242,7 +242,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let InstrumentClass( _
@@ -264,7 +264,7 @@ mDataObj.ColumnValue(InstrumentColumnInstrumentClassID) = Value.Id
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstrumentClass() As InstrumentClass
@@ -276,7 +276,7 @@ Set InstrumentClass = mDB.InstrumentClassFactory.LoadByID(mDataObj.GetColumnValu
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstrumentClassId() As Long
@@ -288,7 +288,7 @@ InstrumentClassId = mDataObj.GetColumnValue(InstrumentColumnInstrumentClassID, 0
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let InstrumentClassName( _
@@ -301,7 +301,7 @@ InstrumentClass = mDB.InstrumentClassFactory.LoadByName(Value)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get InstrumentClassName() As String
@@ -320,7 +320,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get LocalSymbols() As InstrumentLocalSymbols
@@ -345,7 +345,7 @@ Name = GetName
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Name(ByVal Value As String)
@@ -369,7 +369,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Notes() As String
@@ -381,7 +381,7 @@ Notes = mDataObj.GetColumnValue(InstrumentColumnNotes, "")
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Notes(ByVal val As String)
@@ -393,7 +393,7 @@ mDataObj.ColumnValue(InstrumentColumnNotes) = val
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get OptionRight() As OptionRights
@@ -405,7 +405,7 @@ OptionRight = OptionRightFromString(mDataObj.GetColumnValue(InstrumentColumnOpti
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let OptionRight(ByVal Value As OptionRights)
@@ -418,19 +418,19 @@ mDataObj.ColumnValue(InstrumentColumnOptionRight) = Left$(OptionRightToString(Va
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SecType() As SecurityTypes
 Const ProcName As String = "SecType"
 On Error GoTo Err
 
-SecType = gCategoryToSecType(mDataObj.GetColumnValue(InstrumentColumnInstrumentCategoryId))
+SecType = CategoryToSecType(mDataObj.GetColumnValue(InstrumentColumnInstrumentCategoryId))
 
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionEndTime() As Date
@@ -444,7 +444,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get SessionStartTime() As Date
@@ -458,7 +458,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get ShortName() As String
@@ -470,7 +470,7 @@ ShortName = mDataObj.GetColumnValue(InstrumentColumnShortName, "")
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let ShortName(ByVal Value As String)
@@ -485,7 +485,7 @@ mDataObj.ColumnValue(InstrumentColumnShortName) = Left$(Value, mMaxShortNameLeng
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get StrikePrice() As Double
@@ -497,7 +497,7 @@ StrikePrice = mDataObj.GetColumnValue(InstrumentColumnStrikePrice, 0#)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let StrikePrice(ByVal Value As Double)
@@ -510,7 +510,7 @@ mDataObj.ColumnValue(InstrumentColumnStrikePrice) = Value
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let StrikePriceString(ByVal Value As String)
@@ -527,7 +527,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let Symbol(ByVal Value As String)
@@ -542,7 +542,7 @@ mDataObj.ColumnValue(InstrumentColumnSymbol) = Left$(Value, mMaxSymbolLength)
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Symbol() As String
@@ -554,7 +554,7 @@ Symbol = mDataObj.GetColumnValue(InstrumentColumnSymbol, "")
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickSize( _
@@ -573,7 +573,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickSize() As Double
@@ -589,7 +589,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickSizeInheritedFromClass() As Boolean
@@ -603,7 +603,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickSizeString( _
@@ -622,7 +622,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickValue( _
@@ -640,7 +640,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickValue() As Double
@@ -656,7 +656,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TickValueInheritedFromClass() As Boolean
@@ -670,7 +670,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TickValueString( _
@@ -689,7 +689,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TimeZoneName() As String
@@ -705,7 +705,7 @@ End If
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Let TradingClass(ByVal Value As String)
@@ -720,7 +720,7 @@ mDataObj.ColumnValue(InstrumentColumnTradingClass) = Left$(Value, mMaxTradingCla
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get TradingClass() As String
@@ -732,7 +732,7 @@ TradingClass = mDataObj.GetColumnValue(InstrumentColumnTradingClass, "")
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -751,7 +751,7 @@ CreateTickStream.Initialise mDB, Id, FromDate, ToDate
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateTickWriter( _
@@ -765,7 +765,7 @@ CreateTickWriter.Initialise mDB, Me, useAsynchronousWrites
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBars( _
@@ -820,7 +820,7 @@ Set bf = Nothing
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBarsAsync( _
@@ -877,7 +877,7 @@ Set FetchBarsAsync = bf.BarsFuture
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -898,7 +898,7 @@ mMaxTradingClassLength = mDataObj.ColumnMaxLength(InstrumentColumnTradingClass)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub WriteBar( _
@@ -915,10 +915,10 @@ Public Sub WriteBar( _
 Const ProcName As String = "WriteBar"
 On Error GoTo Err
 
-Dim lBarWriter As New BarWriter
-lBarWriter.Initialise mDB, Id, ShortName
+Dim lDbBarWriter As New DbBarWriter
+lDbBarWriter.Initialise mDB, Id, ShortName
 
-lBarWriter.WriteBar timestamp, _
+lDbBarWriter.WriteBar timestamp, _
                     BarType, _
                     barLength, _
                     openPrice, _
@@ -932,7 +932,7 @@ lBarWriter.WriteBar timestamp, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function WriteBarAsync( _
@@ -951,10 +951,10 @@ Public Function WriteBarAsync( _
 Const ProcName As String = "WriteBarAsync"
 On Error GoTo Err
 
-Dim lBarWriter As New BarWriter
-lBarWriter.Initialise mDB, Id, ShortName
+Dim lDbBarWriter As New DbBarWriter
+lDbBarWriter.Initialise mDB, Id, ShortName
 
-Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
+Set WriteBarAsync = lDbBarWriter.WriteBarAsync(timestamp, _
                                             BarType, _
                                             barLength, _
                                             openPrice, _
@@ -970,7 +970,7 @@ Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -991,7 +991,7 @@ Set getFactory = mDB.InstrumentFactory
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub setInitialErrors()
@@ -1025,7 +1025,7 @@ mDataObj.RuleBroken BusRuleInstrumentOptionRightvalid, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub validateStrikePrice( _
@@ -1041,7 +1041,7 @@ mDataObj.RuleBroken BusRuleInstrumentStrikePriceValid, _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -1067,7 +1067,7 @@ ApplyEdit
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub BusinessDataObject_CancelEdit()
@@ -1079,7 +1079,7 @@ CancelEdit
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub BusinessDataObject_Delete()
@@ -1091,7 +1091,7 @@ Delete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get BusinessDataObject_ErrorList() As ErrorList
@@ -1103,7 +1103,7 @@ Set BusinessDataObject_ErrorList = mDataObj.ErrorList
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
@@ -1115,7 +1115,7 @@ Set BusinessDataObject_EventSource = mDataObj.EventSource
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_ID() As Long
@@ -1127,7 +1127,7 @@ BusinessDataObject_ID = Id
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsDeleted() As Boolean
@@ -1139,7 +1139,7 @@ BusinessDataObject_IsDeleted = IsDeleted
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsDirty() As Boolean
@@ -1151,7 +1151,7 @@ BusinessDataObject_IsDirty = IsDirty
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsNew() As Boolean
@@ -1163,7 +1163,7 @@ BusinessDataObject_IsNew = IsNew
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_IsValid() As Boolean
@@ -1175,7 +1175,7 @@ BusinessDataObject_IsValid = IsValid
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Let BusinessDataObject_Name(ByVal RHS As String)
@@ -1187,7 +1187,7 @@ Name = RHS
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get BusinessDataObject_Name() As String
@@ -1199,7 +1199,7 @@ BusinessDataObject_Name = Name
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Sub BusinessDataObject_Refresh()
@@ -1211,7 +1211,7 @@ Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@===============================================================================
@@ -1227,7 +1227,7 @@ RaiseEvent Clean
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataObj_Deleted()
@@ -1239,7 +1239,7 @@ RaiseEvent Deleted
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, ProjectName
+GTDO.NotifyUnhandledError ProcName, ModuleName, ProjectName
 End Sub
 
 Private Sub mDataObj_Dirty()
@@ -1267,7 +1267,7 @@ Set ErrorList = mDataObj.ErrorList
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get Id() As Long
@@ -1279,7 +1279,7 @@ Id = mDataObj.Id
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsValid() As Boolean
@@ -1291,7 +1291,7 @@ IsValid = mDataObj.IsValid
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsDeleted() As Boolean
@@ -1303,7 +1303,7 @@ IsDeleted = mDataObj.IsDeleted
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsDirty() As Boolean
@@ -1315,7 +1315,7 @@ IsDirty = mDataObj.IsDirty
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get IsNew() As Boolean
@@ -1327,7 +1327,7 @@ IsNew = mDataObj.IsNew
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -1343,7 +1343,7 @@ mDataObj.ApplyEdit
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CancelEdit()
@@ -1356,7 +1356,7 @@ If mDataObj.IsNew Then setInitialErrors
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Delete()
@@ -1368,7 +1368,7 @@ mDataObj.Delete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub GenericInitialise( _
@@ -1387,7 +1387,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetName() As String
@@ -1399,7 +1399,7 @@ GetName = mDataObj.Name
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Refresh()
@@ -1411,7 +1411,7 @@ mDataObj.Refresh
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetName(ByVal Value As String)
@@ -1423,7 +1423,7 @@ mDataObj.Name = Value
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GTDO.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
