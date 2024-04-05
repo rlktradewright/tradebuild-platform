@@ -95,7 +95,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -123,7 +123,7 @@ ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
     ElseIf lTwsContracts.Count > 1 Then
         mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract's specifier is not uniquely specified", ProjectName & "." & ModuleName & ":" & ProcName
     Else
-        gLogger.Log "TwsContract retrieved for IContract: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "TwsContract retrieved for IContract: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
         mFutureBuilder.Value = lTwsContracts.Item(1)
         mFutureBuilder.Complete
         Set mSelfRef = Nothing
@@ -133,7 +133,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -149,7 +149,7 @@ If ev.ErrorNumber <> 0 Then
 ElseIf ev.Cancelled Then
     mFutureBuilder.Cancel
 Else
-    gLogger.Log "IContract converted to TwsContractDetails: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "IContract converted to TwsContractDetails: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
     Set mTwsContract = ev.Result
     mFutureBuilder.Value = mTwsContract
     mFutureBuilder.Complete
@@ -161,7 +161,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -181,7 +181,7 @@ Set Future = mFutureBuilder.Future
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -202,7 +202,7 @@ Set mContractCache = pContractCache
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -218,13 +218,13 @@ If pContract.Specifier.SecType = SecTypeCombo Then
     lTask.Initialise mContractRequester, pContract.Specifier
     Set mTaskController = StartTask(lTask, PriorityNormal)
 Else
-    mFutureWaiter.Add gFetchContracts(mContractRequester, mContractCache, pContract.Specifier, Nothing, Empty, True)
+    mFutureWaiter.Add GIBEnhancedApi.FetchContracts(mContractRequester, mContractCache, pContract.Specifier, Nothing, Empty, True)
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

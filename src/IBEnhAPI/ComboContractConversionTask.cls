@@ -62,7 +62,7 @@ Private mRequestsOutstanding                        As Long
 
 Private mLegs                                       As New EnumerableCollection
 
-Private mTimezoneId                                 As String
+Private mTimeZoneId                                 As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -88,7 +88,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestIs As Long)
@@ -106,13 +106,13 @@ If alreadyGotContract(pRequestId) Then
     mErrorMsg = "Contract not uniquely specified for leg " & CStr(getLegIndexFromRequestId(pRequestId) + 1)
 Else
     mLegs.Add createTwsComboLeg(pTwsContract.Specifier, mContractSpec.ComboLegs(getLegIndexFromRequestId(pRequestId) + 1)), CStr(pRequestId)
-    If mTimezoneId = "" And pTwsContract.TimeZoneId <> "" Then mTimezoneId = pTwsContract.TimeZoneId
+    If mTimeZoneId = "" And pTwsContract.TimeZoneId <> "" Then mTimeZoneId = pTwsContract.TimeZoneId
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -131,10 +131,10 @@ If mRequestsOutstanding = 0 Then mTaskContext.Error mErrorCode, mErrorMsg
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Long, pPriceIncrement() As IBAPIV100.TwsPriceIncrement)
+Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Long, pPriceIncrement() As TwsPriceIncrement)
 
 End Sub
 
@@ -154,7 +154,7 @@ Private Sub ITask_Run()
 Const ProcName As String = "ITask_Run"
 On Error GoTo Err
 
-Dim lComboLeg As ComboLeg
+Dim lComboLeg As comboLeg
 
 For Each lComboLeg In mContractSpec.ComboLegs
     mRequestIds(mRequestsOutstanding) = mContractRequester.RequestContractDetails(lComboLeg.ContractSpec, Me)
@@ -166,7 +166,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -195,7 +195,7 @@ Friend Sub Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-AssertArgument pContractSpec.SecType = SecTypeCombo, "Argument is not a combo contract specifier"
+AssertArgument pContractSpec.Sectype = SecTypeCombo, "Argument is not a combo contract specifier"
 AssertArgument pContractSpec.ComboLegs.Count <> 0, "No combo legs specified"
 
 Set mContractRequester = pContractRequester
@@ -206,7 +206,7 @@ ReDim mRequestIds(mContractSpec.ComboLegs.Count - 1) As Long
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -222,12 +222,12 @@ alreadyGotContract = mLegs.Contains(CStr(pRequestId))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function createTwsComboLeg( _
                 ByVal pContractSpec As TwsContractSpecifier, _
-                ByVal pComboLeg As ComboLeg) As TwsComboLeg
+                ByVal pComboLeg As comboLeg) As TwsComboLeg
 Const ProcName As String = "createTwsComboLeg"
 On Error GoTo Err
 
@@ -243,7 +243,7 @@ createTwsComboLeg.ShortSaleSlot = TwsShortSaleSlotNotApplicable
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateTwsContract() As TwsContract
@@ -256,7 +256,7 @@ Dim lContractSpec As TwsContractSpecifier
 Set lContractSpec = New TwsContract
 
 lContractSpec.Symbol = mContractSpec.Symbol
-lContractSpec.SecType = TwsSecTypeCombo
+lContractSpec.Sectype = TwsSecTypeCombo
 lContractSpec.Exchange = mContractSpec.Exchange
 lContractSpec.CurrencyCode = mContractSpec.CurrencyCode
 
@@ -266,12 +266,12 @@ Next
 
 Set generateTwsContract = New TwsContract
 generateTwsContract.Specifier = lContractSpec
-generateTwsContract.TimeZoneId = mTimezoneId
+generateTwsContract.TimeZoneId = mTimeZoneId
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getLegIndexFromRequestId(ByVal pRequestId As Long) As Long
@@ -290,7 +290,7 @@ Assert False, "Invalid request id"
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

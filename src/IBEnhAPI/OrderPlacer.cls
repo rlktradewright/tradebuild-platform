@@ -83,7 +83,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderInfoConsumer_EndOpenOrders()
@@ -99,7 +99,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderInfoConsumer_NotifyError(ByVal pBrokerId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -114,7 +114,7 @@ Case 161
     ' Since this can be a race situation, where TWS has cancelled an order but the
     ' notification hasn't arrived via the API, and the application also tries to cancel,
     ' we just ignore it.
-    gLog "Ignored error 161 from TWS (" & pBrokerId & "): " & pErrorMsg, ModuleName, ProcName
+    GIBEnhApi.Log "Ignored error 161 from TWS (" & pBrokerId & "): " & pErrorMsg, ModuleName, ProcName
 Case 201
     ' the order has been rejected
     GetOrderSubmitter(pBrokerId).NotifyMessage GetOrder(pBrokerId), pErrorMsg
@@ -149,7 +149,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderInfoConsumer_NotifyExecution(ByVal pReqId As Long, ByVal pContractSpec As TwsContractSpecifier, ByVal pExecution As TwsExecution)
@@ -183,7 +183,7 @@ lExecReport.Price = pExecution.Price
 lExecReport.Quantity = pExecution.Shares
 Dim lTimezoneName As String
 lExecReport.FillTime = TwsDateStringToDate(pExecution.Time, lTimezoneName)
-lExecReport.TimezoneName = gTwsTimezoneNameToStandardTimeZoneName(lTimezoneName)
+lExecReport.TimezoneName = GIBEnhancedApi.TwsTimezoneNameToStandardTimeZoneName(lTimezoneName)
 
 If Not lOrder Is Nothing Then
     Dim lOrderSubmitter As OrderSubmitter
@@ -213,7 +213,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderInfoConsumer_NotifyOpenOrder(ByVal pBrokerId As Long, ByVal pContractSpec As TwsContractSpecifier, ByVal pOrder As TwsOrder, ByVal pOrderState As TwsOrderState)
@@ -221,7 +221,7 @@ Const ProcName As String = "IOrderInfoConsumer_NotifyOpenOrder"
 On Error GoTo Err
 
 If pOrder.ClientId <> mTwsAPI.ClientId Then
-    gLog "Ignoring order " & pOrder.OrderId & " for clientID " & pOrder.ClientId, ModuleName, ProcName
+    GIBEnhApi.Log "Ignoring order " & pOrder.OrderId & " for clientID " & pOrder.ClientId, ModuleName, ProcName
     Exit Sub
 End If
 
@@ -233,7 +233,7 @@ End If
 Dim lOrderReport As New OrderReport
 
 With lOrderReport
-    .Action = gTwsOrderActionToOrderAction(pOrder.Action)
+    .Action = GIBEnhancedApi.TwsOrderActionToOrderAction(pOrder.Action)
     .AllOrNone = pOrder.AllOrNone
     .BlockOrder = pOrder.BlockOrder
     .BrokerId = pOrder.OrderId
@@ -241,7 +241,7 @@ With lOrderReport
     .DisplaySize = pOrder.DisplaySize
     
     Dim lTimezoneName As String ' returned byref from TwsDateStringToDate
-    .GoodAfterTime = TwsDateStringToDate(pOrder.GoodAfterTime, gTwsTimezoneNameToStandardTimeZoneName(lTimezoneName))
+    .GoodAfterTime = TwsDateStringToDate(pOrder.GoodAfterTime, TwsTimezoneNameToStandardTimeZoneName(lTimezoneName))
     .GoodAfterTimeTZ = lTimezoneName
     .GoodTillDate = TwsDateStringToDate(pOrder.GoodTillDate, lTimezoneName)
     .GoodTillDateTZ = lTimezoneName
@@ -252,14 +252,14 @@ With lOrderReport
     .LimitPrice = pOrder.LmtPrice
     .Message = pOrderState.WarningText
     .MinimumQuantity = pOrder.MinQty
-    .OrderType = gTwsOrderTypeToOrderType(pOrder.OrderType)
+    .OrderType = GIBEnhancedApi.TwsOrderTypeToOrderType(pOrder.OrderType)
     .Origin = pOrder.Origin
     .OriginatorRef = pOrder.OrderRef
     .OverrideConstraints = pOrder.OverridePercentageConstraints
     .Quantity = pOrder.TotalQuantity
     .SettlingFirm = pOrder.SettlingFirm
-    .Status = gOrderStatusFromString(pOrderState.Status)
-    .StopTriggerMethod = gTwsTriggerMethodToStopTriggerMethod(pOrder.TriggerMethod)
+    .Status = GIBEnhancedApi.OrderStatusFromString(pOrderState.Status)
+    .StopTriggerMethod = GIBEnhancedApi.TwsTriggerMethodToStopTriggerMethod(pOrder.TriggerMethod)
     .SweepToFill = pOrder.SweepToFill
     .TimeInForce = pOrder.Tif
     .TriggerPrice = pOrder.AuxPrice
@@ -279,7 +279,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderInfoConsumer_NotifyOrderStatus( _
@@ -299,7 +299,7 @@ On Error GoTo Err
 
 Dim lStatus As OrderStatuses
 
-lStatus = gOrderStatusFromString(pStatus)
+lStatus = GIBEnhancedApi.OrderStatusFromString(pStatus)
 If isKnownOrder(pBrokerId) Then
     notifyStatus pBrokerId, lStatus
     If lStatus = OrderStatusCancelling And pParentId <> 0 Then
@@ -324,7 +324,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -349,7 +349,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
@@ -364,7 +364,7 @@ doStartOrderRecovery ReconnectionExecutionsRequestId
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -406,7 +406,7 @@ mKnownOrders.Cancel pOrder.BrokerId, mTwsAPI.ClientId
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub FinishOrderRecovery()
@@ -429,7 +429,7 @@ mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId, 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PlaceOrder( _
@@ -449,7 +449,7 @@ Dim lOrder As TwsOrder
 
 mKnownOrders.Add pOrder, pOrderSubmitter, mTwsAPI.ClientId, pParentId
 
-Set lOrder = gOrderToTwsOrder(pOrder, pDataSource)
+Set lOrder = GIBEnhancedApi.OrderToTwsOrder(pOrder, pDataSource)
 If pLimitPriceOverride <> 0 Then lOrder.LmtPrice = pLimitPriceOverride
 lOrder.Transmit = pTransmit
 lOrder.ParentId = pParentId
@@ -467,7 +467,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
                     
 Friend Sub StartOrderRecovery( _
@@ -482,7 +482,7 @@ Set mOrderRecoveryListener = pOrderRecoveryListener
 mStartOrderRecoveryFrom = pStartFrom
 
 If Not (mTwsAPI.ConnectionState = TwsConnConnected And mTwsAPI.IsTwsConnectedToIBServers) Then
-    gLog "Can't start order recovery: not fully connected", ModuleName, ProcName
+    GIBEnhApi.Log "Can't start order recovery: not fully connected", ModuleName, ProcName
     Exit Sub
 End If
 
@@ -491,7 +491,7 @@ doStartOrderRecovery OrderRecoveryExecutionsRequestId
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -504,16 +504,16 @@ On Error GoTo Err
 
 If CDbl(mStartOrderRecoveryFrom) = 0# Then Exit Sub
 
-gLog "Requesting open orders and executions", ModuleName, ProcName
+GIBEnhApi.Log "Requesting open orders and executions", ModuleName, ProcName
 
-gRequestOpenOrders mTwsAPI
+GIBEnhancedApi.RequestOpenOrders mTwsAPI
 
-gRequestExecutions mTwsAPI, pReqId, mTwsAPI.ClientId, mStartOrderRecoveryFrom
+GIBEnhancedApi.RequestExecutions mTwsAPI, pReqId, mTwsAPI.ClientId, mStartOrderRecoveryFrom
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub generateDeferredOrderCancelNotification( _
@@ -533,7 +533,7 @@ DeferAction New DeferredCancelStatus, lMapEntry, 500
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function GetOrder(ByVal pBrokerId As String) As IOrder
@@ -545,7 +545,7 @@ Set GetOrder = mKnownOrders.GetOrder(pBrokerId, mTwsAPI.ClientId)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function GetOrderSubmitter(ByVal pBrokerId As String) As OrderSubmitter
@@ -557,7 +557,7 @@ Set GetOrderSubmitter = mKnownOrders.GetOrderSubmitter(pBrokerId, mTwsAPI.Client
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isKnownOrder(ByVal pBrokerId As String) As Boolean
@@ -569,7 +569,7 @@ isKnownOrder = mKnownOrders.Contains(pBrokerId, mTwsAPI.ClientId)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub notifyStatus( _
@@ -594,7 +594,7 @@ GetOrderSubmitter(pBrokerId).NotifyOrderStatusReport lStatusReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processQueuedOrders()
@@ -605,7 +605,7 @@ On Error GoTo Err
 ' but since there are only rarely expected to be any queued orders we'll
 ' just do them immediaately
 
-gLog "Processing queued orders: " & mQueuedOrders.Count & " orders to be placed", ProcName, ModuleName
+GIBEnhApi.Log "Processing queued orders: " & mQueuedOrders.Count & " orders to be placed", ProcName, ModuleName
 
 Dim en As Enumerator
 Set en = mQueuedOrders.Enumerator
@@ -623,7 +623,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub queueOrder( _
@@ -640,6 +640,6 @@ mQueuedOrders.Add e
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

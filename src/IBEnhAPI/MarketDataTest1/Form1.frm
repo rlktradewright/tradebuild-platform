@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#392.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Secs"
    ClientHeight    =   9585
@@ -107,7 +107,7 @@ Begin VB.Form Form1
       Top             =   120
       Width           =   3615
       _ExtentX        =   6376
-      _ExtentY        =   6191
+      _ExtentY        =   6826
       ForeColor       =   -2147483640
       ModeAdvanced    =   -1  'True
    End
@@ -418,7 +418,7 @@ Implements ITwsConnectionStateListener
 Private Const ModuleName                            As String = "Form1"
 
 Private Const ClientId                              As Long = 132256741
-Private Const Server                                As String = "Essy"
+Private Const Server                                As String = "Sappy"
 
 Private Const DataSourceKey0                        As String = "Source0"
 Private Const DataSourceKey1                        As String = "Source1"

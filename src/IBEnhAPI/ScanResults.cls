@@ -95,7 +95,7 @@ mResults.Add pResult, CStr(pResult.Rank)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

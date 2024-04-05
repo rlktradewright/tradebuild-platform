@@ -130,7 +130,7 @@ GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will
 Set mFutureWaiter = New FutureWaiter
 
 mClientId = 25514278
-Set mClient = GetClient("Essy", 7497, mClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
+Set mClient = GetClient("Sappy", 7497, mClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
 
 Set mContractStore = mClient.GetContractStore
 

@@ -43,6 +43,11 @@ Private Const StopLossOrderIdIncrement              As Long = 1
 Private Const TargetOrderIdIncrement                As Long = 2
 Private Const CloseoutOrderIdIncrement              As Long = 3
 
+Private Const OrderModeEntry                        As String = "entry"
+Private Const OrderModeStopLoss                     As String = "stop loss"
+Private Const OrderModeTarget                       As String = "target"
+Private Const OrderModeCloseout                     As String = "closeout"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -119,7 +124,7 @@ mDataSource.RemoveGenericTickListener Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -135,7 +140,7 @@ AddOrderSubmissionListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -148,7 +153,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IOrderSubmitter_CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
@@ -160,10 +165,14 @@ IOrderSubmitter_CancelBracketOrder = CancelBracketOrder(pBracketOrder)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
+#If SingleDll = 0 Then
 Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As OrderUtils27.IBracketOrder)
+#Else
+Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As TBFoundation.IBracketOrder)
+#End If
 Const ProcName As String = "IOrderSubmitter_CancelCloseoutOrder"
 On Error GoTo Err
 
@@ -172,10 +181,14 @@ CancelCloseoutOrder pBracketOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
+#If SingleDll = 0 Then
 Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As OrderUtils27.IOrder)
+#Else
+Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As TBFoundation.IOrder)
+#End If
 Const ProcName As String = "IOrderSubmitter_CancelOrder"
 On Error GoTo Err
 
@@ -184,7 +197,7 @@ CancelOrder pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
@@ -195,7 +208,7 @@ CancelStopOrder pBracketOrder
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
@@ -206,7 +219,7 @@ CancelTargetOrder pBracketOrder
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IOrderSubmitter_Capabilities() As OrderSubmitterCapabilities
@@ -221,7 +234,7 @@ ExecuteBracketOrder pBracketOrder
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IOrderSubmitter_FetchPermittedOrderProperties(ByVal pContractFuture As IFuture, Optional ByVal pCookie As Variant) As IFuture
@@ -233,7 +246,7 @@ Set IOrderSubmitter_FetchPermittedOrderProperties = FetchPermittedOrderPropertie
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IOrderSubmitter_Finish()
@@ -245,7 +258,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IOrderSubmitter_GetTickSize() As IFuture
@@ -257,7 +270,7 @@ Set IOrderSubmitter_GetTickSize = GetTickSize()
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IOrderSubmitter_IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
@@ -273,7 +286,7 @@ ModifyOrder pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ModifyBracketOrder( _
@@ -289,7 +302,7 @@ ModifyBracketOrder pBracketOrder, EntryOrderChanged, StopOrderChanged, TargetOrd
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_NotifyRecoveredOrder(ByVal pOrder As IOrder)
@@ -301,7 +314,7 @@ NotifyRecoveredOrder pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let IOrderSubmitter_OrdersAreStaged(ByVal Value As Boolean)
@@ -321,7 +334,7 @@ PlaceOrder pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
@@ -333,7 +346,7 @@ RemoveOrderSubmissionListener pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -346,7 +359,7 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrInvalidProcedureCall Then Exit Sub
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
@@ -357,7 +370,7 @@ ResubmitStopAndTargetOrders pBracketOrder
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
@@ -368,7 +381,7 @@ ResubmitStopOrder pBracketOrder
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IOrderSubmitter_ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
@@ -378,7 +391,7 @@ On Error GoTo Err
 ResubmitTargetOrder pBracketOrder
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IOrderSubmitter_State() As OrderSubmitterStates
@@ -410,7 +423,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
@@ -422,7 +435,7 @@ setState OrderSubmitterStateNotReady
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal pSource As Object, ByVal pDataLost As Boolean)
@@ -434,7 +447,7 @@ setState OrderSubmitterStateReady
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -472,7 +485,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -490,11 +503,11 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
         ' contract details were probably from a config entry somewhere,
         ' so get the real thing from TWS
         mFutureWaiter.Add FetchContract(lContract.Specifier, mContractStore)
-        gLog "Getting contract details from TWSAPI", ModuleName, ProcName
+        GIBEnhApi.Log "Getting contract details from TWSAPI", ModuleName, ProcName
     ElseIf lContract.ProviderProperties.GetParameterValue("MarketRuleID", "0") = "0" Then
         ' ditto
         mFutureWaiter.Add FetchContract(lContract.Specifier, mContractStore)
-        gLog "Getting contract details from TWSAPI", ModuleName, ProcName
+        GIBEnhApi.Log "Getting contract details from TWSAPI", ModuleName, ProcName
     Else
         Set mContract = lContract
         If mTicksizeRequestPending Then doGetTickSize
@@ -507,7 +520,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -543,7 +556,7 @@ mOrderSubmissionListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub AddStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -555,7 +568,7 @@ mStateChangeListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function CancelBracketOrder(ByVal pBracketOrder As IBracketOrder) As Boolean
@@ -622,7 +635,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub CancelCloseoutOrder(ByVal pBracketOrder As IBracketOrder)
@@ -647,7 +660,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CancelOrder(ByVal pOrder As IOrder)
@@ -659,7 +672,7 @@ cancelAnOrder pOrder, OrderModeEntry
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CancelStopOrder(ByVal pBracketOrder As IBracketOrder)
@@ -684,7 +697,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CancelTargetOrder(ByVal pBracketOrder As IBracketOrder)
@@ -706,7 +719,7 @@ Case Else
 End Select
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ExecuteBracketOrder(ByVal pBracketOrder As IBracketOrder)
@@ -723,12 +736,12 @@ If pBracketOrder.Contract.Specifier.SecType = SecTypeCombo Then
     lCookie.BracketOrder = pBracketOrder
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
-    execBracketOrder pBracketOrder, gContractSpecToTwsContractSpec(pBracketOrder.Contract.Specifier)
+    execBracketOrder pBracketOrder, ContractSpecToTwsContractSpec(pBracketOrder.Contract.Specifier)
 End If
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function FetchPermittedOrderProperties( _
@@ -745,7 +758,7 @@ Set FetchPermittedOrderProperties = lFetcher.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Finish()
@@ -758,7 +771,7 @@ mOrderSubmissionListeners.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetTickSize() As IFuture
@@ -775,7 +788,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -804,7 +817,7 @@ mFutureWaiter.Add mDataSource.ContractFuture
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsReadyForOrderType(ByVal pOrderType As OrderTypes) As Boolean
@@ -837,13 +850,13 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     lCookie.Transmit = True
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
-    placeAnOrder pOrder, gContractSpecToTwsContractSpec(pOrder.ContractSpecifier), 0, True, 0, "", OrderModeEntry, ""
+    placeAnOrder pOrder, ContractSpecToTwsContractSpec(pOrder.ContractSpecifier), 0, True, 0, "", OrderModeEntry, ""
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ModifyBracketOrder( _
@@ -871,7 +884,7 @@ If pBracketOrder.Contract.Specifier.SecType = SecTypeCombo Then
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
     modifyABracketOrder pBracketOrder, _
-                        gContractSpecToTwsContractSpec(pBracketOrder.Contract.Specifier), _
+                        ContractSpecToTwsContractSpec(pBracketOrder.Contract.Specifier), _
                         pEntryOrderChanged, _
                         pStopOrderChanged, _
                         pTargetOrderChanged, _
@@ -880,7 +893,7 @@ End If
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyAboutToPlaceOrder( _
@@ -900,7 +913,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyError( _
@@ -922,7 +935,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyExecutionReport(ByVal pExecutionReport As IExecutionReport)
@@ -941,7 +954,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyMessage( _
@@ -962,7 +975,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOrderReport(ByVal pOrderReport As IOrderReport)
@@ -981,7 +994,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyOrderStatusReport(ByVal pOrderStatusReport As IOrderStatusReport)
@@ -1000,7 +1013,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub NotifyRecoveredOrder(ByVal pOrder As IOrder)
@@ -1012,7 +1025,7 @@ mOrderPlacer.NotifyRecoveredOrder Me, pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub PlaceOrder(ByVal pOrder As IOrder)
@@ -1024,7 +1037,7 @@ PlaceOrderEx pOrder, 0, True, 0, "", OrderModeEntry
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveOrderSubmissionListener(ByVal pListener As IOrderSubmissionListener)
@@ -1036,7 +1049,7 @@ mOrderSubmissionListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveStateChangeListener(ByVal pListener As IStateChangeListener)
@@ -1048,7 +1061,7 @@ mStateChangeListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ResubmitStopAndTargetOrders(ByVal pBracketOrder As IBracketOrder)
@@ -1069,7 +1082,7 @@ PlaceOrderEx pBracketOrder.TargetOrder, 0, True, 0, lOCAGroup, OrderModeTarget
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ResubmitStopOrder(ByVal pBracketOrder As IBracketOrder)
@@ -1093,7 +1106,7 @@ End If
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub ResubmitTargetOrder(ByVal pBracketOrder As IBracketOrder)
@@ -1117,7 +1130,7 @@ Else
 End If
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '================================================================================
@@ -1140,7 +1153,7 @@ mOrderPlacer.CancelOrder Me, pOrder
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doGetTickSize()
@@ -1155,7 +1168,7 @@ lRulesetID = CLng(mContract.ProviderProperties.GetParameterValue("MarketRuleID",
 
 Dim lPriceMagnifier As Long
 lPriceMagnifier = CLng(mContract.ProviderProperties.GetParameterValue("PriceMagnifier", "1"))
-gLog s & "lRulesetID=" & lRulesetID & "; lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log s & "lRulesetID=" & lRulesetID & "; lPriceMagnifier=" & lPriceMagnifier, ModuleName, ProcName, , LogLevelDetail
 
 Dim lRulesetFuture As IFuture
 Set lRulesetFuture = mContractRequester.RequestPriceIncrementRuleset(lRulesetID, lPriceMagnifier)
@@ -1170,7 +1183,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub execBracketOrder( _
@@ -1218,7 +1231,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireStateChange()
@@ -1249,7 +1262,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getAPrice() As Double
@@ -1270,7 +1283,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getCurrentOrderSubmissionListeners() As Boolean
@@ -1289,7 +1302,7 @@ getCurrentOrderSubmissionListeners = sSomeListeners
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNextBracketId() As Long
@@ -1301,7 +1314,7 @@ getNextBracketId = Int((mTwsAPI.NextOrderId + 4) / 5) * 5
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getOcaGroup(ByVal pOrder As IOrder) As String
@@ -1323,7 +1336,7 @@ getTickSizeFromRuleset = pRuleset.GetIncrement(lPrice)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub logMessage( _
@@ -1331,7 +1344,7 @@ Private Sub logMessage( _
                 ByVal pProcName As String, _
                 Optional ByVal pMsgQualifier As String = vbNullString, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
-gLog pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
+GIBEnhApi.Log pMsg:=pMsg, pMsgQualifier:=pMsgQualifier, pProcName:=pProcName, pModName:=ModuleName, pLogLevel:=pLogLevel
 End Sub
 
 Private Sub modifyABracketOrder( _
@@ -1387,7 +1400,7 @@ End If
 
 Exit Sub
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyOpenOrder(ByVal pOrder As IOrder)
@@ -1398,7 +1411,7 @@ Dim lOrderReport As IOrderReport
 Set lOrderReport = New OrderReport
 
 With lOrderReport
-    .Action = gTwsOrderActionToOrderAction(pOrder.Action)
+    .Action = TwsOrderActionToOrderAction(pOrder.Action)
     .AllOrNone = pOrder.AllOrNone
     .BlockOrder = pOrder.BlockOrder
     .BrokerId = pOrder.BrokerId
@@ -1431,7 +1444,7 @@ NotifyOrderReport lOrderReport
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub notifyStatus(ByVal pOrder As IOrder, ByVal pStatus As OrderStatuses)
@@ -1447,7 +1460,7 @@ NotifyOrderStatusReport statusRpt
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function orderCanBePlaced(ByVal pOrder As IOrder) As Boolean
@@ -1496,7 +1509,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub PlaceOrderEx( _
@@ -1525,13 +1538,13 @@ If pOrder.ContractSpecifier.SecType = SecTypeCombo Then
     lCookie.Transmit = pTransmit
     StartTask(lTask, PriorityNormal, , lCookie).AddTaskCompletionListener Me
 Else
-    placeAnOrder pOrder, gContractSpecToTwsContractSpec(pOrder.ContractSpecifier), pLimitPriceOverride, pTransmit, pParentId, pOcaGroup, pOrderMode, ""
+    placeAnOrder pOrder, ContractSpecToTwsContractSpec(pOrder.ContractSpecifier), pLimitPriceOverride, pTransmit, pParentId, pOcaGroup, pOrderMode, ""
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processRuleset()
@@ -1555,7 +1568,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setOcaGroup( _
@@ -1573,7 +1586,7 @@ pOrder.ProviderProperties = lProps
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setState(ByVal pState As OrderSubmitterStates)
@@ -1587,7 +1600,7 @@ fireStateChange
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

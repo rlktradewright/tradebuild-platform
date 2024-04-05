@@ -146,7 +146,7 @@ If Not mAccountNotReady Then fireAccountValue lAccountValue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IAccountDataConsumer_NotifyPortfolioUpdate( _
@@ -162,7 +162,7 @@ Const ProcName As String = "IAccountDataConsumer_NotifyPortfolioUpdate"
 On Error GoTo Err
 
 Dim lContractSpec As IContractSpecifier
-Set lContractSpec = gTwsContractSpecToContractSpecifier(pTwsContractSpec, 1)
+Set lContractSpec = GIBEnhancedApi.TwsContractSpecToContractSpecifier(pTwsContractSpec, 1)
 
 Dim lKey As String: lKey = getContractName(lContractSpec)
 Dim lPortfolioValue As PortfolioValue
@@ -176,7 +176,7 @@ firePortfolioValue lPortfolioValue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IAccountDataConsumer_NotifyPosition(ByVal pAccount As String, ByVal pContractSpec As TwsContractSpecifier, ByVal pPosition As BoxedDecimal, ByVal pAverageCost As Double)
@@ -209,7 +209,7 @@ IAccountDataProvider_BaseCurrency = mBaseCurrency
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Function IAccountDataProvider_GetAccountValue(ByVal pKey As String, Optional ByVal pCurrency As String) As IAccountValue
@@ -222,7 +222,7 @@ Set IAccountDataProvider_GetAccountValue = mAccountValues.Item(getValueID(pKey, 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IAccountDataProvider_GetAccountValues() As Enumerator
@@ -251,7 +251,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IAccountDataProvider_RemoveAccountValueListener(ByVal pListener As IAccountValueListener)
@@ -291,7 +291,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
@@ -309,7 +309,7 @@ mTwsAPI.RequestAccountUpdates mKeepUpdated, ""
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -354,7 +354,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireAccountValueEnd()
@@ -378,7 +378,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePortfolioValue( _
@@ -403,7 +403,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub firePortfolioValueEnd()
@@ -427,7 +427,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireStateChange()
@@ -451,7 +451,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getAccountListeners(ByRef pListeners() As Object) As Boolean

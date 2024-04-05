@@ -73,7 +73,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:=ProcName, pModuleName:=ModuleName
+GIBEnhApi.HandleUnexpectedError pReRaise:=False, pLog:=True, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 '@================================================================================

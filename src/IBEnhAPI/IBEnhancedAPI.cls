@@ -44,19 +44,17 @@ Public Enum ApiConnectionStates
 End Enum
 
 Public Enum ApiMessageLoggingOptions
-    ApiMessageLoggingOptionNone = IBAPIV100.ApiMessageLoggingOptionNone
-    ApiMessageLoggingOptionDefault = IBAPIV100.ApiMessageLoggingOptionDefault
-    ApiMessageLoggingOptionAlways = IBAPIV100.ApiMessageLoggingOptionAlways
+    ApiMessageLoggingOptionNone = TwsApiMessageLoggingOptionNone
+    ApiMessageLoggingOptionDefault = TWSApiMessageLoggingOptionDefault
+    ApiMessageLoggingOptionAlways = TWSApiMessageLoggingOptionAlways
 End Enum
 
-' These are defined indentically to those in IBAPI. This is so that users of this
-' library do not also need a reference to the IBAPI project.
 Public Enum TwsLogLevels
-    TwsLogLevelSystem = 1
-    TwsLogLevelError
-    TwsLogLevelWarning
-    TwsLogLevelInformation
-    TwsLogLevelDetail
+    TwsLogLevelSystem = TwsLoggingLevelSystem
+    TwsLogLevelError = TwsLoggingLevelError
+    TwsLogLevelWarning = TwsLoggingLevelWarning
+    TwsLogLevelInformation = TwsLoggingLevelInformation
+    TwsLogLevelDetail = TwsLoggingLevelDetail
 End Enum
 
 '@================================================================================
@@ -96,7 +94,7 @@ Public Type PriceIncrementRulesetCacheEntry
 End Type
 
 Public Type ScanRequest
-    RequestID               As Long
+    requestId               As Long
     Cookie                  As String
     FutureBuilder           As FutureBuilder
     Results                 As ScanResults
@@ -144,12 +142,10 @@ Public Function GetClient( _
 Const ProcName As String = "GetClient"
 On Error GoTo Err
 
-If pSessionID = "" Then pSessionID = GenerateGUIDString
-
-Set GetClient = gGetClient(pSessionID, _
-                            pServer, _
+Set GetClient = GIBEnhancedApi.GetClient(pServer, _
                             pPort, _
                             pClientId, _
+                            pSessionID, _
                             pConnectionRetryIntervalSecs, _
                             pLogApiMessages, _
                             pLogRawApiMessages, _
@@ -163,12 +159,13 @@ Set GetClient = gGetClient(pSessionID, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
 
 
 

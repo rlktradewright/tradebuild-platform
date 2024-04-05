@@ -175,7 +175,7 @@ If mTaskContext.CancelPending Then
 End If
 
 If mState = Starting Then
-    gLog "HistDataRequestTask starting", ModuleName, ProcName, , LogLevelDetail
+    GIBEnhApi.Log "HistDataRequestTask starting", ModuleName, ProcName, , LogLevelDetail
     mTaskContext.Suspend -1
     Exit Sub
 End If
@@ -187,7 +187,7 @@ If mState = ConvertingComboContract Then
 
 ElseIf mState = RetrievingBars Then
     If needMoreBars Then
-        gLog "More bars needed", ModuleName, ProcName, , LogLevelDetail
+        GIBEnhApi.Log "More bars needed", ModuleName, ProcName, , LogLevelDetail
         Dim lRequest As TwsHistoricalDataRequest
         prepareForRetrieval
         Dim lSingleTwsAPiRequest As Boolean
@@ -202,12 +202,12 @@ ElseIf mState = RetrievingBars Then
             mState = DataRetrieved
         End If
     Else
-        gLog "No more bars needed", ModuleName, ProcName, , LogLevelDetail
+        GIBEnhApi.Log "No more bars needed", ModuleName, ProcName, , LogLevelDetail
         mState = DataRetrieved
     End If
 
 ElseIf mState = DataRetrieved Then
-    gLog "Total TWS bars retrieved: " & mTotalBarsRetrieved & _
+    GIBEnhApi.Log "Total TWS bars retrieved: " & mTotalBarsRetrieved & _
             " for: " & mTargetContract.Specifier.LocalSymbol & "@" & mTargetContract.Specifier.Exchange, ModuleName, ProcName, , LogLevelDetail
     If Not mListener Is Nothing Then mListener.FetchDataRetrieved mCookie
     
@@ -235,7 +235,7 @@ ElseIf mState = ProcessingBars Then
         End If
     Else
         If mTWSBarsEn Is Nothing Then
-            gLog "Starting bar processing", ModuleName, ProcName, , LogLevelDetail
+            GIBEnhApi.Log "Starting bar processing", ModuleName, ProcName, , LogLevelDetail
             Set mTWSBarsEn = mTWSBarsCollections(mCurrTWSBarsCollectionIndex).Enumerator
         End If
         If mTWSBarsEn.MoveNext Then
@@ -246,8 +246,8 @@ ElseIf mState = ProcessingBars Then
 
 '           leave the following code in for future debugging use
 '            If mTotalTwsBarsProcessed Mod 100 = 0 Then
-'                If gLogger.IsLoggable(LogLevelHighDetail) Then
-'                    gLog "Number of source bars processed: " & mTotalTwsBarsProcessed, _
+'                If GIBEnhApi.Logger.IsLoggable(LogLevelHighDetail) Then
+'                    GIBEnhApi.Log "Number of source bars processed: " & mTotalTwsBarsProcessed, _
 '                    ModuleName, _
 '                    ProcName, _
 '                    , _
@@ -272,7 +272,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal Value As TaskContext)
@@ -306,7 +306,7 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
     doFail ev.Future.ErrorNumber, ev.Future.ErrorMessage, ev.Future.ErrorSource
 ElseIf TypeOf ev.Future.Value Is IContract Then
-    gLog "Got caller-supplied contract", ModuleName, ProcName, , LogLevelDetail
+    GIBEnhApi.Log "Got caller-supplied contract", ModuleName, ProcName, , LogLevelDetail
 
     If Not mListener Is Nothing Then mListener.FetchStarted mCookie
     Set mTargetContract = ev.Future.Value
@@ -314,9 +314,9 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     failpoint = "Set session times"
     setSessionTimes
     
-    gLog "Getting TwsContract", ModuleName, ProcName, , LogLevelDetail
+    GIBEnhApi.Log "Getting TwsContract", ModuleName, ProcName, , LogLevelDetail
     failpoint = "Get TWS contract"
-    mFutureWaiter.Add gContractFutureToTwsContractFuture(mContractRequester, CreateFuture(mTargetContract), mContractCache)
+    mFutureWaiter.Add GIBEnhancedApi.ContractFutureToTwsContractFuture(mContractRequester, CreateFuture(mTargetContract), mContractCache)
     
     If mClockExpected And mClock Is Nothing Then Exit Sub
 
@@ -324,12 +324,12 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     If Not mTwsContract Is Nothing Then processTwsContract
 ElseIf TypeOf ev.Future.Value Is Clock Then
     Set mClock = ev.Future.Value
-    gLog "Got clock" & IIf(mClock.IsSimulated, " - simulated", ""), ModuleName, ProcName, , LogLevelDetail
+    GIBEnhApi.Log "Got clock" & IIf(mClock.IsSimulated, " - simulated", ""), ModuleName, ProcName, , LogLevelDetail
     If mTargetContract Is Nothing Then Exit Sub
     setContractAndSpecialTimes
     If Not mTwsContract Is Nothing Then processTwsContract
 ElseIf TypeOf ev.Future.Value Is TwsContract Then
-    gLog "Got TwsContract", ModuleName, ProcName, , LogLevelDetail
+    GIBEnhApi.Log "Got TwsContract", ModuleName, ProcName, , LogLevelDetail
     Set mTwsContract = ev.Future.Value
     
     If mClockExpected And mClock Is Nothing Then Exit Sub
@@ -344,7 +344,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName, pFailpoint:=failpoint
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName, pFailpoint:=failpoint
 End Sub
 
 '@================================================================================
@@ -364,7 +364,7 @@ Set mCurrentBar = pBar
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -379,7 +379,7 @@ Friend Sub EndHistData()
 Const ProcName As String = "EndHistData"
 On Error GoTo Err
 
-gLog "Retrieved " & mNumberOfBarsInMessage & " bars for: " & _
+GIBEnhApi.Log "Retrieved " & mNumberOfBarsInMessage & " bars for: " & _
         mTargetContract.Specifier.LocalSymbol & "@" & mTargetContract.Specifier.Exchange, _
         ModuleName, _
         ProcName, _
@@ -397,7 +397,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function Initialise( _
@@ -415,7 +415,7 @@ Friend Function Initialise( _
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-gLog "Initialising HistDataRequestTask", ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log "Initialising HistDataRequestTask", ModuleName, ProcName, , LogLevelDetail
 
 Set mTargetBarSpecifier = pBarSpecifier
 mSpecialFromTime = pSpecialFromTime
@@ -425,7 +425,7 @@ mDontReturnBars = pDontReturnBars
 Set mHistDataRequester = pHistDataRequester
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
-gSetVariant mCookie, pCookie
+GIBEnhApi.SetVariant mCookie, pCookie
 mFutureBuilder.Cookie = mCookie
 
 mFutureWaiter.Add pContractFuture
@@ -441,14 +441,14 @@ Set Initialise = mFutureBuilder.Future
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub NotifyError(ByVal pErrorCode As Long, ByVal pErrorMsg As String)
 Const ProcName As String = "NotifyError"
 On Error GoTo Err
 
-gLog "Error " & pErrorCode & " from Tws: " & pErrorMsg, ModuleName, ProcName
+GIBEnhApi.Log "Error " & pErrorCode & " from Tws: " & pErrorMsg, ModuleName, ProcName
 
 If mState = RetrievingBars And isBarFixedDuration(mTargetBarSpecifier.BarTimePeriod) And mTotalBarsRetrieved <> 0 Then
     mState = DataRetrieved
@@ -463,7 +463,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyTwsBar(ByRef pBar As TwsBar)
@@ -480,8 +480,8 @@ If Not notifyTimestamp(lTimestamp, _
 If mFirstBarTimeInMessage = 0 Then mFirstBarTimeInMessage = lTimestamp
 
 ' leave the following code in for future debugging use
-'If gLogger.IsLoggable(LogLevelHighDetail) Then
-'    gLog "Bar time: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs), _
+'If GIBEnhApi.Logger.IsLoggable(LogLevelHighDetail) Then
+'    GIBEnhApi.Log "Bar time: " & FormatTimestamp(lTimestamp, TimestampDateAndTimeISO8601 Or TimestampNoMillisecs), _
 '        ModuleName, ProcName, , LogLevelHighDetail
 'End If
 
@@ -499,7 +499,7 @@ mTWSBarsCollections(mTWSBarsCollectionsIndex).Add pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub StartHistData( _
@@ -510,7 +510,7 @@ Const ProcName As String = "StartHistData"
 On Error GoTo Err
 
 mLatestRetrievalStartDate = convertTwsDateStringToTimestamp(pStartDate)
-gLog "Returning bars for: " & _
+GIBEnhApi.Log "Returning bars for: " & _
         mTargetContract.Specifier.LocalSymbol & "@" & mTargetContract.Specifier.Exchange & _
         "; start: " & FormatTimestamp( _
                             mLatestRetrievalStartDate, _
@@ -526,7 +526,7 @@ gLog "Returning bars for: " & _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -549,7 +549,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function createNewSessionBuilder() As SessionBuilder
@@ -565,14 +565,14 @@ Set createNewSessionBuilder = lSessionBuilder
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub doCancel()
 Const ProcName As String = "doCancel"
 On Error GoTo Err
 
-gLog "Fetch cancelled", ModuleName, ProcName
+GIBEnhApi.Log "Fetch cancelled", ModuleName, ProcName
 mState = Cancelling
 mHistDataRequester.CancelHistoricalDataRequest mRequesterID
 If mFutureBuilder.Future.IsPending Then mFutureBuilder.Cancel
@@ -582,7 +582,7 @@ If Not mListener Is Nothing Then mListener.FetchCancelled mCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doFail(ByVal pErrorCode As Long, ByVal pErrorMsg As String, ByVal pErrorSource As String)
@@ -597,7 +597,7 @@ If Not mListener Is Nothing Then mListener.FetchFailed mCookie, pErrorCode, pErr
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub EndRequest()
@@ -614,7 +614,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fireNotifyBar(ByVal pBar As Bar)
@@ -630,7 +630,7 @@ mListener.NotifyBar mCookie, pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function generateRequestEndTime(ByVal pWorkingBarSpecifier As BarDataSpecifier, _
@@ -660,19 +660,19 @@ If Not mTwsTimezone Is mTargetTimezone Then
     generateRequestEndTime = Format(lEndTime, _
                                     "yyyymmdd hh\:nn\:ss") & _
                                     " " & _
-                                    gStandardTimezoneNameToTwsTimeZoneName(mTwsTimezone.StandardName)
+                                    GIBEnhancedApi.StandardTimezoneNameToTwsTimeZoneName(mTwsTimezone.StandardName)
 Else
     generateRequestEndTime = Format(lEndTime, _
                                     "yyyymmdd hh\:nn\:ss") & _
                                     " " & _
-                                    gStandardTimezoneNameToTwsTimeZoneName(mTargetTimezone.StandardName)
+                                    GIBEnhancedApi.StandardTimezoneNameToTwsTimeZoneName(mTargetTimezone.StandardName)
 End If
 
     
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 
@@ -1003,7 +1003,7 @@ End Select
 If Left$(pTwsRequest.Duration, 2) = "0 " Then pTwsRequest.Duration = ""
 
 With pTwsRequest
-    gLog "Hist data request: size=" & .BarSizeSetting & _
+    GIBEnhApi.Log "Hist data request: size=" & .BarSizeSetting & _
             "; duration=" & .Duration & _
             "; end=" & .EndDateTime & _
             "; what to show=" & .WhatToShow & _
@@ -1016,7 +1016,7 @@ generateTwsHistoricalDataRequest = (pTwsRequest.Duration <> "")
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function generateWorkingBarSpecifier(ByRef pTargetBarSpecifier As BarDataSpecifier) As BarDataSpecifier
@@ -1118,7 +1118,7 @@ Set generateWorkingBarSpecifier = lBarSpec
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getFromDate( _
@@ -1146,7 +1146,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNumberOfPrices( _
@@ -1187,7 +1187,7 @@ getTimestampFromTwsBar = lTimestamp
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getToDate( _
@@ -1215,7 +1215,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isBarFixedDuration( _
@@ -1245,7 +1245,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function needMoreBars() As Boolean
@@ -1273,7 +1273,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function normaliseTime( _
@@ -1326,7 +1326,7 @@ mTargetBarsBuilder.NotifyVolume lValue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function notifyTimestamp( _
@@ -1359,7 +1359,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub prepareForRetrieval()
@@ -1390,7 +1390,7 @@ mAccumulatedVolume = 0
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processBar(ByRef pBar As TwsBar)
@@ -1453,14 +1453,14 @@ mAccumulatedVolume = mAccumulatedVolume + pBar.Volume
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processTwsContract()
 Const ProcName As String = "processTwsContract"
 On Error GoTo Err
 
-    Set mTwsTimezone = GetTimeZone(gTwsTimezoneNameToStandardTimeZoneName(mTwsContract.TimeZoneId))
+    Set mTwsTimezone = GetTimeZone(GIBEnhancedApi.TwsTimezoneNameToStandardTimeZoneName(mTwsContract.TimeZoneId))
     Set mWorkingBarSpecifier = generateWorkingBarSpecifier(mTargetBarSpecifier)
     mState = RetrievingBars
     mTaskContext.Continue
@@ -1468,7 +1468,7 @@ On Error GoTo Err
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -1477,7 +1477,7 @@ Const ProcName As String = "returnResults"
 On Error GoTo Err
 
 fireNotifyBar mCurrentBar
-gLog "Time to process " & mTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(mElapsedTimer.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
+GIBEnhApi.Log "Time to process " & mTotalTwsBarsProcessed & " TWSBars (millisecs)", ModuleName, ProcName, CStr(Int(mElapsedTimer.ElapsedTimeMicroseconds / 1000)), LogLevelDetail
 mHistDataRequester.UnregisterHistoricalDataRequest mRequesterID
 
 If mFutureBuilder.Future.IsPending Then
@@ -1493,7 +1493,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setContractAndSpecialTimes()
@@ -1503,36 +1503,36 @@ On Error GoTo Err
 Dim failpoint As String
 
 If mClock Is Nothing Then
-    gLog "Setting clock for target contract", ModuleName, ProcName, , LogLevelDetail
+    GIBEnhApi.Log "Setting clock for target contract", ModuleName, ProcName, , LogLevelDetail
     Set mClock = GetClock(mTargetContract.TimezoneName)
 End If
 
 failpoint = "Set contract and special times"
-gLog "Set contract and special times", ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log "Set contract and special times", ModuleName, ProcName, , LogLevelDetail
 mTargetBarSpecifier.SetContract mTargetContract, mSpecialFromTime, mSpecialToTime, mClock
 Set mTargetTimezone = GetTimeZone(mTargetContract.TimezoneName)
 
 failpoint = "Set target SessionBuilder"
-gLog "Set target SessionBuilder", ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log "Set target SessionBuilder", ModuleName, ProcName, , LogLevelDetail
 Set mTargetSessionBuilder = createNewSessionBuilder
 Set mTargetSession = mTargetSessionBuilder.Session
 
 failpoint = "Set missing dates and number of bars"
-gLog "Set missing dates and number of bars", ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log "Set missing dates and number of bars", ModuleName, ProcName, , LogLevelDetail
 setDatesAndNumberOfBars
     
 failpoint = "Set timespan data"
-gLog "Set timespan data", ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log "Set timespan data", ModuleName, ProcName, , LogLevelDetail
 setTimespanData
 
 failpoint = "Set max number of bars to fetch"
-gLog "Set max number of bars to fetch", ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log "Set max number of bars to fetch", ModuleName, ProcName, , LogLevelDetail
 setMaxNumberOfBarsToFetch
 
 If Not isBarFixedDuration(mTargetBarSpecifier.BarTimePeriod) Then mNotifyAtEnd = True
     
 failpoint = "Create target BarsBuilder"
-gLog "Create target BarsBuilder", ModuleName, ProcName, , LogLevelDetail
+GIBEnhApi.Log "Create target BarsBuilder", ModuleName, ProcName, , LogLevelDetail
 Set mTargetBarsBuilder = CreateBarsBuilder( _
                                 mTargetBarSpecifier.BarTimePeriod, _
                                 mTargetSession, _
@@ -1546,7 +1546,7 @@ Set mTargetBarsBuilder = CreateBarsBuilder( _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName, failpoint
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName, failpoint
 End Sub
 
 Private Sub setDatesAndNumberOfBars()
@@ -1625,7 +1625,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setMaxNumberOfBarsToFetch()
@@ -1661,7 +1661,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setSessionTimes()
@@ -1703,7 +1703,7 @@ mTargetBarSpecifier.ToDate = lToDate
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

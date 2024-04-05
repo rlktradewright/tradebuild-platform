@@ -96,7 +96,7 @@ If lContinuationData.DataType = ContinuationDataTypeRuleset Then
     lRulesetEntry.CacheDate = Now
     
     mPriceIncrementRulesets.Add lRulesetEntry, lKey
-    gLogger.Log "Added price increment ruleset " & _
+    GIBEnhApi.Logger.Log "Added price increment ruleset " & _
                 lKey & _
                 " to cache", _
                 ProcName, ModuleName, LogLevelDetail
@@ -114,7 +114,7 @@ ElseIf lContinuationData.DataType = ContinuationDataTypeContracts Then
     lContractEntry.CacheDate = Now
     
     mContracts.Add lContractEntry, lKey
-    gLogger.Log "Added " & _
+    GIBEnhApi.Logger.Log "Added " & _
                 lContractEntry.Contracts.Count & _
                 IIf(lContractEntry.Contracts.Count = 1, " contract", " contracts") & _
                 " to cache for key", _
@@ -137,7 +137,7 @@ ElseIf lContinuationData.DataType = ContinuationDataTypeOptionParams Then
     
     mOptionParameters.Add lOptionParamsEntry, lKey
     
-    gLogger.Log "Added option parameters to cache for contract", _
+    GIBEnhApi.Logger.Log "Added option parameters to cache for contract", _
                 ProcName, ModuleName, LogLevelDetail, _
                 lContractSpec.Key
 Else
@@ -147,7 +147,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -179,12 +179,12 @@ Set lEntry.Contracts = lContractsBuilder.Contracts
 If lEntry.TwsContracts Is Nothing Then Set lEntry.TwsContracts = New EnumerableCollection
 lEntry.TwsContracts.Add pTwsContract
 mContracts.Add lEntry, pKey
-gLogger.Log "Added 1 contract to cache for key: " & pKey, ProcName, ModuleName, LogLevelDetail
+GIBEnhApi.Logger.Log "Added 1 contract to cache for key: " & pKey, ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 'Friend Sub AddContracts( _
@@ -201,7 +201,7 @@ End Sub
 'Set lEntry.Contracts = pContracts
 'Set lEntry.TwsContracts = pTwsContracts
 'mContracts.Add lEntry, pRequestContractSpec.Key
-'gLogger.Log "Added " & _
+'GIBEnhApi.Logger.Log "Added " & _
 '            pContracts.Count & _
 '            IIf(pContracts.Count = 1, " contract", " contracts") & _
 '            " to cache for key", _
@@ -211,7 +211,7 @@ End Sub
 'Exit Sub
 '
 'Err:
-'gHandleUnexpectedError ProcName, ModuleName
+'GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 'End Sub
 
 Friend Sub AddOptionParameter( _
@@ -250,12 +250,12 @@ Next
 
 lParametersStore.Complete
 
-gLogger.Log "Added option parameters to cache for key: " & lKey, ProcName, ModuleName, LogLevelDetail
+GIBEnhApi.Logger.Log "Added option parameters to cache for key: " & lKey, ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AddPriceIncrementRuleset( _
@@ -270,7 +270,7 @@ lEntry.CacheDate = Now
 Set lEntry.Ruleset = pRuleset
 mPriceIncrementRulesets.Add lEntry, CStr(pRuleset.RulesID)
 
-gLogger.Log "Added price increment ruleset " & _
+GIBEnhApi.Logger.Log "Added price increment ruleset " & _
             pRuleset.RulesID & _
             " to cache", _
             ProcName, ModuleName, LogLevelDetail
@@ -278,7 +278,7 @@ gLogger.Log "Added price increment ruleset " & _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function ContainsContract( _
@@ -292,7 +292,7 @@ ContainsContract = tryGetContractCacheEntry(pKey, lEntry)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetContract( _
@@ -313,7 +313,7 @@ Else
     GetContract = True
     Set pContract = lEntry.Contracts.ItemAtIndex(1)
     Set pTwsContract = lEntry.TwsContracts(1)
-    gLogger.Log "Retrieved 1 contract from cache for key", _
+    GIBEnhApi.Logger.Log "Retrieved 1 contract from cache for key", _
                 ProcName, ModuleName, LogLevelMediumDetail, _
                 pContractSpec.Key
 End If
@@ -321,7 +321,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetContracts( _
@@ -341,7 +341,7 @@ Else
     GetContracts = True
     Set pContracts = lEntry.Contracts
     Set pTwsContracts = lEntry.TwsContracts
-    gLogger.Log "Retrieved " & _
+    GIBEnhApi.Logger.Log "Retrieved " & _
                 lEntry.Contracts.Count & _
                 IIf(lEntry.Contracts.Count = 1, " contract", " contracts") & _
                 " from cache for key", _
@@ -352,7 +352,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetContractsFutureBuilder( _
@@ -378,7 +378,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetOptionExpiries( _
@@ -405,7 +405,7 @@ GetOptionExpiries = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetOptionStrikes( _
@@ -432,7 +432,7 @@ GetOptionStrikes = True
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetOptionParametersFutureBuilder( _
@@ -455,7 +455,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetPriceIncrementRuleset( _
@@ -468,7 +468,7 @@ If Not tryGetRulesetCacheEntry(pRuleID, lEntry) Then Exit Function
 
 If Not lEntry.Ruleset Is Nothing Then
     Set GetPriceIncrementRuleset = lEntry.Ruleset
-    gLogger.Log "Retrieved price increment ruleset " & _
+    GIBEnhApi.Logger.Log "Retrieved price increment ruleset " & _
                 pRuleID & _
                 " from cache", _
                 ProcName, ModuleName, LogLevelMediumDetail
@@ -477,7 +477,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetRulesetFutureBuilder( _
@@ -498,7 +498,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub SetContractsFutureBuilder( _
@@ -526,7 +526,7 @@ mFutureWaiter.Add pContractsFutureBuilder.Future, c
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetOptionParametersFutureBuilder( _
@@ -555,7 +555,7 @@ mFutureWaiter.Add pOptionParametersFutureBuilder.Future, c
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub SetRulesetFutureBuilder( _
@@ -579,7 +579,7 @@ mFutureWaiter.Add pRulesetFutureBuilder.Future, c
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -602,7 +602,7 @@ generateOptionParametersKey = pContractSpec.Key & "|" & pExchange
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getOptionParameters( _
@@ -621,7 +621,11 @@ Set getOptionParameters = lEntry.OptionParameters
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function isCacheEntryExpired(ByVal pCacheDate As Date) As Boolean
+isCacheEntryExpired = Int(pCacheDate) <> Int(Now)
 End Function
 
 Private Function tryGetContractCacheEntry( _
@@ -631,7 +635,7 @@ Const ProcName As String = "tryGetContractCacheEntry"
 On Error GoTo Err
 
 If Not mContracts.TryItem(pKey, pCacheEntry) Then
-ElseIf gIsCacheEntryExpired(pCacheEntry.CacheDate) Then
+ElseIf isCacheEntryExpired(pCacheEntry.CacheDate) Then
     mContracts.Remove pKey
 Else
     tryGetContractCacheEntry = True
@@ -640,7 +644,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function tryGetOptionParametersCacheEntry( _
@@ -650,7 +654,7 @@ Const ProcName As String = "tryGetOptionParametersCacheEntry"
 On Error GoTo Err
 
 If Not mOptionParameters.TryItem(pKey, pCacheEntry) Then
-ElseIf gIsCacheEntryExpired(pCacheEntry.CacheDate) Then
+ElseIf isCacheEntryExpired(pCacheEntry.CacheDate) Then
     mOptionParameters.Remove pKey
 Else
     tryGetOptionParametersCacheEntry = True
@@ -659,7 +663,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function tryGetRulesetCacheEntry( _
@@ -684,7 +688,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

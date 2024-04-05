@@ -83,7 +83,7 @@ End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-gLogger.Log "ContractsRequestManager terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
+GIBEnhApi.Logger.Log "ContractsRequestManager terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 End Sub
 
 '@================================================================================
@@ -103,7 +103,7 @@ If ev.Future.IsCancelled Then
 ElseIf ev.Future.IsFaulted Then
 
 Else
-    gLogger.Log "Contracts future available for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
+    GIBEnhApi.Logger.Log "Contracts future available for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
     If Not mListener Is Nothing Then mListener.FetchCompleted mCookie
 End If
 
@@ -112,7 +112,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -128,7 +128,7 @@ doCancel
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -159,11 +159,11 @@ mResultsContractsFutureBuilder.Cookie = pCookie
 
 mResultsContractsBuilder.ContractSpecifier = pContractSpecifier
 
-gSetVariant mCookie, pCookie
+GIBEnhApi.SetVariant mCookie, pCookie
 
 mReturnTwsContracts = pReturnTwsContracts
 
-gLogger.Log "Fetch " & IIf(mReturnTwsContracts, "TWS ", "") & "contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
+GIBEnhApi.Logger.Log "Fetch " & IIf(mReturnTwsContracts, "TWS ", "") & "contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Dim lCachedContracts As IContracts
 Dim lCachedTwsContracts As EnumerableCollection
@@ -187,7 +187,7 @@ If Not mContractCache.GetContracts( _
 ElseIf lCachedContracts.Count = 1 Then
     ' there is only one contract for this specifier, already in the cache. So notify
     ' it to the listener and return the relevant result
-    gLogger.Log "One contract in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "One contract in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     Dim lFuture As IFuture
     If mReturnTwsContracts Then
         Set lFuture = CreateFuture(lCachedTwsContracts, mCookie)
@@ -202,10 +202,10 @@ Else
     ' the required contracts are in the cache but there are more than 1 of them
     
     If mReturnTwsContracts Then
-        gLogger.Log lCachedTwsContracts.Count & " tws contracts in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log lCachedTwsContracts.Count & " tws contracts in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         Set Fetch = CreateFuture(lCachedTwsContracts, mCookie)
     Else
-        gLogger.Log lCachedContracts.Count & " contracts in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log lCachedContracts.Count & " contracts in cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         ' so just play them back to the listener
         replayCachedContracts lCachedContracts, lCachedTwsContracts
         mFutureWaiter.Add mResultsContractsFutureBuilder.Future
@@ -216,7 +216,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function FetchSorted( _
@@ -245,7 +245,7 @@ Set FetchSorted = Fetch(pContractRequester, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub NotifyContract( _
@@ -261,7 +261,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyFetchCompleted( _
@@ -270,7 +270,7 @@ Const ProcName As String = "NotifyFetchCompleted"
 On Error GoTo Err
 
 mNumOutstandingRequests = mNumOutstandingRequests - 1
-gLogger.Log "Fetch completed: mNumOutstandingRequests=" & mNumOutstandingRequests, ProcName, ModuleName, LogLevelMediumDetail
+GIBEnhApi.Logger.Log "Fetch completed: mNumOutstandingRequests=" & mNumOutstandingRequests, ProcName, ModuleName, LogLevelMediumDetail
 
 If mNumOutstandingRequests = 0 Then processEnd
 requestCompleted pFetcher
@@ -278,7 +278,7 @@ requestCompleted pFetcher
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyFetchError( _
@@ -305,7 +305,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyTwsContract( _
@@ -320,7 +320,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -342,7 +342,7 @@ mFetchers.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doCancel()
@@ -359,7 +359,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processEnd()
@@ -367,7 +367,7 @@ Const ProcName As String = "processEnd"
 On Error GoTo Err
 
 If mReturnTwsContracts Then
-    gLogger.Log "Retrieved " & _
+    GIBEnhApi.Logger.Log "Retrieved " & _
                 mTwsContracts.Count & _
                 " TWS contracts for: " & mContractSpecifier.ToString, _
                 ProcName, ModuleName, LogLevelMediumDetail
@@ -376,7 +376,7 @@ If mReturnTwsContracts Then
         mResultsContractsFutureBuilder.Complete
     End If
 Else
-    gLogger.Log "Retrieved " & mResultsContractsBuilder.Contracts.Count & " contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
+    GIBEnhApi.Logger.Log "Retrieved " & mResultsContractsBuilder.Contracts.Count & " contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
     If mResultsContractsFutureBuilder.Future.IsPending Then
         mResultsContractsFutureBuilder.Value = mResultsContractsBuilder.Contracts
@@ -387,7 +387,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub replayCachedContracts( _
@@ -405,7 +405,7 @@ mNumOutstandingRequests = mNumOutstandingRequests + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub requestCompleted( _
@@ -414,12 +414,12 @@ Const ProcName As String = "requestCompleted"
 On Error GoTo Err
 
 mFetchers.Remove pFetcher
-gLogger.Log "Removed ContractsFetcher for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
+GIBEnhApi.Logger.Log "Removed ContractsFetcher for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub requestContracts(ByVal pContractSpec As IContractSpecifier)
@@ -441,7 +441,7 @@ mNumOutstandingRequests = mNumOutstandingRequests + 1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub requestContractsForCash()
@@ -484,7 +484,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName & "(LocalSymbol=" & mContractSpecifier.LocalSymbol & "; Symbol=" & mContractSpecifier.Symbol & ")", ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName & "(LocalSymbol=" & mContractSpecifier.LocalSymbol & "; Symbol=" & mContractSpecifier.Symbol & ")", ModuleName
 End Sub
 
 Private Sub requestContractsForUnspecifiedSectype()
@@ -500,7 +500,7 @@ On Error GoTo Err
 ' them, and warrants are not included because they are hardly used so it's not
 ' worth making an extra request every time.
 
-If Not gIsSmartExchange(mContractSpecifier.Exchange) Then
+If Not GIBEnhancedApi.IsSmartExchange(mContractSpecifier.Exchange) Then
     requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.TradingClass, _
@@ -535,7 +535,7 @@ If mContractSpecifier.Expiry = "" And _
     mContractSpecifier.Strike = 0 And _
     mContractSpecifier.Right = OptNone _
 Then
-    If Not gIsSmartExchange(mContractSpecifier.Exchange) Then
+    If Not GIBEnhancedApi.IsSmartExchange(mContractSpecifier.Exchange) Then
         requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Symbol, _
                                                         mContractSpecifier.TradingClass, _
@@ -665,6 +665,6 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 

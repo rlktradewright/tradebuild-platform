@@ -103,7 +103,7 @@ If sSomeListeners Then
     For i = 0 To UBound(sCurrentListeners)
         Set lListener = sCurrentListeners(i)
         lListener.NotifyAPIConnectionStateChange Me, pState, pMessage
-        gLog "Notified API connection state change: " & mServer & "; " & mPort & "; " & mClientId, _
+        GIBEnhApi.Log "Notified API connection state change: " & mServer & "; " & mPort & "; " & mClientId, _
             ModuleName, ProcName, , LogLevelDetail
     Next
 End If
@@ -111,7 +111,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IConnectionStatusConsumer_NotifyIBServerConnectionClosed()
@@ -138,7 +138,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IConnectionStatusConsumer_NotifyIBServerConnectionRecovered(ByVal pDataLost As Boolean)
@@ -165,7 +165,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -189,7 +189,7 @@ mApiErrorListener.Notify ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IErrorAndNotificationConsumer_NotifyApiEvent(ByVal pEventCode As Long, ByVal pEventMsg As String)
@@ -209,7 +209,7 @@ mApiNotificationListener.Notify ev
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -289,7 +289,7 @@ mTwsConnectionStateListeners.Add pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub DisableHistoricalDataRequestPacing()
@@ -301,7 +301,7 @@ getHistDataRequester.DisableHistoricalDataRequestPacing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub Finish()
@@ -330,7 +330,7 @@ gReleaseClient Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub FinishOrderRecovery()
@@ -342,7 +342,7 @@ getOrderPlacer.FinishOrderRecovery
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function GetAccountDataProvider() As IAccountDataProvider
@@ -362,7 +362,7 @@ Set GetAccountDataProvider = sAccountDataProvider
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetContractStore() As IContractStore
@@ -380,7 +380,7 @@ Set GetContractStore = sContractStore
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetHistoricalDataStore() As IHistoricalDataStore
@@ -400,7 +400,7 @@ Set GetHistoricalDataStore = sHistoricalDataStore
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetMarketDataFactory() As IMarketDataFactory
@@ -426,7 +426,7 @@ Set GetMarketDataFactory = lMarketDataFactory
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateOrderSubmitter(ByVal pDataSource As IMarketDataSource) As IOrderSubmitter
@@ -449,7 +449,7 @@ Set CreateOrderSubmitter = lOrderSubmitter
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -489,7 +489,7 @@ Set mApiErrorListener = pApiErrorListener
 Set mApiNotificationListener = pApiNotificationListener
 
 If Not pDeferConnection Then
-    gLog "API client connecting: " & mServer & "; " & mPort & "; " & mClientId, _
+    GIBEnhApi.Log "API client connecting: " & mServer & "; " & mPort & "; " & mClientId, _
             ModuleName, ProcName, , LogLevelDetail
     mTwsAPI.Connect
 End If
@@ -497,7 +497,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub RemoveTwsConnectionStateListener(ByVal pListener As ITwsConnectionStateListener)
@@ -509,19 +509,19 @@ mTwsConnectionStateListeners.Remove pListener
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetTwsLogLevel(ByVal pLogLevel As TwsLogLevels)
 Const ProcName As String = "SetTwsLogLevel"
 On Error GoTo Err
 
-mTwsAPI.SetTwsLogLevel pLogLevel
+mTwsAPI.SetTwsLoggingLevel pLogLevel
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub StartOrderRecovery( _
@@ -535,7 +535,7 @@ getOrderPlacer.StartOrderRecovery pOrderRecoveryListener, pStartFrom
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -561,7 +561,7 @@ getAPIInstance.ConnectionStatusConsumer = Me
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getContractDetailsRequester() As ContractsTwsRequester
@@ -585,7 +585,7 @@ Set getContractDetailsRequester = lContractDetailsRequester
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getHistDataRequester() As HistDataRequester
@@ -609,7 +609,7 @@ Set getHistDataRequester = lHistDataRequester
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getOrderPlacer() As OrderPlacer
@@ -631,7 +631,7 @@ Set getOrderPlacer = sOrderPlacer
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getScanRequester() As ScanRequester
@@ -654,7 +654,7 @@ Set getScanRequester = lScanRequester
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

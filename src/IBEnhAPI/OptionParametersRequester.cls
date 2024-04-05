@@ -80,7 +80,7 @@ End Sub
 
 Private Sub Class_Terminate()
 Const ProcName As String = "Class_Terminate"
-gLogger.Log "OptionParametersRequester terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+GIBEnhApi.Logger.Log "OptionParametersRequester terminated for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
 End Sub
 
 '@================================================================================
@@ -101,7 +101,7 @@ mOptionParametersFutureBuilder.Complete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyContract(ByVal pRequestId As Long, ByVal pTwsContract As TwsContract)
@@ -120,10 +120,10 @@ mResultFutureBuilder.Fail pErrorCode, pErrorMsg, ""
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Long, pPriceIncrement() As IBAPIV100.TwsPriceIncrement)
+Private Sub IContractDetailsConsumer_NotifyMarketRule(ByVal pMarketRuleId As Long, pPriceIncrement() As TwsPriceIncrement)
 
 End Sub
 
@@ -143,7 +143,7 @@ mContractCache.AddOptionParameter mContractSpecifier, pExchange, pExpirations, p
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -158,18 +158,18 @@ Select Case mRequestType
 Case OptionParameterTypeExpiries
     Dim lExpiries As Expiries
     If GetExpiries(lExpiries) Then
-        gLogger.Log "Option Expiries retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "Option Expiries retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         mResultFutureBuilder.Value = lExpiries
     Else
-        gLogger.Log "No Option Expiries retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "No Option Expiries retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     End If
 Case OptionParameterTypeStrikes
     Dim lStrikes As Strikes
     If GetStrikes(lStrikes) Then
-        gLogger.Log "Option Strikes retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "Option Strikes retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         mResultFutureBuilder.Value = lStrikes
     Else
-        gLogger.Log "No Option Strikes retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "No Option Strikes retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     End If
 End Select
 
@@ -180,7 +180,7 @@ Set mSelfRef = Nothing
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -210,13 +210,13 @@ mRequestType = pRequestType
 mExchange = pExchange
 mExpiry = pExpiry
 mStrike = pStrike
-gSetVariant mCookie, pCookie
+GIBEnhApi.SetVariant mCookie, pCookie
 
 Select Case mRequestType
 Case OptionParameterTypeExpiries
     Dim lExpiries As Expiries
     If GetExpiries(lExpiries) Then
-        gLogger.Log "Option Expiries retrieved from cache for ontract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "Option Expiries retrieved from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         Set Fetch = CreateFuture(lExpiries)
         Exit Function
     End If
@@ -224,13 +224,13 @@ Case OptionParameterTypeExpiries
     Set mSelfRef = Me
     
     If mContractCache.GetOptionParametersFutureBuilder(mContractSpecifier, mOptionParametersFutureBuilder) Then
-        gLogger.Log "Awaiting Option Expiries from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "Awaiting Option Expiries from cache for Contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         mFutureWaiter.Add mOptionParametersFutureBuilder.Future
         Set Fetch = mResultFutureBuilder.Future
         Exit Function
     End If
     
-    gLogger.Log "Fetching Option Expiries from TWS for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "Fetching Option Expiries from TWS for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     Set mOptionParametersFutureBuilder = New FutureBuilder
     mContractCache.SetOptionParametersFutureBuilder mContractSpecifier, mOptionParametersFutureBuilder
     mFutureWaiter.Add mOptionParametersFutureBuilder.Future
@@ -238,7 +238,7 @@ Case OptionParameterTypeExpiries
 Case OptionParameterTypeStrikes
     Dim lStrikes As Strikes
     If GetStrikes(lStrikes) Then
-        gLogger.Log "Option Strikes retrieved from cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "Option Strikes retrieved from cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         Set Fetch = CreateFuture(lStrikes)
         Exit Function
     End If
@@ -246,13 +246,13 @@ Case OptionParameterTypeStrikes
     Set mSelfRef = Me
     
     If mContractCache.GetOptionParametersFutureBuilder(mContractSpecifier, mOptionParametersFutureBuilder) Then
-        gLogger.Log "Awaiting Option Strikes from cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+        GIBEnhApi.Logger.Log "Awaiting Option Strikes from cache for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
         mFutureWaiter.Add mOptionParametersFutureBuilder.Future
         Set Fetch = mResultFutureBuilder.Future
         Exit Function
     End If
     
-    gLogger.Log "Fetching Option Strikes from TWS for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "Fetching Option Strikes from TWS for contract: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelDetail
     Set mOptionParametersFutureBuilder = New FutureBuilder
     mContractCache.SetOptionParametersFutureBuilder mContractSpecifier, mOptionParametersFutureBuilder
     mFutureWaiter.Add mOptionParametersFutureBuilder.Future
@@ -264,13 +264,13 @@ mRequestId = mContractRequester.RequestOptionParameters(mContractSpecifier, Me)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
+ 
 Private Function GetExpiries(ByRef pExpiries As Expiries) As Boolean
 Const ProcName As String = "getExpiries"
 On Error GoTo Err
@@ -280,7 +280,7 @@ GetExpiries = mContractCache.GetOptionExpiries(mContractSpecifier, mExchange, mS
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function GetStrikes(ByRef pStrikes As Strikes) As Boolean
@@ -292,7 +292,7 @@ GetStrikes = mContractCache.GetOptionStrikes(mContractSpecifier, mExchange, mExp
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

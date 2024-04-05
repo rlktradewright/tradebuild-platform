@@ -97,7 +97,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function GetEarliestSubmissionTime( _
@@ -122,7 +122,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function RecordSubmission(ByRef pRequest As TwsHistoricalDataRequest) As Date
@@ -151,7 +151,7 @@ RecordSubmission = lTimestamp
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -168,7 +168,7 @@ contractAndTickTypeToString = pRequest.ContractSpec.ToString & vbNullChar & _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getContractAndTickTypeCache(ByRef pRequest As TwsHistoricalDataRequest) As ValueCache
@@ -189,7 +189,7 @@ Set getContractAndTickTypeCache = lCache
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getEarliestTimeForContractAndTickType(ByRef pRequest As TwsHistoricalDataRequest) As Date
@@ -206,7 +206,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getEarliestTimeForIdenticalRequest(ByRef pRequest As TwsHistoricalDataRequest) As Date
@@ -225,7 +225,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function historicalDataRequestToString(ByRef pRequest As TwsHistoricalDataRequest) As String
@@ -241,7 +241,7 @@ historicalDataRequestToString = pRequest.BarSizeSetting & vbNullChar & _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function requestTimes() As EnumerableCollection
@@ -256,7 +256,7 @@ Set requestTimes = sRequestTimes
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function requestTimesForContractAndTickType() As EnumerableCollection
@@ -271,7 +271,7 @@ Set requestTimesForContractAndTickType = sRequestTimesForContractAndTickType
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function submittedHistDataRequests() As ValueCache
@@ -286,7 +286,7 @@ Set submittedHistDataRequests = sSubmittedRequests
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

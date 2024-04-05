@@ -88,7 +88,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Cancel( _
@@ -109,7 +109,7 @@ mOrders.Add lMapEntry, lKey
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function Contains( _
@@ -123,7 +123,7 @@ Contains = mOrders.Contains(generateTwsOrderKey(pBrokerId, pClientId))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetOrder( _
@@ -140,7 +140,7 @@ Set GetOrder = lMapEntry.Order
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetOrderSubmitter( _
@@ -157,7 +157,7 @@ Set GetOrderSubmitter = lMapEntry.OrderSubmitter
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function IsCancelled( _
@@ -187,7 +187,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================

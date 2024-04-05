@@ -80,7 +80,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract
     Set lContract = ev.Future.Value
     Set mContractSpec = lContract.Specifier
-    mFutureWaiter.Add gFetchContracts(mContractRequester, _
+    mFutureWaiter.Add GIBEnhancedApi.FetchContracts(mContractRequester, _
                                         mContractCache, _
                                         mContractSpec, _
                                         Nothing, _
@@ -98,7 +98,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -130,7 +130,7 @@ Set mSelfRef = Me
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -167,7 +167,7 @@ Dim lPermittedOrderTifs As OrderTIFs
 Dim i As Long
 For i = 0 To UBound(lOrderTypesStr)
     Dim lOrderType As TwsOrderTypes
-    lOrderType = gTwsOrderTypeToOrderType(TwsOrderTypeFromString(lOrderTypesStr(i)))
+    lOrderType = GIBEnhancedApi.TwsOrderTypeToOrderType(TwsOrderTypeFromString(lOrderTypesStr(i)))
     
     If lOrderType <> OrderTypeNone Then
         lPermittedOrderTypes = lPermittedOrderTypes Or lOrderType
@@ -209,6 +209,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "ALLOC", _
             "ALGO", _
             "ALGOCLS", _
+            "ALGOLTH", _
             "AVGCOST", _
             "AUC", _
             "BASKET", _
@@ -230,6 +231,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "IMB", _
             "LARGE", _
             "LTH", _
+            "MKT2BBO", _
             "MKTPROT", _
             "NGCOMB"
         Case "NODARK", _
@@ -254,6 +256,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "RELSTK", _
             "RFQ", _
             "RPI", _
+            "RTH4MKT", _
             "RTHIGNOPG", _
             "SCALE", _
             "SCALEODD", _
@@ -276,7 +279,7 @@ For i = 0 To UBound(lOrderTypesStr)
             ' not sure what these signify
         Case Else
             If lOrderTypesStr(i) <> "" Then
-                gLog "Unknown Order type received from Tws", ModuleName, ProcName, pMsgQualifier:=lOrderTypesStr(i)
+                GIBEnhApi.Log "Unknown Order type received from Tws", ModuleName, ProcName, pMsgQualifier:=lOrderTypesStr(i)
             End If
         End Select
     End If
@@ -303,7 +306,7 @@ mFutureBuilder.Complete
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

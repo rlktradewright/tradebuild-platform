@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "RealtimeBarRequester"
+Attribute VB_Name = "IScanResult"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 ''
@@ -38,13 +38,11 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ModuleName                            As String = "RealtimeBarRequester"
+Private Const ModuleName                            As String = "IScanResult"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private mRequesterReference                         As WeakReference
 
 '@================================================================================
 ' Class Event Handlers
@@ -62,72 +60,23 @@ Private mRequesterReference                         As WeakReference
 ' Properties
 '@================================================================================
 
+Public Property Get Attributes() As Parameters
+End Property
+
+Public Property Get Contract() As IContract
+End Property
+
+Public Property Get Rank() As Long
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Friend Sub Initialise(ByVal pRequester As IMarketDataConsumer)
-Set mRequesterReference = CreateWeakReference(pRequester)
-End Sub
-
-Friend Sub NotifyError(ByVal pRequesterId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
-Const ProcName As String = "NotifyError"
-On Error GoTo Err
-
-getRequester.NotifyError pRequesterId, pErrorCode, pErrorMsg
-
-Exit Sub
-
-Err:
-GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Friend Sub NotifyRealtimeBar(ByVal pRequesterId As Long, pBar As TwsBar)
-Const ProcName As String = "NotifyRealtimeBar"
-On Error GoTo Err
-
-With pBar
-    notifyPrice pRequesterId, .OpenValue
-    If .LowValue < .CloseValue Then
-        notifyPrice pRequesterId, .LowValue
-        notifyPrice pRequesterId, .HighValue
-    Else
-        notifyPrice pRequesterId, .HighValue
-        notifyPrice pRequesterId, .LowValue
-    End If
-    notifyPrice pRequesterId, .CloseValue
-End With
-
-Exit Sub
-
-Err:
-GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
-End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function getRequester() As IMarketDataConsumer
-Set getRequester = mRequesterReference.Target
-End Function
 
-Private Sub notifyPrice(ByVal pRequesterId As Long, ByVal pPrice As Double)
-Const ProcName As String = "notifyPrice"
-On Error GoTo Err
 
-Static sPrevNotifiedPrice As Double
-
-If pPrice = sPrevNotifiedPrice Then Exit Sub
-
-sPrevNotifiedPrice = pPrice
-
-Dim t As TwsTickAttributes
-getRequester.NotifyTickPrice pRequesterId, TwsTickLast, pPrice, DecimalZero, t
-
-Exit Sub
-
-Err:
-GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
-End Sub
 

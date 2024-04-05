@@ -77,7 +77,7 @@ CancelScanRefresh pRefreshCookie
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get IHistoricalDataStore_Capabilities() As HistDataStoreCapabilities
@@ -93,7 +93,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Bar writing is not sup
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IHistoricalDataStore_FetchBars( _
@@ -121,7 +121,7 @@ Set IHistoricalDataStore_FetchBars = FetchBars( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IHistoricalDataStore_Finish()
@@ -133,7 +133,7 @@ Finish
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IHistoricalDataStore_RefreshScanData( _
@@ -160,7 +160,7 @@ Set IHistoricalDataStore_ScanMarket = ScanMarket(pScanName, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IHistoricalDataStore_Supports(ByVal pCapability As HistDataStoreCapabilities) As Boolean
@@ -176,7 +176,7 @@ Set IHistoricalDataStore_TimePeriodValidator = mTimePeriodValidator
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Private Property Get IHistoricalDataStore_WriterTimeframes() As TimePeriod()
@@ -188,7 +188,7 @@ Err.Raise ErrorCodes.ErrUnsupportedOperationException, , "Bar writing is not sup
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 '@================================================================================
@@ -204,7 +204,7 @@ mTaskControllers.Remove ev.Source
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -233,7 +233,7 @@ On Error GoTo Err
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function FetchBars( _
@@ -269,7 +269,7 @@ lTc.AddTaskCompletionListener Me
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub Finish()
@@ -299,7 +299,7 @@ mScanRequesters.Clear
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -323,7 +323,7 @@ Set RefreshScanData = mScanRequester.RefreshData(pRefreshCookie)
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function ScanMarket( _
@@ -352,7 +352,7 @@ Set ScanMarket = mScanRequester.ScanMarket(pScanName, _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function Supports(ByVal pCapability As HistDataStoreCapabilities) As Boolean

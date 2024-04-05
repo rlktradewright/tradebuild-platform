@@ -98,7 +98,7 @@ mExpiriesBuilder.Add pExpiry
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AddParameter( _
@@ -120,7 +120,7 @@ lExpiryIndexEntry.StrikesBuilder.Add pStrike
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub AddStrike( _
@@ -135,7 +135,7 @@ mStrikesBuilder.Add pStrike
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Complete()
@@ -153,7 +153,7 @@ Set GetExpiries = mExpiriesBuilder.Expiries
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetExpiriesForStrike(ByVal pStrike As Double) As Expiries
@@ -169,7 +169,7 @@ Set GetExpiriesForStrike = lStrikeIndexEntry.ExpiriesBuilder.Expiries
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetStrikes() As Strikes
@@ -184,7 +184,7 @@ Set GetStrikes = mStrikesBuilder.Strikes
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function GetStrikesForExpiry(ByVal pExpiry As String) As Enumerator
@@ -200,7 +200,7 @@ Set GetStrikesForExpiry = lIndexEntry.StrikesBuilder.Strikes
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -233,7 +233,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

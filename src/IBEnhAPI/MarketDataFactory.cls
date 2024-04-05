@@ -36,6 +36,19 @@ Implements IStateChangeListener
 ' Enums
 '@================================================================================
 
+Private Enum MarketDataReestablishmentModes
+    ' only request market data for tickers that have not yet
+    ' received it
+    NewTickersOnly = 1
+    
+    ' cancel the current market data before re-requesting
+    Cancel
+    
+    ' request market data for all tickers
+    All
+    
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -140,7 +153,7 @@ releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableF
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -166,7 +179,7 @@ Case 200    ' security definition not known
     If Not mIsTwsConnectedToIBServers Then Exit Sub
     
 Case 10197  ' No markety data lumps during competing live session
-    gLog "Spurious message from IB: " & pErrorMsg, ModuleName, ProcName
+    GIBEnhApi.Log "Spurious message from IB: " & pErrorMsg, ModuleName, ProcName
     ' ignore this
     Exit Sub
 End Select
@@ -177,7 +190,7 @@ releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableF
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
@@ -193,7 +206,7 @@ mMarketDataTable(getIndexFromTickerId(pTickerId)).DataHasBeenReceived = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickOptionComputation( _
@@ -250,7 +263,7 @@ FireOptionComputation lIndex, lComputation
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickPrice( _
@@ -327,7 +340,7 @@ FireTick lIndex, lTick
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickRequestParams( _
@@ -418,7 +431,7 @@ FireTick lIndex, lTick
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDataConsumer_NotifyTickString(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pValue As String)
@@ -430,7 +443,7 @@ mMarketDataTable(getIndexFromTickerId(pTickerId)).DataHasBeenReceived = True
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -446,10 +459,14 @@ Set IMarketDataFactory_CreateMarketDataStream = CreateMarketDataStream(pContract
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As ITickStream
+#If SingleDll = 0 Then
+Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As TickUtils27.ITickStream
+#Else
+Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As TBFoundation.ITickStream
+#End If
 Const ProcName As String = "IMarketDataFactory_CreateMarketDepthStream"
 On Error GoTo Err
 
@@ -458,10 +475,14 @@ Set IMarketDataFactory_CreateMarketDepthStream = CreateMarketDepthStream(pContra
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
+#If SingleDll = 0 Then
 Private Function IMarketDataFactory_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TickUtils27.ITickStream
+#Else
+Private Function IMarketDataFactory_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TBFoundation.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TBFoundation.ITickStream
+#End If
 Const ProcName As String = "IMarketDataFactory_CreateSnapshotMarketDataStream"
 On Error GoTo Err
 
@@ -470,7 +491,7 @@ Set IMarketDataFactory_CreateSnapshotMarketDataStream = CreateSnapshotMarketData
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Property Get IMarketDataFactory_MaxStreamId() As Long
@@ -507,7 +528,7 @@ releaseTableEntry mMarketDepthTable, mMarketDataTableNextIndex, mMarketDepthTabl
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDepthConsumer_NotifyMarketDepth( _
@@ -552,7 +573,7 @@ FireTick lIndex, lTick
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IMarketDepthConsumer_ResetMarketDepth(ByVal pReEstablish As Boolean)
@@ -562,7 +583,7 @@ On Error GoTo Err
 ResetMarketDepth pReEstablish
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -606,7 +627,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed( _
@@ -631,7 +652,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -647,10 +668,10 @@ Dim lIsMarketData As Boolean
 lIsMarketData = isStreamBuilderForMarketData(ev.Source, lStreamId)
 
 If lIsMarketData Then
-    gLogger.Log "State changed for market data stream " & lStreamId & _
+    GIBEnhApi.Logger.Log "State changed for market data stream " & lStreamId & _
                 ": " & ev.State, ProcName, ModuleName, LogLevelMediumDetail
 Else
-    gLogger.Log "State changed for market depth stream " & lStreamId & _
+    GIBEnhApi.Logger.Log "State changed for market depth stream " & lStreamId & _
                 ": " & ev.State, ProcName, ModuleName, LogLevelMediumDetail
 End If
 
@@ -673,7 +694,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -701,7 +722,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -730,7 +751,7 @@ End If
 Exit Sub
 
 Err:
-gNotifyUnhandledError ProcName, ModuleName
+GIBEnhApi.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -748,7 +769,7 @@ CurrentAskPrice = mMarketDataTable(getIndexFromTickerId(pTickerId)).PrevAsk
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentAskSize(ByVal pTickerId As Long) As Long
@@ -762,7 +783,7 @@ CurrentAskSize = mMarketDataTable(getIndexFromTickerId(pTickerId)).PrevAskSize
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentBidPrice(ByVal pTickerId As Long) As Double
@@ -776,7 +797,7 @@ CurrentBidPrice = mMarketDataTable(getIndexFromTickerId(pTickerId)).PrevBid
 Exit Property
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get CurrentBidSize(ByVal pTickerId As Long) As Long
@@ -834,7 +855,7 @@ releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableF
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub CancelMarketDepth( _
@@ -848,7 +869,7 @@ releaseTableEntry mMarketDepthTable, mMarketDepthTableNextIndex, mMarketDepthTab
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function CreateMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
@@ -864,7 +885,7 @@ Set CreateMarketDataStream = doCreateMarketDataStream( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
@@ -881,7 +902,7 @@ Set CreateMarketDepthStream = doCreateMarketDepthStream( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Function CreateSnapshotMarketDataStream(ByVal pContractFuture As IFuture, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As ITickStream
@@ -897,7 +918,7 @@ Set CreateSnapshotMarketDataStream = doCreateMarketDataStream( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise( _
@@ -938,7 +959,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub cancelMarketDepthEx(ByVal pIndex As Long)
@@ -951,7 +972,7 @@ mTwsAPI.CancelMarketDepth getMarketDepthIdFromIndex(pIndex), False
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub clearPrevPrices( _
@@ -977,7 +998,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function doCreateMarketDataStream( _
@@ -1000,7 +1021,7 @@ pStreamId = getTableEntry( _
                 pIsSnapshot, _
                 pErrorListener)
 
-gLogger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
+GIBEnhApi.Logger.Log "Creating market data stream: stream id=" & pStreamId, ProcName, ModuleName, LogLevelDetail
 
 prepareTickStream mMarketDataTable, pContractFuture, pStreamId, mTicksFutureWaiter
 reqMarketData pStreamId
@@ -1010,7 +1031,7 @@ Set doCreateMarketDataStream = mMarketDataTable(pStreamId).TickStreamBuilder.Tic
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function doCreateMarketDepthStream( _
@@ -1034,7 +1055,7 @@ pStreamId = getTableEntry( _
                 pErrorListener)
 mMarketDepthTable(pStreamId).NumberOfRows = pNumberOfRows
 
-gLogger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
+GIBEnhApi.Logger.Log "Creating market depth stream: stream id=" & pStreamId + MarketDepthIdOffset, ProcName, ModuleName, LogLevelDetail
 
 prepareTickStream mMarketDepthTable, pContractFuture, pStreamId, mDepthFutureWaiter
 reqMarketDepth pStreamId
@@ -1045,7 +1066,7 @@ Set doCreateMarketDepthStream = mMarketDepthTable(pStreamId).TickStreamBuilder.T
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub FireOptionComputation( _
@@ -1061,7 +1082,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub FireTick( _
@@ -1089,7 +1110,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function getContractsFromCache( _
@@ -1102,7 +1123,7 @@ On Error GoTo Err
 Dim lContract As IContract
 Dim lTwsContract As TwsContract
 If mContractCache.GetContract(pConsumerContract.Specifier, lContract, lTwsContract) Then
-    gLogger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
     Set pTickerTable(pStreamId).Contract = lContract
     Set pTickerTable(pStreamId).TwsContract = lTwsContract
     setTickSize pTickerTable, pStreamId, 0
@@ -1112,7 +1133,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getIndexFromTickerId(ByVal pTickerId As Long) As Long
@@ -1180,7 +1201,7 @@ getTableEntry = lIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub handleCompletedFuture( _
@@ -1192,13 +1213,13 @@ Const ProcName As String = "handleCompletedFuture"
 On Error GoTo Err
 
 If TypeOf pFuture.Value Is IContract Then
-    gLogger.Log "Got consumer contract", ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "Got consumer contract", ProcName, ModuleName, LogLevelDetail
     Dim lConsumerContract As IContract
     Set lConsumerContract = pFuture.Value
     Set pTickerTable(pStreamId).ConsumerTimeZone = GetTimeZone(lConsumerContract.TimezoneName)
 
     If Not getContractsFromCache(lConsumerContract, pTickerTable, pStreamId) Then
-        pFutureWaiter.Add gContractFutureToTwsContractFuture( _
+        pFutureWaiter.Add GIBEnhancedApi.ContractFutureToTwsContractFuture( _
                                     mContractRequester, _
                                     pTickerTable(pStreamId).ContractFuture, _
                                     mContractCache), _
@@ -1206,18 +1227,18 @@ If TypeOf pFuture.Value Is IContract Then
     End If
         
 ElseIf TypeOf pFuture.Value Is TwsContract Then
-    gLogger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "Got TwsContract", ProcName, ModuleName, LogLevelDetail
     Set pTickerTable(pStreamId).TwsContract = pFuture.Value
-    Set pTickerTable(pStreamId).Contract = gTwsContractToContract(pFuture.Value)
+    Set pTickerTable(pStreamId).Contract = GIBEnhancedApi.TwsContractToContract(pFuture.Value)
     setTickSize pTickerTable, pStreamId, 0
 ElseIf TypeOf pFuture.Value Is Clock Then
-    gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "Got Clock", ProcName, ModuleName, LogLevelDetail
 End If
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 
@@ -1273,12 +1294,12 @@ With pTickerTable(pStreamId)
     s = s & ")"
 End With
 
-gLogger.Log "Is ready for data (" & pStreamId & ": " & isReadyForData & "  " & s, ProcName, ModuleName, LogLevelMediumDetail
+GIBEnhApi.Logger.Log "Is ready for data (" & pStreamId & ": " & isReadyForData & "  " & s, ProcName, ModuleName, LogLevelMediumDetail
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function isStreamBuilderForMarketData( _
@@ -1311,7 +1332,7 @@ pStreamId = -1
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub prepareTickStream( _
@@ -1323,13 +1344,13 @@ Const ProcName As String = "prepareTickStream"
 On Error GoTo Err
 
 If pContractFuture.IsAvailable Then
-    gLogger.Log "Got Contract", ProcName, ModuleName, LogLevelMediumDetail
+    GIBEnhApi.Logger.Log "Got Contract", ProcName, ModuleName, LogLevelMediumDetail
     Dim lConsumerContract As IContract
     Set lConsumerContract = pContractFuture.Value
     Set pTickers(pStreamId).ConsumerTimeZone = GetTimeZone(lConsumerContract.TimezoneName)
 
     If Not getContractsFromCache(lConsumerContract, pTickers, pStreamId) Then
-        pFutureWaiter.Add gContractFutureToTwsContractFuture( _
+        pFutureWaiter.Add GIBEnhancedApi.ContractFutureToTwsContractFuture( _
                                     mContractRequester, _
                                     pContractFuture, _
                                     mContractCache), _
@@ -1340,7 +1361,7 @@ Else
 End If
 
 If pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture.IsAvailable Then
-    gLogger.Log "Got Clock", ProcName, ModuleName, LogLevelMediumDetail
+    GIBEnhApi.Logger.Log "Got Clock", ProcName, ModuleName, LogLevelMediumDetail
 Else
     pFutureWaiter.Add pTickers(pStreamId).TickStreamBuilder.TickStream.ClockFuture, pStreamId
 End If
@@ -1348,7 +1369,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reEstablishData( _
@@ -1359,7 +1380,7 @@ Const ProcName As String = "reEstablishData"
 On Error GoTo Err
 
 Dim s As String: s = IIf(pMode = MarketDataReestablishmentModes.All, "All", IIf(pMode = MarketDataReestablishmentModes.Cancel, "Cancel", "New tickers only"))
-gLog "Re-establishing market " & IIf(pIsMarketDepth, "depth ", "") & "data: mode = " & s, ModuleName, ProcName
+GIBEnhApi.Log "Re-establishing market " & IIf(pIsMarketDepth, "depth ", "") & "data: mode = " & s, ModuleName, ProcName
 
 Dim i As Long
 For i = 0 To UBound(pTickers)
@@ -1386,7 +1407,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reEstablishTickers(ByVal pMode As MarketDataReestablishmentModes)
@@ -1399,7 +1420,7 @@ reEstablishData mMarketDepthTable, True, pMode
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub releaseTableEntry( _
@@ -1434,7 +1455,7 @@ clearPrevPrices pIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reqData(ByVal pIndex As Long, ByVal pIsMarketDepth As Boolean)
@@ -1450,7 +1471,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reqMarketData( _
@@ -1471,7 +1492,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub reqMarketDepth( _
@@ -1490,7 +1511,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ResetMarketDepth(ByVal pReEstablish As Boolean)
@@ -1514,7 +1535,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setTickSize( _
@@ -1539,9 +1560,9 @@ Set lRuleset = lRulesetFuture.Value
 
 Dim lIncrement As Double: lIncrement = lRuleset.GetIncrement(pPrice)
 If lIncrement <> 0 Then
-    gLogger.Log "lRulesetID=" & lRulesetID, ProcName, ModuleName, LogLevelMediumDetail
-    gLogger.Log "lPriceMagnifier=" & lPriceMagnifier, ProcName, ModuleName, LogLevelMediumDetail
-    gLogger.Log "Tick size set to " & lIncrement, ProcName, ModuleName, LogLevelDetail
+    GIBEnhApi.Logger.Log "lRulesetID=" & lRulesetID, ProcName, ModuleName, LogLevelMediumDetail
+    GIBEnhApi.Logger.Log "lPriceMagnifier=" & lPriceMagnifier, ProcName, ModuleName, LogLevelMediumDetail
+    GIBEnhApi.Logger.Log "Tick size set to " & lIncrement, ProcName, ModuleName, LogLevelDetail
     pTickers(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lIncrement
     pTickers(pStreamId).TickSizeHasBeenSet = True
 End If
@@ -1549,7 +1570,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function tickerHasBeenStopped(ByVal pTickerId As Long) As Boolean
@@ -1563,7 +1584,7 @@ tickerHasBeenStopped = (pTickerId <> getTickerIdFromIndex(lIndex))
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function tickerMarketDepthHasBeenStopped(ByVal pMarketDepthId As Long) As Boolean
@@ -1577,7 +1598,7 @@ tickerMarketDepthHasBeenStopped = (pMarketDepthId <> getMarketDepthIdFromIndex(l
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function validPrice( _
@@ -1595,7 +1616,7 @@ Then
 ElseIf pPrice <> -1# Or pPrice <> -100# Then
     ' don't log these very common ticks meaning 'no value'
 Else
-    gLogger.Log "Invalid price rejected (" & pPriceType & "): " & _
+    GIBEnhApi.Logger.Log "Invalid price rejected (" & pPriceType & "): " & _
                     "price=" & pPrice & _
                     "; contract={" & pContract.Specifier.ToString & "}", _
                  ProcName, ModuleName
@@ -1605,7 +1626,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

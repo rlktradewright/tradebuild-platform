@@ -84,7 +84,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IScannerDataConsumer_NotifyError( _
@@ -112,7 +112,7 @@ mRequests.Remove CStr(pRequestId)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IScannerDataConsumer_NotifyScannerData( _
@@ -127,7 +127,7 @@ Const ProcName As String = "IScannerDataConsumer_NotifyScannerData"
 On Error GoTo Err
 
 Dim lResult As New ScanResult
-lResult.Contract = gTwsContractToContract(pContract)
+lResult.Contract = GIBEnhancedApi.TwsContractToContract(pContract)
 lResult.Rank = pRank
 lResult.AddAttribute "Benchmark", pBenchmark
 lResult.AddAttribute "Distance", pDistance
@@ -141,7 +141,7 @@ lRequest.Results.Add lResult
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IScannerDataConsumer_NotifyScannerParameters(ByVal pXml As String)
@@ -178,7 +178,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -203,7 +203,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function ScanMarket( _
@@ -265,7 +265,7 @@ If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "Parameter type mismatch"
 Else
-    gHandleUnexpectedError ProcName, ModuleName
+    GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End If
 End Function
 
@@ -290,7 +290,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 

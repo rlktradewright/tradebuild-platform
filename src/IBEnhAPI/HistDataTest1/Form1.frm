@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#392.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Historical Data Tester"
    ClientHeight    =   10380
@@ -33,7 +33,7 @@ Begin VB.Form Form1
       Top             =   120
       Width           =   3615
       _ExtentX        =   6376
-      _ExtentY        =   6191
+      _ExtentY        =   6826
       ForeColor       =   -2147483640
       ModeAdvanced    =   -1  'True
    End
@@ -168,7 +168,7 @@ SetupDefaultLogging Command
 GetLogger("log").AddLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
 
 mClientId = 74889561
-Set mClient = GetClient("Essy", 7497, mClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
+Set mClient = GetClient("Sappy", 7497, mClientId, , , ApiMessageLoggingOptionAlways, ApiMessageLoggingOptionNone, False, , Me)
 Set mContractStore = mClient.GetContractStore
 Set mHistDataStore = mClient.GetHistoricalDataStore
 If DisableRequestPacingCheck.Value = vbChecked Then mClient.DisableHistoricalDataRequestPacing

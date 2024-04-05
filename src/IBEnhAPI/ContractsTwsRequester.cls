@@ -132,7 +132,7 @@ CompleteRequest
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_EndOptionParameters(ByVal pRequestId As Long)
@@ -145,7 +145,7 @@ releaseEntry pRequestId
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyContract( _
@@ -175,7 +175,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -194,7 +194,7 @@ releaseEntry pRequestId
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyMarketRule( _
@@ -203,7 +203,7 @@ Private Sub IContractDetailsConsumer_NotifyMarketRule( _
 Const ProcName As String = "IContractDetailsConsumer_NotifyMarketRule"
 On Error GoTo Err
 
-gLogger.Log "Market rule notified: " & pMarketRuleId, ProcName, ModuleName, LogLevelMediumDetail
+GIBEnhApi.Logger.Log "Market rule notified: " & pMarketRuleId, ProcName, ModuleName, LogLevelMediumDetail
 
 Dim lRequestEntry As MarketRuleRequestEntry
 lRequestEntry = mRulesetRequests.Item(CStr(pMarketRuleId))
@@ -229,7 +229,7 @@ mRulesetRequests.Remove CStr(pMarketRuleId)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IContractDetailsConsumer_NotifyOptionParameter( _
@@ -257,7 +257,7 @@ mRequests(pRequestId).Requester.NotifyOptionParameter _
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -284,7 +284,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
@@ -301,7 +301,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -346,7 +346,7 @@ End With
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
@@ -386,7 +386,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Initialise( _
@@ -400,14 +400,14 @@ Set mContractCache = pContractCache
 
 mMaxConcurrentRequests = MaxConcurrentContractDetailsRequests
 
-gLog "Max concurrent contract details requests", ModuleName, ProcName, CStr(mMaxConcurrentRequests), LogLevelDetail
+GIBEnhApi.Log "Max concurrent contract details requests", ModuleName, ProcName, CStr(mMaxConcurrentRequests), LogLevelDetail
 
 StartTask Me, PriorityNormal
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function RequestContractDetails( _
@@ -422,7 +422,7 @@ mRequests(lIndex).RequestType = ContractInfoRequestTypeContracts
 Set mRequests(lIndex).ContractSpec = pContractSpecifier
 Set mRequests(lIndex).Requester = pRequester
 
-gLog "Queueing request for", ModuleName, ProcName, pContractSpecifier.Key, LogLevelMediumDetail
+GIBEnhApi.Log "Queueing request for", ModuleName, ProcName, pContractSpecifier.Key, LogLevelMediumDetail
 addEntryToRequestQueue lIndex
 
 RequestContractDetails = lIndex
@@ -430,7 +430,7 @@ RequestContractDetails = lIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function RequestOptionParameters( _
@@ -452,7 +452,7 @@ RequestOptionParameters = lIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Function RequestPriceIncrementRuleset( _
@@ -486,7 +486,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -505,7 +505,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub addEntryToRequestQueue( _
@@ -521,7 +521,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function allocateEntry() As Long
@@ -546,7 +546,7 @@ mRequests(allocateEntry).Index = allocateEntry
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub CompleteRequest()
@@ -560,7 +560,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub queueEntry( _
@@ -578,7 +578,7 @@ mRequests(pLastIndex).Next = NullIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function releaseEntry(ByVal pIndex As Long)
@@ -597,7 +597,7 @@ Set mRequests(pIndex).PendingContracts = Nothing
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub removeEntryFromPendingContractQueue( _
@@ -610,7 +610,7 @@ unqueueEntry pIndex, mFirstPendingContractEntry, mLastPendingContractEntry
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub removeEntryFromRequestQueue( _
@@ -623,7 +623,7 @@ unqueueEntry pIndex, mFirstRequestEntry, mLastRequestEntry
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub schedule()
@@ -632,15 +632,15 @@ On Error GoTo Err
 
 If mFirstRequestEntry = NullIndex Then Exit Sub
 
-gLog "Scheduling contract requests", ModuleName, ProcName, , LogLevelMediumDetail
+GIBEnhApi.Log "Scheduling contract requests", ModuleName, ProcName, , LogLevelMediumDetail
 
 If mTwsAPI.ConnectionState <> TwsConnConnected Then
-    gLog "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelMediumDetail
+    GIBEnhApi.Log "Can't schedule contract requests: not connected to TWS", ModuleName, ProcName, , LogLevelMediumDetail
     Exit Sub
 End If
 
 If Not mIsTwsConnectedToIBServers Then
-    gLog "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelMediumDetail
+    GIBEnhApi.Log "Can't schedule contract requests: TWS not connected to IB servers", ModuleName, ProcName, , LogLevelMediumDetail
     Exit Sub
 End If
 
@@ -651,11 +651,11 @@ Do While lIndex <> NullIndex And mConcurrentRequests < mMaxConcurrentRequests
     lCurrIndex = lIndex
     lIndex = mRequests(lIndex).Next
     If mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeContracts Then
-        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting contract details for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelMediumDetail
+        If GIBEnhApi.Logger.IsLoggable(LogLevelDetail) Then GIBEnhApi.Log "Requesting contract details for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelMediumDetail
         mTwsAPI.RequestContractDetails lCurrIndex, _
-                                        gContractSpecToTwsContractSpec(mRequests(lCurrIndex).ContractSpec)
+                                        ContractSpecToTwsContractSpec(mRequests(lCurrIndex).ContractSpec)
     ElseIf mRequests(lCurrIndex).RequestType = ContractInfoRequestTypeOptionParameters Then
-        If gLogger.IsLoggable(LogLevelDetail) Then gLog "Requesting option parameters for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelMediumDetail
+        If GIBEnhApi.Logger.IsLoggable(LogLevelDetail) Then GIBEnhApi.Log "Requesting option parameters for", ModuleName, ProcName, mRequests(lCurrIndex).ContractSpec.ToString, LogLevelMediumDetail
         mTwsAPI.RequestOptionParameters lCurrIndex, _
                                         mRequests(lCurrIndex).ContractSpec.Symbol, _
                                         IIf(mRequests(lCurrIndex).ContractSpec.SecType = TwsSecTypeFuture, _
@@ -675,7 +675,7 @@ Loop
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unqueueEntry( _
@@ -703,7 +703,7 @@ If lPrevIndex <> NullIndex Then mRequests(lPrevIndex).Next = mRequests(lIndex).N
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

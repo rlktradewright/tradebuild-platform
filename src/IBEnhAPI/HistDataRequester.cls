@@ -135,7 +135,7 @@ lHistDataRequestTask.EndHistData
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IHistDataConsumer_NotifyBar(ByVal pRequestId As Long, pBar As TwsBar)
@@ -151,7 +151,7 @@ lHistDataRequestTask.NotifyTwsBar pBar
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IHistDataConsumer_NotifyError(ByVal pRequestId As Long, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
@@ -174,7 +174,7 @@ ElseIf mIsRequestPacingDisabled Then
     ' if request pacing is disabled, let the application handle it
 ElseIf mHistDataRequests(pRequestId).RetryCount >= PacingRetryLimit Then
     ' we're retried several times already, now let the application handle it
-    gLog "Pacing retry limit exceeded", ModuleName, ProcName
+    GIBEnhApi.Log "Pacing retry limit exceeded", ModuleName, ProcName
 Else
     ' pacing violation: this should only happen if another API program
     ' using the same TWS instance has done requests that, combined with ours,
@@ -182,7 +182,7 @@ Else
     ' just requeue it in the hope that it will all sort itself out eventually,
     ' but don't retry more than PacingRetryLimit times
     mHistDataRequests(pRequestId).RetryCount = mHistDataRequests(pRequestId).RetryCount + 1
-    gLog "Requeue request according to pacing rules: attempt " & mHistDataRequests(pRequestId).RetryCount, ModuleName, ProcName
+    GIBEnhApi.Log "Requeue request according to pacing rules: attempt " & mHistDataRequests(pRequestId).RetryCount, ModuleName, ProcName
     queueEntry pRequestId, False
     If mConcurrentHistDataRequests > 0 Then
         mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
@@ -206,7 +206,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IHistDataConsumer_NotifyRealtimeBar(ByVal pRequestId As Long, pBar As TwsBar)
@@ -222,7 +222,7 @@ lRealtimeBarRequester.NotifyRealtimeBar mHistDataRequests(pRequestId).RequesterI
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IHistDataConsumer_StartHistData(ByVal pRequestId As Long, ByVal pStartDate As String, ByVal pEndDate As String, ByVal pBarCount As Long)
@@ -236,7 +236,7 @@ lHistDataRequestTask.StartHistData pStartDate, pEndDate, pBarCount
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -258,7 +258,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSource As Object)
@@ -275,7 +275,7 @@ doSchedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -293,7 +293,7 @@ releaseEntry CLng(tli.data)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================
@@ -313,7 +313,7 @@ doSchedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Let ITask_TaskContext(ByVal RHS As TaskContext)
@@ -367,7 +367,7 @@ End Select
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub CancelRealtimeBars( _
@@ -397,7 +397,7 @@ Next
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub DisableHistoricalDataRequestPacing()
@@ -412,7 +412,7 @@ Set mPacer = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub Finish()
@@ -425,7 +425,7 @@ If Not mTaskContext Is Nothing Then mTaskContext.Finish Empty, False
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function GetTwsMessage() As Byte()
@@ -437,7 +437,7 @@ GetTwsMessage = mTwsAPI.GetRawTwsMessage
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub Initialise(ByVal pTwsAPI As TwsAPI)
@@ -453,7 +453,7 @@ StartTask Me, PriorityNormal
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function RegisterHistoricalDataRequest( _
@@ -471,7 +471,7 @@ RegisterHistoricalDataRequest = lIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Friend Sub RequestHistoricalData( _
@@ -493,7 +493,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub RequestRealtimeBars( _
@@ -520,7 +520,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub schedule()
@@ -532,7 +532,7 @@ mTaskContext.Continue
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Function UnregisterHistoricalDataRequest( _
@@ -545,7 +545,7 @@ If mHistDataRequests(pRequesterId).State <> StateRequestCancelling Then releaseE
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 '@================================================================================
@@ -576,7 +576,7 @@ mHistDataRequests(allocateEntry).State = StateAllocated
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub CompleteRequest(ByVal pRequestId As Long)
@@ -594,7 +594,7 @@ schedule
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub doSchedule()
@@ -615,7 +615,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function removeEntry( _
@@ -653,7 +653,7 @@ If getDelayTillEarliestSubmission = 0 Then getDelayTillEarliestSubmission = getD
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getDelayTillEarliestSubmissionInQueue(ByRef pReason As String, ByVal pFirstPendingEntry As Long) As Long
@@ -688,7 +688,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNextReadyRequest() As Long
@@ -701,7 +701,7 @@ If getNextReadyRequest = NullIndex Then getNextReadyRequest = getNextReadyReques
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function getNextReadyRequestFromQueue(ByVal pFirstPendingEntry As Long) As Long
@@ -728,7 +728,7 @@ Loop
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub queueEntry(ByVal pIndex As Long, ByVal pPriority As Boolean)
@@ -750,12 +750,12 @@ End If
 mHistDataRequests(pIndex).State = StateRequestQueued
 
 If pPriority Then
-    gLog "Queue priority entry " & pIndex & _
+    GIBEnhApi.Log "Queue priority entry " & pIndex & _
                 "; FirstPriorityEntry=" & mFirstPendingPriorityHistDataRequestsEntry & _
                 "; LastPriorityEntry=" & mLastPendingPriorityHistDataRequestsEntry, _
                 ModuleName, ProcName, , LogLevelDetail
 Else
-    gLog "Queue entry " & pIndex & _
+    GIBEnhApi.Log "Queue entry " & pIndex & _
                 "; FirstEntry=" & mFirstPendingHistDataRequestsEntry & _
                 "; LastEntry=" & mLastPendingHistDataRequestsEntry, _
                 ModuleName, ProcName, , LogLevelDetail
@@ -764,7 +764,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function releaseEntry(ByVal pIndex As Long)
@@ -790,7 +790,7 @@ mFirstFreeHistDataRequestsEntry = pIndex
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub schedulePaced()
@@ -819,7 +819,7 @@ If lDelay = 0 Then
 End If
     
 If lDelay <> 0 Then
-    gLog "Delay till next request (millisecs): " & lDelay & ": " & lReason, ModuleName, ProcName
+    GIBEnhApi.Log "Delay till next request (millisecs): " & lDelay & ": " & lReason, ModuleName, ProcName
     mTaskContext.Suspend lDelay
 Else
     mTaskContext.Suspend -1
@@ -828,7 +828,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub scheduleUnpaced()
@@ -858,7 +858,7 @@ mTaskContext.Suspend -1
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub setEarliestSubmissionTime(ByVal pIndex As Long)
@@ -874,7 +874,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub submitEntry(ByVal pIndex As Long)
@@ -892,7 +892,7 @@ unqueueEntry pIndex
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub unqueueEntry(ByVal pIndex As Long)
@@ -903,12 +903,12 @@ Assert (mFirstPendingHistDataRequestsEntry <> NullIndex And mLastPendingHistData
     (mFirstPendingPriorityHistDataRequestsEntry <> NullIndex And mLastPendingPriorityHistDataRequestsEntry <> NullIndex), "No pending entries"
 
 If removeEntry(pIndex, mFirstPendingPriorityHistDataRequestsEntry, mLastPendingPriorityHistDataRequestsEntry) Then
-    gLogger.Log "Unqueue priority entry " & pIndex & _
+    GIBEnhApi.Logger.Log "Unqueue priority entry " & pIndex & _
                 "; FirstPriorityEntry=" & mFirstPendingPriorityHistDataRequestsEntry & _
                 "; LastPriorityEntry=" & mLastPendingPriorityHistDataRequestsEntry, _
                 ProcName, ModuleName, LogLevelMediumDetail
 ElseIf removeEntry(pIndex, mFirstPendingHistDataRequestsEntry, mLastPendingHistDataRequestsEntry) Then
-    gLogger.Log "Unqueue entry " & pIndex & _
+    GIBEnhApi.Logger.Log "Unqueue entry " & pIndex & _
                 "; FirstEntry=" & mFirstPendingHistDataRequestsEntry & _
                 "; LastEntry=" & mLastPendingHistDataRequestsEntry, _
                 ProcName, ModuleName, LogLevelMediumDetail
@@ -919,7 +919,7 @@ End If
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 

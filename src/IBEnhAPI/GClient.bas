@@ -60,7 +60,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function gGetClient( _
+Public Function GetClient( _
                 ByVal pSessionID As String, _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
@@ -74,7 +74,7 @@ Public Function gGetClient( _
                 ByVal pProgramErrorHandler As IProgramErrorListener, _
                 ByVal pApiErrorListener As IErrorListener, _
                 ByVal pApiNotificationListener As INotificationListener) As Client
-Const ProcName As String = "gGetClient"
+Const ProcName As String = "GetClient"
 On Error GoTo Err
 
 Dim lKey As String
@@ -84,10 +84,10 @@ If pServer = "" Then pServer = "127.0.0.1"
 lKey = generateTwsKey(pServer, pPort, pClientId)
 
 If Not mClientCollection.Contains(lKey) Then
-    Set gGetClient = New Client
-    mClientCollection.Add gGetClient, lKey
+    Set GetClient = New Client
+    mClientCollection.Add GetClient, lKey
     
-    gGetClient.Initialise pSessionID, _
+    GetClient.Initialise pSessionID, _
                         pServer, _
                         pPort, _
                         pClientId, _
@@ -101,14 +101,14 @@ If Not mClientCollection.Contains(lKey) Then
                         pApiErrorListener, _
                         pApiNotificationListener
 Else
-    Set gGetClient = mClientCollection(lKey)
-    Assert gGetClient.SessionID = pSessionID, "Client already started in another session"
+    Set GetClient = mClientCollection(lKey)
+    Assert GetClient.SessionID = pSessionID, "Client already started in another session"
 End If
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Public Sub gReleaseClient(ByVal pClient As Client)
@@ -120,7 +120,7 @@ mClientCollection.Remove generateTwsKey(pClient.Server, pClient.Port, pClient.Cl
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 '@================================================================================

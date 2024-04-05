@@ -67,7 +67,7 @@ Private Function IContractStore_FetchContracts( _
 Const ProcName As String = "IContractStore_FetchContracts"
 On Error GoTo Err
 
-Set IContractStore_FetchContracts = gFetchContracts( _
+Set IContractStore_FetchContracts = GIBEnhancedApi.FetchContracts( _
                                                 mContractRequester, _
                                                 mContractCache, _
                                                 pContractSpecifier, _
@@ -79,7 +79,7 @@ mContractsFutures.Add IContractStore_FetchContracts
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IContractStore_FetchContractsSorted( _
@@ -90,7 +90,7 @@ Private Function IContractStore_FetchContractsSorted( _
 Const ProcName As String = "IContractStore_FetchContractsSorted"
 On Error GoTo Err
 
-Set IContractStore_FetchContractsSorted = gFetchContractsSorted( _
+Set IContractStore_FetchContractsSorted = GIBEnhancedApi.FetchContractsSorted( _
                                                 mContractRequester, _
                                                 mContractCache, _
                                                 pContractSpec, _
@@ -102,7 +102,7 @@ Set IContractStore_FetchContractsSorted = gFetchContractsSorted( _
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IContractStore_FetchOptionExpiries( _
@@ -113,12 +113,12 @@ Private Function IContractStore_FetchOptionExpiries( _
 Const ProcName As String = "IContractStore_FetchOptionExpiries"
 On Error GoTo Err
 
-Set IContractStore_FetchOptionExpiries = gFetchOptionExpiries(mContractRequester, mContractCache, pUnderlyingContractSpecifier, pExchange, pStrike, pCookie)
+Set IContractStore_FetchOptionExpiries = FetchOptionExpiries(mContractRequester, mContractCache, pUnderlyingContractSpecifier, pExchange, pStrike, pCookie)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Function IContractStore_FetchOptionStrikes( _
@@ -129,12 +129,12 @@ Private Function IContractStore_FetchOptionStrikes( _
 Const ProcName As String = "IContractStore_FetchOptionStrikes"
 On Error GoTo Err
 
-Set IContractStore_FetchOptionStrikes = gFetchOptionStrikes(mContractRequester, mContractCache, pUnderlyingContractSpecifier, pExchange, pExpiry, pCookie)
+Set IContractStore_FetchOptionStrikes = FetchOptionStrikes(mContractRequester, mContractCache, pUnderlyingContractSpecifier, pExchange, pExpiry, pCookie)
 
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub IContractStore_Finish()
@@ -159,7 +159,7 @@ Set mContractRequester = Nothing
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Function IContractStore_Supports(ByVal pCapabilities As ContractStoreCapabilities) As Boolean
