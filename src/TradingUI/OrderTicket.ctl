@@ -926,6 +926,8 @@ setupActionCombo BracketIndexes.BracketTargetOrder
 
 disableAll NoContractMessage
 
+clearBracketOrder
+
 Exit Sub
 
 Err:
@@ -1801,13 +1803,17 @@ Set mEntryTriggerPriceSpec = lEntryOrder.TriggerPriceSpec
 
 Dim lStopLossOrder As IOrder
 Set lStopLossOrder = mBracketOrder.StopLossOrder
-Set mStopLossLimitPriceSpec = lStopLossOrder.LimitPriceSpec
-Set mStopLossTriggerPriceSpec = lStopLossOrder.TriggerPriceSpec
+If Not lStopLossOrder Is Nothing Then
+    Set mStopLossLimitPriceSpec = lStopLossOrder.LimitPriceSpec
+    Set mStopLossTriggerPriceSpec = lStopLossOrder.TriggerPriceSpec
+End If
 
 Dim lTargetOrder As IOrder
 Set lTargetOrder = mBracketOrder.TargetOrder
-Set mTargetLimitPriceSpec = lTargetOrder.LimitPriceSpec
-Set mTargetTriggerPriceSpec = lTargetOrder.TriggerPriceSpec
+If Not lTargetOrder Is Nothing Then
+    Set mTargetLimitPriceSpec = lTargetOrder.LimitPriceSpec
+    Set mTargetTriggerPriceSpec = lTargetOrder.TriggerPriceSpec
+End If
 
 If lStopLossOrder Is Nothing And lTargetOrder Is Nothing Then
     AssertArgument pRole = BracketOrderRoleEntry, "pRole must be BracketOrderRoleEntry for a standalone order"
@@ -1912,10 +1918,15 @@ Private Sub clearBracketOrder()
 Const ProcName As String = "clearBracketOrder"
 On Error GoTo Err
 
-If mBracketOrder Is Nothing Then Exit Sub
-
-mBracketOrder.RemoveChangeListener Me
+If Not mBracketOrder Is Nothing Then mBracketOrder.RemoveChangeListener Me
 Set mBracketOrder = Nothing
+
+Set mEntryLimitPriceSpec = NewPriceSpecifier
+Set mEntryTriggerPriceSpec = NewPriceSpecifier
+Set mStopLossLimitPriceSpec = NewPriceSpecifier
+Set mStopLossTriggerPriceSpec = NewPriceSpecifier
+Set mTargetLimitPriceSpec = NewPriceSpecifier
+Set mTargetTriggerPriceSpec = NewPriceSpecifier
 
 Exit Sub
 
@@ -2379,7 +2390,11 @@ On Error GoTo Err
 
 If Not mTheme Is Nothing Then
     If Not mTheme.AlertFont Is Nothing Then Set pText.Font = mTheme.AlertFont
-    pText.ForeColor = mTheme.AlertForeColor
+    If pText.Text <> "" Then
+        pText.ForeColor = mTheme.AlertForeColor
+    Else
+        pText.BackColor = mTheme.AlertForeColor
+    End If
 Else
     pText.BackColor = ErroredFieldColor
 End If

@@ -612,7 +612,7 @@ If TypeOf ev.Source Is BracketProfitCalculator Then
     If CBool(lBOProfitType And ProfitTypes.ProfitTypeMaxProfit) Then _
         displayProfitValue lProfitCalculator.MaxProfit, rowIndex, BracketMaxProfit
     If CBool(lBOProfitType And ProfitTypes.ProfitTypeDrawdown) Then _
-        displayProfitValue -lProfitCalculator.Drawdown, rowIndex, BracketDrawdown
+        displayProfitValue CreateBoxedDecimal(-1 * lProfitCalculator.Drawdown), rowIndex, BracketDrawdown
 
 ElseIf TypeOf ev.Source Is PositionManager Then
     Dim lPositionManager As PositionManager
@@ -632,7 +632,7 @@ ElseIf TypeOf ev.Source Is PositionManager Then
     If CBool(lPMProfitType And ProfitTypes.ProfitTypeSessionMaxProfit) Then _
         displayProfitValue lPositionManager.MaxProfit, rowIndex, PositionMaxProfit
     If CBool(lPMProfitType And ProfitTypes.ProfitTypeSessionDrawdown) Then _
-        displayProfitValue -lPositionManager.Drawdown, rowIndex, PositionDrawdown
+        displayProfitValue CreateBoxedDecimal(-1 * lPositionManager.Drawdown), rowIndex, PositionDrawdown
 End If
 
 adjustEditBox
@@ -1655,7 +1655,7 @@ lPrevCol = BracketOrderGrid.col
 BracketOrderGrid.Row = pRowIndex
 BracketOrderGrid.col = pColIndex
 BracketOrderGrid.Text = Format(pProfit, "0.00")
-If pProfit >= 0 Then
+If pProfit.GE(DecimalZero) Then
     BracketOrderGrid.CellForeColor = CPositiveProfitColor
 Else
     BracketOrderGrid.CellForeColor = CNegativeProfitColor
