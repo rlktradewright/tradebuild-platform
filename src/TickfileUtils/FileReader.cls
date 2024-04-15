@@ -244,15 +244,25 @@ Const ProcName As String = "getCrescendoV1ContractInfo"
 On Error GoTo Err
 
 On Error Resume Next
+#If SingleDll Then
 Set mContractSpecifier = GContractUtils.CreateContractSpecifier( _
-                                , _
-                                pHeaderLineFields(TickfileFieldsV1.Symbol), _
-                                , _
-                                pHeaderLineFields(TickfileFieldsV1.Exchange), _
-                                SecTypeFuture, _
-                                , _
-                                pHeaderLineFields(TickfileFieldsV1.Expiry))
-
+                                        , _
+                                        pHeaderLineFields(TickfileFieldsV1.Symbol), _
+                                        , _
+                                        pHeaderLineFields(TickfileFieldsV1.Exchange), _
+                                        SecTypeFuture, _
+                                        , _
+                                        pHeaderLineFields(TickfileFieldsV1.Expiry))
+#Else
+Set mContractSpecifier = ContractUtils27.CreateContractSpecifier( _
+                                        , _
+                                        pHeaderLineFields(TickfileFieldsV1.Symbol), _
+                                        , _
+                                        pHeaderLineFields(TickfileFieldsV1.Exchange), _
+                                        SecTypeFuture, _
+                                        , _
+                                        pHeaderLineFields(TickfileFieldsV1.Expiry))
+#End If
 If Err.Number <> 0 Then
     mTs.Close
     setEventDetails TickfileEventCodes.TickfileEventFileIsInvalid, "Tickfile format/version not determined: " & pFilename
