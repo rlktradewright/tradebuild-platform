@@ -238,6 +238,10 @@ Set ProviderIDs = mProviderIDs
 End Property
 
 Public Property Let ProviderProperties(ByVal Value As Parameters)
+If Value Is Nothing Then
+    Set mProviderProperties = Nothing
+    Exit Property
+End If
 Set mProviderProperties = Value.Clone
 End Property
 

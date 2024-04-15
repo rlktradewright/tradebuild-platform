@@ -38,6 +38,7 @@ Public Const ConfigSettingContractSpecExpiry            As String = "&Expiry"
 Public Const ConfigSettingContractSpecExchange          As String = "&Exchange"
 Public Const ConfigSettingContractSpecLocalSymbol       As String = "&LocalSymbol"
 Public Const ConfigSettingContractSpecMultiplier        As String = "&Multiplier"
+Public Const ConfigSettingContractSpecProviderProperties    As String = "&ProviderProperties"
 Public Const ConfigSettingContractSpecRight             As String = "&Right"
 Public Const ConfigSettingContractSpecSecType           As String = "&SecType"
 Public Const ConfigSettingContractSpecStrikePrice       As String = "&StrikePrice"
@@ -50,6 +51,7 @@ Public Const ConfigSettingExpiryDate                    As String = "&ExpiryDate
 Public Const ConfigSettingFullSessionEndTime            As String = "&FullSessionEndTime"
 Public Const ConfigSettingFullSessionStartTime          As String = "&FullSessionStartTime"
 Public Const ConfigSettingMultiplier                    As String = "&Multiplier"
+Public Const ConfigSettingProviderProperties            As String = "&ProviderProperties"
 Public Const ConfigSettingSessionEndTime                As String = "&SessionEndTime"
 Public Const ConfigSettingSessionStartTime              As String = "&SessionStartTime"
 Public Const ConfigSettingTickSize                      As String = "&TickSize"
@@ -353,8 +355,8 @@ ContractToString = "Specifier=(" & pContract.Specifier.ToString & "); " & _
             "Description=" & pContract.Description & "; " & _
             "Expiry date=" & pContract.ExpiryDate & "; " & _
             "Tick size=" & pContract.TickSize & "; " & _
-            "Session start=" & FormatDateTime(pContract.sessionStartTime, vbShortTime) & "; " & _
-            "Session end=" & FormatDateTime(pContract.sessionEndTime, vbShortTime) & "; " & _
+            "Session start=" & FormatDateTime(pContract.SessionStartTime, vbShortTime) & "; " & _
+            "Session end=" & FormatDateTime(pContract.SessionEndTime, vbShortTime) & "; " & _
             "Full session start=" & FormatDateTime(pContract.FullSessionStartTime, vbShortTime) & "; " & _
             "Full session end=" & FormatDateTime(pContract.FullSessionEndTime, vbShortTime) & "; " & _
             "TimezoneName=" & pContract.TimezoneName
@@ -374,8 +376,8 @@ Dim lContractElement As IXMLDOMElement: Set lContractElement = XMLdoc.createElem
 Set XMLdoc.documentElement = lContractElement
 lContractElement.SetAttribute "xmlns", "urn:tradewright.com:tradebuild"
 lContractElement.SetAttribute "minimumtick", pContract.TickSize
-lContractElement.SetAttribute "sessionstarttime", Format(pContract.sessionStartTime, "hh:mm:ss")
-lContractElement.SetAttribute "sessionendtime", Format(pContract.sessionEndTime, "hh:mm:ss")
+lContractElement.SetAttribute "sessionstarttime", Format(pContract.SessionStartTime, "hh:mm:ss")
+lContractElement.SetAttribute "sessionendtime", Format(pContract.SessionEndTime, "hh:mm:ss")
 lContractElement.SetAttribute "fullsessionstarttime", Format(pContract.FullSessionStartTime, "hh:mm:ss")
 lContractElement.SetAttribute "fullsessionendtime", Format(pContract.FullSessionEndTime, "hh:mm:ss")
 lContractElement.SetAttribute "Description", pContract.Description
@@ -702,13 +704,13 @@ End Function
 
 Public Function CreateSessionBuilderFutureFromContractFuture( _
                 ByVal pContractFuture As IFuture, _
-                ByVal pUseExchangeTimezone As Boolean, _
+                ByVal pUseExchangeTimeZone As Boolean, _
                 ByVal pUseFullSession As Boolean) As IFuture
 Const ProcName As String = "CreateSessionBuilderFutureFromContractFuture"
 On Error GoTo Err
 
 Dim lBuilder As New SessnBuilderFutBldr
-lBuilder.Initialise pContractFuture, pUseExchangeTimezone, pUseFullSession
+lBuilder.Initialise pContractFuture, pUseExchangeTimeZone, pUseFullSession
 Set CreateSessionBuilderFutureFromContractFuture = lBuilder.Future
 
 Exit Function
@@ -1020,8 +1022,8 @@ Dim lExpiry As Date
 
 If Int(pContract.ExpiryDate) <> pContract.ExpiryDate Then
     lExpiry = pContract.ExpiryDate
-ElseIf pContract.sessionEndTime <> 0 Then
-    lExpiry = pContract.ExpiryDate + pContract.sessionEndTime
+ElseIf pContract.SessionEndTime <> 0 Then
+    lExpiry = pContract.ExpiryDate + pContract.SessionEndTime
 Else
     lExpiry = pContract.ExpiryDate + 1
 End If
@@ -1112,7 +1114,7 @@ End Function
 
 Public Function IsValidExpiry( _
                 ByVal Value As String, _
-                ByRef ErrorMessage As String) As Boolean
+                Optional ByRef ErrorMessage As String) As Boolean
 Const ProcName As String = "IsValidExpiry"
 On Error GoTo Err
 
@@ -1247,13 +1249,14 @@ With pConfig
     lContract.ExpiryDate = CDate(.GetSetting(ConfigSettingExpiryDate, DefaultExpiry))
     lContract.FullSessionEndTime = .GetSetting(ConfigSettingFullSessionEndTime, "00:00:00")
     lContract.FullSessionStartTime = .GetSetting(ConfigSettingFullSessionStartTime, "00:00:00")
-    lContract.sessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
-    lContract.sessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
+    lContract.SessionEndTime = .GetSetting(ConfigSettingSessionEndTime, "00:00:00")
+    lContract.SessionStartTime = .GetSetting(ConfigSettingSessionStartTime, "00:00:00")
     lContract.TickSize = .GetSetting(ConfigSettingTickSize, DefaultTickSize)
     lContract.TimezoneName = .GetSetting(ConfigSettingTimezoneName, DefaultTimezoneName)
     If .GetSetting(ConfigSettingMultiplier, DefaultMultiplier) <> DefaultMultiplier Then
         lSpec.Multiplier = .GetSetting(ConfigSettingMultiplier, DefaultMultiplier)
     End If
+    lContract.ProviderProperties = CreateParametersFromString(.GetSetting(ConfigSettingProviderProperties, ""))
 End With
 
 Set LoadContractFromConfig = lContract
@@ -1280,7 +1283,7 @@ With pConfig
                                             CDbl(.GetSetting(ConfigSettingContractSpecMultiplier, DefaultMultiplier)), _
                                             CDbl(.GetSetting(ConfigSettingContractSpecStrikePrice, "0.0")), _
                                             GContractUtils.OptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, "")))
-
+    lContractSpec.ProviderProperties = CreateParametersFromString(.GetSetting(ConfigSettingContractSpecProviderProperties, ""))
 End With
 
 Set LoadContractSpecFromConfig = lContractSpec
@@ -1416,6 +1419,7 @@ With pConfig
     .SetSetting ConfigSettingContractSpecMultiplier, pContractSpec.Multiplier
     .SetSetting ConfigSettingContractSpecStrikePrice, pContractSpec.Strike
     .SetSetting ConfigSettingContractSpecRight, GContractUtils.OptionRightToString(pContractSpec.Right)
+    .SetSetting ConfigSettingContractSpecProviderProperties, pContractSpec.ProviderProperties
 End With
 
 Exit Sub
@@ -1433,13 +1437,14 @@ SaveContractSpecToConfig pContract.Specifier, pConfig.AddConfigurationSection(Co
 With pConfig
     .SetSetting ConfigSettingDaysBeforeExpiryToSwitch, pContract.DaysBeforeExpiryToSwitch
     .SetSetting ConfigSettingDescription, pContract.Description
-    .SetSetting ConfigSettingExpiryDate, formatTimestamp(pContract.ExpiryDate, TimestampDateOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingSessionEndTime, formatTimestamp(pContract.sessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingSessionStartTime, formatTimestamp(pContract.sessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingFullSessionEndTime, formatTimestamp(pContract.FullSessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
-    .SetSetting ConfigSettingFullSessionStartTime, formatTimestamp(pContract.FullSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingExpiryDate, FormatTimestamp(pContract.ExpiryDate, TimestampDateOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingSessionEndTime, FormatTimestamp(pContract.SessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingSessionStartTime, FormatTimestamp(pContract.SessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingFullSessionEndTime, FormatTimestamp(pContract.FullSessionEndTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
+    .SetSetting ConfigSettingFullSessionStartTime, FormatTimestamp(pContract.FullSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingTickSize, pContract.TickSize
     .SetSetting ConfigSettingTimezoneName, pContract.TimezoneName
+    .SetSetting ConfigSettingProviderProperties, pContract.ProviderProperties
 End With
 
 Exit Sub
