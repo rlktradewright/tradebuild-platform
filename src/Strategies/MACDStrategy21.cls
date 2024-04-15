@@ -460,9 +460,15 @@ If sSessionEnding Then
 End If
 
 sSessionEnding = True
-LogTradeMessage "Approaching end of session: closing any outstanding position"
-CloseAllPositions
-CloseAllSimulatedPositions
+
+If MinutesToEndOfTradingSession < 0# Then
+    LogTradeMessage "Not currently in trading session"
+Else
+    LogTradeMessage "Approaching end of session: closing any outstanding position"
+    CloseAllPositions
+    CloseAllSimulatedPositions
+End If
+
 IsEndOfSession = True
 
 Exit Function
