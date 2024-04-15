@@ -38,7 +38,6 @@ Public Const ConfigSettingContractSpecExpiry            As String = "&Expiry"
 Public Const ConfigSettingContractSpecExchange          As String = "&Exchange"
 Public Const ConfigSettingContractSpecLocalSymbol       As String = "&LocalSymbol"
 Public Const ConfigSettingContractSpecMultiplier        As String = "&Multiplier"
-Public Const ConfigSettingContractSpecProviderProperties    As String = "&ProviderProperties"
 Public Const ConfigSettingContractSpecRight             As String = "&Right"
 Public Const ConfigSettingContractSpecSecType           As String = "&SecType"
 Public Const ConfigSettingContractSpecStrikePrice       As String = "&StrikePrice"
@@ -51,7 +50,6 @@ Public Const ConfigSettingExpiryDate                    As String = "&ExpiryDate
 Public Const ConfigSettingFullSessionEndTime            As String = "&FullSessionEndTime"
 Public Const ConfigSettingFullSessionStartTime          As String = "&FullSessionStartTime"
 Public Const ConfigSettingMultiplier                    As String = "&Multiplier"
-Public Const ConfigSettingProviderProperties            As String = "&ProviderProperties"
 Public Const ConfigSettingSessionEndTime                As String = "&SessionEndTime"
 Public Const ConfigSettingSessionStartTime              As String = "&SessionStartTime"
 Public Const ConfigSettingTickSize                      As String = "&TickSize"
@@ -374,28 +372,28 @@ On Error GoTo Err
 Dim XMLdoc As DOMDocument60: Set XMLdoc = New DOMDocument60
 Dim lContractElement As IXMLDOMElement: Set lContractElement = XMLdoc.createElement("contract")
 Set XMLdoc.documentElement = lContractElement
-lContractElement.SetAttribute "xmlns", "urn:tradewright.com:tradebuild"
-lContractElement.SetAttribute "minimumtick", pContract.TickSize
-lContractElement.SetAttribute "sessionstarttime", Format(pContract.SessionStartTime, "hh:mm:ss")
-lContractElement.SetAttribute "sessionendtime", Format(pContract.SessionEndTime, "hh:mm:ss")
-lContractElement.SetAttribute "fullsessionstarttime", Format(pContract.FullSessionStartTime, "hh:mm:ss")
-lContractElement.SetAttribute "fullsessionendtime", Format(pContract.FullSessionEndTime, "hh:mm:ss")
-lContractElement.SetAttribute "Description", pContract.Description
-lContractElement.SetAttribute "numberofdecimals", pContract.NumberOfDecimals
-lContractElement.SetAttribute "timezonename", pContract.TimezoneName
+lContractElement.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
+lContractElement.setAttribute "minimumtick", pContract.TickSize
+lContractElement.setAttribute "sessionstarttime", Format(pContract.SessionStartTime, "hh:mm:ss")
+lContractElement.setAttribute "sessionendtime", Format(pContract.SessionEndTime, "hh:mm:ss")
+lContractElement.setAttribute "fullsessionstarttime", Format(pContract.FullSessionStartTime, "hh:mm:ss")
+lContractElement.setAttribute "fullsessionendtime", Format(pContract.FullSessionEndTime, "hh:mm:ss")
+lContractElement.setAttribute "Description", pContract.Description
+lContractElement.setAttribute "numberofdecimals", pContract.NumberOfDecimals
+lContractElement.setAttribute "timezonename", pContract.TimezoneName
 
 Dim Specifier As IXMLDOMElement: Set Specifier = XMLdoc.createElement("specifier")
 lContractElement.appendChild Specifier
-Specifier.SetAttribute "symbol", pContract.Specifier.Symbol
-Specifier.SetAttribute "tradingclass", pContract.Specifier.TradingClass
-Specifier.SetAttribute "sectype", pContract.Specifier.SecType
-Specifier.SetAttribute "expiry", pContract.Specifier.Expiry
-Specifier.SetAttribute "exchange", pContract.Specifier.Exchange
-Specifier.SetAttribute "currencycode", pContract.Specifier.CurrencyCode
-Specifier.SetAttribute "localsymbol", pContract.Specifier.LocalSymbol
-Specifier.SetAttribute "multiplier", pContract.Specifier.Multiplier
-Specifier.SetAttribute "right", pContract.Specifier.Right
-Specifier.SetAttribute "strike", pContract.Specifier.Strike
+Specifier.setAttribute "symbol", pContract.Specifier.Symbol
+Specifier.setAttribute "tradingclass", pContract.Specifier.TradingClass
+Specifier.setAttribute "sectype", pContract.Specifier.SecType
+Specifier.setAttribute "expiry", pContract.Specifier.Expiry
+Specifier.setAttribute "exchange", pContract.Specifier.Exchange
+Specifier.setAttribute "currencycode", pContract.Specifier.CurrencyCode
+Specifier.setAttribute "localsymbol", pContract.Specifier.LocalSymbol
+Specifier.setAttribute "multiplier", pContract.Specifier.Multiplier
+Specifier.setAttribute "right", pContract.Specifier.Right
+Specifier.setAttribute "strike", pContract.Specifier.Strike
 
 Dim ComboLegs As IXMLDOMElement: Set ComboLegs = XMLdoc.createElement("combolegs")
 Specifier.appendChild ComboLegs
@@ -407,18 +405,18 @@ If Not pContract.Specifier.ComboLegs Is Nothing Then
         
         Set Specifier = XMLdoc.createElement("specifier")
         ComboLeg.appendChild Specifier
-        ComboLeg.SetAttribute "isBuyLeg", comboLegObj.IsBuyLeg
-        ComboLeg.SetAttribute "Ratio", comboLegObj.Ratio
-        Specifier.SetAttribute "symbol", comboLegObj.ContractSpec.Symbol
-        Specifier.SetAttribute "tradingclass", comboLegObj.ContractSpec.TradingClass
-        Specifier.SetAttribute "sectype", comboLegObj.ContractSpec.SecType
-        Specifier.SetAttribute "expiry", comboLegObj.ContractSpec.Expiry
-        Specifier.SetAttribute "exchange", comboLegObj.ContractSpec.Exchange
-        Specifier.SetAttribute "currencycode", comboLegObj.ContractSpec.CurrencyCode
-        Specifier.SetAttribute "localsymbol", comboLegObj.ContractSpec.LocalSymbol
-        Specifier.SetAttribute "multiplier", comboLegObj.ContractSpec.Multiplier
-        Specifier.SetAttribute "right", comboLegObj.ContractSpec.Right
-        Specifier.SetAttribute "strike", comboLegObj.ContractSpec.Strike
+        ComboLeg.setAttribute "isBuyLeg", comboLegObj.IsBuyLeg
+        ComboLeg.setAttribute "Ratio", comboLegObj.Ratio
+        Specifier.setAttribute "symbol", comboLegObj.ContractSpec.Symbol
+        Specifier.setAttribute "tradingclass", comboLegObj.ContractSpec.TradingClass
+        Specifier.setAttribute "sectype", comboLegObj.ContractSpec.SecType
+        Specifier.setAttribute "expiry", comboLegObj.ContractSpec.Expiry
+        Specifier.setAttribute "exchange", comboLegObj.ContractSpec.Exchange
+        Specifier.setAttribute "currencycode", comboLegObj.ContractSpec.CurrencyCode
+        Specifier.setAttribute "localsymbol", comboLegObj.ContractSpec.LocalSymbol
+        Specifier.setAttribute "multiplier", comboLegObj.ContractSpec.Multiplier
+        Specifier.setAttribute "right", comboLegObj.ContractSpec.Right
+        Specifier.setAttribute "strike", comboLegObj.ContractSpec.Strike
     Next
 End If
 ContractToXML = XMLdoc.xml
@@ -1256,7 +1254,6 @@ With pConfig
     If .GetSetting(ConfigSettingMultiplier, DefaultMultiplier) <> DefaultMultiplier Then
         lSpec.Multiplier = .GetSetting(ConfigSettingMultiplier, DefaultMultiplier)
     End If
-    lContract.ProviderProperties = CreateParametersFromString(.GetSetting(ConfigSettingProviderProperties, ""))
 End With
 
 Set LoadContractFromConfig = lContract
@@ -1283,7 +1280,6 @@ With pConfig
                                             CDbl(.GetSetting(ConfigSettingContractSpecMultiplier, DefaultMultiplier)), _
                                             CDbl(.GetSetting(ConfigSettingContractSpecStrikePrice, "0.0")), _
                                             GContractUtils.OptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, "")))
-    lContractSpec.ProviderProperties = CreateParametersFromString(.GetSetting(ConfigSettingContractSpecProviderProperties, ""))
 End With
 
 Set LoadContractSpecFromConfig = lContractSpec
@@ -1419,7 +1415,6 @@ With pConfig
     .SetSetting ConfigSettingContractSpecMultiplier, pContractSpec.Multiplier
     .SetSetting ConfigSettingContractSpecStrikePrice, pContractSpec.Strike
     .SetSetting ConfigSettingContractSpecRight, GContractUtils.OptionRightToString(pContractSpec.Right)
-    .SetSetting ConfigSettingContractSpecProviderProperties, pContractSpec.ProviderProperties
 End With
 
 Exit Sub
@@ -1444,7 +1439,6 @@ With pConfig
     .SetSetting ConfigSettingFullSessionStartTime, FormatTimestamp(pContract.FullSessionStartTime, TimestampTimeOnlyISO8601 + TimestampNoMillisecs)
     .SetSetting ConfigSettingTickSize, pContract.TickSize
     .SetSetting ConfigSettingTimezoneName, pContract.TimezoneName
-    .SetSetting ConfigSettingProviderProperties, pContract.ProviderProperties
 End With
 
 Exit Sub
