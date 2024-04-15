@@ -161,7 +161,8 @@ Else
     Dim lTick As GenericTick
     lTick = pDataSource.CurrentTick(pTickType)
     s = s & FormatPrice(lTick.Price, pSecType, pTickSize)
-    If lTick.Size.EQ(DecimalZero) Then
+    If pTickType = TickTypeOptionModelPrice Then
+    ElseIf lTick.Size.EQ(DecimalZero) Then
         s = s & "n/a"
     Else
         s = s & "("
