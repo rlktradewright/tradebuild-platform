@@ -161,7 +161,11 @@ Assert Not mInitialBarsFutureSupplied, "InitialBarsFuture has been supplied"
 If mBarFetchListener Is Nothing Then Set mBarFetchListener = New BarFetchListener
 Set InitialBarFetchListener = mBarFetchListener
 
+#If SingleDll Then
 Set mBarsBuilder = GBarUtils.CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
+#Else
+Set mBarsBuilder = BarUtils27.CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
+#End If
 setupBars mBarsBuilder
 
 Exit Property
