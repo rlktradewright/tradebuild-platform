@@ -625,6 +625,9 @@ If pParams <> "" Then
     Set mBOSpec.RolloverSpec = gProcessRolloverCommand( _
                                     pParams, _
                                     mContract.Specifier.SecType)
+    mBOSpec.RolloverSpec.setInitialStrikeSelectionMode(mInitialStrikeSelectionMode). _
+                        setInitialStrikeParameter(mInitialStrikeParameter). _
+                        setInitialStrikeOperator mInitialStrikeOperator
 ElseIf Not mDefaultRolloverSpec Is Nothing Then
     Set mBOSpec.RolloverSpec = mDefaultRolloverSpec
 Else
