@@ -339,26 +339,36 @@ Public Function Clone() As RolloverSpecification
 Dim lRolloverSpecification As New RolloverSpecification
 With Me
     Set Clone = lRolloverSpecification. _
-                setDays(.Days). _
-                setTime(.Time). _
-                setInitialStrikeSelectionMode(.InitialStrikeSelectionMode). _
-                setInitialStrikeParameter(.InitialStrikeParameter). _
-                setInitialStrikeOperator(.InitialStrikeOperator). _
-                setRolloverStrikeSelectionMode(.RolloverStrikeSelectionMode). _
-                setRolloverStrikeParameter(.RolloverStrikeParameter). _
-                setRolloverStrikeOperator(.RolloverStrikeOperator). _
-                setRolloverQuantityMode(.RolloverQuantityMode). _
-                setRolloverQuantityParameter(.RolloverQuantityParameter). _
-                setRolloverQuantityLotSize(.RolloverQuantityLotSize). _
-                setUnderlyingExchangeName(.UnderlyingExchangeName). _
                 setCloseOrderType(.CloseOrderType). _
-                setCloseTimeoutSecs(.CloseTimeoutSecs). _
                 setCloseLimitPriceSpec(.CloseLimitPriceSpec). _
+                setCloseTimeoutSecs(.CloseTimeoutSecs). _
                 setCloseTriggerPriceSpec(.CloseTriggerPriceSpec). _
+                setDays(.Days). _
+                setEntryLimitPriceSpec(.EntryLimitPriceSpec). _
                 setEntryOrderType(.EntryOrderType). _
                 setEntryTimeoutSecs(.EntryTimeoutSecs). _
-                setEntryLimitPriceSpec(.EntryLimitPriceSpec). _
-                setEntryTriggerPriceSpec(.EntryTriggerPriceSpec)
+                setEntryTriggerPriceSpec(.EntryTriggerPriceSpec). _
+                setInitialStrikeParameter(.InitialStrikeParameter). _
+                setInitialStrikeOperator(.InitialStrikeOperator). _
+                setInitialStrikeSelectionMode(.InitialStrikeSelectionMode). _
+                setRolloverDaysBeforeExpiryToSwitch(.RolloverDaysBeforeExpiryToSwitch). _
+                setRolloverExpiryOffset(.RolloverExpiryOffset). _
+                setRolloverQuantityLotSize(.RolloverQuantityLotSize). _
+                setRolloverQuantityMode(.RolloverQuantityMode). _
+                setRolloverQuantityParameter(.RolloverQuantityParameter). _
+                setRolloverStrikeOperator(.RolloverStrikeOperator). _
+                setRolloverStrikeParameter(.RolloverStrikeParameter). _
+                setRolloverStrikeSelectionMode(.RolloverStrikeSelectionMode). _
+                setStopLossLimitPriceSpec(.StopLossLimitPriceSpec). _
+                setStopLossOrderType(.StopLossOrderType). _
+                setStopLossTriggerPriceSpec(.StopLossTriggerPriceSpec)
+                
+    Set Clone = Clone. _
+                setTargetLimitPriceSpec(.TargetLimitPriceSpec). _
+                setTargetOrderType(.TargetOrderType). _
+                setTargetTriggerPriceSpec(.TargetTriggerPriceSpec). _
+                setTime(.Time). _
+                setUnderlyingExchangeName(.UnderlyingExchangeName)
 End With
 End Function
 

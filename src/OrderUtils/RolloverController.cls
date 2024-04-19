@@ -230,6 +230,7 @@ Case RolloverControllerStateCreatingNextBracketOrder
 Case RolloverControllerStateExecutingNextBracketOrder
     failpoint = "RolloverControllerStateExecutingNextBracketOrder"
     
+    GOrderUtils.Log mBracketOrder.Key & ": Executing next bracket order: " & lId & "; " & mNextContract.Specifier.ToString, ProcName, ModuleName
     mNextOrderContext.ExecuteBracketOrder mNextBracketOrder
     Set mOrderContext = Nothing
     
@@ -247,6 +248,7 @@ Case RolloverControllerStateExecutingNextBracketOrder
 Case RolloverControllerStateCancellingNextBracketOrder
     failpoint = "RolloverControllerStateCancellingNextBracketOrder"
     
+    GOrderUtils.Log mBracketOrder.Key & ": Cancelling next bracket order due to execution timeout: " & lId & "; " & mNextContract.Specifier.ToString, ProcName, ModuleName
     mNextBracketOrder.Cancel
     mTaskContext.Suspend -1
 Case RolloverControllerStateCompleted
@@ -349,6 +351,7 @@ On Error GoTo Err
 
 If mNextBracketOrder.Size = 0 Then
     ' the cancellation must have completed
+    Set mNextBracketOrder = Nothing
     mUseMarketEntry = True
     setState RolloverControllerStateCreatingNextBracketOrder
     mTaskContext.Continue
@@ -569,27 +572,29 @@ On Error GoTo Err
 Dim lPrevEntryOrder As IOrder
 Set lPrevEntryOrder = mBracketOrder.EntryOrder
 
-With mBracketOrder.RolloverSpecification
-    If .EntryOrderType = OrderTypeNone Then
-        Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
-                                            lPrevEntryOrder.OrderType, _
-                                            .EntryLimitPriceSpec, _
-                                            .EntryTriggerPriceSpec, _
-                                            lPrevEntryOrder.IgnoreRegularTradingHours)
-    ElseIf Not pUseMarketOrder Then
-        Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
-                                            .EntryOrderType, _
-                                            .EntryLimitPriceSpec, _
-                                            .EntryTriggerPriceSpec, _
-                                            lPrevEntryOrder.IgnoreRegularTradingHours)
-    Else
-        Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
-                                            OrderTypeMarket, _
-                                            gNewPriceSpecifier(), _
-                                            gNewPriceSpecifier(), _
-                                            lPrevEntryOrder.IgnoreRegularTradingHours)
-    End If
-End With
+If pUseMarketOrder Then
+    Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                        OrderTypeMarket, _
+                                        gNewPriceSpecifier(), _
+                                        gNewPriceSpecifier(), _
+                                        lPrevEntryOrder.IgnoreRegularTradingHours)
+Else
+    With mBracketOrder.RolloverSpecification
+        If .EntryOrderType = OrderTypeNone Then
+            Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                                lPrevEntryOrder.OrderType, _
+                                                .EntryLimitPriceSpec, _
+                                                .EntryTriggerPriceSpec, _
+                                                lPrevEntryOrder.IgnoreRegularTradingHours)
+        Else
+            Set createNextEntryOrder = mNextOrderContext.CreateEntryOrder( _
+                                                .EntryOrderType, _
+                                                .EntryLimitPriceSpec, _
+                                                .EntryTriggerPriceSpec, _
+                                                lPrevEntryOrder.IgnoreRegularTradingHours)
+        End If
+    End With
+End If
 
 Exit Function
 
@@ -676,34 +681,36 @@ Else
         Case RolloverStrikeModeDeltaIncrement
             lInitialStrikeParameter = mStrikeParameter
         End Select
+        
+        Set createNextRolloverSpec = .setInitialStrikeParameter(lInitialStrikeParameter)
                 
-        Set createNextRolloverSpec = GOrderUtils.CreateOptionRolloverSpecification( _
-                                            .Days, _
-                                            .Time, _
-                                            .InitialStrikeSelectionMode, _
-                                            lInitialStrikeParameter, _
-                                            .InitialStrikeOperator, _
-                                            .RolloverStrikeSelectionMode, _
-                                            .RolloverStrikeParameter, _
-                                            .RolloverStrikeSelectionMode, _
-                                            .RolloverQuantityMode, _
-                                            .RolloverQuantityParameter, _
-                                            .RolloverQuantityLotSize, _
-                                            .UnderlyingExchangeName, _
-                                            .CloseOrderType, _
-                                            .CloseTimeoutSecs, _
-                                            .CloseLimitPriceSpec, _
-                                            .CloseTriggerPriceSpec, _
-                                            .EntryOrderType, _
-                                            .EntryTimeoutSecs, _
-                                            .EntryLimitPriceSpec, _
-                                            .EntryTriggerPriceSpec)
-        createNextRolloverSpec.setStopLossLimitPriceSpec .StopLossLimitPriceSpec
-        createNextRolloverSpec.setStopLossTriggerPriceSpec .StopLossTriggerPriceSpec
-        createNextRolloverSpec.setTargetLimitPriceSpec .TargetLimitPriceSpec
-        createNextRolloverSpec.setTargetTriggerPriceSpec .TargetTriggerPriceSpec
-        createNextRolloverSpec.setRolloverDaysBeforeExpiryToSwitch .RolloverDaysBeforeExpiryToSwitch
-        createNextRolloverSpec.setRolloverExpiryOffset .RolloverExpiryOffset
+'        Set createNextRolloverSpec = GOrderUtils.CreateOptionRolloverSpecification( _
+'                                            .Days, _
+'                                            .Time, _
+'                                            .InitialStrikeSelectionMode, _
+'                                            lInitialStrikeParameter, _
+'                                            .InitialStrikeOperator, _
+'                                            .RolloverStrikeSelectionMode, _
+'                                            .RolloverStrikeParameter, _
+'                                            .RolloverStrikeSelectionMode, _
+'                                            .RolloverQuantityMode, _
+'                                            .RolloverQuantityParameter, _
+'                                            .RolloverQuantityLotSize, _
+'                                            .UnderlyingExchangeName, _
+'                                            .CloseOrderType, _
+'                                            .CloseTimeoutSecs, _
+'                                            .CloseLimitPriceSpec, _
+'                                            .CloseTriggerPriceSpec, _
+'                                            .EntryOrderType, _
+'                                            .EntryTimeoutSecs, _
+'                                            .EntryLimitPriceSpec, _
+'                                            .EntryTriggerPriceSpec)
+'        createNextRolloverSpec.setStopLossLimitPriceSpec .StopLossLimitPriceSpec
+'        createNextRolloverSpec.setStopLossTriggerPriceSpec .StopLossTriggerPriceSpec
+'        createNextRolloverSpec.setTargetLimitPriceSpec .TargetLimitPriceSpec
+'        createNextRolloverSpec.setTargetTriggerPriceSpec .TargetTriggerPriceSpec
+'        createNextRolloverSpec.setRolloverDaysBeforeExpiryToSwitch .RolloverDaysBeforeExpiryToSwitch
+'        createNextRolloverSpec.setRolloverExpiryOffset .RolloverExpiryOffset
     End With
 End If
 
