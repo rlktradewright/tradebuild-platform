@@ -429,8 +429,8 @@ End If
 
 Dim tick As GenericTick
 Do While mTickStream.GetNextTick(tick)
-    If tick.timestamp >= mInputTickfileSpecifier.FromDate Then
-        If tick.timestamp >= mInputTickfileSpecifier.ToDate Then
+    If tick.TimeStamp >= mInputTickfileSpecifier.FromDate Then
+        If tick.TimeStamp >= mInputTickfileSpecifier.ToDate Then
             noMoreTicks
             Exit Function
         End If
@@ -440,8 +440,8 @@ Do While mTickStream.GetNextTick(tick)
             getTick = True
             Exit Function
         Else
-            mSessionBuilder.SetSessionCurrentTime tick.timestamp
-            If mSession.IsTimeInSession(tick.timestamp) Then
+            mSessionBuilder.SetSessionCurrentTime tick.TimeStamp
+            If mSession.IsTimeInSession(tick.TimeStamp) Then
                 processTick tick
                 getTick = True
                 Exit Function
@@ -546,7 +546,7 @@ Set mContract = mContracts.ItemAtIndex(1)
 With mInputTickfileSpecifier
     .Contract = mContract
     If .EntireSession Then
-        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimeZoneName))
+        Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(mContract.TimezoneName))
         Set mSession = mSessionBuilder.Session
         
         If .ToDate = 0# Then .ToDate = .FromDate
@@ -556,9 +556,6 @@ With mInputTickfileSpecifier
                             mContract.SessionStartTime, _
                             mContract.SessionEndTime)
         .FromDate = st.StartTime
-        st = GetSessionTimesIgnoringWeekend(CDbl(Int(.ToDate)) + mContract.SessionStartTime + 1# / 86400#, _
-                            mContract.SessionStartTime, _
-                            mContract.SessionEndTime)
         .ToDate = st.EndTime
     End If
 End With
