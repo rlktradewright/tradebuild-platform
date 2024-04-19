@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "Gsd27"
+Public Const ProjectName                            As String = "Gsd"
 Private Const ModuleName                            As String = "MainMod"
 
 Private Const DefaultClientId                       As Long = 323115649
