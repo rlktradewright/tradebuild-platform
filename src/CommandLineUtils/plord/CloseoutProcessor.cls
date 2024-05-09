@@ -44,7 +44,7 @@ Private Const ModuleName                            As String = "CloseoutProcess
 ' Member variables
 '@================================================================================
 
-Private mOrderManager                               As New OrderManager
+Private mOrderManager                               As OrderManager
 
 Private mGroups                                     As Groups
 

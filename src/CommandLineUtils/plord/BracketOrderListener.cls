@@ -46,15 +46,24 @@ Private Const ModuleName                            As String = "BracketOrderLis
 ' Member variables
 '@================================================================================
 
+#If SingleDll = 0 Then
 Private WithEvents mBracketOrderListener            As OrderUtils27.BracketOrderListener
 Attribute mBracketOrderListener.VB_VarHelpID = -1
+#Else
+Private WithEvents mBracketOrderListener            As TBFoundation.BracketOrderListener
+Attribute mBracketOrderListener.VB_VarHelpID = -1
+#End If
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
+#If SingleDll = 0 Then
 Set mBracketOrderListener = New OrderUtils27.BracketOrderListener
+#Else
+Set mBracketOrderListener = New TBFoundation.BracketOrderListener
+#End If
 End Sub
 
 '@================================================================================
@@ -136,6 +145,7 @@ Dim s As String: s = lBO.Key & ": " & _
 
 Dim s1 As String
 Dim lToConsole As Boolean
+Dim lNewBo As IBracketOrder
 
 Select Case lChangeType
 Case BracketOrderCompleted
@@ -205,12 +215,17 @@ Case BracketOrderRolloverGotContract
     lToConsole = True
     s1 = "bracket order rolling over to next contract: " & _
         gGetContractName(lBO.NextContract)
-Case BracketOrderRolloverCompleted
+Case BracketOrderRolloverNextBracketOrderCreated
     lToConsole = True
-    Dim lNewBo As IBracketOrder: Set lNewBo = lBO.NextBracketOrder
-    s1 = "rollover completed: new bracket order is: " & _
+    Set lNewBo = lBO.NextBracketOrder
+    s1 = "rollover bracket order created: order is: " & _
         lNewBo.Key
     Add lNewBo
+Case BracketOrderRolloverCompleted
+    lToConsole = True
+    Set lNewBo = lBO.NextBracketOrder
+    s1 = "rollover completed: new bracket order is: " & _
+        lNewBo.Key
     CreateBracketProfitCalculator lNewBo, lNewBo.OrderContext.DataSource
     mBracketOrderListener.Remove lBO
 End Select
@@ -236,7 +251,11 @@ End Sub
 ' Properties
 '@================================================================================
 
+#If SingleDll = 0 Then
 Friend Property Get Base() As OrderUtils27.BracketOrderListener
+#Else
+Friend Property Get Base() As TBFoundation.BracketOrderListener
+#End If
 Set Base = mBracketOrderListener
 End Property
 

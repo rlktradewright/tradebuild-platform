@@ -154,20 +154,25 @@ Select Case mState
 
 Case RolloverControllerStateInitial
     failpoint = "RolloverControllerStateInitial"
-    
-    If IsContractExpired(mBracketOrder.Contract, mClock) Then
-        GOrderUtils.Log mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-        setState RolloverControllerStateFailed
-        mTaskContext.Finish Empty, False
+
+    If Not mNextBracketOrder Is Nothing Then
+        recover
     Else
-        GOrderUtils.Log mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
-        LogBracketOrderMessage "Initiating rollover", _
-                                mBracketOrder.DataSource, _
-                                mBracketOrder.Contract, _
-                                mBracketOrder.Key, _
-                                mBracketOrder.IsSimulated, _
-                                Me
-        setState RolloverControllerStateClosingCurrentPosition
+        
+        If IsContractExpired(mBracketOrder.Contract, mClock) Then
+            GOrderUtils.Log mBracketOrder.Key & ": Ignoring rollover - initial contract has expired: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+            setState RolloverControllerStateFailed
+            mTaskContext.Finish Empty, False
+        Else
+            GOrderUtils.Log mBracketOrder.Key & ": Initiating rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+            LogBracketOrderMessage "Initiating rollover", _
+                                    mBracketOrder.DataSource, _
+                                    mBracketOrder.Contract, _
+                                    mBracketOrder.Key, _
+                                    mBracketOrder.IsSimulated, _
+                                    Me
+            setState RolloverControllerStateClosingCurrentPosition
+        End If
     End If
 Case RolloverControllerStateClosingCurrentPosition
     failpoint = "RolloverControllerStateClosingCurrentPosition"
@@ -363,12 +368,36 @@ Err:
 GOrders.NotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub mNextBracketOrder_EntryOrderChanged()
+Const ProcName As String = "mNextBracketOrder_EntryOrderChanged"
+On Error GoTo Err
+
+If mNextBracketOrder.EntryOrder.Status <> OrderStatusPreSubmitted Then Exit Sub
+
+If mNextBracketFillTLI Is Nothing Then
+    ' the next order has been received by the broker, and there is no fill
+    ' timeout, so rollover is complete
+    Set mNextBracketOrder = Nothing ' ignore any further events
+    setState RolloverControllerStateCompleted
+    mTaskContext.Continue
+End If
+
+Exit Sub
+
+Err:
+GOrders.NotifyUnhandledError ProcName, ModuleName
+End Sub
+
 Private Sub mNextBracketOrder_EntryOrderFilled()
 Const ProcName As String = "mNextBracketOrder_EntryOrderFilled"
 On Error GoTo Err
 
 If Not mNextBracketFillTLI Is Nothing Then mNextBracketFillTLI.Cancel
-
+    
+' the next order has received a fill, so rollover is now complete
+setState RolloverControllerStateCompleted
+mTaskContext.Continue
+    
 Exit Sub
 
 Err:
@@ -468,6 +497,7 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pBracketOrder As IBracketOrder, _
+                ByVal pNextBracketOrderId As String, _
                 ByVal pOrderManager As OrderManager, _
                 ByVal pScopeName As String, _
                 ByVal pTimerList As TimerList)
@@ -480,6 +510,17 @@ Set mOrderManager = pOrderManager
 mScopeName = pScopeName
 Set mTimerList = pTimerList
 Set mClock = mTimerList.Clock
+
+If mOrderManager.AllBracketOrders.Contains(pNextBracketOrderId) Then
+    ' the target bracket order of the rollover has already been determined and
+    ' placed and we are in a recovery situation after terminating during the
+    ' rollover process.
+    
+    Set mNextBracketOrder = mOrderManager.AllBracketOrders(pNextBracketOrderId)
+    Set mNextOrderContext = mNextBracketOrder.OrderContext
+End If
+
+setState RolloverControllerStateInitial
 
 Exit Sub
 
@@ -1157,6 +1198,50 @@ GOrderUtils.LogBracketOrderRollover _
                 pNextBracketOrder.IsSimulated, _
                 Me
 
+
+Exit Sub
+
+Err:
+GOrders.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub recover()
+Const ProcName As String = "recover"
+On Error GoTo Err
+
+' we are recovering after terminating during the rollover process
+
+GOrderUtils.Log mBracketOrder.Key & ": Resuming rollover: " & mBracketOrder.Contract.Specifier.ToString, ProcName, ModuleName
+LogBracketOrderMessage "Resuming rollover for", _
+                        mBracketOrder.DataSource, _
+                        mBracketOrder.Contract, _
+                        mBracketOrder.Key, _
+                        mBracketOrder.IsSimulated, _
+                        Me
+LogBracketOrderMessage "Next bracket order", _
+                        mNextBracketOrder.DataSource, _
+                        mNextBracketOrder.Contract, _
+                        mNextBracketOrder.Key, _
+                        mNextBracketOrder.IsSimulated, _
+                        Me
+
+Dim lEntryTimeout As Long: lEntryTimeout = mBracketOrder.RolloverSpecification.EntryTimeoutSecs
+If lEntryTimeout <> 0 Then
+    Dim lEntryTimeoutTime As Date
+    lEntryTimeoutTime = mNextBracketOrder.CreationTime + lEntryTimeout / 86400#
+    If lEntryTimeoutTime > mClock.Timestamp Then
+        Set mNextBracketFillTLI = mTimerList.Add( _
+                                    Nothing, _
+                                    mBracketOrder.RolloverSpecification.EntryTimeoutSecs, _
+                                    ExpiryTimeUnitSeconds)
+        mTaskContext.Suspend -1
+    Else
+        setState RolloverControllerStateCancellingNextBracketOrder
+    End If
+Else
+    Set mNextBracketOrder = Nothing
+    setState RolloverControllerStateCompleted
+End If
 
 Exit Sub
 

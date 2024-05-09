@@ -61,6 +61,9 @@ Private mMarketDataManager                          As IMarketDataManager
 
 Private mOrderSubmitterFactory                      As IOrderSubmitterFactory
 
+Private mAllBracketOrders                           As New BracketOrders
+Private mAllBracketOrdersSimulated                  As New BracketOrders
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -88,6 +91,14 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get AllBracketOrders() As BracketOrders
+Set AllBracketOrders = mAllBracketOrders
+End Property
+
+Public Property Get AllBracketOrdersSimulated() As BracketOrders
+Set AllBracketOrdersSimulated = mAllBracketOrdersSimulated
+End Property
 
 Public Property Let ContractStorePrimary(ByVal Value As IContractStore)
 Set mContractStorePrimary = Value
@@ -136,6 +147,22 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub AddBracketOrder(ByVal pBracketOrder As IBracketOrder)
+Const ProcName As String = "AddBracketOrder"
+On Error GoTo Err
+
+If pBracketOrder.IsSimulated Then
+    mAllBracketOrdersSimulated.Add pBracketOrder
+Else
+    mAllBracketOrders.Add pBracketOrder
+End If
+
+Exit Sub
+
+Err:
+GOrders.HandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Public Function CloseAllPositions( _
                 ByVal pTypes As PositionTypes) As IFuture

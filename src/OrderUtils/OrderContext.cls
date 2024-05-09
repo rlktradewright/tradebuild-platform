@@ -536,6 +536,7 @@ Else
     mActiveBracketOrders.Add pBracketOrder
     fireChange OrderContextActiveStateChanged
 End If
+mOrderManager.AddBracketOrder pBracketOrder
 pBracketOrder.Activate
 
 Exit Sub

@@ -87,8 +87,8 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub FinishRecovery()
-Const ProcName As String = "FinishRecovery"
+Friend Sub FinishDataRecovery()
+Const ProcName As String = "FinishDataRecovery"
 On Error GoTo Err
 
 If mOrderContext.Name = BalancingOrderContextName Then Exit Sub
@@ -100,11 +100,25 @@ setUnrecoveredOrderAsCancelled mBracketOrder.CloseoutOrder
 
 mOrderContext.ActivateBracketOrder mBracketOrder
 
+GOrderUtils.Log "Finished recovering bracket order data", ProcName, ModuleName, mBracketOrder.Key, LogLevelDetail
+
+Exit Sub
+
+Err:
+GOrders.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Friend Sub FinishStateRecovery()
+Const ProcName As String = "FinishStateRecovery"
+On Error GoTo Err
+
+If mOrderContext.Name = BalancingOrderContextName Then Exit Sub
+
 Dim lRecoverable As IRecoverable
 Set lRecoverable = mBracketOrder
 lRecoverable.FinishRecovery
 
-GOrderUtils.Log "Finished recovering bracket order", ProcName, ModuleName, mBracketOrder.Key, LogLevelDetail
+GOrderUtils.Log "Finished recovering bracket order state", ProcName, ModuleName, mBracketOrder.Key, LogLevelDetail
 
 Exit Sub
 

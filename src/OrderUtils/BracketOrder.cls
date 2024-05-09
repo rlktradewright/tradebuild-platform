@@ -970,10 +970,14 @@ Case RolloverControllerStateClosingCurrentPosition
 Case RolloverControllerStateCreatingNextBracketOrder
     Set mNextContract = mRolloverController.NextContract
     fireChange BracketOrderRolloverGotContract
+Case RolloverControllerStateExecutingNextBracketOrder
+    Set mNextBracketOrder = mRolloverController.NextBracketOrder
+    mSummary.NextBracketOrderId = mNextBracketOrder.Key
+    SaveRecoveryInfo
+    fireChange BracketOrderChangeTypes.BracketOrderRolloverNextBracketOrderCreated
 Case RolloverControllerStateCompleted
     WriteRecoveryDataComment "Rollover completed"
     mIsRolloverInProgress = False
-    Set mNextBracketOrder = mRolloverController.NextBracketOrder
     
     mRolloverController.RemoveStateChangeListener Me
     Set mRolloverController = Nothing
@@ -3952,8 +3956,12 @@ On Error GoTo Err
 If Not mRolloverController Is Nothing Then Exit Sub
 
 Set mRolloverController = New RolloverController
-mRolloverController.Initialise Me, mOrderContext.OrderManager, mOrderContext.ScopeName, mTimerList
-WriteRecoveryDataComment ProcName & "()"
+mRolloverController.Initialise Me, mSummary.NextBracketOrderId, mOrderContext.OrderManager, mOrderContext.ScopeName, mTimerList
+If mSummary.NextBracketOrderId = "" Then
+    WriteRecoveryDataComment "initiate rollover"
+Else
+    WriteRecoveryDataComment "resume rollover"
+End If
 StartTask mRolloverController, PriorityNormal
 mRolloverController.AddStateChangeListener Me
 

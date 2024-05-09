@@ -91,6 +91,7 @@ Private mIsDirty                                    As Boolean
 
 Private mDiff                                       As New ROD
 
+Private mNextBracketOrderId                         As String
 Private mRolloverSpecification                      As RolloverSpecification
 Private mRolloverDate                               As Date
 
@@ -307,6 +308,17 @@ End Property
 
 Public Property Get LotSize() As Long
 LotSize = mLotSize
+End Property
+
+Public Property Let NextBracketOrderId(ByVal Value As String)
+If mNextBracketOrderId = Value Then Exit Property
+setDirty
+mNextBracketOrderId = Value
+mDiff.SetProperty "NextBracketOrderId", Value
+End Property
+
+Public Property Get NextBracketOrderId() As String
+NextBracketOrderId = mNextBracketOrderId
 End Property
 
 Public Property Let PeggedOrdersProcessed(ByVal Value As Boolean)

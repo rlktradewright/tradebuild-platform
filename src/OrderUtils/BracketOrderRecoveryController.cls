@@ -599,9 +599,8 @@ Set mRecoveryAgent = Nothing
 
 Dim lBor As BracketOrderRecoverer
 For Each lBor In mBracketOrderRecoverers
-    lBor.FinishRecovery
+    lBor.FinishDataRecovery
 Next
-Set mBracketOrderRecoverers = Nothing
 
 Dim lPMsToFinish As New EnumerableCollection
 Dim en As Enumerator
@@ -623,6 +622,11 @@ Do While en.MoveNext
         lPMsToFinish.Add pm
     End If
 Loop
+
+For Each lBor In mBracketOrderRecoverers
+    lBor.FinishStateRecovery
+Next
+Set mBracketOrderRecoverers = Nothing
 
 Dim lPm As PositionManager
 For Each lPm In lPMsToFinish
