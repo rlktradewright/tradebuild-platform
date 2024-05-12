@@ -1,0 +1,4 @@
+<assemblyIdentity name="TradeWright.TradeBuildS.Platform" processorArchitecture="X86" type="win32" version="3.0.0.0" />
+<assemblyIdentity name="TradeWright.TradeBuildS.ServiceProviders" processorArchitecture="X86" type="win32" version="3.0.0.0" />
+<assemblyIdentity name="TradeWright.TradeBuildS.ExternalComponents" processorArchitecture="X86" type="win32" version="3.0.0.0" />
+<assemblyIdentity name="TradeWright.Common" processorArchitecture="X86" type="win32" version="4.0.0.128" />
