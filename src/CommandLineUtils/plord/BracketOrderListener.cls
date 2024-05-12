@@ -167,7 +167,8 @@ Case BracketOrderEntryOrderChanged
 Case BracketOrderEntryOrderFilled
     lToConsole = True
     s1 = "entry order filled " & _
-        filledString(lBO.EntryOrder, lBO.Contract)
+        filledString(lBO.EntryOrder, lBO.Contract) & _
+        lRolloverClause
 Case BracketOrderStopLossOrderChanged
 
 Case BracketOrderStopLossOrderFilled
