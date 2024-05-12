@@ -724,34 +724,6 @@ Else
         End Select
         
         Set createNextRolloverSpec = .setInitialStrikeParameter(lInitialStrikeParameter)
-                
-'        Set createNextRolloverSpec = GOrderUtils.CreateOptionRolloverSpecification( _
-'                                            .Days, _
-'                                            .Time, _
-'                                            .InitialStrikeSelectionMode, _
-'                                            lInitialStrikeParameter, _
-'                                            .InitialStrikeOperator, _
-'                                            .RolloverStrikeSelectionMode, _
-'                                            .RolloverStrikeParameter, _
-'                                            .RolloverStrikeSelectionMode, _
-'                                            .RolloverQuantityMode, _
-'                                            .RolloverQuantityParameter, _
-'                                            .RolloverQuantityLotSize, _
-'                                            .UnderlyingExchangeName, _
-'                                            .CloseOrderType, _
-'                                            .CloseTimeoutSecs, _
-'                                            .CloseLimitPriceSpec, _
-'                                            .CloseTriggerPriceSpec, _
-'                                            .EntryOrderType, _
-'                                            .EntryTimeoutSecs, _
-'                                            .EntryLimitPriceSpec, _
-'                                            .EntryTriggerPriceSpec)
-'        createNextRolloverSpec.setStopLossLimitPriceSpec .StopLossLimitPriceSpec
-'        createNextRolloverSpec.setStopLossTriggerPriceSpec .StopLossTriggerPriceSpec
-'        createNextRolloverSpec.setTargetLimitPriceSpec .TargetLimitPriceSpec
-'        createNextRolloverSpec.setTargetTriggerPriceSpec .TargetTriggerPriceSpec
-'        createNextRolloverSpec.setRolloverDaysBeforeExpiryToSwitch .RolloverDaysBeforeExpiryToSwitch
-'        createNextRolloverSpec.setRolloverExpiryOffset .RolloverExpiryOffset
     End With
 End If
 
