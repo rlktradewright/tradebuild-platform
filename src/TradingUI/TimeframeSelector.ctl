@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TimeframeSelector 
    BackStyle       =   0  'Transparent
    ClientHeight    =   1710
@@ -421,11 +421,15 @@ addComboEntry GetTimePeriod(1, TimePeriodDay)
 addComboEntry GetTimePeriod(1, TimePeriodWeek)
 addComboEntry GetTimePeriod(1, TimePeriodMonth)
 addComboEntry GetTimePeriod(100, TimePeriodVolume)
+addComboEntry GetTimePeriod(500, TimePeriodVolume)
 addComboEntry GetTimePeriod(1000, TimePeriodVolume)
 addComboEntry GetTimePeriod(4, TimePeriodTickMovement)
 addComboEntry GetTimePeriod(5, TimePeriodTickMovement)
 addComboEntry GetTimePeriod(10, TimePeriodTickMovement)
 addComboEntry GetTimePeriod(20, TimePeriodTickMovement)
+addComboEntry GetTimePeriod(100, TimePeriodTickVolume)
+addComboEntry GetTimePeriod(500, TimePeriodTickVolume)
+addComboEntry GetTimePeriod(1000, TimePeriodTickVolume)
 
 'If selectComboEntry(5, TimePeriodMinute) Then
 'ElseIf selectComboEntry(10, TimePeriodMinute) Then

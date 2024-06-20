@@ -359,6 +359,57 @@ Err:
 GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Public Sub NotifyBar( _
+    ByVal pTimestamp As Date, _
+    ByVal pOpenValue As Double, _
+    ByVal pHighValue As Double, _
+    ByVal pLowValue As Double, _
+    ByVal pCloseValue As Double, _
+    ByVal pVolume As Long, _
+    ByVal pTickVolume As Long)
+Const ProcName As String = "NotifyBar"
+On Error GoTo Err
+
+If mBarTimePeriod.Units = TimePeriodTickVolume Then
+    notifyBarForTickVolume pTimestamp, _
+                            pOpenValue, _
+                            pHighValue, _
+                            pLowValue, _
+                            pCloseValue, _
+                            pVolume, _
+                            pTickVolume
+ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
+    notifyBarForVolume pTimestamp, _
+                            pOpenValue, _
+                            pHighValue, _
+                            pLowValue, _
+                            pCloseValue, _
+                            pVolume, _
+                            pTickVolume
+ElseIf mBarTimePeriod.Units = TimePeriodTickMovement Then
+    notifyBarForConstantTimeOrTickMovement pTimestamp, _
+                            pOpenValue, _
+                            pHighValue, _
+                            pLowValue, _
+                            pCloseValue, _
+                            pVolume, _
+                            pTickVolume
+Else
+    notifyBarForConstantTimeOrTickMovement _
+                            pTimestamp, _
+                            pOpenValue, _
+                            pHighValue, _
+                            pLowValue, _
+                            pCloseValue, _
+                            pVolume, pTickVolume
+End If
+
+Exit Sub
+
+Err:
+GBars.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Public Sub NotifyOpenInterest( _
                 ByRef oi As SValue)
 Const ProcName As String = "NotifyOpenInterest"
@@ -408,7 +459,11 @@ If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
 ElseIf mCurrentBar Is Nothing Then
     createNewBar Value.Timestamp, Value.Value, 0, 0
 ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
-    mCurrentBar.NotifyValue Value.Value
+    If mCurrentBar.Volume >= mBarTimePeriod.Length Then
+        createNewBar Value.Timestamp, Value.Value, 0, 0
+    Else
+        mCurrentBar.NotifyValue Value.Value
+    End If
 ElseIf mBarTimePeriod.Units = TimePeriodTickMovement Then
     AssertArgument mTickSize <> 0, "Ticksize cannot be 0 if TimePeriod.Units is TimePeriodTickMovement"
     
@@ -615,6 +670,17 @@ Err:
 GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function getNumberOfPrices( _
+                ByVal pOpenValue As Double, _
+                ByVal pHighValue As Double, _
+                ByVal pLowValue As Double, _
+                ByVal pCloseValue As Double) As Long
+getNumberOfPrices = 1
+If pOpenValue <> pHighValue Then getNumberOfPrices = getNumberOfPrices + 1
+If pOpenValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
+If pCloseValue <> pHighValue And pCloseValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
+End Function
+
 Private Function newBar(ByVal BarNumber As Long) As Boolean
 Const ProcName As String = "newBar"
 On Error GoTo Err
@@ -631,6 +697,276 @@ Exit Function
 Err:
 GBars.HandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Sub notifyBarForConstantTimeOrTickMovement( _
+    ByVal pTimestamp As Date, _
+    ByVal pOpenValue As Double, _
+    ByVal pHighValue As Double, _
+    ByVal pLowValue As Double, _
+    ByVal pCloseValue As Double, _
+    ByVal pVolume As Long, _
+    ByVal pTickVolume As Long)
+Const ProcName As String = "notifyBarForConstantTimeOrTickMovement"
+On Error GoTo Err
+
+Dim lNumberOfPrices As Long
+lNumberOfPrices = getNumberOfPrices(pOpenValue, pHighValue, pLowValue, pCloseValue)
+
+Dim lNumberOfPricesNotified As Long
+
+Dim lTickVolumePerNotify As Long
+lTickVolumePerNotify = Int((pTickVolume - lNumberOfPrices) / lNumberOfPrices)
+If lTickVolumePerNotify < 0 Then lTickVolumePerNotify = 0
+
+Dim lVolumePerNotify As Long
+lVolumePerNotify = Int((pVolume - lNumberOfPrices) / lNumberOfPrices)
+If lVolumePerNotify < 0 Then lVolumePerNotify = 0
+
+notifyBarValue pOpenValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+
+If pOpenValue <= pCloseValue Then
+    If pLowValue <> pOpenValue Then notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    If pHighValue <> pOpenValue And pHighValue <> pLowValue Then notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    If pCloseValue <> pOpenValue And pCloseValue <> pHighValue And pCloseValue <> pLowValue Then notifyBarValue pCloseValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+Else
+    If pHighValue <> pOpenValue Then notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    If pLowValue <> pOpenValue And pLowValue <> pHighValue Then notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+    If pCloseValue <> pOpenValue And pCloseValue <> pHighValue And pCloseValue <> pLowValue Then notifyBarValue pCloseValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
+End If
+
+Exit Sub
+
+Err:
+GBars.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub notifyBarForTickVolume( _
+    ByVal pTimestamp As Date, _
+    ByVal pOpenValue As Double, _
+    ByVal pHighValue As Double, _
+    ByVal pLowValue As Double, _
+    ByVal pCloseValue As Double, _
+    ByVal pVolume As Long, _
+    ByVal pTickVolume As Long)
+Const ProcName As String = "notifyBarForTickVolume"
+On Error GoTo Err
+
+Dim lNumberOfIntermediateBars As Long
+Dim lFirstTickVolume As Long
+Dim lLastTickVolume As Long
+
+Dim lIntermediateVolume As Long
+Dim lLastVolume As Long
+
+If mCurrentBar Is Nothing Then createNewBar pTimestamp, pOpenValue, 0, 0
+
+If mCurrentBar.TickVolume + pTickVolume <= mBarTimePeriod.Length Then
+    lFirstTickVolume = pTickVolume
+    lIntermediateVolume = pVolume
+Else
+    lFirstTickVolume = mBarTimePeriod.Length - mCurrentBar.TickVolume
+    lNumberOfIntermediateBars = Int((pTickVolume - lFirstTickVolume + mBarTimePeriod.Length - 1) / mBarTimePeriod.Length) - 1
+    lLastTickVolume = pTickVolume - lFirstTickVolume - lNumberOfIntermediateBars * mBarTimePeriod.Length
+    lIntermediateVolume = (pVolume + lNumberOfIntermediateBars) / (lNumberOfIntermediateBars + 1)
+    lLastVolume = pVolume - (lNumberOfIntermediateBars + 1) * lIntermediateVolume
+End If
+
+Dim lIsUpBar As Boolean
+lIsUpBar = (pCloseValue >= pOpenValue)
+
+Dim lValue As SValue
+lValue.Timestamp = pTimestamp
+
+' build first bar
+lValue.Value = pOpenValue
+NotifyValue lValue
+lValue.Value = pHighValue
+NotifyValue lValue
+lValue.Value = pLowValue
+NotifyValue lValue
+lValue.Value = pCloseValue
+NotifyValue lValue
+
+IncrementTickVolume lFirstTickVolume - 4
+
+lValue.Value = lIntermediateVolume + mVolumeParser.CurrSessionVolume
+NotifyVolume lValue
+
+'build intermediate bars
+Dim i As Long
+For i = 1 To lNumberOfIntermediateBars
+    If lIsUpBar Then
+        lValue.Value = pLowValue
+        NotifyValue lValue
+        lValue.Value = pHighValue
+        NotifyValue lValue
+    Else
+        lValue.Value = pHighValue
+        NotifyValue lValue
+        lValue.Value = pLowValue
+        NotifyValue lValue
+    End If
+    
+    IncrementTickVolume mBarTimePeriod.Length - 2
+    
+    lValue.Value = lIntermediateVolume + mVolumeParser.CurrSessionVolume
+    NotifyVolume lValue
+Next
+
+'Build last bar
+If lLastTickVolume <> 0 Then
+    lValue.Value = pOpenValue
+    NotifyValue lValue
+    lValue.Value = pHighValue
+    NotifyValue lValue
+    lValue.Value = pLowValue
+    NotifyValue lValue
+    lValue.Value = pCloseValue
+    NotifyValue lValue
+    
+    IncrementTickVolume lLastTickVolume - 4
+    
+    lValue.Value = lLastVolume + mVolumeParser.CurrSessionVolume
+    NotifyVolume lValue
+End If
+
+Exit Sub
+
+Err:
+GBars.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub notifyBarForVolume( _
+    ByVal pTimestamp As Date, _
+    ByVal pOpenValue As Double, _
+    ByVal pHighValue As Double, _
+    ByVal pLowValue As Double, _
+    ByVal pCloseValue As Double, _
+    ByVal pVolume As Long, _
+    ByVal pTickVolume As Long)
+Const ProcName As String = "notifyBarForVolume"
+On Error GoTo Err
+
+Dim lNumberOfIntermediateBars As Long
+Dim lFirstVolume As Long
+Dim lLastVolume As Long
+
+Dim lIntermediateTickVolume As Long
+Dim lLastTickVolume As Long
+
+If mCurrentBar Is Nothing Then createNewBar pTimestamp, pOpenValue, 0, 0
+
+If mCurrentBar.Volume + pVolume <= mBarTimePeriod.Length Then
+    lFirstVolume = pVolume
+    lIntermediateTickVolume = pTickVolume
+Else
+    lFirstVolume = mBarTimePeriod.Length - mCurrentBar.Volume
+    lNumberOfIntermediateBars = Int((pVolume - lFirstVolume + mBarTimePeriod.Length - 1) / mBarTimePeriod.Length) - 1
+    lLastVolume = pVolume - lFirstVolume - lNumberOfIntermediateBars * mBarTimePeriod.Length
+    lIntermediateTickVolume = (pTickVolume + lNumberOfIntermediateBars) / (lNumberOfIntermediateBars + 1)
+    lLastTickVolume = pTickVolume - (lNumberOfIntermediateBars + 1) * lIntermediateTickVolume
+End If
+
+Dim lIsUpBar As Boolean
+lIsUpBar = (pCloseValue >= pOpenValue)
+
+Dim lValue As SValue
+lValue.Timestamp = pTimestamp
+
+' build first bar
+lValue.Value = pOpenValue
+NotifyValue lValue
+lValue.Value = pHighValue
+NotifyValue lValue
+lValue.Value = pLowValue
+NotifyValue lValue
+lValue.Value = pCloseValue
+NotifyValue lValue
+
+IncrementTickVolume lIntermediateTickVolume - 4
+
+lValue.Value = lFirstVolume + mVolumeParser.CurrSessionVolume
+NotifyVolume lValue
+
+'build intermediate bars
+Dim i As Long
+For i = 1 To lNumberOfIntermediateBars
+    If lIsUpBar Then
+        lValue.Value = pLowValue
+        NotifyValue lValue
+        lValue.Value = pHighValue
+        NotifyValue lValue
+    Else
+        lValue.Value = pHighValue
+        NotifyValue lValue
+        lValue.Value = pLowValue
+        NotifyValue lValue
+    End If
+    
+    IncrementTickVolume lIntermediateTickVolume - 2
+    
+    lValue.Value = mBarTimePeriod.Length + mVolumeParser.CurrSessionVolume
+    NotifyVolume lValue
+Next
+
+'Build last bar
+If lLastTickVolume <> 0 Then
+    lValue.Value = pOpenValue
+    NotifyValue lValue
+    lValue.Value = pHighValue
+    NotifyValue lValue
+    lValue.Value = pLowValue
+    NotifyValue lValue
+    lValue.Value = pCloseValue
+    NotifyValue lValue
+    
+    IncrementTickVolume lLastTickVolume - 4
+    
+    lValue.Value = lLastVolume + mVolumeParser.CurrSessionVolume
+    NotifyVolume lValue
+End If
+
+Exit Sub
+
+Err:
+GBars.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub notifyBarValue( _
+                ByVal pValue As Double, _
+                ByVal pNumberOfPrices As Long, _
+                ByRef pNumberOfPricesNotified As Long, _
+                ByVal pTimestamp As Date, _
+                ByVal pTickVolumePerNotify As Long, _
+                ByVal pTickVolume As Long, _
+                ByVal pVolumePerNotify As Long, _
+                ByVal pVolume As Long)
+Const ProcName As String = "notifyBarValue"
+On Error GoTo Err
+
+Dim lValue As SValue
+lValue.Timestamp = pTimestamp
+
+lValue.Value = pValue
+NotifyValue lValue
+pNumberOfPricesNotified = pNumberOfPricesNotified + 1
+
+IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, _
+                        pTickVolumePerNotify, _
+                        pTickVolume - (pNumberOfPrices - 1) * (pTickVolumePerNotify + 1) - 1)
+
+lValue.Value = mVolumeParser.CurrSessionVolume + _
+                IIf(pNumberOfPricesNotified < pNumberOfPrices, _
+                    pNumberOfPricesNotified * pVolumePerNotify, _
+                    pVolume)
+
+NotifyVolume lValue
+
+Exit Sub
+
+Err:
+GBars.HandleUnexpectedError ProcName, ModuleName
+End Sub
 
 Private Sub setTickSize(ByVal pTickSize As Double)
 Const ProcName As String = "setTickSize"

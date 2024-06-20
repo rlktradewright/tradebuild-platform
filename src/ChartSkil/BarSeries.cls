@@ -692,19 +692,40 @@ On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Bar series is finished"
 
+Static sDuplicateCount As Long      ' counts the number of successive adds with
+                                    ' the same Timestamp
+Static sPrevTimestamp As Date
+
+If Not mPrevBarRef Is Nothing Then
+    If Timestamp = sPrevTimestamp Then
+        sDuplicateCount = sDuplicateCount + 1
+    Else
+        sDuplicateCount = 0
+    End If
+End If
+
 Dim lBar As New Bar
 
 If Key = "" Then Key = GetObjectKey(lBar)
 
 lBar.Initialise Me, Timestamp, Key, mGOSP, mViewport, LocalStyle
 
-If CDbl(Timestamp) <> 0# Then lBar.X = mPeriods.GetXFromTimestamp(Timestamp, False)
+If CDbl(Timestamp) <> 0# Then
+    lBar.X = mPeriods.GetXFromTimestamp(Timestamp, sDuplicateCount <> 0, sDuplicateCount)
+'    gLogger.Log "Add bar: timestamp=" & FormatTimestamp(Timestamp, _
+'                                                        TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & _
+'                "; dup=" & sDuplicateCount & _
+'                "; X=" & lBar.X, _
+'                ProcName, _
+'                ModuleName
+End If
 
 If Not mPrevBarRef Is Nothing Then lBar.PreviousBar = prevBarObj
 mBars.Add lBar, Key
 mBarsIndex.Add lBar, Key
 
 Set mPrevBarRef = CreateWeakReference(lBar)
+sPrevTimestamp = Timestamp
 mGOSP.AddGraphicObject lBar
 
 Set Add = lBar

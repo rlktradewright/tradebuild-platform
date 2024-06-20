@@ -1149,17 +1149,6 @@ Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getNumberOfPrices( _
-                ByVal pOpenValue As Double, _
-                ByVal pHighValue As Double, _
-                ByVal pLowValue As Double, _
-                ByVal pCloseValue As Double) As Long
-getNumberOfPrices = 1
-If pOpenValue <> pHighValue Then getNumberOfPrices = getNumberOfPrices + 1
-If pOpenValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
-If pCloseValue <> pHighValue And pCloseValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
-End Function
-
 Private Function getTimestampFromTwsBar( _
                 ByRef pBar As TwsBar, _
                 ByVal pBarTimePeriod As TimePeriod) As Date
@@ -1294,41 +1283,6 @@ Else
 End If
 End Function
 
-Private Sub notifyBarValue( _
-                ByVal pValue As Double, _
-                ByVal pNumberOfPrices As Long, _
-                ByRef pNumberOfPricesNotified As Long, _
-                ByVal pTimeStamp As Date, _
-                ByVal pTickVolumePerNotify As Long, _
-                ByVal pTickVolume As Long, _
-                ByVal pVolumePerNotify As Long, _
-                ByVal pVolume As Long)
-Const ProcName As String = "notifyBarValue"
-On Error GoTo Err
-
-Dim lValue As SValue
-lValue.Timestamp = pTimeStamp
-
-lValue.Value = pValue
-mTargetBarsBuilder.NotifyValue lValue
-pNumberOfPricesNotified = pNumberOfPricesNotified + 1
-
-mTargetBarsBuilder.IncrementTickVolume _
-                        IIf(pNumberOfPricesNotified < pNumberOfPrices, _
-                            pTickVolumePerNotify, _
-                            pTickVolume - pNumberOfPricesNotified - (pNumberOfPricesNotified - 1) * pTickVolumePerNotify)
-lValue.Value = mAccumulatedVolume + _
-                IIf(pNumberOfPricesNotified < pNumberOfPrices, _
-                    pNumberOfPricesNotified * pVolumePerNotify, _
-                    pVolume)
-mTargetBarsBuilder.NotifyVolume lValue
-
-Exit Sub
-
-Err:
-GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
-End Sub
-
 Private Function notifyTimestamp( _
                 ByVal pTimeStamp As Date, _
                 ByVal pBarTimePeriod As TimePeriod, _
@@ -1380,7 +1334,6 @@ If mTWSBarsCollectionsIndex > 0 Then
                                         lToDate, _
                                         mWorkingBarSpecifier.MaxNumberOfBars)
     mWorkingBarSpecifier.ToDate = lToDate
-    'If mIsFromDateCalculated Then mTargetBarSpecifier.FromDate = mWorkingBarSpecifier.FromDate
 End If
 
 mFirstBarTimeInMessage = 0
@@ -1411,43 +1364,14 @@ Dim lSessEv As SessionEventData
 lSessEv = mTargetSessionBuilder.SetSessionCurrentTime(lTimestamp)
 If lSessEv.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
 
-Dim lNumberOfPrices As Long
-lNumberOfPrices = getNumberOfPrices(pBar.OpenValue, pBar.HighValue, pBar.LowValue, pBar.CloseValue)
-
-Dim lNumberOfPricesNotified As Long
-
-Dim lTickVolumePerNotify As Long
-lTickVolumePerNotify = Int((pBar.TickVolume - lNumberOfPrices) / lNumberOfPrices)
-If lTickVolumePerNotify < 0 Then lTickVolumePerNotify = 0
-
-Dim lVolumePerNotify As Long
-lVolumePerNotify = Int((pBar.Volume - lNumberOfPrices) / lNumberOfPrices)
-If lVolumePerNotify < 0 Then lVolumePerNotify = 0
-
-notifyBarValue pBar.OpenValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-
-If pBar.CloseValue = pBar.HighValue Then
-    If pBar.LowValue = pBar.OpenValue And pBar.LowValue = pBar.HighValue Then
-    ElseIf pBar.LowValue = pBar.OpenValue Then
-        notifyBarValue pBar.HighValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-    Else
-        notifyBarValue pBar.LowValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-        notifyBarValue pBar.HighValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-    End If
-ElseIf pBar.CloseValue = pBar.LowValue Then
-    If pBar.HighValue = pBar.OpenValue And pBar.HighValue = pBar.LowValue Then
-    ElseIf pBar.HighValue = pBar.OpenValue Then
-        notifyBarValue pBar.LowValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-    Else
-        notifyBarValue pBar.HighValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-        notifyBarValue pBar.LowValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-    End If
-Else
-    If pBar.LowValue <> pBar.OpenValue Then notifyBarValue pBar.LowValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-    If pBar.HighValue <> pBar.OpenValue Then notifyBarValue pBar.HighValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-    notifyBarValue pBar.CloseValue, lNumberOfPrices, lNumberOfPricesNotified, lTimestamp, lTickVolumePerNotify, pBar.TickVolume, lVolumePerNotify, pBar.Volume
-End If
-
+mTargetBarsBuilder.NotifyBar lTimestamp, _
+                            pBar.OpenValue, _
+                            pBar.HighValue, _
+                            pBar.LowValue, _
+                            pBar.CloseValue, _
+                            pBar.Volume, _
+                            pBar.TickVolume
+                            
 mAccumulatedVolume = mAccumulatedVolume + pBar.Volume
 
 Exit Sub
