@@ -87,7 +87,6 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 
 Private mContract                                   As IContract
 
-Private mRulesetFutureBuilder                       As FutureBuilder
 Private mTicksizeFutureBuilder                      As FutureBuilder
 
 Private mRuleset                                    As PriceIncrementRuleset

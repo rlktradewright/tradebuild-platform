@@ -77,7 +77,7 @@ lRequest.FutureBuilder.Complete
 If lRequest.AutoRefresh Then
     Set lRequest.FutureBuilder = New FutureBuilder
 Else
-    mTwsAPI.CancelScannerSubscription lRequest.RequestID
+    mTwsAPI.CancelScannerSubscription lRequest.requestId
     mRequests.Remove CStr(pRequestId)
 End If
 
@@ -169,7 +169,7 @@ Dim en As Enumerator: Set en = mRequests.Enumerator
 Do While en.MoveNext
     Dim lRequest As ScanRequest: lRequest = en.Current
     If lRequest.Cookie = pCookie Then
-        mTwsAPI.CancelScannerSubscription lRequest.RequestID
+        mTwsAPI.CancelScannerSubscription lRequest.requestId
         en.Remove
         Exit Do
     End If
@@ -223,20 +223,20 @@ With lSubscription
     .NumberOfRows = pParameters.GetParameterValue("NumberOfRows", CStr(&H7FFFFFFF))
     .Instrument = UCase$(pParameters.GetParameterValue("Instrument", ""))
     .LocationCode = UCase$(pParameters.GetParameterValue("LocationCode", ""))
-    .AbovePrice = updateDoubleFromParameters(.AbovePrice, pParameters, "AbovePrice", MaxDouble)
-    .BelowPrice = updateDoubleFromParameters(.BelowPrice, pParameters, "BelowPrice", MaxDouble)
+    .AbovePrice = updateDoubleFromParameters(pParameters, "AbovePrice", MaxDouble)
+    .BelowPrice = updateDoubleFromParameters(pParameters, "BelowPrice", MaxDouble)
     .AboveVolume = pParameters.GetParameterValue("AboveVolume", CStr(&H7FFFFFFF))
     .AverageOptionVolumeAbove = pParameters.GetParameterValue("AverageOptionVolumeAbove", CStr(&H7FFFFFFF))
-    .MarketCapAbove = updateDoubleFromParameters(.MarketCapAbove, pParameters, "MarketCapAbove", MaxDouble)
-    .MarketCapBelow = updateDoubleFromParameters(.MarketCapBelow, pParameters, "MarketCapBelow", MaxDouble)
+    .MarketCapAbove = updateDoubleFromParameters(pParameters, "MarketCapAbove", MaxDouble)
+    .MarketCapBelow = updateDoubleFromParameters(pParameters, "MarketCapBelow", MaxDouble)
     .MoodyRatingAbove = UCase$(pParameters.GetParameterValue("MoodyRatingAbove", ""))
     .MoodyRatingBelow = UCase$(pParameters.GetParameterValue("MoodyRatingBelow", ""))
     .SpRatingAbove = UCase$(pParameters.GetParameterValue("SpRatingAbove", ""))
     .SpRatingBelow = UCase$(pParameters.GetParameterValue("SpRatingBelow", ""))
     .MaturityDateAbove = pParameters.GetParameterValue("MaturityDateAbove", "")
     .MaturityDateBelow = pParameters.GetParameterValue("MaturityDateBelow", "")
-    .CouponRateAbove = updateDoubleFromParameters(.CouponRateAbove, pParameters, "CouponRateAbove", MaxDouble)
-    .CouponRateBelow = updateDoubleFromParameters(.CouponRateBelow, pParameters, "CouponRateBelow", MaxDouble)
+    .CouponRateAbove = updateDoubleFromParameters(pParameters, "CouponRateAbove", MaxDouble)
+    .CouponRateBelow = updateDoubleFromParameters(pParameters, "CouponRateBelow", MaxDouble)
     .ExcludeConvertible = pParameters.GetParameterValue("ExcludeConvertible", "False")
     .ScannerSettingPairs = UCase$(pParameters.GetParameterValue("ScannerSettingPairs", ""))
     .StockTypeFilter = UCase$(pParameters.GetParameterValue("StockTypeFilter", ""))
@@ -246,12 +246,12 @@ Dim lScanRequest As ScanRequest
 lScanRequest.AutoRefresh = pAutoRefresh
 lScanRequest.Cookie = pCookie
 Set lScanRequest.FutureBuilder = New FutureBuilder
-lScanRequest.RequestID = mNextRequestID
+lScanRequest.requestId = mNextRequestID
 mNextRequestID = mNextRequestID + 1
 Set lScanRequest.Results = New ScanResults
-mRequests.Add lScanRequest, CStr(lScanRequest.RequestID)
+mRequests.Add lScanRequest, CStr(lScanRequest.requestId)
 
-mTwsAPI.RequestScannerSubscription lScanRequest.RequestID, _
+mTwsAPI.RequestScannerSubscription lScanRequest.requestId, _
                                     lSubscription, _
                                     pOptions, _
                                     pFilters
@@ -274,7 +274,6 @@ End Function
 '@================================================================================
 
 Private Function updateDoubleFromParameters( _
-                ByVal pCurrentValue As Double, _
                 ByVal pParams As Parameters, _
                 ByVal pParamName As String, _
                 ByVal pDefault As Double) As Double

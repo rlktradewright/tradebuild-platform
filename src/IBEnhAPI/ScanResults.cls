@@ -48,8 +48,6 @@ Private Const ModuleName                            As String = "ScanResults"
 
 Private mResults                                    As EnumerableCollection
 
-Private mEnumerator                                 As Enumerator
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================

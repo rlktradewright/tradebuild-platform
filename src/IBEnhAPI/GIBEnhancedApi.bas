@@ -87,7 +87,7 @@ Public Function ContractSpecToTwsContractSpec( _
 Const ProcName As String = "ContractSpecToTwsContractSpec"
 On Error GoTo Err
 
-Dim lComboLeg As comboLeg
+Dim lComboLeg As ComboLeg
 Dim lTwsComboLeg As TwsComboLeg
 
 Dim lTwsContractSpec As New TwsContractSpecifier
@@ -114,7 +114,7 @@ With lTwsContractSpec
         .PrimaryExch = PrimaryExchangeNYSE
         .Exchange = ExchangeSmart
     ElseIf lExchange = ExchangeSmartUS Then
-        If pContractSpecifier.Sectype <> SecTypeOption Then
+        If pContractSpecifier.SecType <> SecTypeOption Then
             .PrimaryExch = PrimaryExchangeARCA
         End If
         .Exchange = ExchangeSmart
@@ -134,7 +134,7 @@ With lTwsContractSpec
     .Expiry = IIf(Len(pContractSpecifier.Expiry) >= 6, pContractSpecifier.Expiry, "")
     .LocalSymbol = pContractSpecifier.LocalSymbol
     .Multiplier = pContractSpecifier.Multiplier
-    If pContractSpecifier.Sectype = SecTypeStock Then
+    If pContractSpecifier.SecType = SecTypeStock Then
         .Multiplier = 0
     Else
         Dim lPriceMagnifier As Long
@@ -146,7 +146,7 @@ With lTwsContractSpec
         End If
     End If
     .OptRight = OptionRightToTwsOptRight(pContractSpecifier.Right)
-    .Sectype = SecTypeToTwsSecType(pContractSpecifier.Sectype)
+    .SecType = SecTypeToTwsSecType(pContractSpecifier.SecType)
     .Strike = pContractSpecifier.Strike
     .Symbol = pContractSpecifier.Symbol
     .TradingClass = pContractSpecifier.TradingClass
@@ -192,7 +192,7 @@ Private Function ContractToTwsContract(ByVal pContract As IContract) As TwsContr
 Const ProcName As String = "ContractToTwsContract"
 On Error GoTo Err
 
-Assert pContract.Specifier.Sectype <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
+Assert pContract.Specifier.SecType <> SecTypeCombo, "Combo contracts not supported", ErrorCodes.ErrUnsupportedOperationException
 
 Dim lContract As New TwsContract
 Dim lContractSpec As TwsContractSpecifier
@@ -279,7 +279,7 @@ On Error GoTo Err
 Dim lSpec As IContractSpecifier
 Set lSpec = GIBEnhancedApi.TwsContractSpecToContractSpecifier(pContract.Specifier, pContract.PriceMagnifier)
 
-GenerateTwsContractKey = lSpec.key
+GenerateTwsContractKey = lSpec.Key
 
 Exit Function
 
@@ -388,19 +388,6 @@ Case Else
 End Select
 End Function
 
-Private Function OrderActionFromString(ByVal Value As String) As OrderActions
-Select Case UCase$(Value)
-Case ""
-    OrderActionFromString = OrderActionNone
-Case "BUY"
-    OrderActionFromString = OrderActionBuy
-Case "SELL"
-    OrderActionFromString = OrderActionSell
-Case Else
-    AssertArgument False, "Value is not a valid Order Action"
-End Select
-End Function
-
 Private Function OrderActionToTwsOrderAction(ByVal Value As OrderActions) As TwsOrderActions
 Select Case Value
 Case OrderActions.OrderActionNone
@@ -437,38 +424,6 @@ Case Else
 End Select
 End Function
 
-Private Function OrderTIFFromString(ByVal Value As String) As OrderTIFs
-Select Case UCase$(Value)
-Case ""
-    OrderTIFFromString = OrderTIFNone
-Case "DAY"
-    OrderTIFFromString = OrderTIFDay
-Case "GTC"
-    OrderTIFFromString = OrderTIFGoodTillCancelled
-Case "IOC"
-    OrderTIFFromString = OrderTIFImmediateOrCancel
-Case Else
-    AssertArgument False, "Value is not a valid Order TIF"
-End Select
-End Function
-
-Private Function OrderTIFToString(ByVal Value As OrderTIFs) As String
-Select Case Value
-Case OrderTIFs.OrderTIFNone
-    OrderTIFToString = ""
-Case OrderTIFs.OrderTIFDay
-    OrderTIFToString = "DAY"
-Case OrderTIFs.OrderTIFGoodTillCancelled
-    OrderTIFToString = "GTC"
-Case OrderTIFs.OrderTIFImmediateOrCancel
-    OrderTIFToString = "IOC"
-Case OrderTIFs.OrderTIFNone
-    OrderTIFToString = ""
-Case Else
-    AssertArgument False, "Value is not a valid Order TIF"
-End Select
-End Function
-
 Private Function OrderTIFToTwsOrderTIF(ByVal Value As OrderTIFs) As TwsOrderTIFs
 Select Case Value
 Case OrderTIFNone
@@ -501,7 +456,7 @@ With pOrder
     If .GoodAfterTime <> 0 Then OrderToTwsOrder.GoodAfterTime = Format(.GoodAfterTime, "yyyymmdd hh:nn:ss") & IIf(.GoodAfterTimeTZ <> "", " " & StandardTimezoneNameToTwsTimeZoneName(.GoodAfterTimeTZ), "")
     If .GoodTillDate <> 0 Then OrderToTwsOrder.GoodTillDate = Format(.GoodTillDate, "yyyymmdd hh:nn:ss") & IIf(.GoodTillDateTZ <> "", " " & StandardTimezoneNameToTwsTimeZoneName(.GoodTillDateTZ), "")
     OrderToTwsOrder.Hidden = .Hidden
-    OrderToTwsOrder.OutsideRth = .IgnoreRegularTradingHours
+    OrderToTwsOrder.OutsideRTH = .IgnoreRegularTradingHours
     OrderToTwsOrder.LmtPrice = .LimitPrice
     OrderToTwsOrder.MinQty = IIf(.MinimumQuantity = 0, GIBEnhApi.MaxLong, .MinimumQuantity)
     If Not .ProviderProperties Is Nothing Then
@@ -596,7 +551,7 @@ On Error GoTo Err
 
 Dim lExecFilter As TwsExecutionFilter
 Set lExecFilter = New TwsExecutionFilter
-lExecFilter.ClientID = pClientId
+lExecFilter.ClientId = pClientId
 lExecFilter.Time = pFrom
 pTwsAPI.RequestExecutions pReqId, lExecFilter
 
@@ -712,18 +667,18 @@ With pTwsContractSpec
     End If
     
     Dim lMultiplier As Double
-    If .Sectype = TwsSecTypeStock Then
+    If .SecType = TwsSecTypeStock Then
         lMultiplier = 1 / pPriceMagnifier
     Else
         lMultiplier = .Multiplier / pPriceMagnifier
     End If
     Dim lTradingClass As String
-    If .Sectype <> TwsSecTypeStock Then lTradingClass = .TradingClass
+    If .SecType <> TwsSecTypeStock Then lTradingClass = .TradingClass
     Set lContractSpec = CreateContractSpecifier(.LocalSymbol, _
                                                 .Symbol, _
                                                 lTradingClass, _
                                                 lExchange, _
-                                                TwsSecTypeToSecType(.Sectype), _
+                                                TwsSecTypeToSecType(.SecType), _
                                                 .CurrencyCode, _
                                                 .Expiry, _
                                                 lMultiplier, _
@@ -768,8 +723,8 @@ With pTwsContract
     
     Dim lSessionTimes As SessionTimes
     lSessionTimes = GetSessionTimes(.LiquidHours)
-    lBuilder.sessionStartTime = lSessionTimes.StartTime
-    lBuilder.sessionEndTime = lSessionTimes.EndTime
+    lBuilder.SessionStartTime = lSessionTimes.StartTime
+    lBuilder.SessionEndTime = lSessionTimes.EndTime
     
     lSessionTimes = GetSessionTimes(.TradingHours)
     lBuilder.FullSessionStartTime = lSessionTimes.StartTime
@@ -1024,7 +979,8 @@ Case "ISRAEL"
     TwsTimezoneNameToStandardTimeZoneName = "MIDDLE EAST STANDARD TIME"
 Case "PST", _
         "US/PACIFIC", _
-        "PACIFIC/PITCAIRN"
+        "PACIFIC/PITCAIRN", _
+        "America/Los_Angeles"
     TwsTimezoneNameToStandardTimeZoneName = "PACIFIC STANDARD TIME"
 Case "EUROPE/MOSCOW"
     TwsTimezoneNameToStandardTimeZoneName = "RUSSIAN STANDARD TIME"

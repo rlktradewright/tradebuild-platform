@@ -142,7 +142,7 @@ If Not mContractsForCachingBuilder.Contracts.Contains(lContract.Specifier) Then
     addCacheEntries lContract, pTwsContract
     mTwsContracts.Add pTwsContract
     mContractsForCachingBuilder.Add lContract
-    processPriceIncrementRuleset lContract, pTwsContract
+    processPriceIncrementRuleset lContract
 
     If Not mCancelled Then
         If mReturnTwsContracts Then mRequestManager.NotifyTwsContract pTwsContract
@@ -409,17 +409,17 @@ Private Sub addCacheEntries( _
 Const ProcName As String = "addCacheEntries"
 On Error GoTo Err
 
-addCacheEntry pContract.Specifier.key, pContract, pTwsContract
+addCacheEntry pContract.Specifier.Key, pContract, pTwsContract
 
 Dim lSpec As IContractSpecifier
 Set lSpec = CreateContractSpecifier(LocalSymbol:=pContract.Specifier.LocalSymbol, _
                                     Exchange:=pContract.Specifier.Exchange)
-addCacheEntry lSpec.key, pContract, pTwsContract
+addCacheEntry lSpec.Key, pContract, pTwsContract
 
 Set lSpec = CreateContractSpecifier(LocalSymbol:=pContract.Specifier.LocalSymbol, _
                                     Exchange:=pContract.Specifier.Exchange, _
-                                    Sectype:=pContract.Specifier.Sectype)
-addCacheEntry lSpec.key, pContract, pTwsContract
+                                    SecType:=pContract.Specifier.SecType)
+addCacheEntry lSpec.Key, pContract, pTwsContract
 
 Exit Sub
 
@@ -434,7 +434,7 @@ Private Sub addCacheEntry( _
 Const ProcName As String = "addCacheEntry"
 On Error GoTo Err
 
-If pKey = mContractSpecifier.key Then
+If pKey = mContractSpecifier.Key Then
 ElseIf mContractCache.ContainsContract(pKey) Then
 Else
     mContractCache.AddContract pKey, pContract, pTwsContract
@@ -469,8 +469,7 @@ GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub processPriceIncrementRuleset( _
-                ByVal pContract As IContract, _
-                ByVal pTwsContract As TwsContract)
+                ByVal pContract As IContract)
 Const ProcName As String = "processPriceIncrementRuleset"
 On Error GoTo Err
 
