@@ -705,6 +705,12 @@ Case "GTC"
     TwsOrderTIFFromString = TwsOrderTIFGoodTillCancelled
 Case "IOC"
     TwsOrderTIFFromString = TwsOrderTIFImmediateOrCancel
+Case "FOK"
+    TwsOrderTIFFromString = TwsOrderTIFFillOrKill
+Case "DTC"
+    TwsOrderTIFFromString = TwsOrderTIFDayTillCancelled
+Case "AUC"
+    TwsOrderTIFFromString = TwsOrderTIFAuction
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Tws Order TIF"
 End Select
@@ -715,11 +721,11 @@ Select Case Value
 Case TwsOrderTIFs.TwsOrderTIFDay
     TwsOrderTIFToString = "DAY"
 Case TwsOrderTIFs.TwsOrderTIFGoodTillCancelled
-    TwsOrderTIFToString = "TC"
+    TwsOrderTIFToString = "GTC"
 Case TwsOrderTIFs.TwsOrderTIFImmediateOrCancel
     TwsOrderTIFToString = "IOC"
 Case TwsOrderTIFGoodTillDate
-    TwsOrderTIFToString = "TD"
+    TwsOrderTIFToString = "GTD"
 Case TwsOrderTIFFillOrKill
     TwsOrderTIFToString = "FOK"
 Case TwsOrderTIFDayTillCancelled
