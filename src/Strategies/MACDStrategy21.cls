@@ -171,7 +171,7 @@ Set lSwing = DeclareStudy( _
                         "Swing", _
                         lTimeframe, _
                         "Minimum swing (ticks)=" & GetParameterValue(ParamMinimumSwingTicks) & _
-                            ";Include implicit swing points=N", _
+                            ";Include implicit swing points=Y", _
                         GetParameterValue(ParamIncludeBarsOutsideSession), _
                         3)
 ChartStudyValue lSwing, SwingValueSwingLine
@@ -870,7 +870,9 @@ If IsEndOfSession Then Exit Sub
 If IsInEstablishedPosition Then Exit Sub
 
 If ActiveBuySize <> 0 Or ActiveSimulatedBuySize <> 0 Then Exit Sub
+If PendingBuySize <> 0 Or PendingSimulatedBuySize <> 0 Then Exit Sub
 If ActiveSellSize <> 0 Or ActiveSimulatedSellSize <> 0 Then Exit Sub
+If PendingSellSize <> 0 Or PendingSimulatedSellSize <> 0 Then Exit Sub
 
 InitialiseTickProcessing
 
