@@ -1606,14 +1606,6 @@ If Not pContractProcessor Is Nothing Then
     Else
         pContractProcessor.ProcessSellCommand pParams, pID, pModify
     End If
-    If mBlockingErrorCount <> 0 Or mErrorCount <> 0 Then
-        gWriteLineToConsole gErrorCount & " errors have been found - order will not be placed"
-    Else
-        processOrders
-    End If
-    
-    mBlockingErrorCount = 0
-    mErrorCount = 0
 Else
     gWriteErrorLine "No contract has been specified in this group", ErrorCountIncrementNo
 End If

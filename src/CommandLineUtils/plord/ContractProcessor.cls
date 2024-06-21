@@ -1082,6 +1082,8 @@ Private Sub processBuyOrSellCommand( _
 Const ProcName As String = "processBuyOrSellCommand"
 On Error GoTo Err
 
+Dim lError As Boolean
+
 Set mBOSpec = New BracketOrderSpecification
 Set mBOSpec.Contract = mContract
 mBOSpec.ID = pID
@@ -1100,7 +1102,8 @@ If UCase$(lClp.Arg(lClp.NumberOfArgs - 1)) = "ROLLOVER" Then
 End If
 
 If Not setQuantity(lClp.Arg(0)) Then
-    gWriteErrorLine "Invalid quantity", ErrorCountIncrementIfNotInteractive
+    lError = True
+    gWriteErrorLine "Invalid quantity", ErrorCountIncrementNo
 End If
 
 Dim lOrderTypeStr As String: lOrderTypeStr = lClp.Arg(1)
@@ -1112,7 +1115,8 @@ If Not parsePseudoOrder(lOrderTypeStr, lPriceOrOffset) Then
     
     If Not IsEntryOrderType(mBOSpec.EntryType) Then
         mBOSpec.EntryType = OrderTypeNone
-        gWriteErrorLine "Invalid entry order type", ErrorCountIncrementIfNotInteractive
+        lError = True
+        gWriteErrorLine "Invalid entry order type", ErrorCountIncrementNo
     Else
         Dim lLimitPriceSpec As PriceSpecifier
         Dim lTriggerPriceSpec As PriceSpecifier
@@ -1124,13 +1128,15 @@ If Not parsePseudoOrder(lOrderTypeStr, lPriceOrOffset) Then
                                 lTriggerPriceSpec, _
                                 lMessage) _
         Then
-            gWriteErrorLine lMessage, ErrorCountIncrementIfNotInteractive
+            lError = True
+            gWriteErrorLine lMessage, ErrorCountIncrementNo
         End If
         Set mBOSpec.EntryLimitPriceSpec = lLimitPriceSpec
         Set mBOSpec.EntryTriggerPriceSpec = lTriggerPriceSpec
         
         If mBOSpec.EntryLimitPriceSpec.PriceType = PriceValueTypeEntry Or _
             mBOSpec.EntryTriggerPriceSpec.PriceType = PriceValueTypeEntry Then
+            lError = True
             gWriteErrorLine "Invalid use of 'ENTRY'", ErrorCountIncrementNo
         End If
     End If
@@ -1143,7 +1149,7 @@ If lClp.Switch(lSwitchName) Then mBOSpec.EntryTIF = OrderTIFFromString(lClp.Swit
 lSwitchName = IgnoreRTHSwitch
 mBOSpec.EntryIgnoreRTH = lClp.Switch(lSwitchName)
 
-If gErrorCount = 0 Then
+If Not lError Then
     mBracketOrders.Add mBOSpec
     
     If pAction = OrderActionBuy Then
@@ -1159,9 +1165,11 @@ Exit Sub
 
 Err:
 If Err.Number = VBErrorCodes.VbErrTypeMismatch Then
+    lError = True
     gWriteErrorLine lSwitchName & ": invalid value", ErrorCountIncrementNo
     Resume Next
 ElseIf Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    lError = True
     gWriteErrorLine Err.Description, ErrorCountIncrementNo
     Resume Next
 End If
