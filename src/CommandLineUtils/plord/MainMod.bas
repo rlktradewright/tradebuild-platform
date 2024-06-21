@@ -1300,6 +1300,7 @@ Do While inString <> gCon.EofString
             gWriteLineToConsole ">" & inString
         End If
         
+        Dim lCommandObj As Command
         If Left$(inString, 1) = ":" Then
             gRegExp.Global = True
             gRegExp.IgnoreCase = True
@@ -1314,16 +1315,19 @@ Do While inString <> gCon.EofString
                 Dim lMatch As Match: Set lMatch = lMatches(0)
                 Dim lLabel As String: lLabel = lMatch.SubMatches(0)
                 Dim lCommand As String: lCommand = lMatch.SubMatches(1)
-                If Not processCommand(lCommand, lLabel) Then
+                If Not processCommand(lCommand, lCommandObj, lLabel) Then
                     gWriteLineToConsole "Exiting due to unprocessed input"
                     Exit Do
                 End If
             End If
+        ElseIf processCommand(inString, lCommandObj) Then
+        
+        ElseIf lCommandObj Is gCommands.ExitCommand Then
+            gWriteLineToConsole "Exiting"
+            Exit Do
         Else
-            If Not processCommand(inString) Then
-                gWriteLineToConsole "Exiting due to unprocessed input"
-                Exit Do
-            End If
+            gWriteLineToConsole "Exiting due to unprocessed input"
+            Exit Do
         End If
     End If
     
@@ -1352,6 +1356,7 @@ End Sub
 
 Private Function processCommand( _
                 ByVal pInstring As String, _
+                ByRef pCommand As Command, _
                 Optional ByVal pLabel As String) As Boolean
 Const ProcName As String = "processCommand"
 On Error GoTo Err
@@ -1364,83 +1369,82 @@ lCommandName = UCase$(Split(pInstring, " ")(0))
 Dim Params As String
 Params = Trim$(Right$(pInstring, Len(pInstring) - Len(lCommandName)))
 
-Dim lCommand As Command
-Set lCommand = gCommands.ParseCommand(lCommandName)
+Set pCommand = gCommands.ParseCommand(lCommandName)
 
-If lCommand Is gCommands.ExitCommand Then
+If pCommand Is gCommands.ExitCommand Then
     processCommand = False
     Exit Function
 End If
 
 Dim lContractProcessor As ContractProcessor: Set lContractProcessor = mCurrentGroup.CurrentContractProcessor
 
-If lCommand Is gCommands.Help1Command Then
+If pCommand Is gCommands.Help1Command Then
     gCon.WriteLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames
-ElseIf lCommand Is gCommands.HelpCommand Then
+ElseIf pCommand Is gCommands.HelpCommand Then
     showStdInHelp
-ElseIf Not mNextCommands.IsCommandValid(lCommand) Then
+ElseIf Not mNextCommands.IsCommandValid(pCommand) Then
     gWriteErrorLine "Valid commands at this point are: " & mNextCommands.ValidCommandNames, _
                     IIf(mBracketOrderDefinitionInProgress, ErrorCountIncrementIfNotInteractive, ErrorCountIncrementNo)
-ElseIf lCommand Is gCommands.ContractCommand Then
+ElseIf pCommand Is gCommands.ContractCommand Then
     processContractCommand Params, lContractProcessor
-ElseIf lCommand Is gCommands.BatchOrdersCommand Then
+ElseIf pCommand Is gCommands.BatchOrdersCommand Then
     processBatchOrdersCommand Params
-ElseIf lCommand Is gCommands.StageOrdersCommand Then
+ElseIf pCommand Is gCommands.StageOrdersCommand Then
     processStageOrdersCommand Params
-ElseIf lCommand Is gCommands.GroupCommand Then
+ElseIf pCommand Is gCommands.GroupCommand Then
     processGroupCommand Params, lContractProcessor
-ElseIf lCommand Is gCommands.SetBalanceCommand Then
+ElseIf pCommand Is gCommands.SetBalanceCommand Then
     processSetBalanceCommand Params
-ElseIf lCommand Is gCommands.ShowBalanceCommand Then
+ElseIf pCommand Is gCommands.ShowBalanceCommand Then
     processShowBalanceCommand
-ElseIf lCommand Is gCommands.SetFundsCommand Then
+ElseIf pCommand Is gCommands.SetFundsCommand Then
     processSetFundsCommand Params
-ElseIf lCommand Is gCommands.SetGroupFundsCommand Then
+ElseIf pCommand Is gCommands.SetGroupFundsCommand Then
     processSetGroupFundsCommand Params
-ElseIf lCommand Is gCommands.SetRolloverCommand Then
+ElseIf pCommand Is gCommands.SetRolloverCommand Then
     processSetRolloverCommand Params
-ElseIf lCommand Is gCommands.SetGroupRolloverCommand Then
+ElseIf pCommand Is gCommands.SetGroupRolloverCommand Then
     processSetGroupRolloverCommand Params
-ElseIf lCommand Is gCommands.BuyCommand Then
+ElseIf pCommand Is gCommands.BuyCommand Then
     If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
     mErrorCount = 0
     If Not mBatchOrders Then mBlockingErrorCount = 0
     ProcessBuyCommand Params, lContractProcessor, lID
-ElseIf lCommand Is gCommands.BuyAgainCommand Then
+ElseIf pCommand Is gCommands.BuyAgainCommand Then
     If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
     ProcessBuyAgainCommand Params, lContractProcessor, lID
-ElseIf lCommand Is gCommands.SellCommand Then
+ElseIf pCommand Is gCommands.SellCommand Then
     If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
     mErrorCount = 0
     If Not mBatchOrders Then mBlockingErrorCount = 0
     ProcessSellCommand Params, lContractProcessor, lID
-ElseIf lCommand Is gCommands.SellAgainCommand Then
+ElseIf pCommand Is gCommands.SellAgainCommand Then
     If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
     ProcessSellAgainCommand Params, lContractProcessor, lID
-ElseIf lCommand Is gCommands.BracketCommand Then
+ElseIf pCommand Is gCommands.BracketCommand Then
     mBracketOrderDefinitionInProgress = True
     If lID = "" Then lID = GenerateBracketOrderId
     gWriteLineToConsole "Order id: " & lID
     mErrorCount = 0
     If Not mBatchOrders Then mBlockingErrorCount = 0
     ProcessBracketCommand Params, lContractProcessor, lID, False
-ElseIf lCommand Is gCommands.EntryCommand Then
+ElseIf pCommand Is gCommands.EntryCommand Then
     lContractProcessor.ProcessEntryCommand Params
-ElseIf lCommand Is gCommands.StopLossCommand Then
+ElseIf pCommand Is gCommands.StopLossCommand Then
     lContractProcessor.ProcessStopLossCommand Params
-ElseIf lCommand Is gCommands.TargetCommand Then
+ElseIf pCommand Is gCommands.TargetCommand Then
     lContractProcessor.ProcessTargetCommand Params
-ElseIf lCommand Is gCommands.RolloverCommand Then
+ElseIf pCommand Is gCommands.RolloverCommand Then
     lContractProcessor.ProcessRolloverCommand Params
-ElseIf lCommand Is gCommands.QuitCommand Then
+ElseIf pCommand Is gCommands.QuitCommand Then
     lContractProcessor.ProcessQuitCommand
     mBlockingErrorCount = 0
     mErrorCount = 0
-ElseIf lCommand Is gCommands.EndBracketCommand Then
+ElseIf pCommand Is gCommands.EndBracketCommand Then
     mBracketOrderDefinitionInProgress = False
     lContractProcessor.ProcessEndBracketCommand
     
@@ -1449,25 +1453,25 @@ ElseIf lCommand Is gCommands.EndBracketCommand Then
     Else
         processOrders
     End If
-ElseIf lCommand Is gCommands.EndOrdersCommand Then
+ElseIf pCommand Is gCommands.EndOrdersCommand Then
     processEndOrdersCommand
-ElseIf lCommand Is gCommands.ModifyCommand Then
+ElseIf pCommand Is gCommands.ModifyCommand Then
     processModifyCommand Params
-ElseIf lCommand Is gCommands.Modify1Command Then
+ElseIf pCommand Is gCommands.Modify1Command Then
     processModifyCommand Params
-ElseIf lCommand Is gCommands.Modify2Command Then
+ElseIf pCommand Is gCommands.Modify2Command Then
     processModifyCommand Params
-ElseIf lCommand Is gCommands.CancelCommand Then
+ElseIf pCommand Is gCommands.CancelCommand Then
     processCancelCommand Params
-ElseIf lCommand Is gCommands.ResetCommand Then
+ElseIf pCommand Is gCommands.ResetCommand Then
     processResetCommand
-ElseIf lCommand Is gCommands.ListCommand Then
+ElseIf pCommand Is gCommands.ListCommand Then
     processListCommand Params
-ElseIf lCommand Is gCommands.CloseoutCommand Then
+ElseIf pCommand Is gCommands.CloseoutCommand Then
     processCloseoutCommand Params
-ElseIf lCommand Is gCommands.QuoteCommand Then
+ElseIf pCommand Is gCommands.QuoteCommand Then
     processQuoteCommand Params, lContractProcessor
-ElseIf lCommand Is gCommands.PurgeCommand Then
+ElseIf pCommand Is gCommands.PurgeCommand Then
     processPurgeCommand Params
 Else
     gWriteErrorLine "Invalid command '" & Command & "'", ErrorCountIncrementIfNotInteractive
