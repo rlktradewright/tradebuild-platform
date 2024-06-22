@@ -53,6 +53,30 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Interop.BusObjUtils40">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BusObjUtils40.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ContractUtils27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ContractUtils27.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.CurrencyUtils27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.CurrencyUtils27.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.TradingDbApi27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TradingDbApi27.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.TradingDO27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TradingDO27.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.TWUtilities40">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TWUtilities40.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="microsoft.managementconsole, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\WINDOWS\SYSTEM32\microsoft.managementconsole.dll</HintPath>
@@ -121,66 +145,6 @@
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
     </COMReference>
-    <COMReference Include="BarUtils27">
-      <Guid>{8622E2E9-D418-4A94-A1C5-9E0EA38DABCD}</Guid>
-      <VersionMajor>515</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="BusObjUtils40">
-      <Guid>{DF7D0763-2DB2-48E6-B72F-FED6AB7339B9}</Guid>
-      <VersionMajor>27</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="ContractUtils27">
-      <Guid>{E02A555E-D592-4AA4-A2F1-21831599F39B}</Guid>
-      <VersionMajor>518</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="CurrencyUtils27">
-      <Guid>{C38FFF09-EABD-4E86-B09B-32E7ACE73476}</Guid>
-      <VersionMajor>22</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="HistDataUtils27">
-      <Guid>{B8BA0F01-2ED4-48A2-B496-1F69CF7B44AF}</Guid>
-      <VersionMajor>394</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="MktDataUtils27">
-      <Guid>{D081990A-7912-48FD-A0EB-EE13AFF6502C}</Guid>
-      <VersionMajor>417</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
     <COMReference Include="MSDAOSP">
       <Guid>{E0E270C2-C0BE-11D0-8FE4-00A0C90A6341}</Guid>
       <VersionMajor>1</VersionMajor>
@@ -197,16 +161,6 @@
       <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
     </COMReference>
-    <COMReference Include="SessionUtils27">
-      <Guid>{35397E37-23B7-4B20-AC05-27DED8253B14}</Guid>
-      <VersionMajor>454</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
     <COMReference Include="stdole">
       <Guid>{00020430-0000-0000-C000-000000000046}</Guid>
       <VersionMajor>2</VersionMajor>
@@ -214,66 +168,6 @@
       <Lcid>0</Lcid>
       <WrapperTool>primary</WrapperTool>
       <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="StudyUtils27">
-      <Guid>{5248A6C6-E559-4A84-8C34-E84F78087992}</Guid>
-      <VersionMajor>501</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="TickfileUtils27">
-      <Guid>{3614E717-8643-4665-B658-FCC19996E9BE}</Guid>
-      <VersionMajor>177</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="TickUtils27">
-      <Guid>{6FA5621C-ACAE-42B7-BA00-CFEA7C03952A}</Guid>
-      <VersionMajor>528</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="TimeframeUtils27">
-      <Guid>{CFD1F13A-0761-4434-AF32-C3DC0D48B56E}</Guid>
-      <VersionMajor>407</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="TradingDO27">
-      <Guid>{60CDFD60-27FE-4FFF-BA0D-FC61228B61C5}</Guid>
-      <VersionMajor>401</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
-    </COMReference>
-    <COMReference Include="TWUtilities40">
-      <Guid>{C7606F22-DB8A-44E5-91A9-799A54976F5C}</Guid>
-      <VersionMajor>28</VersionMajor>
-      <VersionMinor>1</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-      <Private>False</Private>
     </COMReference>
   </ItemGroup>
   <ItemGroup>

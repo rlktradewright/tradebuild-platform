@@ -289,7 +289,7 @@ namespace com.tradewright.tradebuildsnapin
             SimpleConditionBuilder bldr = new SimpleConditionBuilder();
             bldr.addTerm("id", ConditionalOperators.CondOpEqual, id.ToString(), LogicalOperators.LogicalOpNone, false);
 
-            Array ar = new string[] { };
+            var ar = new string[] { };
             _instanceSummary = _instanceFactory.Query(bldr.conditionString, ref ar).Item(1);
         }
 
@@ -298,7 +298,7 @@ namespace com.tradewright.tradebuildsnapin
             SimpleConditionBuilder bldr = new SimpleConditionBuilder();
             bldr.addTerm("id", ConditionalOperators.CondOpEqual, id.ToString(), LogicalOperators.LogicalOpNone, false);
 
-            Array ar = new string[] { };
+            var ar = new string[] { };
             return ChildFactory.Query(bldr.conditionString, ref ar).Item(1);
         }
 

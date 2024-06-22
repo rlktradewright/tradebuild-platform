@@ -46,7 +46,7 @@ namespace com.tradewright.tradebuildsnapin
             _exProps = exProps;
             _db = db;
 
-            Array ar = new string[] { };
+            var ar = new string[] { };
             DataObjectSummaries tzs = _db.TimeZoneFactory.Search("", ref ar);
 
             TimezoneCombo.BeginUpdate();

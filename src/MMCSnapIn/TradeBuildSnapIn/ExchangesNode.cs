@@ -133,7 +133,7 @@ namespace com.tradewright.tradebuildsnapin
             {
                 this.Children.Clear();
 
-                Array exchangeFieldNames = _dof.FieldSpecifiers.FieldNames;
+                var exchangeFieldNames = _dof.FieldSpecifiers.FieldNames;
 
                 DataObjectSummaries exchSummaries;
 

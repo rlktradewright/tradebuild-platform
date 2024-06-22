@@ -162,7 +162,7 @@ namespace com.tradewright.tradebuildsnapin
 
                 _lvw.ResultNodes.Clear();
 
-                Array instrFieldNames = new string[] { };
+                var instrFieldNames = new string[] { };
 
                 DataObjectSummaries instrSummaries;
                 instrSummaries = _tdb.InstrumentFactory.LoadSummariesByClass(ref (instrFieldNames), _exchangeName, _name);

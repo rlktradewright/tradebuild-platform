@@ -102,7 +102,7 @@ namespace com.tradewright.tradebuildsnapin
             SimpleConditionBuilder bldr = new SimpleConditionBuilder();
             bldr.addTerm("id", ConditionalOperators.CondOpEqual, _instanceSummary.Id.ToString(), LogicalOperators.LogicalOpNone, false);
 
-            Array ar = new string[] { };
+            var ar = new string[] { };
             DataObjectSummary summ = _instanceFactory.Query(bldr.conditionString, ref ar).Item(1);
             _instanceSummary = summ;
         }
@@ -162,7 +162,7 @@ namespace com.tradewright.tradebuildsnapin
             SimpleConditionBuilder bldr = new SimpleConditionBuilder();
             bldr.addTerm("id", ConditionalOperators.CondOpEqual, id.ToString(), LogicalOperators.LogicalOpNone, false);
 
-            Array ar = new string[] { };
+            var ar = new string[] { };
             _instanceSummary = _instanceFactory.Query(bldr.conditionString, ref ar).Item(1);
         }
 

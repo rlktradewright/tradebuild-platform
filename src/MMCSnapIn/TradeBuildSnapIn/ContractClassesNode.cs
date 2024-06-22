@@ -157,7 +157,7 @@ namespace com.tradewright.tradebuildsnapin
                 this.Children.Clear();
 
                 DataObjectSummaries instrClassSummaries;
-                Array instrClassFieldNames = new string[] { };
+                var instrClassFieldNames = new string[] { };
 
                 instrClassSummaries = _tdb.InstrumentClassFactory.LoadSummaries(ref (instrClassFieldNames),
                                                                                 _exchg.get_FieldValue("name"),
