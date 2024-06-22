@@ -225,12 +225,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_1A1DB6FF87AD438C9941E41B9D3C731C"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_1A5C5BE6F4B673E202271C934F7D97F1"
         "OwnerKey" = "8:_CBC4BA385E01B5AE66DC096F778BA25B"
         "MsmSig" = "8:_UNDEFINED"
@@ -491,6 +485,12 @@
         {
         "MsmKey" = "8:_2476BEA20B0523000E4C6D1F5535DE01"
         "OwnerKey" = "8:_80DF803EA8144D4F8E6F805D8C223030"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_2476BEA20B0523000E4C6D1F5535DE01"
+        "OwnerKey" = "8:_588DF42FDE5F6266753AD1355D637AEF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -3585,6 +3585,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_F95C1541C8E04F018615A43AE247F3C0"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_F9C4ECAF19F449A0AD8A515FD84FFED7"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -4419,7 +4425,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.263.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.264.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -7032,7 +7038,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.260, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.263, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_723FD58125624424AB2685557D3B43CC"
@@ -10493,15 +10499,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{B0168348-8948-4378-BEAA-6C372F028DBF}"
-        "PackageCode" = "8:{9F525039-1242-4083-A210-486C033466DD}"
+        "ProductCode" = "8:{2EEFCE72-BC31-4DC4-97DB-4024A5629A4B}"
+        "PackageCode" = "8:{8753C2C7-CF13-40CE-A900-B2F906F73876}"
         "UpgradeCode" = "8:{8867596C-A9FC-4200-AE7C-E24E252A6A65}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.263"
+        "ProductVersion" = "8:2.7.264"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -10509,7 +10515,7 @@
         "Subject" = "8:"
         "ARPCONTACT" = "8:Richard L King"
         "Keywords" = "8:"
-        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.263"
+        "ARPCOMMENTS" = "8:TradeBuild Platform v2.7.264"
         "ARPURLINFOABOUT" = "8:"
         "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
@@ -11160,16 +11166,16 @@
         }
         "MergeModule"
         {
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_1A1DB6FF87AD438C9941E41B9D3C731C"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_33B52E7436F14C6799628BAE0B5C7FEE"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.263.msm"
+            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-128.msm"
                 "Properties"
                 {
-                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
                     {
-                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
                     "DisplayName" = "8:Module Retargetable Folder"
                     "Description" = "8:"
                     "Type" = "3:32769"
@@ -11185,16 +11191,16 @@
             "Feature" = "8:"
             "IsolateTo" = "8:"
             }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_33B52E7436F14C6799628BAE0B5C7FEE"
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_F95C1541C8E04F018615A43AE247F3C0"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\..\\..\\..\\tradewright-common\\Build\\Setup\\Bin\\TradeWrightCommon4-0-128.msm"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.264.msm"
                 "Properties"
                 {
-                    "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     {
-                    "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
+                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     "DisplayName" = "8:Module Retargetable Folder"
                     "Description" = "8:"
                     "Type" = "3:32769"
