@@ -162,72 +162,15 @@ If lBarEndTime > sCurrentBarEndTime Then
     If mStartAtFromDate And sCurrentBarNumber > mMaxNumberOfBars Then Exit Sub
 End If
 
-Dim lNumberOfPrices As Long
-lNumberOfPrices = getNumberOfPrices(pOpenValue, pHighValue, pLowValue, pCloseValue)
-
-Dim lNumberOfPricesNotified As Long
-
-Dim lTickVolumePerNotify As Long
-lTickVolumePerNotify = Int((pTickVolume - lNumberOfPrices) / lNumberOfPrices)
-If lTickVolumePerNotify < 0 Then lTickVolumePerNotify = 0
-
-Dim lVolumePerNotify As Long
-lVolumePerNotify = Int((pVolume - lNumberOfPrices) / lNumberOfPrices)
-If lVolumePerNotify < 0 Then lVolumePerNotify = 0
-
-notifyBarValue pOpenValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
-
-If pOpenValue <= pCloseValue Then
-    If pLowValue <> pOpenValue Then notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
-    If pHighValue <> pOpenValue And pHighValue <> pLowValue Then notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
-    If pCloseValue <> pOpenValue And pCloseValue <> pHighValue And pCloseValue <> pLowValue Then notifyBarValue pCloseValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
-Else
-    If pHighValue <> pOpenValue Then notifyBarValue pHighValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
-    If pLowValue <> pOpenValue And pLowValue <> pHighValue Then notifyBarValue pLowValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
-    If pCloseValue <> pOpenValue And pCloseValue <> pHighValue And pCloseValue <> pLowValue Then notifyBarValue pCloseValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
-End If
-
+mTargetBarsBuilder.NotifyBar pTimestamp, _
+                            pOpenValue, _
+                            pHighValue, _
+                            pLowValue, _
+                            pCloseValue, _
+                            pVolume, _
+                            pTickVolume
+                            
 mAccumulatedVolume = mAccumulatedVolume + pVolume
-
-Exit Sub
-
-Err:
-GTDO.HandleUnexpectedError ProcName, ModuleName
-End Sub
-
-Private Function getNumberOfPrices( _
-                ByVal pOpenValue As Double, _
-                ByVal pHighValue As Double, _
-                ByVal pLowValue As Double, _
-                ByVal pCloseValue As Double) As Long
-getNumberOfPrices = 1
-If pOpenValue <> pHighValue Then getNumberOfPrices = getNumberOfPrices + 1
-If pOpenValue <> pLowValue And pHighValue <> pLowValue Then getNumberOfPrices = getNumberOfPrices + 1
-If pCloseValue <> pHighValue And pCloseValue <> pLowValue And pCloseValue <> pOpenValue Then getNumberOfPrices = getNumberOfPrices + 1
-End Function
-
-Private Sub notifyBarValue( _
-                ByVal pValue As Double, _
-                ByVal pNumberOfPrices As Long, _
-                ByRef pNumberOfPricesNotified As Long, _
-                ByVal pTimestamp As Date, _
-                ByVal pTickVolumePerNotify As Long, _
-                ByVal pTickVolume As Long, _
-                ByVal pVolumePerNotify As Long, _
-                ByVal pVolume As Long)
-Const ProcName As String = "notifyBarValue"
-On Error GoTo Err
-
-Dim lValue As SValue
-lValue.timestamp = pTimestamp
-
-lValue.Value = pValue
-mTargetBarsBuilder.NotifyValue lValue
-pNumberOfPricesNotified = pNumberOfPricesNotified + 1
-
-mTargetBarsBuilder.IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, pTickVolumePerNotify, pTickVolume - (pNumberOfPrices - 1) * (pTickVolumePerNotify + 1) - 1)
-lValue.Value = mAccumulatedVolume + IIf(pNumberOfPricesNotified < pNumberOfPrices, pNumberOfPricesNotified * pVolumePerNotify, pVolume)
-mTargetBarsBuilder.NotifyVolume lValue
 
 Exit Sub
 
