@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "ComCt332.ocx"
 Begin VB.Form fChart 
    BorderStyle     =   5  'Sizable ToolWindow
@@ -66,7 +66,7 @@ Begin VB.Form fChart
       BandBorders     =   0   'False
       _CBWidth        =   11280
       _CBHeight       =   330
-      _Version        =   "6.7.9816"
+      _Version        =   "6.7.9839"
       BandBackColor1  =   -2147483638
       Child1          =   "ChartNavToolbar1"
       MinWidth1       =   5865

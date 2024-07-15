@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#337.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#341.1#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -258,7 +258,7 @@ If TypeOf ev.Future.Value Is IContract Then
         mReadyForDeferredStart = True
         If mDeferredStartRequested Then Start
     Else
-        prepareChart
+'        prepareChart
     End If
 End If
 
@@ -410,6 +410,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get ChartID() As String
+ChartID = Chart1.ChartID
 End Property
 
 Public Property Let ConfigurationSection( _
@@ -1147,6 +1151,8 @@ SetupChart pTimeframes, _
 mDeferStart = False
 
 Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
+
+prepareChart
 
 Exit Sub
 
