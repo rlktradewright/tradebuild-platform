@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#400.1#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -795,6 +795,7 @@ Begin VB.Form fStrategyHost
       TabPicture(3)   =   "fStrategyHost.frx":00FC
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "BracketOrderList"
+      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       Begin TradingUI27.MultiChart PriceChart 
          Height          =   4845
@@ -827,7 +828,9 @@ Begin VB.Form fStrategyHost
          LabelWrap       =   -1  'True
          HideSelection   =   0   'False
          AllowReorder    =   -1  'True
+         FlatScrollBar   =   -1  'True
          FullRowSelect   =   -1  'True
+         HotTracking     =   -1  'True
          _Version        =   393217
          ForeColor       =   -2147483640
          BackColor       =   -2147483643
@@ -1022,12 +1025,6 @@ On Error GoTo Err
 Me.ScaleMode = vbTwips
 setupBracketOrderList
 Set mChartStyle = gCreateChartStyle
-LogMessage "Setting StrategyCombo"
-StrategyCombo.ComboItems.Add , , "RlkStrategies27.MACDStrategy1"
-StrategyCombo.ComboItems.Add , , "Strategies27.MACDStrategy21"
-LogMessage "Setting StopStrategyFactoryCombo"
-StopStrategyFactoryCombo.ComboItems.Add , , "RlkStrategies27.StopStrategyFactory1"
-StopStrategyFactoryCombo.ComboItems.Add , , "Strategies27.StopStrategyFactory5"
 LogMessage "Form loaded"
 
 ChartNavToolbar.Initialise , PriceChart
@@ -1192,11 +1189,15 @@ On Error GoTo Err
 If pTimeframeIndex = 0 Then
     Dim i As Long
     For i = 1 To PriceChart.Count
-        gLog "DisableDrawing " & i, ProcName, ModuleName, , LogLevelHighDetail
+        gLog "DisableDrawing " & _
+            PriceChart.BaseChartController(i).ChartID & "; " & _
+            PriceChart.BaseChartController(i).TimePeriod.ToShortString, ProcName, ModuleName, , LogLevelDetail
         PriceChart.BaseChartController(i).DisableDrawing
     Next
 Else
-    gLog "DisableDrawing " & pTimeframeIndex, ProcName, ModuleName, , LogLevelHighDetail
+    gLog "DisableDrawing " & _
+        PriceChart.BaseChartController(pTimeframeIndex).ChartID & "; " & _
+        PriceChart.BaseChartController(pTimeframeIndex).TimePeriod.ToShortString, ProcName, ModuleName, , LogLevelDetail
     PriceChart.BaseChartController(pTimeframeIndex).DisableDrawing
 End If
 
@@ -1210,7 +1211,7 @@ Private Sub IStrategyHostView_DisableProfitDrawing()
 Const ProcName As String = "IStrategyHostView_DisableProfitDrawing"
 On Error GoTo Err
 
-gLog "DisableProfitDrawing", ProcName, ModuleName, , LogLevelHighDetail
+gLog "DisableProfitDrawing " & ProfitChart.BaseChartController.ChartID, ProcName, ModuleName, , LogLevelDetail
 ProfitChart.DisableDrawing
 
 Exit Sub
@@ -1229,7 +1230,7 @@ Private Sub IStrategyHostView_DisableTradeDrawing()
 Const ProcName As String = "IStrategyHostView_DisableTradeDrawing"
 On Error GoTo Err
 
-gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
+gLog "DisableTradeDrawing " & TradeChart.BaseChartController.ChartID, ProcName, ModuleName, , LogLevelDetail
 TradeChart.DisableDrawing
 
 Exit Sub
@@ -1245,11 +1246,15 @@ On Error GoTo Err
 If pTimeframeIndex = 0 Then
     Dim i As Long
     For i = 1 To PriceChart.Count
-        gLog "EnableDrawing " & i, ProcName, ModuleName, , LogLevelHighDetail
+        gLog "EnableDrawing " & _
+            PriceChart.BaseChartController(i).ChartID & "; " & _
+            PriceChart.BaseChartController(i).TimePeriod.ToShortString, ProcName, ModuleName, , LogLevelDetail
         PriceChart.BaseChartController(i).EnableDrawing
     Next
 Else
-    gLog "EnableDrawing " & pTimeframeIndex, ProcName, ModuleName, , LogLevelHighDetail
+    gLog "EnableDrawing " & _
+        PriceChart.BaseChartController(pTimeframeIndex).ChartID & "; " & _
+        PriceChart.BaseChartController(pTimeframeIndex).TimePeriod.ToShortString, ProcName, ModuleName, , LogLevelHighDetail
     PriceChart.BaseChartController(pTimeframeIndex).EnableDrawing
 End If
 
@@ -1263,7 +1268,7 @@ Private Sub IStrategyHostView_EnableProfitDrawing()
 Const ProcName As String = "IStrategyHostView_EnableProfitDrawing"
 On Error GoTo Err
 
-gLog "EnableProfitDrawing", ProcName, ModuleName, , LogLevelHighDetail
+gLog "EnableProfitDrawing " & ProfitChart.BaseChartController.ChartID, ProcName, ModuleName, , LogLevelDetail
 ProfitChart.EnableDrawing
 
 Exit Sub
@@ -1281,7 +1286,7 @@ Private Sub IStrategyHostView_EnableTradeDrawing()
 Const ProcName As String = "IStrategyHostView_EnableTradeDrawing"
 On Error GoTo Err
 
-gLog "EnableDrawing", ProcName, ModuleName, , LogLevelHighDetail
+gLog "EnableTradeDrawing " & TradeChart.BaseChartController.ChartID, ProcName, ModuleName, , LogLevelDetail
 TradeChart.EnableDrawing
 
 Exit Sub
@@ -1887,7 +1892,10 @@ End Sub
 
 Friend Sub Initialise( _
                 ByVal pModel As IStrategyHostModel, _
-                ByVal pController As IStrategyHostController)
+                ByVal pController As IStrategyHostController, _
+                ByVal pStrategyProgIds As String, _
+                ByVal pStopStrategyFactoryProgIds As String, _
+                ByVal pTargetStrategyFactoryProgIds As String)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -1918,9 +1926,32 @@ setDummyParams
 LogMessage "Setting controls from model"
 ResultsPathText.Text = mModel.ResultsPath
 NoMoneyManagementCheck.Value = IIf(mModel.UseMoneyManagement, vbUnchecked, vbChecked)
-If mModel.StrategyClassName <> "" Then StrategyCombo.Text = mModel.StrategyClassName
-If mModel.StopStrategyFactoryClassName <> "" Then StopStrategyFactoryCombo.Text = mModel.StopStrategyFactoryClassName
 ShowChartCheck.Value = IIf(mModel.ShowChart, vbChecked, vbUnchecked)
+
+Dim a() As String
+Dim s
+
+LogMessage "Setting Strategy progids"
+a = Split(pStrategyProgIds, ";")
+For Each s In a
+    StrategyCombo.ComboItems.Add , , s
+Next
+If StrategyCombo.ComboItems.Count = 1 Then
+    StrategyCombo.SelectedItem = StrategyCombo.ComboItems(1)
+    mModel.StrategyClassName = StrategyCombo.ComboItems(1)
+    If validateStrategyCombo Then getDefaultParams
+End If
+
+LogMessage "Setting Stop Strategy Factory progids"
+a = Split(pStopStrategyFactoryProgIds, ";")
+For Each s In a
+    StopStrategyFactoryCombo.ComboItems.Add , , s
+Next
+If StopStrategyFactoryCombo.ComboItems.Count = 1 Then
+    StopStrategyFactoryCombo.SelectedItem = StopStrategyFactoryCombo.ComboItems(1)
+    mModel.StopStrategyFactoryClassName = StopStrategyFactoryCombo.ComboItems(1)
+    If validateStopStrategyFactoryCombo Then getDefaultParams
+End If
 
 If mModel.UseLiveBroker Then
     SymbolText.Enabled = True
@@ -2078,14 +2109,17 @@ On Error GoTo Err
 
 If Not mModel.ShowChart Then Exit Sub
 
+gLog "ProfitChart id is: " & ProfitChart.ChartID, ProcName, ModuleName, , LogLevelHighDetail
+
 Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
-ProfitChart.DisableDrawing
+'gLog "DisableDrawing for ProfitChart", ProcName, ModuleName, , LogLevelDetail
+
+'ProfitChart.DisableDrawing
 ProfitChart.ShowChart CreateTimeframes(mProfitStudyBase), _
                         GetTimePeriod(1, TimePeriodDay), _
                         CreateChartSpecifier(0), _
@@ -2106,14 +2140,17 @@ On Error GoTo Err
 
 If Not mModel.ShowChart Then Exit Sub
 
+gLog "TradeChart id is: " & TradeChart.ChartID, ProcName, ModuleName, , LogLevelHighDetail
+
 Set mTradeStudyBase = CreateStudyBaseForDoubleInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
                                                     GetTimeZone(mContract.TimeZoneName)))
 
-gLog "DisableDrawing", ProcName, ModuleName, , LogLevelHighDetail
-TradeChart.DisableDrawing
+'gLog "DisableDrawing for TradeChart", ProcName, ModuleName, , LogLevelDetail
+
+'TradeChart.DisableDrawing
 TradeChart.ShowChart CreateTimeframes(mTradeStudyBase), _
                     GetTimePeriod(0, TimePeriodNone), _
                     CreateChartSpecifier(0), _
@@ -2314,10 +2351,8 @@ Private Function validateStopStrategyFactoryCombo() As Boolean
 Const ProcName As String = "validateStopStrategyFactoryCombo"
 On Error GoTo Err
 
-Dim lFactory As IPosnMgmtStrtgyFactory
 If StopStrategyFactoryCombo.Text <> "" Then
-    Set lFactory = CreateObject(StopStrategyFactoryCombo.Text)
-    Set mPMFactory = lFactory
+    Set mPMFactory = CreateObject(StopStrategyFactoryCombo.Text)
 Else
     Set mPMFactory = Nothing
 End If
@@ -2341,10 +2376,8 @@ Private Function validateStrategyCombo() As Boolean
 Const ProcName As String = "validateStrategyCombo"
 On Error GoTo Err
 
-Dim lStrategy As IStrategy
 If StrategyCombo.Text <> "" Then
-    Set lStrategy = CreateObject(StrategyCombo.Text)
-    Set mStrategy = lStrategy
+    Set mStrategy = CreateObject(StrategyCombo.Text)
 Else
     Set mStrategy = Nothing
 End If

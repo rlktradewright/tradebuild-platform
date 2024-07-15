@@ -113,6 +113,16 @@ Then
     ElseIf Not pTheme.BaseFont Is Nothing Then
         Set pControl.Font = pTheme.BaseFont
     End If
+ElseIf TypeOf pControl Is ListView _
+Then
+    pControl.Appearance = pTheme.Appearance
+    pControl.BackColor = pTheme.TextBackColor
+    pControl.ForeColor = pTheme.TextForeColor
+    If Not pTheme.ComboFont Is Nothing Then
+        Set pControl.Font = pTheme.ComboFont
+    ElseIf Not pTheme.BaseFont Is Nothing Then
+        Set pControl.Font = pTheme.BaseFont
+    End If
 ElseIf TypeOf pControl Is CommandButton Or _
     TypeOf pControl Is Shape _
 Then

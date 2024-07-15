@@ -85,49 +85,52 @@ If lClp.Switch("noui") Then lNoUI = True
 Dim lRun As Boolean
 If lClp.Switch("run") Then lRun = True
 
-Dim lLiveTrades As Boolean
-If lClp.Switch("livetrades") Then lLiveTrades = True
+Dim lSimulateOrders As Boolean
+If lClp.Switch("simulateorders") Then lSimulateOrders = True
 
-Dim lSymbol As String
-lSymbol = lClp.Arg(0)
-If lSymbol = "" And lNoUI Then
-    LogMessage "No symbol supplied"
-    If Not lNoUI And lRun Then MsgBox "Error - no symbol argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
-    Exit Sub
-ElseIf lSymbol <> "" Then
+Dim lContractSpecString As String
+lContractSpecString = lClp.switchValue("contract")
+If lContractSpecString <> "" Then
     Dim lContractSpec As IContractSpecifier
-    If Left$(lSymbol, 1) = "(" Then
-        Set lContractSpec = parseSymbol(lSymbol)
-    Else
-        Set lContractSpec = CreateContractSpecifierFromString(lSymbol)
-    End If
+    Set lContractSpec = CreateContractSpecifierFromString(lContractSpecString)
     If lContractSpec Is Nothing Then
-        LogMessage "Invalid symbol"
-        If Not lNoUI And lRun Then MsgBox "Error - invalid symbol string supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+        LogMessage "Invalid contract spec"
+        If Not lNoUI And lRun Then MsgBox "Error - invalid contract supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Sub
     End If
     mModel.Symbol = lContractSpec
+ElseIf lNoUI Then
+    LogMessage "No contract supplied"
+    Exit Sub
+ElseIf Not lNoUI And lRun Then MsgBox "Error - no contract supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Sub
 End If
 
-Dim lStrategyClassName As String
-lStrategyClassName = lClp.Arg(1)
-If lStrategyClassName = "" And lNoUI Then
+Dim lStrategyProgIds As String
+lStrategyProgIds = lClp.switchValue("strategy")
+If lStrategyProgIds = "" And lNoUI Then
     LogMessage "No strategy supplied"
     If Not lNoUI And lRun Then MsgBox "Error - no strategy class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
     Exit Sub
 End If
-mModel.StrategyClassName = lStrategyClassName
 
-Dim lStopStrategyFactoryClassName As String
-lStopStrategyFactoryClassName = lClp.Arg(2)
-If lStopStrategyFactoryClassName = "" And lNoUI Then
-    LogMessage "No stop strategy factory supplied"
-    If Not lNoUI And lRun Then MsgBox "Error - no stop strategy factory class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+Dim lStopLossStrategyFactoryProgIds As String
+lStopLossStrategyFactoryProgIds = lClp.switchValue("stoplossstrategy")
+If lStopLossStrategyFactoryProgIds = "" And lNoUI Then
+    LogMessage "No stop-loss strategy factory supplied"
+    If Not lNoUI And lRun Then MsgBox "Error - no stop-loss strategy factory class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
     Exit Sub
 End If
-mModel.StopStrategyFactoryClassName = lStopStrategyFactoryClassName
 
-If Not setupServiceProviders(lClp, lLiveTrades, lNoUI) Then Exit Sub
+Dim lTargetStrategyFactoryProgIds As String
+lTargetStrategyFactoryProgIds = lClp.switchValue("targetstrategy")
+If lTargetStrategyFactoryProgIds = "" And lNoUI Then
+    LogMessage "No target strategy factory supplied"
+    If Not lNoUI And lRun Then MsgBox "Error - no target strategy factory class name argument supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Sub
+End If
+
+If Not setupServiceProviders(lClp, lSimulateOrders, lNoUI) Then Exit Sub
 
 If lClp.Switch("umm") Or _
     lClp.Switch("UseMoneyManagement") _
@@ -177,7 +180,7 @@ Else
     mStrategyHost.Initialise mModel, mForm, lController
     
     failpoint = "mForm.Initialise mModel, lController"
-    mForm.Initialise mModel, lController
+    mForm.Initialise mModel, lController, lStrategyProgIds, lStopLossStrategyFactoryProgIds, lTargetStrategyFactoryProgIds
     
     If lRun Then
         mForm.Start
@@ -218,10 +221,11 @@ End Sub
 
 Private Function getUsageString() As String
 getUsageString = _
-            "strategyhost  [(/specifier[;/specifier]...)]" & vbCrLf & _
-            "              [strategy class name]" & vbCrLf & _
-            "              [stop strategy factory class name]" & vbCrLf & _
-            "              [/tws:[Server],[Port],[ClientId]" & vbCrLf & _
+            "strategyhost  [/contract:contractspec)]" & vbCrLf & _
+            "              [/strategy:progId [; progid]...]" & vbCrLf & _
+            "              [/stopstrategy:progId [; progid]...]]" & vbCrLf & _
+            "              [/targetstrategy:progId [; progid]...]]" & vbCrLf & _
+            "              [/tws:[server],[port],[clientId]" & vbCrLf & _
             "              [/db:[server],[servertype],[database]" & vbCrLf & _
             "              [/livetrades]" & vbCrLf & _
             "              [/log:path]" & vbCrLf & _
@@ -235,17 +239,6 @@ getUsageString = _
             vbCrLf & _
             " where" & vbCrLf & _
             vbCrLf
-getUsageString = getUsageString & _
-            "   specifier := [ local[symbol]:<localsymbol>" & vbCrLf & _
-            "                | symb[ol]:<symbol>" & vbCrLf & _
-            "                | sec[type]:[ STK | FUT | FOP | CASH ]" & vbCrLf & _
-            "                | exch[ange]:<exchangename>" & vbCrLf & _
-            "                | curr[ency]:<currencycode>" & vbCrLf & _
-            "                | exp[iry]:[yyyymm | yyyymmdd]" & vbCrLf & _
-            "                | mult[iplier]:<multiplier>" & vbCrLf & _
-            "                | str[ike]:<price>" & vbCrLf & _
-            "                | right:[ CALL | PUT ]" & vbCrLf & _
-            "                ]" & vbCrLf
 getUsageString = getUsageString & _
             "   levelname is one of:" & vbCrLf & _
             "       None    or 0" & vbCrLf & _
@@ -276,12 +269,35 @@ lLogOverwrite = pClp.Switch("logoverwrite")
 Dim lLogBackup As Boolean
 lLogBackup = pClp.Switch("logbackup")
 
-LogMessage "Logfile is: " & SetupDefaultLogging(Command, lLogOverwrite, lLogBackup)
-LogMessage "Loglevel is: " & LogLevelToString(DefaultLogLevel)
+SetupDefaultLogging Command, lLogOverwrite, lLogBackup
+
+logProgramId
 
 Set mModel = New DefaultStrategyHostModl
 mModel.LogParameters = True
 mModel.ShowChart = True
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub logProgramId()
+Const ProcName As String = "logProgramId"
+On Error GoTo Err
+
+Dim s As String
+s = App.ProductName & _
+    " V" & _
+    App.Major & _
+    "." & App.Minor & _
+    "." & App.Revision & _
+    IIf(App.FileDescription <> "", "-" & App.FileDescription, "") & _
+    vbCrLf & _
+    App.LegalCopyright
+s = s & vbCrLf & "Arguments: " & Command
+LogMessage s
 
 Exit Sub
 
@@ -371,7 +387,7 @@ End Function
 
 Private Function setupServiceProviders( _
                 ByVal pClp As CommandLineParser, _
-                ByVal pLiveTrades As Boolean, _
+                ByVal pSimulateOrders As Boolean, _
                 ByVal pNoUI As Boolean) As Boolean
 Const ProcName As String = "setupServiceProviders"
 On Error GoTo Err
@@ -382,7 +398,7 @@ lPermittedSPRoles = SPRoleContractDataPrimary + _
                     SPRoleOrderSubmissionLive + _
                     SPRoleOrderSubmissionSimulated
 
-If Not pLiveTrades And Not pNoUI Then lPermittedSPRoles = lPermittedSPRoles + SPRoleTickfileInput
+If pSimulateOrders And Not pNoUI Then lPermittedSPRoles = lPermittedSPRoles + SPRoleTickfileInput
 
 If pClp.Switch("tws") Then lPermittedSPRoles = lPermittedSPRoles + SPRoleRealtimeData
 
@@ -403,20 +419,20 @@ If pClp.Switch("papertws") Then
 End If
 
 If pClp.Switch("tws") Then
-    If Not setupTwsServiceProviders(pClp.switchValue("tws"), Not pClp.Switch("db"), Not lOrdersViaPaperTWS And pLiveTrades) Then
+    If Not setupTwsServiceProviders(pClp.switchValue("tws"), Not pClp.Switch("db"), Not lOrdersViaPaperTWS And Not pSimulateOrders) Then
         MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Function
     End If
 End If
 
 If pClp.Switch("db") Then
-    If Not setupDbServiceProviders(pClp.switchValue("db"), Not (pLiveTrades Or pNoUI)) Then
+    If Not setupDbServiceProviders(pClp.switchValue("db"), pSimulateOrders And Not pNoUI) Then
         MsgBox "Error setting up database service providers - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Function
     End If
 End If
 
-If Not setupSimulateOrderServiceProviders(pLiveTrades) Then
+If Not setupSimulateOrderServiceProviders(pSimulateOrders) Then
     MsgBox "Error setting up simulated orders service provider(s) - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
     Exit Function
 End If
@@ -527,10 +543,10 @@ LogMessage Err.Description, LogLevelSevere
 setupDbServiceProviders = False
 End Function
 
-Private Function setupSimulateOrderServiceProviders(ByVal pLiveTrades As Boolean) As Boolean
+Private Function setupSimulateOrderServiceProviders(ByVal pSimulateOrders As Boolean) As Boolean
 On Error GoTo Err
 
-If Not pLiveTrades Then
+If pSimulateOrders Then
     mTB.ServiceProviders.Add _
                         ProgId:="TradeBuild27.OrderSimulatorSP", _
                         Enabled:=True, _
