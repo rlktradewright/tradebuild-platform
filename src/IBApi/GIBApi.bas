@@ -554,6 +554,15 @@ b(3) = (pNumber And &HFF&)
 LongToNetworkBytes = b
 End Function
 
+Public Function NetworkBytesToLong(ByRef pBytes() As Byte) As Long
+Dim l As Long
+l = pBytes(0) * &H1000000 + _
+    pBytes(1) * &H10000 + _
+    pBytes(2) * &H100& + _
+    pBytes(3)
+NetworkBytesToLong = l
+End Function
+
 Public Function OutputMessageIdToString( _
                 ByVal msgId As TwsSocketOutMsgTypes) As String
 Const ProcName As String = "OutputMessageIdToString"

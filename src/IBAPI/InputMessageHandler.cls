@@ -311,10 +311,11 @@ On Error GoTo Err
 Do While Not mReader.AtEnd
     mReader.BeginCheckpointScope
         mReader.BeginMessage
-        mReader.DiscardMessageLength
+        Dim lMessageLength As Long
+        lMessageLength = mReader.GetMessageLength
         getPerformanceTimer.StartTiming
         
-        getMessageIDandVersion mReader, pMessageId, pVersion
+        getMessageIDandVersion mReader, pMessageId, pVersion, lMessageLength
         
         mInputMessageParser.GetMessage pMessageId, pVersion
         updateStats pMessageId, getPerformanceTimer.ElapsedTimeMicroseconds
@@ -346,7 +347,11 @@ Err:
 GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
-Private Sub getMessageIDandVersion(ByVal pReader As BufferedReader, ByRef pMessageId As Long, ByRef pVersion As Long)
+Private Sub getMessageIDandVersion( _
+                ByVal pReader As BufferedReader, _
+                ByRef pMessageId As Long, _
+                ByRef pVersion As Long, _
+                ByVal pMessageLength As Long)
 Const ProcName As String = "GetMessageIDandVersion"
 On Error GoTo Err
 
@@ -355,7 +360,7 @@ pVersion = &H7FFFFFFF
 If messageHasVersion(pMessageId) Then
     pReader.GetLongCheckpointed pVersion, "Version"
 End If
-pReader.SetCurrentMessageIdAndVersion pMessageId, pVersion
+pReader.SetCurrentMessageIdAndVersion pMessageId, pVersion, pMessageLength
 
 Exit Sub
 

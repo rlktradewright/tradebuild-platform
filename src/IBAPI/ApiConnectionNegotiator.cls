@@ -210,7 +210,7 @@ mReader.BeginMessage
 ' Note that if there is incomplete data, then a call to GetString() will result in
 ' processing being aborted and then retried when more data arrives.
 
-mReader.DiscardMessageLength
+mReader.GetMessageLength
 
 lString1 = mReader.GetString("Field 1")
 

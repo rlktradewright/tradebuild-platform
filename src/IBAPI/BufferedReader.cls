@@ -70,6 +70,7 @@ Private mRawApiMessageLogLevel                      As LogLevels
 
 Private mMessageId                                  As Long
 Private mVersion                                    As Long
+Private mMessageLength                              As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -122,6 +123,71 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub NewAddData(ByRef pData() As Byte)
+Const ProcName As String = "AddData"
+On Error GoTo Err
+
+Static sCurrentMessageStart As Long
+Static sCurrentMessageEnd As Long
+
+
+
+
+Dim lBytesReceived As Long: lBytesReceived = UBound(pData) + 1
+
+GIB.Logger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, mRawApiMessageLogLevel
+
+If (mBufferNextFreeIndex = mInputParseIndex) And _
+    mMessageStartIndex < 0 _
+Then
+    ' no unprocessed data so start at the beginning of the buffer again
+    GIB.Logger.Log "Reusing buffer from start", ProcName, ModuleName, mRawApiMessageLogLevel
+    mBufferNextFreeIndex = 0
+    mInputParseIndex = 0
+    mInputParseIndexChk = 0
+End If
+
+If mBufferNextFreeIndex + lBytesReceived <= UBound(mBuffer) + 1 Then
+    GIB.Logger.Log "Appending data to buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+Else
+    If lBytesReceived <= getFreeBufferSpaceSize Then
+        ' copy the existing contents (from the start of the current message) down to the start of the buffer
+        If mMessageStartIndex < 0 Then
+            GIB.Logger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+            moveBufferContents 0, mInputParseIndex, mBufferNextFreeIndex - mInputParseIndex
+        Else
+            GIB.Logger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+            moveBufferContents 0, mMessageStartIndex, mBufferNextFreeIndex - mMessageStartIndex
+        End If
+    Else
+        Dim lNewBound As Long: lNewBound = 2 * (UBound(mBuffer) + 1) - 1
+        GIB.Logger.Log "Extending buffer to " & CStr(lNewBound) & " bytes", ProcName, ModuleName, mRawApiMessageLogLevel
+        ReDim Preserve mBuffer(lNewBound) As Byte
+    End If
+End If
+
+CopyMemory mBuffer(mBufferNextFreeIndex), pData(0), lBytesReceived
+mBufferNextFreeIndex = mBufferNextFreeIndex + lBytesReceived
+
+If mBufferNextFreeIndex <> mInputParseIndex Then
+    If sProcessingMessages Then
+        ' this is a re-entrant call to AddData. We don't want to call ProcessData()
+        ' here, because the current call to it will process the new data that has been
+        ' added to the buffer
+        GIB.Logger.Log "Re-entrant call to " & ProcName, ProcName, ModuleName
+    Else
+        sProcessingMessages = True
+        mInputMessageHandler.ProcessData GetTimestamp
+        sProcessingMessages = False
+    End If
+End If
+
+Exit Sub
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
 
 Friend Sub AddData(ByRef pData() As Byte)
 Const ProcName As String = "AddData"
@@ -256,17 +322,26 @@ ReDim mCurrCheckpointNumber(7) As Long
 mCheckpointScopeIndex = 0
 End Sub
 
-Friend Sub DiscardMessageLength()
-If alreadyProcessedItem Then Exit Sub
+Friend Function GetMessageLength() As Long
+ Static sLength As Long
+If alreadyProcessedItem Then
+    GetMessageLength = sLength
+    Exit Function
+End If
 
 Dim i As Long
 Dim j As Long
 For i = mInputParseIndex To mBufferNextFreeIndex - 1
     j = j + 1
     If j = 4 Then
+        sLength = mBuffer(i - 3) * &H1000000 + _
+            mBuffer(i - 2) * &H10000 + _
+            mBuffer(i - 1) * &H100& + _
+            mBuffer(i)
         mInputParseIndex = i + 1
         Checkpoint
-        Exit Sub
+        GetMessageLength = sLength
+        Exit Function
     End If
 Next
 
@@ -274,7 +349,7 @@ Next
 ' this attempt to assemble a message
 'Debug.Print "Failed to get string"
 Err.Raise DataIncomplete
-End Sub
+End Function
 
 Friend Sub EndCheckpointScope()
 mNextCheckpointToProcess(mCheckpointScopeIndex) = 0
@@ -507,9 +582,16 @@ End Sub
 
 Friend Sub SetCurrentMessageIdAndVersion( _
                 ByVal pMessageId As Long, _
-                ByVal pVersion As Long)
+                ByVal pVersion As Long, _
+                ByVal pMessageLength As Long)
 mMessageId = pMessageId
 mVersion = pVersion
+mMessageLength = pMessageLength
+GIB.Logger.Log "Message id: " & pMessageId & _
+                "(" & GIBApi.InputMessageIdToString(pMessageId) & ")" & _
+                "; length: " & pMessageLength, _
+                "SetCurrentMessageIdAndVersion", ModuleName, LogLevelDetail
+                
 End Sub
 
 '@================================================================================
