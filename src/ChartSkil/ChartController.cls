@@ -133,6 +133,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get ChartID() As String
+ChartID = chartObj.ChartID
+End Property
+
 Public Property Get ChartLeft() As Single
 Const ProcName As String = "ChartLeft"
 

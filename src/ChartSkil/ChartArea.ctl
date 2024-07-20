@@ -1157,6 +1157,10 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Get ChartID() As String
+ChartID = mChartID
+End Property
+
 Public Property Get ChartLeft() As Double
 Attribute ChartLeft.VB_MemberFlags = "400"
 ChartLeft = mScaleLeft
@@ -2967,14 +2971,14 @@ Dim lChange As Boolean
 
 If suppress Then
     mSuppressDrawingCount = mSuppressDrawingCount + 1
-    gLogger.Log mChartID & " Suppress drawing (true): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelMediumDetail
+    gLogger.Log mChartID & " Suppress drawing (true): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelDetail
     If mSuppressDrawingCount = 1 Then lChange = True
 ElseIf mSuppressDrawingCount = 0 Then
-    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelMediumDetail
+    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelDetail
     lChange = False
 Else
     mSuppressDrawingCount = mSuppressDrawingCount - 1
-    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelMediumDetail
+    gLogger.Log mChartID & " Suppress drawing (false): " & mSuppressDrawingCount, ProcName, ModuleName, LogLevelDetail
     If mSuppressDrawingCount = 0 Then
         Resize True, True
         lChange = True
