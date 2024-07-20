@@ -17,6 +17,8 @@ call makeTradeBuildExternalComponentsAssemblyManifest.bat
 
 call makeComInteropFiles.bat
 
+call makeDotNetCommandLineTools.bat 
+
 echo =================================
 echo Make all completed
 echo =================================
