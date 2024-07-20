@@ -130,8 +130,23 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub GetMessage(ByVal pMessageId As TwsSocketInMsgTypes, ByVal pVersion As Long)
-Const ProcName As String = "GetMessage"
+Friend Sub Begin( _
+                ByVal pServerVersion As Long, _
+                ByVal pReader As BufferedReader)
+Const ProcName As String = "Begin"
+On Error GoTo Err
+
+mServerVersion = pServerVersion
+Set mReader = pReader
+
+Exit Sub
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Friend Sub ParseMessage(ByVal pMessageId As TwsSocketInMsgTypes, ByVal pVersion As Long)
+Const ProcName As String = "ParseMessage"
 On Error GoTo Err
 
 Select Case pMessageId
@@ -193,7 +208,7 @@ Case TwsSocketInMsgTypes.DELTA_NEUTRAL_VALIDATION
     getDeltaNeutralValidation pVersion
 Case TwsSocketInMsgTypes.TICK_SNAPSHOT_END
     getTickSnapshotEnd pVersion
-Case TwsSocketInMsgTypes.POSITION
+Case TwsSocketInMsgTypes.Position
     getPosition pVersion
 Case TwsSocketInMsgTypes.POSITION_END
     getPositionEnd pVersion
@@ -224,21 +239,6 @@ Case TwsSocketInMsgTypes.OptionParameterEnd
 Case Else
     Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid message code from Tws"
 End Select
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Friend Sub Begin( _
-                ByVal pServerVersion As Long, _
-                ByVal pReader As BufferedReader)
-Const ProcName As String = "Begin"
-On Error GoTo Err
-
-mServerVersion = pServerVersion
-Set mReader = pReader
 
 Exit Sub
 
@@ -882,54 +882,43 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Static sStartInfo As TwsHistDataStartInfo
-Static sBar As TwsBar
-Static i As Long
+Dim lStartInfo As TwsHistDataStartInfo
+Dim i As Long
 
 Dim lBar As TwsBar
 Dim lReqId As Long
-Dim lNotUsed As Boolean
 
-mReader.BeginCheckpointScope
-    If mReader.GetLongCheckpointed(lReqId, "Request id") Then
-        i = 0
-        sBar = lBar
-        sStartInfo.requestId = GIdManager.GetCallerId(lReqId, IdTypeHistoricalData)
-    End If
+lReqId = mReader.GetLong("Request id")
+lStartInfo.requestId = GIdManager.GetCallerId(lReqId, IdTypeHistoricalData)
+
+If pVersion >= 2 Then
+    lStartInfo.StartDate = mReader.GetString("Start date")
+    lStartInfo.EndDate = mReader.GetString("End date")
+End If
+
+lStartInfo.BarCount = mReader.GetLong("Item count")
+Debug.Print "Bars retrieved: " & lStartInfo.BarCount
     
-    If pVersion >= 2 Then
-        mReader.GetStringCheckpointed sStartInfo.StartDate, "Start date"
-        mReader.GetStringCheckpointed sStartInfo.EndDate, "End date"
-    End If
+If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.StartHistData lStartInfo.requestId, lStartInfo.StartDate, lStartInfo.EndDate, lStartInfo.BarCount
+
+For i = i To lStartInfo.BarCount - 1
+    lBar.Timestamp = mReader.GetString("Bar date")
+    lBar.OpenValue = mReader.GetDouble("Open")
+    lBar.HighValue = mReader.GetDouble("High")
+    lBar.LowValue = mReader.GetDouble("Low")
+    lBar.CloseValue = mReader.GetDouble("Close")
+    Set lBar.Volume = mReader.GetDecimal("Volume")
+    Set lBar.WAP = mReader.GetDecimal("WAP")
+    If mServerVersion < ApiServerVersions.SYNT_REALTIME_BARS Then _
+        mReader.GetBoolean "Has gaps"
+    If pVersion >= 3 Then lBar.TickVolume = mReader.GetLong("Tick volume")
     
-    If mReader.GetLongCheckpointed(sStartInfo.BarCount, "Item count") Then
-        Debug.Print "Bars retrieved: " & sStartInfo.BarCount
-        
-        If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.StartHistData sStartInfo.requestId, sStartInfo.StartDate, sStartInfo.EndDate, sStartInfo.BarCount
-    End If
-    
-    For i = i To sStartInfo.BarCount - 1
-        mReader.BeginCheckpointScope
-            mReader.GetStringCheckpointed sBar.Timestamp, "Bar date"
-            mReader.GetDoubleCheckpointed sBar.OpenValue, "Open"
-            mReader.GetDoubleCheckpointed sBar.HighValue, "High"
-            mReader.GetDoubleCheckpointed sBar.LowValue, "Low"
-            mReader.GetDoubleCheckpointed sBar.CloseValue, "Close"
-            mReader.GetDecimalCheckpointed sBar.Volume, "Volume"
-            mReader.GetDecimalCheckpointed sBar.WAP, "WAP"
-            If mServerVersion < ApiServerVersions.SYNT_REALTIME_BARS Then _
-                mReader.GetBooleanCheckpointed lNotUsed, "Has gaps"
-            If pVersion >= 3 Then mReader.GetLongCheckpointed sBar.TickVolume, "Tick volume"
-            
-            If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyBar sStartInfo.requestId, sBar
-            
-        mReader.EndCheckpointScope
-    Next
-mReader.EndCheckpointScope
+    If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyBar lStartInfo.requestId, lBar
+Next
 
 mReader.EndLogMessage
 
-If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.EndHistData sStartInfo.requestId
+If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.EndHistData lStartInfo.requestId
 
 Exit Sub
 
@@ -1683,64 +1672,54 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Static sRequestId As Long
-Static sNumberOfElements As Long
+Dim lNumberOfElements As Long
 
-Static sContractSpec As TwsContractSpecifier
-Static sContract As TwsContract
+Dim lContractSpec As TwsContractSpecifier
+Dim lContract As TwsContract
 
-Static sRank As Long
-Static sDistance As String
-Static sBenchmark As String
-Static sProjection As String
-Static sLegs As String
+Dim lRank As Long
+Dim lDistance As String
+Dim lBenchmark As String
+Dim lProjection As String
+Dim lLegs As String
 
-mReader.BeginCheckpointScope
-    Dim lRequestId As Long
-    mReader.GetLongCheckpointed lRequestId, "Request Id"
-    sRequestId = GIdManager.GetCallerId(lRequestId, IdTypeScanner)
-    mReader.GetLongCheckpointed sNumberOfElements, "Number of elements"
+Dim lRequestId As Long
+lRequestId = mReader.GetLong("Request Id")
+lRequestId = GIdManager.GetCallerId(lRequestId, IdTypeScanner)
+lNumberOfElements = mReader.GetLong("Number of elements")
+
+Dim i As Long
+For i = 0 To lNumberOfElements - 1
+    lRank = mReader.GetLong("Rank")
+    Set lContractSpec = New TwsContractSpecifier
+    Set lContract = New TwsContract
+    lContract.Specifier = lContractSpec
     
-    Dim i As Long
-    For i = 0 To sNumberOfElements - 1
-        mReader.BeginCheckpointScope
-            Dim lLongValue As Long
-            Dim lStringValue As String
-            Dim lDoubleValue As Double
-            
-            If mReader.GetLongCheckpointed(sRank, "Rank") Then
-                Set sContractSpec = New TwsContractSpecifier
-                Set sContract = New TwsContract
-                sContract.Specifier = sContractSpec
-            End If
-            
-            If (pVersion >= 3) Then If mReader.GetLongCheckpointed(lLongValue, "ConId") Then sContractSpec.ConId = lLongValue
-            
-            If mReader.GetStringCheckpointed(lStringValue, "Symbol") Then sContractSpec.Symbol = lStringValue
-            If mReader.GetStringCheckpointed(lStringValue, "Sec type") Then sContractSpec.SecType = TwsSecTypeFromString(lStringValue)
-            If mReader.GetStringCheckpointed(lStringValue, "Expiry") Then sContractSpec.Expiry = lStringValue
-            If mReader.GetDoubleCheckpointed(lDoubleValue, "Strike") Then sContractSpec.Strike = lDoubleValue
-            If mReader.GetStringCheckpointed(lStringValue, "Right") Then sContractSpec.OptRight = TwsOptionRightFromString(lStringValue)
-            If mReader.GetStringCheckpointed(lStringValue, "Exchange") Then sContractSpec.Exchange = lStringValue
-            If mReader.GetStringCheckpointed(lStringValue, "Currency") Then sContractSpec.CurrencyCode = lStringValue
-            If mReader.GetStringCheckpointed(lStringValue, "Local Symbol") Then sContractSpec.LocalSymbol = lStringValue
-            
-            If mReader.GetStringCheckpointed(lStringValue, "Market name") Then sContract.MarketName = lStringValue
-            If mReader.GetStringCheckpointed(lStringValue, "TradingClass") Then sContractSpec.TradingClass = lStringValue
-            
-            mReader.GetStringCheckpointed sDistance, "Distance"
-            mReader.GetStringCheckpointed sBenchmark, "Benchmark"
-            mReader.GetStringCheckpointed sProjection, "Projection"
-            If (pVersion >= 2) Then mReader.GetStringCheckpointed sLegs, "Legs Str"
-        
-            If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.NotifyScannerData sRequestId, sRank, sContract, sDistance, sBenchmark, sProjection, sLegs
-        mReader.EndCheckpointScope
-    Next
-mReader.EndCheckpointScope
+    If (pVersion >= 3) Then lContractSpec.ConId = mReader.GetLong("ConId")
+    
+    lContractSpec.Symbol = mReader.GetString("Symbol")
+    lContractSpec.SecType = TwsSecTypeFromString(mReader.GetString("Sec type"))
+    lContractSpec.Expiry = mReader.GetString("Expiry")
+    lContractSpec.Expiry = mReader.GetDouble("Strike")
+    lContractSpec.OptRight = TwsOptionRightFromString(mReader.GetString("Right"))
+    lContractSpec.Exchange = mReader.GetString("Exchange")
+    lContractSpec.CurrencyCode = mReader.GetString("Currency")
+    lContractSpec.LocalSymbol = mReader.GetString("Local Symbol")
+    
+    lContract.MarketName = mReader.GetString("Market name")
+    lContractSpec.TradingClass = mReader.GetString("TradingClass")
+    
+    lDistance = mReader.GetString("Distance")
+    lBenchmark = mReader.GetString("Benchmark")
+    lProjection = mReader.GetString("Projection")
+    If (pVersion >= 2) Then lLegs = mReader.GetString("Legs Str")
+
+    If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.NotifyScannerData lRequestId, lRank, lContract, lDistance, lBenchmark, lProjection, lLegs
+Next
 
 mReader.EndLogMessage
 
-If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.EndScannerData sRequestId
+If Not mScannerDataConsumer Is Nothing Then mScannerDataConsumer.EndScannerData lRequestId
 
 Exit Sub
 

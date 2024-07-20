@@ -198,19 +198,12 @@ Dim lString2 As String
 Dim lFieldNumber As Long
 lFieldNumber = 1
 
-mReader.BeginMessage
-
 ' With a new connection, the first data received is plain server version number,
 ' followed by the time at the server. However in some circumstances (eg after
 ' reconnection following a read timeout on the socket) TWS may send invalid information
 ' before the server version and server time. So we just read and discard until we
 ' identify the server version followed by a time that's close to the current time (say
 ' within 60 seconds - experiment has shown that 5 seconds is too short).
-
-' Note that if there is incomplete data, then a call to GetString() will result in
-' processing being aborted and then retried when more data arrives.
-
-mReader.GetMessageLength
 
 lString1 = mReader.GetString("Field 1")
 

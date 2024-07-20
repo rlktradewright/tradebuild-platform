@@ -40,6 +40,8 @@ Option Explicit
 
 Private Const ModuleName                            As String = "BufferedReader"
 
+Private Const MessageLengthHeaderLength             As Long = 4
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -48,16 +50,12 @@ Private mBuffer()                                   As Byte
 Private mBufferNextFreeIndex                        As Long
 
 Private mInputParseIndex                            As Long
-Private mInputParseIndexChk                         As Long
 
 Private mInMessageBuilder                           As StringBuilder
 Private mMessageBuildStarted                        As Boolean
 
-Private mNextCheckpointToProcess()                  As Long
-Private mCurrCheckpointNumber()                     As Long
-Private mCheckpointScopeIndex                       As Long
-
 Private mMessageStartIndex                          As Long
+Private mMessageEndIndex                            As Long
 
 Private mInputMessageHandler                        As InputMessageHandler
 
@@ -78,8 +76,6 @@ Private mMessageLength                              As Long
 
 Private Sub Class_Initialize()
 ReDim mBuffer((1024& * 1024&) - 1) As Byte
-ReDim mNextCheckpointToProcess(7) As Long
-ReDim mCurrCheckpointNumber(7) As Long
 mMessageStartIndex = -1
 Set mInMessageBuilder = CreateStringBuilder(initialCapacity:=1024)
 End Sub
@@ -108,10 +104,6 @@ Friend Property Get BufferNextFreeIndex() As Long
 BufferNextFreeIndex = mBufferNextFreeIndex
 End Property
 
-Friend Property Get CheckpointNumber() As Long
-CheckpointNumber = mNextCheckpointToProcess(mCheckpointScopeIndex)
-End Property
-
 Friend Property Get InputParseIndex() As Long
 InputParseIndex = mInputParseIndex
 End Property
@@ -124,140 +116,25 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub NewAddData(ByRef pData() As Byte)
-Const ProcName As String = "AddData"
-On Error GoTo Err
-
-Static sCurrentMessageStart As Long
-Static sCurrentMessageEnd As Long
-
-
-
-
-Dim lBytesReceived As Long: lBytesReceived = UBound(pData) + 1
-
-GIB.Logger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, mRawApiMessageLogLevel
-
-If (mBufferNextFreeIndex = mInputParseIndex) And _
-    mMessageStartIndex < 0 _
-Then
-    ' no unprocessed data so start at the beginning of the buffer again
-    GIB.Logger.Log "Reusing buffer from start", ProcName, ModuleName, mRawApiMessageLogLevel
-    mBufferNextFreeIndex = 0
-    mInputParseIndex = 0
-    mInputParseIndexChk = 0
-End If
-
-If mBufferNextFreeIndex + lBytesReceived <= UBound(mBuffer) + 1 Then
-    GIB.Logger.Log "Appending data to buffer", ProcName, ModuleName, mRawApiMessageLogLevel
-Else
-    If lBytesReceived <= getFreeBufferSpaceSize Then
-        ' copy the existing contents (from the start of the current message) down to the start of the buffer
-        If mMessageStartIndex < 0 Then
-            GIB.Logger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
-            moveBufferContents 0, mInputParseIndex, mBufferNextFreeIndex - mInputParseIndex
-        Else
-            GIB.Logger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
-            moveBufferContents 0, mMessageStartIndex, mBufferNextFreeIndex - mMessageStartIndex
-        End If
-    Else
-        Dim lNewBound As Long: lNewBound = 2 * (UBound(mBuffer) + 1) - 1
-        GIB.Logger.Log "Extending buffer to " & CStr(lNewBound) & " bytes", ProcName, ModuleName, mRawApiMessageLogLevel
-        ReDim Preserve mBuffer(lNewBound) As Byte
-    End If
-End If
-
-CopyMemory mBuffer(mBufferNextFreeIndex), pData(0), lBytesReceived
-mBufferNextFreeIndex = mBufferNextFreeIndex + lBytesReceived
-
-If mBufferNextFreeIndex <> mInputParseIndex Then
-    If sProcessingMessages Then
-        ' this is a re-entrant call to AddData. We don't want to call ProcessData()
-        ' here, because the current call to it will process the new data that has been
-        ' added to the buffer
-        GIB.Logger.Log "Re-entrant call to " & ProcName, ProcName, ModuleName
-    Else
-        sProcessingMessages = True
-        mInputMessageHandler.ProcessData GetTimestamp
-        sProcessingMessages = False
-    End If
-End If
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
 Friend Sub AddData(ByRef pData() As Byte)
 Const ProcName As String = "AddData"
 On Error GoTo Err
 
-Static sProcessingMessages As Boolean
-
 Dim lBytesReceived As Long: lBytesReceived = UBound(pData) + 1
-
 GIB.Logger.Log "Received data: length=" & lBytesReceived, ProcName, ModuleName, mRawApiMessageLogLevel
 
-If (mBufferNextFreeIndex = mInputParseIndex) And _
-    mMessageStartIndex < 0 _
-Then
-    ' no unprocessed data so start at the beginning of the buffer again
-    GIB.Logger.Log "Reusing buffer from start", ProcName, ModuleName, mRawApiMessageLogLevel
-    mBufferNextFreeIndex = 0
-    mInputParseIndex = 0
-    mInputParseIndexChk = 0
-End If
+compactBuffer lBytesReceived
 
-If mBufferNextFreeIndex + lBytesReceived <= UBound(mBuffer) + 1 Then
-    GIB.Logger.Log "Appending data to buffer", ProcName, ModuleName, mRawApiMessageLogLevel
-Else
-    If lBytesReceived <= getFreeBufferSpaceSize Then
-        ' copy the existing contents (from the start of the current message) down to the start of the buffer
-        If mMessageStartIndex < 0 Then
-            GIB.Logger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
-            moveBufferContents 0, mInputParseIndex, mBufferNextFreeIndex - mInputParseIndex
-        Else
-            GIB.Logger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
-            moveBufferContents 0, mMessageStartIndex, mBufferNextFreeIndex - mMessageStartIndex
-        End If
-    Else
-        Dim lNewBound As Long: lNewBound = 2 * (UBound(mBuffer) + 1) - 1
-        GIB.Logger.Log "Extending buffer to " & CStr(lNewBound) & " bytes", ProcName, ModuleName, mRawApiMessageLogLevel
-        ReDim Preserve mBuffer(lNewBound) As Byte
-    End If
-End If
+appendData pData, lBytesReceived
 
-CopyMemory mBuffer(mBufferNextFreeIndex), pData(0), lBytesReceived
-mBufferNextFreeIndex = mBufferNextFreeIndex + lBytesReceived
-
-If mBufferNextFreeIndex <> mInputParseIndex Then
-    If sProcessingMessages Then
-        ' this is a re-entrant call to AddData. We don't want to call ProcessData()
-        ' here, because the current call to it will process the new data that has been
-        ' added to the buffer
-        GIB.Logger.Log "Re-entrant call to " & ProcName, ProcName, ModuleName
-    Else
-        sProcessingMessages = True
-        mInputMessageHandler.ProcessData GetTimestamp
-        sProcessingMessages = False
-    End If
-End If
+Do While gotMessage
+    mInputMessageHandler.ProcessMessage
+Loop
 
 Exit Sub
 
 Err:
 GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
-Friend Sub BeginCheckpointScope()
-mCheckpointScopeIndex = mCheckpointScopeIndex + 1
-If mCheckpointScopeIndex > UBound(mCurrCheckpointNumber) Then
-    ReDim Preserve mCurrCheckpointNumber(2 * (UBound(mCurrCheckpointNumber) + 1) - 1) As Long
-    ReDim Preserve mNextCheckpointToProcess(2 * (UBound(mNextCheckpointToProcess) + 1) - 1) As Long
-End If
-mCurrCheckpointNumber(mCheckpointScopeIndex) = 0
-If mNextCheckpointToProcess(mCheckpointScopeIndex) = 0 Then mNextCheckpointToProcess(mCheckpointScopeIndex) = 1
 End Sub
 
 Friend Sub BeginLogMessage( _
@@ -298,64 +175,20 @@ Err:
 'gIB.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub BeginMessage()
-Const ProcName As String = "BeginMessage"
-On Error GoTo Err
-
-If alreadyProcessedItem Then Exit Sub
-
-mMessageStartIndex = mInputParseIndex
-Checkpoint
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
-
 Friend Sub ClearBuffer()
 mBufferNextFreeIndex = 0
 mInputParseIndex = 0
-mInputParseIndexChk = 0
-ReDim mNextCheckpointToProcess(7) As Long
-ReDim mCurrCheckpointNumber(7) As Long
-mCheckpointScopeIndex = 0
 End Sub
 
 Friend Function GetMessageLength() As Long
- Static sLength As Long
-If alreadyProcessedItem Then
-    GetMessageLength = sLength
-    Exit Function
-End If
-
-Dim i As Long
-Dim j As Long
-For i = mInputParseIndex To mBufferNextFreeIndex - 1
-    j = j + 1
-    If j = 4 Then
-        sLength = mBuffer(i - 3) * &H1000000 + _
-            mBuffer(i - 2) * &H10000 + _
-            mBuffer(i - 1) * &H100& + _
-            mBuffer(i)
-        mInputParseIndex = i + 1
-        Checkpoint
-        GetMessageLength = sLength
-        Exit Function
-    End If
-Next
-
-' we've got to the end of the current data, so raise an error to abort
-' this attempt to assemble a message
-'Debug.Print "Failed to get string"
-Err.Raise DataIncomplete
+Dim i As Long: i = mInputParseIndex
+Dim length As Long
+length = mBuffer(i) * &H1000000 + _
+    mBuffer(i + 1) * &H10000 + _
+    mBuffer(i + 2) * &H100& + _
+    mBuffer(i + 3)
+GetMessageLength = length
 End Function
-
-Friend Sub EndCheckpointScope()
-mNextCheckpointToProcess(mCheckpointScopeIndex) = 0
-mCheckpointScopeIndex = mCheckpointScopeIndex - 1
-mInputParseIndexChk = mInputParseIndex
-End Sub
 
 Friend Sub EndLogMessage()
 Const ProcName As String = "EndLogMessage"
@@ -377,6 +210,7 @@ GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub EndMessage()
+mInputParseIndex = mMessageStartIndex + mMessageLength
 mMessageStartIndex = -1
 End Sub
 
@@ -391,15 +225,6 @@ Else
 End If
 End Function
 
-Friend Function GetBooleanCheckpointed( _
-                ByRef pValue As Boolean, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-pValue = GetBoolean(pFieldName)
-Checkpoint
-GetBooleanCheckpointed = True
-End Function
-
 Friend Function GetDecimal( _
                 ByRef pFieldName As String) As BoxedDecimal
 Dim s As String
@@ -411,15 +236,6 @@ Else
 End If
 End Function
 
-Friend Function GetDecimalCheckpointed( _
-                ByRef pValue As BoxedDecimal, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-Set pValue = GetDecimal(pFieldName)
-Checkpoint
-GetDecimalCheckpointed = True
-End Function
-
 Friend Function GetDouble( _
                 ByRef pFieldName As String) As Double
 Dim s As String
@@ -429,15 +245,6 @@ If s = "" Then
 Else
     GetDouble = val(s)
 End If
-End Function
-
-Friend Function GetDoubleCheckpointed( _
-                ByRef pValue As Double, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-pValue = GetDouble(pFieldName)
-Checkpoint
-GetDoubleCheckpointed = True
 End Function
 
 Friend Function GetDoubleMax( _
@@ -453,15 +260,6 @@ Else
 End If
 End Function
 
-Friend Function GetDoubleMaxCheckpointed( _
-                ByRef pValue As Double, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-pValue = GetDoubleMax(pFieldName)
-Checkpoint
-GetDoubleMaxCheckpointed = True
-End Function
-
 Friend Function GetLong( _
                 ByRef pFieldName As String) As Long
 Dim s As String
@@ -473,15 +271,6 @@ Else
 End If
 End Function
 
-Friend Function GetLongCheckpointed( _
-                ByRef pValue As Long, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-pValue = GetLong(pFieldName)
-Checkpoint
-GetLongCheckpointed = True
-End Function
-
 Friend Function GetLongMax( _
                 ByRef pFieldName As String) As Long
 Dim s As String
@@ -491,15 +280,6 @@ If s = "" Then
 Else
     GetLongMax = CLng(s)
 End If
-End Function
-
-Friend Function GetLongMaxCheckpointed( _
-                ByRef pValue As Long, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-pValue = GetLongMax(pFieldName)
-Checkpoint
-GetLongMaxCheckpointed = True
 End Function
 
 Friend Function GetParameters( _
@@ -524,7 +304,7 @@ Friend Function GetString( _
 Dim s As String
 Dim i As Long
 
-For i = mInputParseIndex To mBufferNextFreeIndex - 1
+For i = mInputParseIndex To mMessageEndIndex - 1
     If mBuffer(i) = 0 Then
         ' we've found our Next string
         'Debug.Print "Got string: mInputIndex=" & mInputParseIndex & " value=" & s
@@ -540,24 +320,15 @@ For i = mInputParseIndex To mBufferNextFreeIndex - 1
     End If
     ' NB: I've tried various other means of generating the string
     ' without using string concatenation, but for the lengths of the
-    ' fields in the TwsAPI protocol (except for error messages) they are all much slower
-    ' than string concatenation
+    ' fields in the TwsAPI protocol (except for error messages) they
+    ' are all much slower than string concatenation
     s = s & Chr$(mBuffer(i))
 Next
 
-' we've got to the end of the current data, so raise an error to abort
-' this attempt to assemble a message
+' we've got to the end of the current message before completing the
+' string, which should never happen
 'Debug.Print "Failed to get string"
-Err.Raise DataIncomplete
-End Function
-
-Friend Function GetStringCheckpointed( _
-                ByRef pValue As String, _
-                ByRef pFieldName As String) As Boolean
-If alreadyProcessedItem Then Exit Function
-pValue = GetString(pFieldName)
-Checkpoint
-GetStringCheckpointed = True
+Assert False, "API message incomplete", DataIncomplete
 End Function
 
 Friend Sub Initialise( _
@@ -575,32 +346,90 @@ Else
 End If
 End Sub
 
-Friend Sub Rollback()
-mInputParseIndex = mInputParseIndexChk
-mCheckpointScopeIndex = 0
-End Sub
-
 Friend Sub SetCurrentMessageIdAndVersion( _
                 ByVal pMessageId As Long, _
-                ByVal pVersion As Long, _
-                ByVal pMessageLength As Long)
+                ByVal pVersion As Long)
 mMessageId = pMessageId
 mVersion = pVersion
-mMessageLength = pMessageLength
-GIB.Logger.Log "Message id: " & pMessageId & _
-                "(" & GIBApi.InputMessageIdToString(pMessageId) & ")" & _
-                "; length: " & pMessageLength, _
-                "SetCurrentMessageIdAndVersion", ModuleName, LogLevelDetail
-                
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function Checkpoint() As Boolean
-mInputParseIndexChk = mInputParseIndex
-mNextCheckpointToProcess(mCheckpointScopeIndex) = mNextCheckpointToProcess(mCheckpointScopeIndex) + 1
+Private Sub appendData(ByRef pNewData() As Byte, ByVal pDataLength As Long)
+Const ProcName As String = "appendData"
+On Error GoTo Err
+
+CopyMemory mBuffer(mBufferNextFreeIndex), pNewData(0), pDataLength
+mBufferNextFreeIndex = mBufferNextFreeIndex + pDataLength
+GIB.Logger.Log "InputParseIndex=" & mInputParseIndex & _
+                "; BufferNextFreeIndex=" & mBufferNextFreeIndex, ProcName, ModuleName, mRawApiMessageLogLevel
+
+Exit Sub
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub compactBuffer(ByVal pBytesReceived As Long)
+Const ProcName As String = "compactBuffer"
+On Error GoTo Err
+
+If (mBufferNextFreeIndex = mInputParseIndex) And _
+    mMessageStartIndex < 0 _
+Then
+    ' no unprocessed data so start at the beginning of the buffer again
+    GIB.Logger.Log "Reusing buffer from start", ProcName, ModuleName, mRawApiMessageLogLevel
+    mBufferNextFreeIndex = 0
+    mInputParseIndex = 0
+End If
+
+If mBufferNextFreeIndex + pBytesReceived <= UBound(mBuffer) + 1 Then
+    GIB.Logger.Log "Appending data to buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+Else
+    If pBytesReceived <= getFreeBufferSpaceSize Then
+        ' copy the existing contents (from the start of the current message) down to the start of the buffer
+        If mMessageStartIndex < 0 Then
+            GIB.Logger.Log "Moving unparsed buffer data to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+            moveBufferContents 0, mInputParseIndex, mBufferNextFreeIndex - mInputParseIndex
+        Else
+            GIB.Logger.Log "Moving buffer data from start of message to start of buffer", ProcName, ModuleName, mRawApiMessageLogLevel
+            moveBufferContents 0, mMessageStartIndex, mBufferNextFreeIndex - mMessageStartIndex
+        End If
+    Else
+        Dim lNewBound As Long: lNewBound = 2 * (UBound(mBuffer) + 1) - 1
+        GIB.Logger.Log "Extending buffer to " & CStr(lNewBound) & " bytes", ProcName, ModuleName, mRawApiMessageLogLevel
+        ReDim Preserve mBuffer(lNewBound) As Byte
+    End If
+End If
+
+Exit Sub
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Function gotMessage() As Boolean
+Const ProcName As String = "gotMessage"
+On Error GoTo Err
+
+If mBufferNextFreeIndex < mInputParseIndex + MessageLengthHeaderLength Then Exit Function
+
+mMessageLength = GetMessageLength
+If mBufferNextFreeIndex < mInputParseIndex + mMessageLength Then Exit Function
+
+mInputParseIndex = mInputParseIndex + MessageLengthHeaderLength
+
+mMessageStartIndex = mInputParseIndex
+mMessageEndIndex = mMessageStartIndex + mMessageLength
+
+gotMessage = True
+
+Exit Function
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
 Private Function getFreeBufferSpaceSize() As Long
@@ -611,18 +440,12 @@ Else
 End If
 End Function
 
-Private Function alreadyProcessedItem() As Boolean
-mCurrCheckpointNumber(mCheckpointScopeIndex) = mCurrCheckpointNumber(mCheckpointScopeIndex) + 1
-alreadyProcessedItem = (mCurrCheckpointNumber(mCheckpointScopeIndex) < mNextCheckpointToProcess(mCheckpointScopeIndex))
-End Function
-
 Private Sub moveBufferContents(ByVal pToIndex As Long, ByVal pFromIndex As Long, ByVal pLength As Long)
 Dim lDistance As Long
 lDistance = (pFromIndex - pToIndex)
 MoveMemory mBuffer(pToIndex), mBuffer(pFromIndex), pLength
 mBufferNextFreeIndex = mBufferNextFreeIndex - lDistance
 mInputParseIndex = mInputParseIndex - lDistance
-mInputParseIndexChk = mInputParseIndex - lDistance
 mMessageStartIndex = mMessageStartIndex - lDistance
 End Sub
 

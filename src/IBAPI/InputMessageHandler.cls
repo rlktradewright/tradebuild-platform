@@ -231,57 +231,44 @@ Set mProgramErrorHandler = pProgramErrorHandler
 mLogApiMessageStats = pLogApiMessageStats
 End Sub
 
-Friend Sub ProcessData( _
-                ByVal pTimeStamp As Date)
-Const ProcName As String = "ProcessData"
+Friend Sub ProcessMessage()
+Const ProcName As String = "ProcessMessage"
 On Error GoTo Err
 
-Static sRetryCount As Long
-
-mReader.BeginCheckpointScope
-    
 If Not mApiConnectionEstablished Then
-    mServerVersion = mConnectionNegotiator.ProcessInitialData(mClientID, mOptionalCapabilities, pTimeStamp)
+    mServerVersion = mConnectionNegotiator.ProcessInitialData(mClientID, mOptionalCapabilities, GetTimestamp)
     mApiConnectionEstablished = True
     mInputMessageParser.Begin mServerVersion, mReader
+    Exit Sub
 End If
 
-Static sMessageID As TwsSocketInMsgTypes
-Static sVersion As Long
+getPerformanceTimer.StartTiming
 
-checkmessages sMessageID, sVersion
+Dim lMessageId As Long
+Dim lVersion As Long
+getMessageIDandVersion mReader, lMessageId, lVersion
 
-GIB.Logger.Log "End of buffer reached (no more messages): mInputParseIndex=" & mReader.InputParseIndex, _
-            ProcName, ModuleName, LogLevelHighDetail
+mInputMessageParser.ParseMessage lMessageId, lVersion
+updateStats lMessageId, getPerformanceTimer.ElapsedTimeMicroseconds
 
-sRetryCount = 0
-
-mReader.EndCheckpointScope
+mReader.EndMessage
 
 Exit Sub
 
 Err:
-Dim errNum As Long
-Dim errDesc As String
-Dim errSource As String
-
-errNum = Err.Number
-errDesc = Err.Description
-errSource = Err.source
+Dim errNum As Long: errNum = Err.Number
+Dim errDesc As String: errDesc = Err.Description
+Dim errSource As String: errSource = Err.source
 
 If errNum = DataIncomplete Then
     GIB.Logger.Log "End of buffer reached (while parsing message): mInputParseIndex=" & mReader.InputParseIndex, _
                 ProcName, ModuleName, LogLevelHighDetail
-    sRetryCount = sRetryCount + 1
-    Debug.Print "Data incomplete count: " & sRetryCount & "; CheckPointNumber: &H" & Hex$(mReader.CheckpointNumber)
-    mReader.Rollback
-    Exit Sub
 End If
 
 Dim s As String
 s = "Error while processing input message: " & vbCrLf & _
-    "Message ID=" & sMessageID & _
-    " version=" & sVersion & _
+    "Message ID=" & lMessageId & _
+    " version=" & lVersion & _
     " MessageStartindex=" & mReader.MessageStartIndex & vbCrLf & _
     "InputBufferNextFreeIndex=" & mReader.BufferNextFreeIndex & _
     " InputParseIndex=" & mReader.InputParseIndex & vbCrLf & _
@@ -293,7 +280,7 @@ Debug.Print "Error " & errNum & ": " & errDesc & vbCrLf & s
 GIB.Log s, ModuleName, ProcName, pLogLevel:=LogLevelSevere
 mReader.EndLogMessage
 
-GIB.HandleUnexpectedError mProgramErrorHandler, pErrorNumber:=errNum, pErrorDesc:=errDesc, pErrorSource:=errSource, pProcedureName:=ProcName, pModuleName:=ModuleName
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName, , , , errNum, errDesc, errSource
 End Sub
 
 Friend Sub Reset()
@@ -303,32 +290,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Sub checkmessages(ByRef pMessageId As TwsSocketInMsgTypes, ByRef pVersion As Long)
-Const ProcName As String = "checkmessages"
-On Error GoTo Err
-
-Do While Not mReader.AtEnd
-    mReader.BeginCheckpointScope
-        mReader.BeginMessage
-        Dim lMessageLength As Long
-        lMessageLength = mReader.GetMessageLength
-        getPerformanceTimer.StartTiming
-        
-        getMessageIDandVersion mReader, pMessageId, pVersion, lMessageLength
-        
-        mInputMessageParser.GetMessage pMessageId, pVersion
-        updateStats pMessageId, getPerformanceTimer.ElapsedTimeMicroseconds
-        
-        mReader.EndMessage
-    mReader.EndCheckpointScope
-Loop
-
-Exit Sub
-
-Err:
-GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
-End Sub
 
 Private Function getElapsedTimer() As ElapsedTimer
 Static sElapsedTimer As ElapsedTimer
@@ -350,17 +311,16 @@ End Function
 Private Sub getMessageIDandVersion( _
                 ByVal pReader As BufferedReader, _
                 ByRef pMessageId As Long, _
-                ByRef pVersion As Long, _
-                ByVal pMessageLength As Long)
+                ByRef pVersion As Long)
 Const ProcName As String = "GetMessageIDandVersion"
 On Error GoTo Err
 
-pReader.GetLongCheckpointed pMessageId, "Msg id"
+pMessageId = pReader.GetLong("Msg id")
 pVersion = &H7FFFFFFF
 If messageHasVersion(pMessageId) Then
-    pReader.GetLongCheckpointed pVersion, "Version"
+    pVersion = pReader.GetLong("Version")
 End If
-pReader.SetCurrentMessageIdAndVersion pMessageId, pVersion, pMessageLength
+pReader.SetCurrentMessageIdAndVersion pMessageId, pVersion
 
 Exit Sub
 

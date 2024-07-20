@@ -22,54 +22,6 @@ Private Const ModuleName                            As String = "GIBApi"
 
 Private Const InvalidEnumValue                   As String = "*ERR*"
 
-Private Const TICK_BID_SIZE                      As Long = 0
-Private Const TICK_BID                           As Long = 1
-Private Const TICK_ASK                           As Long = 2
-Private Const TICK_ASK_SIZE                      As Long = 3
-Private Const TICK_LAST                          As Long = 4
-Private Const TICK_LAST_SIZE                     As Long = 5
-Private Const TICK_High                          As Long = 6
-Private Const TICK_LOW                           As Long = 7
-Private Const TICK_VOLUME                        As Long = 8
-Private Const TICK_CLOSE                         As Long = 9
-Private Const TICK_BID_OPTION                    As Long = 10
-Private Const TICK_ASK_OPTION                    As Long = 11
-Private Const TICK_LAST_OPTION                   As Long = 12
-Private Const TICK_MODEL_OPTION                  As Long = 13
-Private Const TICK_OPEN                          As Long = 14
-Private Const TICK_LOW_13_WEEK                   As Long = 15
-Private Const TICK_HIGH_13_WEEK                  As Long = 16
-Private Const TICK_LOW_26_WEEK                   As Long = 17
-Private Const TICK_HIGH_26_WEEK                  As Long = 18
-Private Const TICK_LOW_52_WEEK                   As Long = 19
-Private Const TICK_HIGH_52_WEEK                  As Long = 20
-Private Const TICK_AVG_VOLUME                    As Long = 21
-Private Const TICK_OPEN_INTEREST                 As Long = 22
-Private Const TICK_OPTION_HISTORICAL_VOL         As Long = 23
-Private Const TICK_OPTION_IMPLIED_VOL            As Long = 24
-Private Const TICK_OPTION_BID_EXCH               As Long = 25
-Private Const TICK_OPTION_ASK_EXCH               As Long = 26
-Private Const TICK_OPTION_CALL_OPEN_INTEREST     As Long = 27
-Private Const TICK_OPTION_PUT_OPEN_INTEREST      As Long = 28
-Private Const TICK_OPTION_CALL_VOLUME            As Long = 29
-Private Const TICK_OPTION_PUT_VOLUME             As Long = 30
-Private Const TICK_INDEX_FUTURE_PREMIUM          As Long = 31
-Private Const TICK_BID_EXCH                      As Long = 32
-Private Const TICK_ASK_EXCH                      As Long = 33
-Private Const TICK_AUCTION_VOLUME                As Long = 34
-Private Const TICK_AUCTION_PRICE                 As Long = 35
-Private Const TICK_AUCTION_IMBALANCE             As Long = 36
-Private Const TICK_MARK_PRICE                    As Long = 37
-Private Const TICK_BID_EFP_COMPUTATION           As Long = 38
-Private Const TICK_ASK_EFP_COMPUTATION           As Long = 39
-Private Const TICK_LAST_EFP_COMPUTATION          As Long = 40
-Private Const TICK_OPEN_EFP_COMPUTATION          As Long = 41
-Private Const TICK_HIGH_EFP_COMPUTATION          As Long = 42
-Private Const TICK_LOW_EFP_COMPUTATION           As Long = 43
-Private Const TICK_CLOSE_EFP_COMPUTATION         As Long = 44
-Private Const TICK_LAST_TIMESTAMP                As Long = 45
-Private Const TICK_SHORTABLE                     As Long = 46
-
 '@================================================================================
 ' Enums
 '@================================================================================
