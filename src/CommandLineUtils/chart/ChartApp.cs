@@ -45,6 +45,9 @@ namespace TradeWright.TradeBuild.Applications.Chart
 
         private ConsoleHandler1 mConsoleHandler;
 
+        private Task mCommandProcessorTask;
+        private static readonly CancellationTokenSource mCancellationTokenSource = new CancellationTokenSource();
+
         public event EventHandler<EventArgs> 
         MainFormClosed;
         protected virtual void OnMainFormClosed(EventArgs e)
@@ -83,16 +86,18 @@ namespace TradeWright.TradeBuild.Applications.Chart
             var commandProcessor = new CommandProcessor(SynchronizationContext.Current, mConsoleHandler, clientManager, chart);
             TW.LogMessage("Starting command processor");
 
-            new Task(
-                (d) =>
+            mCommandProcessorTask = Task.Factory.StartNew(
+                () =>
                 {
+                    TW.LogMessage("Processing commands");
                     if (commandProcessor.ProcessCommandLineCommands(clp.Arg[1]))
                     {
                         commandProcessor.ProcessStdInCommands();
                     }
                 },
-                null,
-                TaskCreationOptions.LongRunning).Start();
+                mCancellationTokenSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.FromCurrentSynchronizationContext());
 
             return;
 

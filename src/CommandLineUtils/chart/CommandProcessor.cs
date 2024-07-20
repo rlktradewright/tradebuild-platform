@@ -224,6 +224,7 @@ namespace TradeWright.TradeBuild.Applications.Chart
         internal bool
         ProcessCommandLineCommands(string commandLineCommands)
         {
+            TW.LogMessage("ProcessCommandLineCommands");
             var lClp = ((TWUtilities40._TWUtilities)TW).CreateCommandLineParser(commandLineCommands);
 
             if (lClp.NumberOfArgs == 0) return true;

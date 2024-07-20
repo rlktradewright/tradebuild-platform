@@ -5,10 +5,10 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{239A7D12-CC7F-4C61-A6F1-C8CECD3F3717}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>TradeWright.TradeBuild.Applications.Chart</RootNamespace>
     <AssemblyName>Chart</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
@@ -57,6 +57,9 @@
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Interop.AxChartSkil27">
       <SpecificVersion>False</SpecificVersion>
@@ -73,6 +76,7 @@
     <Reference Include="Interop.BarFormatters27">
       <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BarFormatters27.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Interop.BarUtils27, Version=495.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -104,15 +108,21 @@
       <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ExtProps40.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.HistDataUtils27, Version=373.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Interop.HistDataUtils27">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.HistDataUtils27.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Interop.IBAPI, Version=39.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.HistDataUtils27.dll</HintPath>
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.IBAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Interop.IBENHAPI27">
       <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.IBENHAPI27.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Interop.MarketDataUtils27">
       <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.MarketDataUtils27.dll</HintPath>
@@ -254,7 +264,7 @@
     <None Include="app.manifest">
       <SubType>Designer</SubType>
     </None>
-	<None Include="packages.config" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
