@@ -3,20 +3,8 @@ setlocal enableextensions enabledelayedexpansion
 
 ::=============================================================================+
 ::                                                                             +
-::   This command file runs the gbd27.exe program for downloadig historical    +
-::   data from IBKR's Trader Workstation or Gateway.                           + 
-::                                                                             +
-::   If the first argument is /I, the program is run in interactive mode,      +
-::   meaning that you must type commands manually. Any other arguments are     +
-::   ignored.                                                                  +
-::                                                                             +
-::   If the first argument is a filename, the program reads the file from      +
-::   the directory specified by the INPUTFILESDIR setting (see below) and      +
-::   actions it. Any other arguments are ignored.                              +
-::                                                                             +
-::   If there are no arguments, the program monitors the INPUTFILESDIR         +
-::   directory and actions any commandfiles that are subsequently placed in    +
-::   it.                                                                       +
+::   This command file runs the StrategyHost program for use in development,   +
+::   testing and auto-execution of trading strategies.                         +
 ::                                                                             +
 ::   You may wish to change some of the settings below, but it should work     +
 ::   well without changes if TWS is running on this computer, and the          +
@@ -31,22 +19,33 @@ setlocal enableextensions enabledelayedexpansion
 ::                                                                             +
 ::=============================================================================+
 
+
+
 set TOPDIR=%~dp0
+
+set CONTRACT=FUT:ES(0[1d])@CME
+
+set STRATEGY=Strategies27.MACDStrategy21
+set STOPLOSSSTRATEGY=Strategies27.StopStrategyFactory5
+set TARGETSTRATEGY=
+
+set SIMULATEORDERS=no
+
+set RUN=yes
+
+set RESULTSDIR=%TOPDIR%\Results
 
 set TWSSERVER=
 set PORT=7497
 set CLIENTID=
+set CONNECTIONRETRYINTERVAL=
 
-set LOG=%TOPDIR%\Log\gbd27.log
+set LOG=%TOPDIR%\Log\StrategyHost.log
 set LOGLEVEL=N
+set LOGOVERWRITE=yes
+set LOGBACKUP=yes
+
 set APIMESSAGELOGGING=NNN
-
-set FILEFILTER=gbd*.txt
-set INPUTFILESDIR=%TOPDIR%\InputFiles
-set ARCHIVEDIR=%TOPDIR%\Archive
-set OUTPUTDIR=%TOPDIR%\BarData\{$contract}\Bars({$fromdatetime}-{$todatetime}).txt
-
-set RESULTFORMAT={$TIMESTAMP},{$open},{$high},{$low},{$close},{$volume},{$tickvolume}
 
 set INSTALLFOLDER=
 
@@ -59,7 +58,65 @@ set INSTALLFOLDER=
 ::
 ::
 :: TOPDIR	
-::   Set this to the root folder for use of the GetBarData program.
+::   Set this to the location where the installation zip was extracted.
+::
+::
+:: CONTRACT
+::   Specifies the contract against which the specified strategy is to be run.
+::   Any TradeBuild contract specification format can be used, for example
+::   "FUT:ES(0,1d)@CME" is the current ES future trading on CME, switching to
+::   the next contract 1 day before expiry.
+::
+:: STRATEGY
+::   The prog id for the trading strategy to be executed. This is of the form:
+::
+::      <dll>.<classname>
+::
+::   where 
+::      <dll> is the filename of the dll that contains the trading strategy
+::      <classname> is the name of the class within the dll that implements the
+::      strategy
+::
+:: STOPLOSSSTRATEGY
+::   The prog id for the stop-loss management strategy to be executed, if any. 
+::   This is of the form:
+::
+::      <dll>.<classname>
+::
+::   where 
+::      <dll> 	is the filename of the dll that contains the stop-loss management
+::      	strategy
+::      <classname> is the name of the class within the dll that implements the
+::      	stop-loss management strategy
+::
+:: TARGETSTRATEGY
+::   The prog id for the target management strategy to be executed, if any. 
+::   This is of the form:
+::
+::      <dll>.<classname>
+::
+::   where 
+::      <dll> 	is the filename of the dll that contains the target management
+::      	strategy
+::      <classname> is the name of the class within the dll that implements the
+::      	target management strategy
+::
+::
+:: SIMULATEORDERS
+::   Set this to 'yes', for orders to be simulated rather than being passed to
+::   TWS. Set it to 'no', or no value, to use real orders.
+::
+::
+:: RUN
+::  Indicates whether the program is to immediately commence execution of the 
+::  specified trading strategy. Permitted values are 'yes' and 'no'. The
+::  default is 'no'.
+::
+::
+:: RESULTSDIR
+::   Set this to the folder where output files are to be stored (these files
+::   record details of orders placed, and the outcome of completed bracket
+::   orders).
 ::
 ::
 :: TWSSERVER
@@ -81,21 +138,36 @@ set INSTALLFOLDER=
 ::      Gateway (paper)   4001
 ::
 :: CLIENTID
-::   [NB: there is no need to set this value unless you need to run two or more
-::   instances of this program simultaneously: if the value is not set, the
-::   program will use its built-in client id.]
 ::   Set this to a value that is unique to this program (ie it mustn't be the
 ::   same clientID that's used by any other API program). Note that if you need
-::   to run two or more instances of this program at the same time, they must
-::   have different clientIDs. The value must be a positive integer between 1 and
-::   999999999.
+::   to run two instances of this program at the same time, they must have
+::   different clientIDs. The value must be a positive integer between 1 and
+::   999999999. 
+::
+::   If you don't supply a value, 723 will be used.
+::
+:: CONNECTIONRETRYINTERVAL
+::   This specifies how frequently the program will attempt to reconnect to
+::   TWS/Gateway after failing to connect, or losing the connection. The value
+::   is a number of seconds, with a default of 60.
 ::
 ::
 :: LOG
 ::   Set this to the program's log filename. This file records details of
 ::   program operation, which can be helpful in identifying the reason for
 ::   program failures. If no value is specified, the filename will be
-::   %APPDATA%\TradeWright\gbd\gbd.log
+::   %APPDATA%\TradeWright\plord\plord.log
+::
+:: LOGOVERWRITE
+::   Indicates whether to overwrite the previous logfile. Permitted values are
+::   YES and NO. If set to NO, the previous logfile is appended to. Note that
+::   if LOGBACKUP is set to YES, this setting is ignored, because a new logfile
+::   is always created.
+::
+:: LOGBACKUP
+::   Indicates whether to retain the previous logfile by appending a suffix to
+::   its filename. The suffix is of the form .bak[n], where n is incremented
+::   for each run.
 ::
 :: LOGLEVEL
 ::   Set this to control the level of detail in the program logfile.
@@ -108,46 +180,14 @@ set INSTALLFOLDER=
 ::   statistics. It should be left at the default value of 'NNN' except under
 ::   advice from the program developer. API message logging can cause 
 ::   logfiles to become very large: the default setting turns off all API
-::   message logging except for those related to API connections and
+::   message logging except for those related to orders, API connections and
 ::   API errors/notfications.
-::
-::
-:: FILEFILTER
-::   Set this to specify the filenames that will contain input commands.
-::   For example gbd*.txt or *.gbd. Files whose names do not pass the filter
-::   are ignored.
-::
-:: INPUTFILESDIR
-::   Set this to the folder into which input files must be placed for their
-::   commands to be actioned.
-::
-:: ARCHIVEDIR
-::   Set this to the folder where input files will be placed after they have
-::   been processed. Note that if you move or copy a file from this folder
-::   to the input files folder, it will be processed again. When a file has
-::   been processed, if the archive directory already contains a file with
-::   the same name, it will be overwritten by the new one: thus the archive
-::   is not necessarily a complete record of all order files processed.
-::
-:: OUTPUTDIR
-::   Set this to the path for the folder where downloaded historical data files
-::   are to be stored (unless otherwise specified by commands). You can include
-::   a filename and both the path and filename can include substitution
-::   variables.
-::
-:: RESULTFORMAT
-::    Specifies the format of the a line of output representing one bar. Each
-::    bar is written to a single line in the output file, with this format.
-::    The format can contain substitution variables (for example {$open}
-::    represents the bar's open value). See the User Guide for a complete list
-::    of the permitted substitution variables.
 ::
 ::
 :: INSTALLFOLDER
 ::   Set this to the folder where you installed the TradeBuild Platform.
 ::   If you installed TradeBuild Platform using the .msi installer with the 
 ::   default installation location, you do not need to set this value.
-::
 ::
 ::
 ::
@@ -161,4 +201,4 @@ if "%INSTALLFOLDER%" NEQ "" (
 ) else (
 	set "SCRIPTS=%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Scripts"
 )
-"%SCRIPTS%\GetBarData.bat" %~1
+"%SCRIPTS%\StrategyHost.bat"

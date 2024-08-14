@@ -49,6 +49,8 @@ if not defined GBD_ARCHIVEDIR set GBD_ARCHIVEDIR=%GBD_TOPDIR%\Archive
 if not defined GBD_OUTPUTDIR if defined OUTPUTDIR set GBD_OUTPUTDIR=%OUTPUTDIR%
 if not defined GBD_OUTPUTDIR set GBD_OUTPUTDIR=%GBD_TOPDIR%\BarData
 
+if not defined GBD_RESULTFORMAT if defined RESULTFORMAT set GBD_RESULTFORMAT=%RESULTFORMAT%
+
 if not defined GBD_BIN if defined INSTALLFOLDER set GBD_BIN=%INSTALLFOLDER%\BIN
 if not defined GBD_BIN if defined PROGRAMFILES^(X86^) set GBD_BIN=%PROGRAMFILES(X86)%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
 if not defined GBD_BIN set GBD_BIN=%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
@@ -76,6 +78,12 @@ if not exist "%GBD_INPUTFILESDIR%" mkdir "%GBD_INPUTFILESDIR%"
 
 if "%GBD_OUTPUTDIR%"=="" set GBD_OUTPUTDIR=%GBD_TOPDIR%\BarData
 
+if not "%GBD_RESULTFORMAT%"=="" (
+	set GBD_RESULTFORMAT=-RESULTFORMAT:"%GBD_RESULTFORMAT%"
+) else (
+	set GBD_RESULTFORMAT= 
+)
+
 if "%GBD_ARCHIVEDIR%"=="" set GBD_ARCHIVEDIR=%GBD_TOPDIR%\Archive
 if not exist "%GBD_ARCHIVEDIR%" mkdir "%GBD_ARCHIVEDIR%"
 
@@ -85,6 +93,7 @@ if not defined APIMESSAGELOGGING (
 
 set RUN_GBD=GBD27 -fromtws:"%GBD_TWSSERVER%,%GBD_PORT%,%GBD_CLIENTID%" ^
 -OUTPUTPATH:"%GBD_OUTPUTDIR%" ^
+%GBD_RESULTFORMAT% ^
 -log:"%GBD_LOG%" ^
 -loglevel:%GBD_LOGLEVEL% ^
 -apimessagelogging:%APIMESSAGELOGGING%

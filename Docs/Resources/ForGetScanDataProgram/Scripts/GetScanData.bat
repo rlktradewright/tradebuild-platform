@@ -48,7 +48,7 @@ if not defined GSD_ARCHIVEDIR set GSD_ARCHIVEDIR=%GSD_TOPDIR%\Archive
 if not defined GSD_OUTPUTDIR if defined OUTPUTDIR set GSD_OUTPUTDIR=%OUTPUTDIR%
 if not defined GSD_OUTPUTDIR set GSD_OUTPUTDIR=%GSD_TOPDIR%\ScanData
 
-if not defined GBD_BIN if defined INSTALLFOLDER set GBD_BIN=%INSTALLFOLDER%\BIN
+if not defined GSD_BIN if defined INSTALLFOLDER set GSD_BIN=%INSTALLFOLDER%\BIN
 if not defined GSD_BIN if defined PROGRAMFILES^(X86^) set GSD_BIN=%PROGRAMFILES(X86)%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
 if not defined GSD_BIN set GSD_BIN=%PROGRAMFILES%\TradeWright Software Systems\TradeBuild Platform 2.7\Bin
 
