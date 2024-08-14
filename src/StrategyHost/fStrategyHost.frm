@@ -49,16 +49,19 @@ Begin VB.Form fStrategyHost
       TabPicture(1)   =   "fStrategyHost.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "ParametersPicture"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Log"
       TabPicture(2)   =   "fStrategyHost.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "LogPicture"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Results"
       TabPicture(3)   =   "fStrategyHost.frx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "ResultsPicture"
+      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       Begin VB.PictureBox ResultsPicture 
          Appearance      =   0  'Flat
@@ -393,7 +396,7 @@ Begin VB.Form fStrategyHost
             BorderStyle     =   0  'None
             BeginProperty Font 
                Name            =   "Consolas"
-               Size            =   14.25
+               Size            =   9.75
                Charset         =   0
                Weight          =   400
                Underline       =   0   'False
@@ -795,7 +798,6 @@ Begin VB.Form fStrategyHost
       TabPicture(3)   =   "fStrategyHost.frx":00FC
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "BracketOrderList"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       Begin TradingUI27.MultiChart PriceChart 
          Height          =   4845
