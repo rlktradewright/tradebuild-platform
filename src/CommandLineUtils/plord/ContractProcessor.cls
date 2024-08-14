@@ -1159,6 +1159,7 @@ If Not lError Then
     End If
 End If
 
+gPlaceOrdersTask.AddContractProcessor Me, mStageOrders
 gSetValidNextCommands gCommandListAlways, gCommandListGeneral, gCommandListOrderCreation
 
 Exit Sub
