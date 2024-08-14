@@ -115,9 +115,6 @@ Dim lTimeframe As Timeframe: Set lTimeframe = ev.Source
 mNumberOfTimeframesLoading = mNumberOfTimeframesLoading - 1
 
 If mModel.ShowChart Then
-    
-    Dim lChartIndex As Long
-    lChartIndex = mTimeframeIndexes(lTimeframe.TimePeriod.ToString)
     addStudiesForChart lTimeframe
 End If
 
