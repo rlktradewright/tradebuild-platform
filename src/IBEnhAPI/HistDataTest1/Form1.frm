@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#400.1#0"; "TradingUI27.ocx"
 Begin VB.Form Form1 
    Caption         =   "Historical Data Tester"
    ClientHeight    =   10380
@@ -250,12 +250,12 @@ On Error GoTo Err
 Dim lBarSpec As BarDataSpecifier
 Dim lContractSpec As IContractSpecifier
 
-Set lContractSpec = CreateContractSpecifier("ESM2", "ES", , "GLOBEX", SecTypeFuture, "USD", "202206")
+Set lContractSpec = CreateContractSpecifierFromString("FUT:ES(0[1D])@CME")
 
 Set lBarSpec = CreateBarDataSpecifier( _
                 GetTimePeriod(1, TimePeriodMinute), _
-                CDate("2022/05/25 10:00"), _
-                CDate("2022/05/25 13:00"), _
+                CDate(Int(Now) + CDate("09:00")), _
+                CDate(Int(Now) + CDate("09:30")), _
                 10000, _
                 BarTypeTrade, _
                 , _

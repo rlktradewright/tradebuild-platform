@@ -58,7 +58,7 @@ Private mContractSpec                               As IContractSpecifier
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
 
-Private mbars                                       As Bars
+Private mBars                                       As Bars
 
 '@================================================================================
 ' Class Event Handlers
@@ -138,7 +138,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     Dim lContract As IContract: Set lContract = ev.Future.Value
     Set mContractSpec = lContract.Specifier
 ElseIf TypeOf ev.Future.Value Is Bars Then
-    Set mbars = ev.Future.Value
+    Set mBars = ev.Future.Value
 End If
 
 Exit Sub
@@ -189,16 +189,16 @@ Private Sub processReturnedBars()
 Const ProcName As String = "processReturnedBars"
 On Error GoTo Err
 
-LogMessage "Historical data fetch completed: " & mbars.Count & " bars retrieved for " & mContractSpec.ToString
-If mbars.Count = 0 Then Exit Sub
+LogMessage "Historical data fetch completed: " & mBars.Count & " bars retrieved for " & mContractSpec.ToString
+If mBars.Count = 0 Then Exit Sub
 
-LogMessage "First bar: " & mbars.Bar(1).ToString
-LogMessage "Last bar: " & mbars.Bar(0).ToString
+LogMessage "First bar: " & mBars.Bar(1).ToString
+LogMessage "Last bar: " & mBars.Bar(0).ToString
 
 If mShowAllBarsAtEnd Then
     Dim i As Long
-    For i = 1 To mbars.Count
-        LogMessage mContractSpec.LocalSymbol & "." & i & ": " & mbars.Bar(i).ToString
+    For i = 1 To mBars.Count
+        LogMessage mContractSpec.LocalSymbol & "." & i & ": " & mBars.Bar(i).ToString
     Next
 End If
 
