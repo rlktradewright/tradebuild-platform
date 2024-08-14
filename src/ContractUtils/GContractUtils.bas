@@ -1722,6 +1722,7 @@ addExchangeCode "GETTEX2"
 
 addExchangeCode "HKFE"
 
+addExchangeCode "IBEOS"
 addExchangeCode "IBIS"
 addExchangeCode "ICEEU"
 addExchangeCode "ICEEUSOFT"
@@ -1771,6 +1772,7 @@ addExchangeCode "OMXNO"
 addExchangeCode "ONE"
 addExchangeCode "OSE"
 addExchangeCode "OSE.JPN"
+addExchangeCode "OVERNIGHT"
 
 addExchangeCode "PEARL"
 addExchangeCode "PHLX"
@@ -1802,6 +1804,7 @@ addExchangeCode "SWX"
 
 addExchangeCode "TPLUS1"
 addExchangeCode "TPLUS2"
+addExchangeCode "TPLUS0"
 addExchangeCode "TRACKECN"
 addExchangeCode "TRQXEN"
 addExchangeCode "TRQXUK"
