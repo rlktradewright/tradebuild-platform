@@ -118,6 +118,7 @@ Private Const SwitchFromFile                        As String = "fromfile"
 Private Const SwitchFromTws                         As String = "fromtws"
 Private Const SwitchLogToConsole                    As String = "logtoconsole"
 Private Const SwitchOutputPath                      As String = "outputpath"
+Private Const SwitchResultFormat                    As String = "resultformat"
 Private Const SwitchApiMessageLogging               As String = "APIMESSAGELOGGING"
 
 Private Const DefaultClientId                       As Long = 205644991
@@ -814,6 +815,7 @@ If mClp.Switch(SwitchCommandSeparator) Then mCommandSeparator = mClp.switchValue
 Assert Len(mCommandSeparator) = 1, "The command separator must be a single character"
 
 If mClp.Switch(SwitchOutputPath) Then processOutputPathCommand mClp.switchValue(SwitchOutputPath)
+If mClp.Switch(SwitchResultFormat) Then processResultFormatCommand mClp.switchValue(SwitchResultFormat)
 
 If mClp.Switch(SwitchFromDb) Then
     mDataSource = FromDb
