@@ -71,6 +71,23 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="TradeWright.CommandLine, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TradeWright.CommandLine.1.1.0\lib\netstandard2.0\TradeWright.CommandLine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="TradeWright.DataStorage, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TradeWright.DataStorage.1.1.0\lib\netstandard2.0\TradeWright.DataStorage.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="TradeWright.Logging, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TradeWright.Logging.1.1.1\lib\netstandard2.0\TradeWright.Logging.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="TradeWright.Time, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\TradeWright.Time.1.1.0\lib\netstandard2.0\TradeWright.Time.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -79,6 +96,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="app.manifest" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="Scripting">

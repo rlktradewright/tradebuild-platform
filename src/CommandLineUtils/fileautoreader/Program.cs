@@ -6,13 +6,29 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using TradeWright.Utilities.DataStorage;
+using TradeWright.Utilities.Logging;
+
 using TWUtilities40;
 
 namespace FileAutoReader
 {
 
 	internal sealed class Program
+    {
+		[STAThread]
+		public static void Main(string[] args)
+        {
+			(new MainClass()).run(args);
+        }
+
+	}
+
+	internal sealed class MainClass : ITimerExpiryListener
 	{
+
+		private static TradeWright.Utilities.Logging.FormattingLogger mLogger;
+
 		private static FileSystemWatcher mFileSystemWatcher;
 
 		private static readonly BlockingCollection<string> mFilenameQueue = new BlockingCollection<string>();
@@ -29,13 +45,22 @@ namespace FileAutoReader
 		private static TWUtilities40._Console mCon;
 		private static TWUtilities40._IntervalTimer mTimer;
 
-		[STAThread]
-		public static void Main(string[] args)
+		internal void run(string[] args)
 		{
 			try
 			{
+				Logging.DefaultLogLevel = LogLevel.Normal;
+
 				TW = new TWUtilities();
 				mCon = TW.GetConsole();
+				TW.ApplicationGroupName = "TradeWright";
+				TW.ApplicationName = nameof(FileAutoReader);
+				DataStorage.ApplicationDataPathUser = TW.ApplicationSettingsFolder;
+				
+				mLogger = new TradeWright.Utilities.Logging.FormattingLogger("", nameof(FileAutoReader));
+
+  				var logfileName = Logging.SetupDefaultLogging(synchronized: true);
+				
 				if (!checkArgs(args)) return;
 
 				var mutexName = $"Global\\{args[2].Replace("\\", "$")}";
@@ -45,12 +70,10 @@ namespace FileAutoReader
 					return;
 				}
 
+				writeDiagnostic("FileAutoReader starting");
+
 				using (mutex = new Mutex(false, mutexName))
 				{
-					TW.ApplicationGroupName = "TradeWright";
-					TW.ApplicationName = "FileAutoReader";
-					TW.SetupDefaultLogging(Environment.CommandLine, true, true);
-
 					mDispatcher = Task.Factory.StartNew(() =>
 					{
 						fileProcessingLoop(mFilenameQueue,
@@ -67,8 +90,8 @@ namespace FileAutoReader
 			}
 			catch (Exception ex)
 			{
-				writeDiagnostic(ex.Message);
-				writeDiagnostic(ex.StackTrace);
+				writeDiagnostic($"RLK message: {ex.Message}");
+				writeDiagnostic($"RLK message: {ex.StackTrace}");
 			}
 			finally
 			{
@@ -88,7 +111,7 @@ namespace FileAutoReader
 				return false;
 			}
 			args[2] = ensureDirectorySeparatorAtEnd(args[2]);
-            return true;
+			return true;
 		}
 
 		private static FileSystemWatcher startFileSystemWatcher(string orderFilesFolderPath, string filter, BlockingCollection<string> filenameQueue)
@@ -125,7 +148,6 @@ namespace FileAutoReader
 			return fileSystemWatcher;
 		}
 
-		[STAThread]
 		private static async void fileProcessingLoop(BlockingCollection<string> filenameQueue, string archiveFolderPath, CancellationToken token)
 		{
 			try
@@ -139,10 +161,10 @@ namespace FileAutoReader
 					writeDiagnostic($"Take from queue file {num}: {text}");
 					string archiveFilename = (archiveFolderPath.Length != 0) ? archiveFolderPath + Path.GetFileName(text) : "";
 					if (!await outputFile(text, archiveFilename, num))
-                    {
+					{
 						// we failed unexpectedly to output this file, so exit the program
 						return;
-                    }
+					}
 
 				}
 			}
@@ -180,23 +202,30 @@ namespace FileAutoReader
 		private static async Task<bool> outputFile(string filename, string archiveFilename, int filenumber)
 		{
 			StreamReader sr;
-			while (true) {
-				try {
+			while (true)
+			{
+				try
+				{
 					sr = new StreamReader(new FileStream(filename, FileMode.Open, FileAccess.Read));
 					break;
-				} catch (FileNotFoundException) {
+				}
+				catch (FileNotFoundException)
+				{
 					// This should never happen: it probably means there is more than one instance
 					// of this program running, and one of the others has already processed it
 					writeDiagnostic($"outputFile: file not found for {filename}. Perhaps you have more than one instance of FileAutoReader running against this folder. Program will exit.");
 					return false;
-				} catch (IOException ex) {
+				}
+				catch (IOException ex)
+				{
 					// probably means the file hasn't been closed by its creator yet - so try again
 					writeDiagnostic($"outputFile: can't create StreamReader: {ex.Message}");
 				}
 				await Task.Delay(10);
 			}
 			writeDiagnostic($"Start of file {filenumber}: {filename}");
-			while (!sr.EndOfStream) {
+			while (!sr.EndOfStream)
+			{
 				writeToConsole(sr.ReadLine());
 			}
 			sr.Close();
@@ -205,11 +234,12 @@ namespace FileAutoReader
 			if (archiveFilename.Length != 0)
 			{
 				try
-                {
+				{
 					if (File.Exists(archiveFilename)) File.Delete(archiveFilename);
 					File.Move(filename, archiveFilename);
-				} catch (IOException)
-                {
+				}
+				catch (IOException)
+				{
 					// the file has been deleted/moved by another instance
 					writeDiagnostic($"outputFile: file already moved to archive {filename}. Perhaps you have more than one instance of FileAutoReader running against this folder. Program will exit.");
 					return false;
@@ -218,23 +248,23 @@ namespace FileAutoReader
 			return true;
 		}
 
-		private static void writeDiagnostic(string message)
+		internal static void writeDiagnostic(string message)
 		{
+			mLogger.Log(message);
 			writeToConsole(message, isDiagnostic: true);
 		}
 
-        [STAThread]
-        private static IntervalTimer writePeriodically()
-        {
-            writeDiagnostic("Starting periodic writer");
+		private IntervalTimer writePeriodically()
+		{
+			writeDiagnostic("Starting periodic writer");
 			var timer = TW.CreateIntervalTimer(10, ExpiryTimeUnits.ExpiryTimeUnitMilliseconds, 10);
 			TW.LogMessage("Created IntervalTimer");
-			timer.AddTimerExpiryListener(new TimerListener());
+			timer.AddTimerExpiryListener(this);
 			timer.StartTimer();
 			return timer;
-        }
+		}
 
-        internal static void writeSingleLineToConsole(string message, bool isDiagnostic = false)
+		internal static void writeSingleLineToConsole(string message, bool isDiagnostic = false)
 		{
 			if (isDiagnostic)
 			{
@@ -255,6 +285,7 @@ namespace FileAutoReader
 
 		private static void readInputFromConsole()
 		{
+			writeDiagnostic("Starting reading from console");
 			while (true)
 			{
 				var s = String.Empty;
@@ -282,15 +313,27 @@ namespace FileAutoReader
 			var lWaitUntilTime = DateTime.UtcNow + TimeSpan.FromMilliseconds(waitTimeMIllisecs);
 
 			var s = mCon.ReadLine(">");
-            do
-            {
+			do
+			{
 				// allow queued system messages to be handled
 				TW.Wait(5);
-			} while (DateTime.UtcNow < lWaitUntilTime); 
+			} while (DateTime.UtcNow < lWaitUntilTime);
 
 			return s;
 		}
 
+		public void TimerExpired(ref TimerExpiredEventData ev)
+		{
+			try
+			{
+				writeSingleLineToConsole("");
+			}
+			catch (COMException ex)
+			{
+				writeDiagnostic(ex.Message);
+				writeDiagnostic(ex.StackTrace);
+			}
+		}
 	}
 
 }
