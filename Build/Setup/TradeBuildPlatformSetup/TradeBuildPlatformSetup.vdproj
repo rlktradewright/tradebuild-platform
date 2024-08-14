@@ -567,6 +567,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_2AACED6A735441439BDFB025B7FD33C8"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2AD3BF8E9578FCFA575EC7F88244E0B8"
         "OwnerKey" = "8:_EC45378A134444408F6E9664A2C49534"
         "MsmSig" = "8:_UNDEFINED"
@@ -1313,6 +1319,12 @@
         {
         "MsmKey" = "8:_51F78119D153601D0D81F719A56031A8"
         "OwnerKey" = "8:_F150A60F9D7D42BCA6C234AF0F1CE8DF"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_52DB26D84442408B8D96B2350A7E6809"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -2709,12 +2721,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_DBE2778222954ED8A82982CCA4D82954"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_DCA6F3B53A494A7C8532FE3CBFBAE258"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -3082,12 +3088,6 @@
         "Entry"
         {
         "MsmKey" = "8:_F150A60F9D7D42BCA6C234AF0F1CE8DF"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_F492FEA63AB74270A7E92EB47B726BC0"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -3609,6 +3609,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_F9649C36382642E7BFD7D3FA8EB774D0"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_F9C4ECAF19F449A0AD8A515FD84FFED7"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -3707,6 +3713,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_FED2A3C2ACE14220801F5BCE41C05877"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_52DB26D84442408B8D96B2350A7E6809"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -4449,7 +4461,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.266.msi"
+        "OutputFilename" = "8:..\\Bin\\TradeBuild-2.7.267.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -5423,6 +5435,26 @@
             "TargetName" = "8:README.txt"
             "Tag" = "8:"
             "Folder" = "8:_5FE692CB05E54ABB94DCECD19110BF4F"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2AACED6A735441439BDFB025B7FD33C8"
+            {
+            "SourcePath" = "8:..\\..\\..\\Bin\\FileAutoReader.exe.config"
+            "TargetName" = "8:FileAutoReader.exe.config"
+            "Tag" = "8:"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -7133,7 +7165,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.265, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Chart, Version=2.7.0.267, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_723FD58125624424AB2685557D3B43CC"
@@ -9452,26 +9484,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DBE2778222954ED8A82982CCA4D82954"
-            {
-            "SourcePath" = "8:..\\..\\..\\Bin\\Chart.exe.config"
-            "TargetName" = "8:Chart.exe.config"
-            "Tag" = "8:"
-            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DCA6F3B53A494A7C8532FE3CBFBAE258"
             {
             "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ExternalComponents\\dbadapt.dll"
@@ -10137,6 +10149,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F9649C36382642E7BFD7D3FA8EB774D0"
+            {
+            "SourcePath" = "8:..\\..\\..\\Bin\\Chart.exe.config"
+            "TargetName" = "8:Chart.exe.config"
+            "Tag" = "8:"
+            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F9C4ECAF19F449A0AD8A515FD84FFED7"
             {
             "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TradeBuild.ExternalComponents\\TLBINF32.DLL"
@@ -10625,15 +10657,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
-        "ProductCode" = "8:{EF8AEEB3-302C-4216-8F2D-21ECDF316BC5}"
-        "PackageCode" = "8:{C8C7E73E-9B62-4102-BA0D-D8B731CB95BA}"
+        "ProductCode" = "8:{BE810229-7BC6-49F4-941B-0B4EE7C443E2}"
+        "PackageCode" = "8:{024CDC0D-0F95-46C2-91AC-2186DA448785}"
         "UpgradeCode" = "8:{8867596C-A9FC-4200-AE7C-E24E252A6A65}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.7.266"
+        "ProductVersion" = "8:2.7.267"
         "Manufacturer" = "8:TradeWright Software Systems"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -11292,6 +11324,101 @@
         }
         "MergeModule"
         {
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_52DB26D84442408B8D96B2350A7E6809"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:FALSE"
+            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.267.msm"
+                "Properties"
+                {
+                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    {
+                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DisplayName" = "8:Module Retargetable Folder"
+                    "Description" = "8:"
+                    "Type" = "3:32769"
+                    "ContextData" = "8:_RetargetableFolder"
+                    "Attributes" = "3:6"
+                    "Setting" = "3:1"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                    "_4613E54AAEB4CBFDFC2EE75DF85418B8.4EB5B2E27A794B3384350D2FB58C0123"
+                    {
+                    "Name" = "8:_4613E54AAEB4CBFDFC2EE75DF85418B8.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DisplayName" = "8:"
+                    "Description" = "8:"
+                    "Type" = "3:2"
+                    "ContextData" = "8:InstallToGAC=;IsolateToManifest=_826E7EE640B5412DA8EB61E88DE8EE2F.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Attributes" = "3:0"
+                    "Setting" = "3:2"
+                    "Value" = "8:_826E7EE640B5412DA8EB61E88DE8EE2F.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DefaultValue" = "8:_826E7EE640B5412DA8EB61E88DE8EE2F.4EB5B2E27A794B3384350D2FB58C0123"
+                    "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                    "_49924E51A9E8F0768A018CCBB71FC1EA.4EB5B2E27A794B3384350D2FB58C0123"
+                    {
+                    "Name" = "8:_49924E51A9E8F0768A018CCBB71FC1EA.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DisplayName" = "8:"
+                    "Description" = "8:"
+                    "Type" = "3:2"
+                    "ContextData" = "8:InstallToGAC=;IsolateToManifest=_727DAA6040E94816BC1109390A96B583.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Attributes" = "3:0"
+                    "Setting" = "3:2"
+                    "Value" = "8:_727DAA6040E94816BC1109390A96B583.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DefaultValue" = "8:_727DAA6040E94816BC1109390A96B583.4EB5B2E27A794B3384350D2FB58C0123"
+                    "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                    "_652CE689BC31075F316AA0527B85A34A.4EB5B2E27A794B3384350D2FB58C0123"
+                    {
+                    "Name" = "8:_652CE689BC31075F316AA0527B85A34A.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DisplayName" = "8:"
+                    "Description" = "8:"
+                    "Type" = "3:2"
+                    "ContextData" = "8:InstallToGAC=;IsolateToManifest=_3B5D441818224816BC981126F8DF8C80.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Attributes" = "3:0"
+                    "Setting" = "3:2"
+                    "Value" = "8:_3B5D441818224816BC981126F8DF8C80.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DefaultValue" = "8:_3B5D441818224816BC981126F8DF8C80.4EB5B2E27A794B3384350D2FB58C0123"
+                    "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                    "_917718FB90F4255E5D0959A19CC9B6F2.4EB5B2E27A794B3384350D2FB58C0123"
+                    {
+                    "Name" = "8:_917718FB90F4255E5D0959A19CC9B6F2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DisplayName" = "8:"
+                    "Description" = "8:"
+                    "Type" = "3:2"
+                    "ContextData" = "8:InstallToGAC=;IsolateToManifest=_DEEA2C15A4584BFE888F2C5EACC66389.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Attributes" = "3:0"
+                    "Setting" = "3:2"
+                    "Value" = "8:_DEEA2C15A4584BFE888F2C5EACC66389.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DefaultValue" = "8:_DEEA2C15A4584BFE888F2C5EACC66389.4EB5B2E27A794B3384350D2FB58C0123"
+                    "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                    "_C5038CA3D1361A4E08BCD13F946E8B14.4EB5B2E27A794B3384350D2FB58C0123"
+                    {
+                    "Name" = "8:_C5038CA3D1361A4E08BCD13F946E8B14.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DisplayName" = "8:"
+                    "Description" = "8:"
+                    "Type" = "3:2"
+                    "ContextData" = "8:InstallToGAC=;IsolateToManifest=_A090A67532FC483CB4F989D325961FEF.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Attributes" = "3:0"
+                    "Setting" = "3:2"
+                    "Value" = "8:_A090A67532FC483CB4F989D325961FEF.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DefaultValue" = "8:_A090A67532FC483CB4F989D325961FEF.4EB5B2E27A794B3384350D2FB58C0123"
+                    "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                }
+            "LanguageId" = "3:1033"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
             "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_BDDFACF9333E4E9BBDF0C0B79BEF2322"
             {
             "UseDynamicProperties" = "11:TRUE"
@@ -11302,31 +11429,6 @@
                     "_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
                     {
                     "Name" = "8:_B6805193FBF747E796CBE61421A29A58.D788F584E95341F9BFCE168A4548C3FF"
-                    "DisplayName" = "8:Module Retargetable Folder"
-                    "Description" = "8:"
-                    "Type" = "3:32769"
-                    "ContextData" = "8:_RetargetableFolder"
-                    "Attributes" = "3:6"
-                    "Setting" = "3:1"
-                    "UsePlugInResources" = "11:FALSE"
-                    }
-                }
-            "LanguageId" = "3:1033"
-            "Exclude" = "11:FALSE"
-            "Folder" = "8:"
-            "Feature" = "8:"
-            "IsolateTo" = "8:"
-            }
-            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_F492FEA63AB74270A7E92EB47B726BC0"
-            {
-            "UseDynamicProperties" = "11:TRUE"
-            "IsDependency" = "11:FALSE"
-            "SourcePath" = "8:..\\Bin\\TradeBuildPlatform-2.7.266.msm"
-                "Properties"
-                {
-                    "_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
-                    {
-                    "Name" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     "DisplayName" = "8:Module Retargetable Folder"
                     "Description" = "8:"
                     "Type" = "3:32769"
