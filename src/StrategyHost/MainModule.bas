@@ -139,7 +139,7 @@ Then
 End If
 
 If lClp.Switch("ResultsPath") Then
-    mModel.ResultsPath = lClp.switchValue("ResultsPath")
+    mModel.ResultsPath = lClp.switchValue("ResultsDir")
 End If
 
 If lNoUI Then
