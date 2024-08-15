@@ -86,18 +86,17 @@ namespace TradeWright.TradeBuild.Applications.Chart
             var commandProcessor = new CommandProcessor(SynchronizationContext.Current, mConsoleHandler, clientManager, chart);
             TW.LogMessage("Starting command processor");
 
-            mCommandProcessorTask = Task.Factory.StartNew(
-                () =>
+            new Task(
+                (d) =>
                 {
-                    TW.LogMessage("Processing commands");
+
                     if (commandProcessor.ProcessCommandLineCommands(clp.Arg[1]))
                     {
                         commandProcessor.ProcessStdInCommands();
                     }
                 },
-                mCancellationTokenSource.Token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.FromCurrentSynchronizationContext());
+                null,
+                TaskCreationOptions.LongRunning).Start();
 
             return;
 

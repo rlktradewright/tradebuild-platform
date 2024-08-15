@@ -209,6 +209,8 @@
     <Reference Include="System.Xml" />
     <Reference Include="TradeWright.TabControlExtra, Version=2.0.1.0, Culture=neutral, PublicKeyToken=f4d0df7e5886cbe9, processorArchitecture=MSIL">
       <HintPath>packages\TradeWright.TabControlExtra.2.0.1\lib\net45\TradeWright.TabControlExtra.dll</HintPath>
+      <Private>False</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="VBA, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
