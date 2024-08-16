@@ -705,12 +705,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_311AF19427ABCCBCF425066437CABE95"
-        "OwnerKey" = "8:_723FD58125624424AB2685557D3B43CC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_33D4542FAEB64A17B3543EC9BC5CDF28"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -1462,12 +1456,6 @@
         "Entry"
         {
         "MsmKey" = "8:_62B498D0B23F43259A2A365C1EA4A800"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_634003DE3ECC483B810598A3D9A2046B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -3718,12 +3706,6 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_52DB26D84442408B8D96B2350A7E6809"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_FD63DFDF2FEE4659A461694B789175F2"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4126,12 +4108,6 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_311AF19427ABCCBCF425066437CABE95"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_71B4C9135EA9400CAF2A32CE17B430EC"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -4187,12 +4163,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_66BF3AAE104F4AC7BF4732B93AE060C5"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_634003DE3ECC483B810598A3D9A2046B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -4451,6 +4421,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_09A9A9AF87683BA2823F3D25175CFB76"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_52DB26D84442408B8D96B2350A7E6809"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -5033,7 +5009,7 @@
             "ReadOnly" = "11:FALSE"
             "Hidden" = "11:FALSE"
             "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
+            "Permanent" = "11:TRUE"
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
@@ -5517,37 +5493,6 @@
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_23C7A4A5769F461691533D7AAF23E45D"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_311AF19427ABCCBCF425066437CABE95"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TradeWright.TabControlExtra, Version=2.0.1.0, Culture=neutral, PublicKeyToken=f4d0df7e5886cbe9, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_311AF19427ABCCBCF425066437CABE95"
-                    {
-                    "Name" = "8:TradeWright.TabControlExtra.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:TradeWright.TabControlExtra.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -6737,37 +6682,6 @@
             "TargetName" = "8:MSWINSCK.ocx"
             "Tag" = "8:"
             "Folder" = "8:_86755753AF254035A165EA45EDCE7F59"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_634003DE3ECC483B810598A3D9A2046B"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TradeWright.TabControlExtra, Version=2.0.1.0, Culture=neutral, PublicKeyToken=f4d0df7e5886cbe9, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_634003DE3ECC483B810598A3D9A2046B"
-                    {
-                    "Name" = "8:TradeWright.TabControlExtra.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\..\\..\\Bin\\TradeWright.TabControlExtra.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_84F57BA502FB43D9B1DDA9163E971E81"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -10658,7 +10572,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TradeBuild Platform 2.7"
         "ProductCode" = "8:{BE810229-7BC6-49F4-941B-0B4EE7C443E2}"
-        "PackageCode" = "8:{024CDC0D-0F95-46C2-91AC-2186DA448785}"
+        "PackageCode" = "8:{B90A3CE1-10B4-4CBE-9BCC-FBAC212E03B5}"
         "UpgradeCode" = "8:{8867596C-A9FC-4200-AE7C-E24E252A6A65}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -11381,6 +11295,20 @@
                     "Setting" = "3:2"
                     "Value" = "8:_3B5D441818224816BC981126F8DF8C80.4EB5B2E27A794B3384350D2FB58C0123"
                     "DefaultValue" = "8:_3B5D441818224816BC981126F8DF8C80.4EB5B2E27A794B3384350D2FB58C0123"
+                    "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
+                    "UsePlugInResources" = "11:FALSE"
+                    }
+                    "_6FCA4C45854624832C765794C043D012.4EB5B2E27A794B3384350D2FB58C0123"
+                    {
+                    "Name" = "8:_6FCA4C45854624832C765794C043D012.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DisplayName" = "8:"
+                    "Description" = "8:"
+                    "Type" = "3:2"
+                    "ContextData" = "8:InstallToGAC=;IsolateToManifest=_3D161BA4AFFB4BBC8191F1DBF7250C4C.4EB5B2E27A794B3384350D2FB58C0123"
+                    "Attributes" = "3:0"
+                    "Setting" = "3:2"
+                    "Value" = "8:_3D161BA4AFFB4BBC8191F1DBF7250C4C.4EB5B2E27A794B3384350D2FB58C0123"
+                    "DefaultValue" = "8:_3D161BA4AFFB4BBC8191F1DBF7250C4C.4EB5B2E27A794B3384350D2FB58C0123"
                     "ParentName" = "8:_0B442E37F75E483792E12920AEB693A2.4EB5B2E27A794B3384350D2FB58C0123"
                     "UsePlugInResources" = "11:FALSE"
                     }
