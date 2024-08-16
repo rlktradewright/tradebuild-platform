@@ -138,7 +138,7 @@ Then
     mModel.UseMoneyManagement = True
 End If
 
-If lClp.Switch("ResultsPath") Then
+If lClp.Switch("ResultsDir") Then
     mModel.ResultsPath = lClp.switchValue("ResultsDir")
 End If
 
