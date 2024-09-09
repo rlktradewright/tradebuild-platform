@@ -47,6 +47,8 @@ Private Const ModuleName                            As String = "ContractsReques
 Private mContractSpecifier                          As IContractSpecifier
 Private mContractRequester                          As ContractsTwsRequester
 
+Private mInitialContractSpecifier                   As ContractSpecifier
+
 Private mNumOutstandingRequests                     As Long
 
 Private mFetchers                                   As EnumerableCollection
@@ -433,6 +435,7 @@ lFetcher.FetchContracts Me, _
                         mContractRequester, _
                         mContractCache, _
                         pContractSpec, _
+                        mContractSpecifier, _
                         mReturnTwsContracts, _
                         mCookie
 

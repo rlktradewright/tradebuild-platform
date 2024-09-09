@@ -52,6 +52,8 @@ Private mRequestManager                             As ContractsRequestManager
 Private mContractSpecifier                          As IContractSpecifier
 Private mContractRequester                          As ContractsTwsRequester
 
+Private mInitialContractSpecifier                   As ContractSpecifier
+
 Private mTaskContext                                As TaskContext
 
 Private mContractsForCachingFutureBuilder           As FutureBuilder
@@ -340,6 +342,7 @@ Friend Sub FetchContracts( _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
                 ByVal pContractSpecifier As IContractSpecifier, _
+                ByVal pInitialContractSpecifier As ContractSpecifier, _
                 ByVal pReturnTwsContracts As Boolean, _
                 ByVal pCookie As Variant)
 Const ProcName As String = "FetchContracts"
@@ -349,6 +352,7 @@ Set mRequestManager = pRequestManager
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mContractSpecifier = pContractSpecifier
+Set mInitialContractSpecifier = pInitialContractSpecifier
 mReturnTwsContracts = pReturnTwsContracts
 
 Dim lCachedContractsFutureBuilder As FutureBuilder
@@ -409,6 +413,8 @@ Private Sub addCacheEntries( _
 Const ProcName As String = "addCacheEntries"
 On Error GoTo Err
 
+addCacheEntry mInitialContractSpecifier.Key, pContract, pTwsContract
+
 addCacheEntry pContract.Specifier.Key, pContract, pTwsContract
 
 Dim lSpec As IContractSpecifier
@@ -434,9 +440,7 @@ Private Sub addCacheEntry( _
 Const ProcName As String = "addCacheEntry"
 On Error GoTo Err
 
-If pKey = mContractSpecifier.Key Then
-ElseIf mContractCache.ContainsContract(pKey) Then
-Else
+If pKey <> mContractSpecifier.Key Then
     mContractCache.AddContract pKey, pContract, pTwsContract
 End If
 

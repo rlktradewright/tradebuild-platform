@@ -48,11 +48,11 @@ Private Const ContinuationDataTypeOptionParams      As String = "OPTIONPARAMS"
 ' Member variables
 '@================================================================================
 
-Private mContracts                                  As New EnumerableCollection
+Private mContractEntries                            As New EnumerableCollection
 
-Private mOptionParameters                           As New EnumerableCollection
+Private mOptionParametersEntries                    As New EnumerableCollection
 
-Private mPriceIncrementRulesets                     As New EnumerableCollection
+Private mPriceIncrementRulesetsEntries              As New EnumerableCollection
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -85,8 +85,8 @@ Dim lKey As String
 If lContinuationData.DataType = ContinuationDataTypeRuleset Then
     lKey = CStr(lContinuationData.DataValue)
     Dim lRulesetEntry As PriceIncrementRulesetCacheEntry
-    lRulesetEntry = mPriceIncrementRulesets.Item(lKey)
-    mPriceIncrementRulesets.Remove lKey
+    lRulesetEntry = mPriceIncrementRulesetsEntries.Item(lKey)
+    mPriceIncrementRulesetsEntries.Remove lKey
     
     If ev.Future.IsCancelled Or ev.Future.IsFaulted Then Exit Sub
     
@@ -95,7 +95,7 @@ If lContinuationData.DataType = ContinuationDataTypeRuleset Then
     
     lRulesetEntry.CacheDate = Now
     
-    mPriceIncrementRulesets.Add lRulesetEntry, lKey
+    mPriceIncrementRulesetsEntries.Add lRulesetEntry, lKey
     GIBEnhApi.Logger.Log "Added price increment ruleset " & _
                 lKey & _
                 " to cache", _
@@ -103,8 +103,8 @@ If lContinuationData.DataType = ContinuationDataTypeRuleset Then
 ElseIf lContinuationData.DataType = ContinuationDataTypeContracts Then
     lKey = lContinuationData.DataValue
     Dim lContractEntry As ContractCacheEntry
-    lContractEntry = mContracts.Item(lKey)
-    mContracts.Remove lKey
+    lContractEntry = mContractEntries.Item(lKey)
+    mContractEntries.Remove lKey
     
     If ev.Future.IsCancelled Or ev.Future.IsFaulted Then Exit Sub
     
@@ -113,7 +113,7 @@ ElseIf lContinuationData.DataType = ContinuationDataTypeContracts Then
     
     lContractEntry.CacheDate = Now
     
-    mContracts.Add lContractEntry, lKey
+    mContractEntries.Add lContractEntry, lKey
     GIBEnhApi.Logger.Log "Added " & _
                 lContractEntry.Contracts.Count & _
                 IIf(lContractEntry.Contracts.Count = 1, " contract", " contracts") & _
@@ -127,15 +127,15 @@ ElseIf lContinuationData.DataType = ContinuationDataTypeOptionParams Then
     lKey = generateEndOptionParametersKey(lContractSpec)
     
     Dim lOptionParamsEntry As OptionParametersCacheEntry
-    lOptionParamsEntry = mOptionParameters.Item(lKey)
-    mOptionParameters.Remove lKey
+    lOptionParamsEntry = mOptionParametersEntries.Item(lKey)
+    mOptionParametersEntries.Remove lKey
     
     If ev.Future.IsCancelled Or ev.Future.IsFaulted Then Exit Sub
     
     Set lOptionParamsEntry.OptionParametersFutureBuilder = Nothing
     lOptionParamsEntry.CacheDate = Now
     
-    mOptionParameters.Add lOptionParamsEntry, lKey
+    mOptionParametersEntries.Add lOptionParamsEntry, lKey
     
     GIBEnhApi.Logger.Log "Added option parameters to cache for contract", _
                 ProcName, ModuleName, LogLevelDetail, _
@@ -169,7 +169,12 @@ If pContract.Specifier.SecType = SecTypeCombo Then Exit Sub
 If Not IsValidExchangeCode(pTwsContract.Specifier.Exchange) Then Exit Sub
 
 Dim lEntry As ContractCacheEntry
-If tryGetContractCacheEntry(pKey, lEntry) Then Exit Sub
+If Not tryGetContractCacheEntry(pKey, lEntry) Then
+ElseIf lEntry.Contracts.Count = 0 Then
+    mContractEntries.Remove pKey
+Else
+    Exit Sub
+End If
 
 lEntry.CacheDate = Now
 Dim lContractsBuilder As New ContractsBuilder
@@ -178,7 +183,7 @@ lContractsBuilder.ContractSpecifier = pContract.Specifier
 Set lEntry.Contracts = lContractsBuilder.Contracts
 If lEntry.TwsContracts Is Nothing Then Set lEntry.TwsContracts = New EnumerableCollection
 lEntry.TwsContracts.Add pTwsContract
-mContracts.Add lEntry, pKey
+mContractEntries.Add lEntry, pKey
 GIBEnhApi.Logger.Log "Added 1 contract to cache for key: " & pKey, ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
@@ -186,33 +191,6 @@ Exit Sub
 Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
-
-'Friend Sub AddContracts( _
-'                ByVal pContracts As IContracts, _
-'                ByVal pTwsContracts As EnumerableCollection, _
-'                ByVal pRequestContractSpec As IContractSpecifier)
-'Const ProcName As String = "AddContracts"
-'On Error GoTo Err
-'
-'Dim lEntry As ContractCacheEntry
-'If tryGetContractCacheEntry(pRequestContractSpec.Key, lEntry) Then mContracts.Remove pRequestContractSpec.Key
-'
-'lEntry.CacheDate = Now
-'Set lEntry.Contracts = pContracts
-'Set lEntry.TwsContracts = pTwsContracts
-'mContracts.Add lEntry, pRequestContractSpec.Key
-'GIBEnhApi.Logger.Log "Added " & _
-'            pContracts.Count & _
-'            IIf(pContracts.Count = 1, " contract", " contracts") & _
-'            " to cache for key", _
-'            ProcName, ModuleName, LogLevelDetail, _
-'            pRequestContractSpec.Key
-'
-'Exit Sub
-'
-'Err:
-'GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
-'End Sub
 
 Friend Sub AddOptionParameter( _
                 ByVal pContractSpec As IContractSpecifier, _
@@ -230,7 +208,7 @@ lEntry.CacheDate = Now
 Dim lParametersStore As New OptionParametersStore
 Set lEntry.OptionParameters = lParametersStore
 
-mOptionParameters.Add lEntry, lKey
+mOptionParametersEntries.Add lEntry, lKey
 
 Dim i As Long
 Dim j As Long
@@ -268,7 +246,7 @@ If tryGetRulesetCacheEntry(CStr(pRuleset.RulesID), lEntry) Then Exit Sub
 
 lEntry.CacheDate = Now
 Set lEntry.Ruleset = pRuleset
-mPriceIncrementRulesets.Add lEntry, CStr(pRuleset.RulesID)
+mPriceIncrementRulesetsEntries.Add lEntry, CStr(pRuleset.RulesID)
 
 GIBEnhApi.Logger.Log "Added price increment ruleset " & _
             pRuleset.RulesID & _
@@ -516,7 +494,7 @@ Assert Not tryGetContractCacheEntry(pContractSpec.Key, lEntry), "Cache entry alr
 Set lEntry.ContractsFutureBuilder = pContractsFutureBuilder
 Set lEntry.TwsContracts = pTwsContracts
 lEntry.CacheDate = Now
-mContracts.Add lEntry, pContractSpec.Key
+mContractEntries.Add lEntry, pContractSpec.Key
 
 Dim c As New CacheContinuationData
 c.DataType = ContinuationDataTypeContracts
@@ -545,7 +523,7 @@ Assert Not tryGetOptionParametersCacheEntry(lKey, lEntry), "OPtion parameters ca
 Set lEntry.OptionParametersFutureBuilder = pOptionParametersFutureBuilder
 lEntry.CacheDate = Now
 
-mOptionParameters.Add lEntry, lKey
+mOptionParametersEntries.Add lEntry, lKey
 
 Dim c As New CacheContinuationData
 c.DataType = ContinuationDataTypeOptionParams
@@ -569,7 +547,7 @@ Assert Not tryGetRulesetCacheEntry(pRuleID, lEntry), "Cache entry already exists
     
 Set lEntry.RulesetFutureBuilder = pRulesetFutureBuilder
 lEntry.CacheDate = Now
-mPriceIncrementRulesets.Add lEntry, CStr(Abs(pRuleID))
+mPriceIncrementRulesetsEntries.Add lEntry, CStr(Abs(pRuleID))
 
 Dim c As New CacheContinuationData
 c.DataType = ContinuationDataTypeRuleset
@@ -634,9 +612,9 @@ Private Function tryGetContractCacheEntry( _
 Const ProcName As String = "tryGetContractCacheEntry"
 On Error GoTo Err
 
-If Not mContracts.TryItem(pKey, pCacheEntry) Then
+If Not mContractEntries.TryItem(pKey, pCacheEntry) Then
 ElseIf isCacheEntryExpired(pCacheEntry.CacheDate) Then
-    mContracts.Remove pKey
+    mContractEntries.Remove pKey
 Else
     tryGetContractCacheEntry = True
 End If
@@ -653,9 +631,9 @@ Private Function tryGetOptionParametersCacheEntry( _
 Const ProcName As String = "tryGetOptionParametersCacheEntry"
 On Error GoTo Err
 
-If Not mOptionParameters.TryItem(pKey, pCacheEntry) Then
+If Not mOptionParametersEntries.TryItem(pKey, pCacheEntry) Then
 ElseIf isCacheEntryExpired(pCacheEntry.CacheDate) Then
-    mOptionParameters.Remove pKey
+    mOptionParametersEntries.Remove pKey
 Else
     tryGetOptionParametersCacheEntry = True
 End If
@@ -672,7 +650,7 @@ Private Function tryGetRulesetCacheEntry( _
 Const ProcName As String = "tryGetRulesetCacheEntry"
 On Error GoTo Err
 
-If Not mPriceIncrementRulesets.TryItem(CStr(Abs(pRuleID)), pCacheEntry) Then
+If Not mPriceIncrementRulesetsEntries.TryItem(CStr(Abs(pRuleID)), pCacheEntry) Then
 
 ' don't check for ruleset expiry to avoid problems where a ticker is
 ' started before midnight but the first tick doesn't arrive till after
@@ -680,7 +658,7 @@ If Not mPriceIncrementRulesets.TryItem(CStr(Abs(pRuleID)), pCacheEntry) Then
 'ElseIf gIsCacheEntryExpired(pCacheEntry.CacheDate) Then
 '    Dim lCacheEntry As PriceIncrementRulesetCacheEntry
 '    pCacheEntry = lCacheEntry
-'    mPriceIncrementRulesets.Remove CStr(Abs(pRuleID))
+'    mPriceIncrementRulesetsEntries.Remove CStr(Abs(pRuleID))
 Else
     tryGetRulesetCacheEntry = True
 End If
