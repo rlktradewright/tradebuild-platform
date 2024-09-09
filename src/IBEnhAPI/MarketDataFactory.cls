@@ -62,6 +62,7 @@ Private Type TickerTableEntry
     ContractFuture          As IFuture
     TwsContract             As TwsContract
     Contract                As IContract
+    MinimumPriceVariation   As Double
     ConsumerTimeZone        As TimeZone
     ErrorListener           As IMarketDataErrorListener
     DataHasBeenReceived     As Boolean
@@ -284,6 +285,8 @@ Dim lTick As GenericTick
 lTick.Price = pPrice
 Set lTick.Size = pSize
 
+Dim lCashTradeTick As GenericTick
+
 With mMarketDataTable(lIndex)
 
     .DataHasBeenReceived = True
@@ -336,6 +339,17 @@ With mMarketDataTable(lIndex)
 End With
 
 FireTick lIndex, lTick
+
+With mMarketDataTable(lIndex)
+    If .Contract.Specifier.SecType <> SecTypeCash Then
+    ElseIf pTickType = TwsTickAsk Or pTickType = TwsTickBid Then
+        lCashTradeTick.TickType = TickTypeTrade
+        lCashTradeTick.Timestamp = lTick.Timestamp
+        Set lCashTradeTick.Size = DecimalZero
+        lCashTradeTick.Price = calcMidPrice(.PrevBid, .PrevAsk, .MinimumPriceVariation)
+        FireTick lIndex, lCashTradeTick
+    End If
+End With
 
 Exit Sub
 
@@ -935,6 +949,23 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function calcMidPrice( _
+                ByVal pBidPrice As Double, _
+                ByVal pAskPrice As Double, _
+                ByVal pMinPriceVariation As Double) As Double
+If pBidPrice = MaxDouble And pAskPrice = MaxDouble Then Exit Function
+If pBidPrice = MaxDouble Then
+    calcMidPrice = pAskPrice
+ElseIf pAskPrice = MaxDouble Then
+    calcMidPrice = pBidPrice
+Else
+    Dim lNumDecimalPlaces As Long
+    lNumDecimalPlaces = Len(Format(pMinPriceVariation, "0.########")) - 2
+    
+    calcMidPrice = Round((pBidPrice + pAskPrice + (pMinPriceVariation * 0.001)) / 2# / pMinPriceVariation * pMinPriceVariation, lNumDecimalPlaces)
+End If
+End Function
 
 Private Sub cancelMarketDataEx(ByVal pIndex As Long)
 Const ProcName As String = "cancelMarketDataEx"
@@ -1564,6 +1595,7 @@ If lIncrement <> 0 Then
     GIBEnhApi.Logger.Log "lPriceMagnifier=" & lPriceMagnifier, ProcName, ModuleName, LogLevelMediumDetail
     GIBEnhApi.Logger.Log "Tick size set to " & lIncrement, ProcName, ModuleName, LogLevelDetail
     pTickers(pStreamId).TickStreamBuilder.SetMinimumPriceVariation lIncrement
+    pTickers(pStreamId).MinimumPriceVariation = lIncrement
     pTickers(pStreamId).TickSizeHasBeenSet = True
 End If
 

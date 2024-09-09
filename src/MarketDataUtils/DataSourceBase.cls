@@ -626,7 +626,7 @@ Set mContract = mContractFuture.Value
 If mOptions And MarketDataSourceOptions.MarketDataSourceOptUseFullSession Then
     Set mSessionBuilder = CreateSessionBuilder(mContract.FullSessionStartTime, mContract.FullSessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
 Else
-    Set mSessionBuilder = CreateSessionBuilder(mContract.sessionStartTime, mContract.sessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
+    Set mSessionBuilder = CreateSessionBuilder(mContract.SessionStartTime, mContract.SessionEndTime, GetTimeZone(IIf(mOptions And MarketDataSourceOptUseExchangeTimeZone, mContract.TimezoneName, "")))
 End If
 
 Set mVolumeAdjuster = New VolumeAdjuster

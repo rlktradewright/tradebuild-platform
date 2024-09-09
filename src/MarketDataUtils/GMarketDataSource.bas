@@ -67,13 +67,11 @@ Dim lTickSize As Double: lTickSize = lContract.TickSize
 Dim lTick As GenericTick
 s = gPadStringRight("B=" & formatPriceTick(pDataSource, TickTypeBid, lSectype, lTickSize), 17)
 s = s & gPadStringRight("A=" & formatPriceTick(pDataSource, TickTypeAsk, lSectype, lTickSize), 17)
-If lSectype <> SecTypeCash Then
-    s = s & gPadStringRight("T=" & formatPriceTick(pDataSource, TickTypeTrade, lSectype, lTickSize), 17)
-    If lSectype = SecTypeOption Or lSectype = SecTypeFuturesOption Then
-        s = s & gPadStringRight("M=" & formatPriceTick(pDataSource, TickTypeOptionModelPrice, lSectype, lTickSize), 17)
-    End If
-    s = s & "V=" & formatSizeTick(pDataSource, TickTypeVolume)
+s = s & gPadStringRight("T=" & formatPriceTick(pDataSource, TickTypeTrade, lSectype, lTickSize), 17)
+If lSectype = SecTypeOption Or lSectype = SecTypeFuturesOption Then
+    s = s & gPadStringRight("M=" & formatPriceTick(pDataSource, TickTypeOptionModelPrice, lSectype, lTickSize), 17)
 End If
+s = s & "V=" & formatSizeTick(pDataSource, TickTypeVolume)
 
 gGetCurrentTickSummary = s
 
@@ -163,7 +161,7 @@ Else
     s = s & FormatPrice(lTick.Price, pSecType, pTickSize)
     If pTickType = TickTypeOptionModelPrice Then
     ElseIf lTick.Size.EQ(DecimalZero) Then
-        s = s & "n/a"
+        s = s & "(n/a)"
     Else
         s = s & "("
         s = s & formatBigInteger(lTick.Size)
