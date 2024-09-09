@@ -85,8 +85,7 @@ If lClp.Switch("noui") Then lNoUI = True
 Dim lRun As Boolean
 If lClp.Switch("run") Then lRun = True
 
-Dim lSimulateOrders As Boolean
-If lClp.Switch("simulateorders") Then lSimulateOrders = True
+mModel.UseLiveBroker = Not lClp.Switch("simulateorders")
 
 Dim lContractSpecString As String
 lContractSpecString = lClp.switchValue("contract")
@@ -130,7 +129,7 @@ If lTargetStrategyFactoryProgIds = "" And lNoUI Then
     Exit Sub
 End If
 
-If Not setupServiceProviders(lClp, lSimulateOrders, lNoUI) Then Exit Sub
+If Not setupServiceProviders(lClp, Not mModel.UseLiveBroker, lNoUI) Then Exit Sub
 
 If lClp.Switch("umm") Or _
     lClp.Switch("UseMoneyManagement") _
