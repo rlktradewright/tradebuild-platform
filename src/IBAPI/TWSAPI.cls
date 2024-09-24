@@ -1783,7 +1783,7 @@ Err:
 GIB.HandleUnexpectedError mProgramErrorHandler, ProcName, ModuleName
 End Sub
 
-Public Sub RequestMarketDataType(ByVal pMarketDataType As Long)
+Public Sub RequestMarketDataType(ByVal pMarketDataType As TwsMarketDataTypes)
 Const ProcName As String = "RequestMarketDataType"
 On Error GoTo Err
 

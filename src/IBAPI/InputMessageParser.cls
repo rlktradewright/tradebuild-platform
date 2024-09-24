@@ -949,9 +949,11 @@ On Error GoTo Err
 mReader.BeginLogMessage
 
 Dim lReqId As Long: lReqId = mReader.GetLong("Ticker id")
-Dim lMarketDataType As Long: lMarketDataType = mReader.GetLong("MarketDataType")
+Dim lMarketDataType As TwsMarketDataTypes: lMarketDataType = mReader.GetLong("MarketDataType")
 
 mReader.EndLogMessage
+
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyMarketDataType GIdManager.GetCallerId(lReqId, IdTypeMarketData), lMarketDataType
 
 Exit Sub
 

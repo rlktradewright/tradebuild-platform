@@ -258,6 +258,10 @@ Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickUti
 IMarketDataSource_HasCurrentTick = HasCurrentTick(pTickType)
 End Property
 
+Private Property Get IMarketDataSource_IsDataDelayed() As Boolean
+IMarketDataSource_IsDataDelayed = IsDataDelayed
+End Property
+
 Private Property Get IMarketDataSource_IsFinished() As Boolean
 IMarketDataSource_IsFinished = IsFinished
 End Property
@@ -697,6 +701,10 @@ Exit Property
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get IsDataDelayed() As Boolean
+IsDataDelayed = mDataSource.IsDataDelayed
 End Property
 
 Public Property Get IsFinished() As Boolean

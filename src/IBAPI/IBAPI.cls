@@ -102,6 +102,14 @@ Public Enum TwsLiquidityTypes
     TwsLiquidityTypeLiquidityRoutedOut
 End Enum
 
+Public Enum TwsMarketDataTypes
+    TwsMarketDataTypeNone
+    TwsMarketDataTypeRealtime
+    TwsMarketDataTypeFrozen
+    TwsMarketDataTypeDelayed
+    TwsMarketDataTypeDelayedFrozen
+End Enum
+
 Public Enum TwsOcaTypes
     TwsOcaTypeCancelWithBlock = 1
     TwsOcaTypeReduceWithBlock = 2

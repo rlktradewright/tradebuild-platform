@@ -142,7 +142,7 @@ With lTwsContractSpec
             lPriceMagnifier = pContractSpecifier.ProviderProperties.GetParameterValue(ProviderPropertyPriceMagnifier, "0")
             If lPriceMagnifier <> 0 Then .Multiplier = pContractSpecifier.Multiplier / lPriceMagnifier
         ElseIf UCase$(.CurrencyCode) = "GBP" Then
-            .Multiplier = .Multiplier / 100
+            .Multiplier = .Multiplier * 100
         End If
     End If
     .OptRight = OptionRightToTwsOptRight(pContractSpecifier.Right)

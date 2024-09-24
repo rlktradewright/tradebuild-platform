@@ -325,6 +325,11 @@ Friend Property Get ContractFuture() As IFuture
 Set ContractFuture = mContractFuture
 End Property
 
+Friend Property Get DataTickStream() As ITickStream
+Assert Not mDataTickStream Is Nothing, "DataTickStream is not yet set"
+Set DataTickStream = mDataTickStream
+End Property
+
 Friend Property Get DOMManager() As DOMManager
 Set DOMManager = mDOMManager
 End Property

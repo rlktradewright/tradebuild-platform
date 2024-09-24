@@ -49,6 +49,8 @@ Attribute mClock.VB_VarHelpID = -1
 Private WithEvents mBaseClock                       As Clock
 Attribute mBaseClock.VB_VarHelpID = -1
 
+Private mDataIsDelayed                              As Boolean
+
 Private mTimePanel                                  As Panel
 Private mTimeframePanel                             As Panel
 
@@ -80,7 +82,7 @@ Private Sub mBaseClock_Tick()
 Const ProcName As String = "mBaseClock_Tick"
 On Error GoTo Err
 
-displayTime
+displayTime mDataIsDelayed
 
 Exit Sub
 
@@ -101,7 +103,11 @@ Const ProcName As String = "mFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
-SetClock ev.Future.Value
+
+Dim lBoxedValue As BoxedValue
+Set lBoxedValue = ev.ContinuationData
+mDataIsDelayed = lBoxedValue.Value
+SetClock ev.Future.Value, mDataIsDelayed
 
 Exit Sub
 
@@ -129,13 +135,13 @@ Set mTimePanel = pTimePanel
 Set mTimeframePanel = pTimeframePanel
 End Sub
 
-Friend Sub SetClock(ByVal pClock As Clock)
+Friend Sub SetClock(ByVal pClock As Clock, Optional ByVal pIsDataDelayed As Boolean)
 Const ProcName As String = "SetClockFuture"
 On Error GoTo Err
 
 Set mClock = pClock
 mTimeframePanel.Text = mClock.TimeZone.StandardName
-displayTime
+displayTime pIsDataDelayed
 
 Exit Sub
 
@@ -143,11 +149,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Sub SetClockFuture(ByVal pClockFuture As IFuture)
+Friend Sub SetClockFuture(ByVal pClockFuture As IFuture, ByVal pIsDataDelayed As Boolean)
 Const ProcName As String = "SetClockFuture"
 On Error GoTo Err
 
-mFutureWaiter.Add pClockFuture
+mFutureWaiter.Add pClockFuture, CreateBoxedValue(pIsDataDelayed)
 
 Exit Sub
 
@@ -159,13 +165,13 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub displayTime()
+Private Sub displayTime(ByVal pIsDataDelayed As Boolean)
 Const ProcName As String = "displayTime"
 On Error GoTo Err
 
 Dim theTime As Date
 If Not mClock Is Nothing Then
-    theTime = mClock.TimeStamp
+    theTime = mClock.TimeStamp - IIf(pIsDataDelayed, 900# / 86400#, 0)
 Else
     theTime = mBaseClock.TimeStamp
 End If

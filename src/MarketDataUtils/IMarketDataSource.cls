@@ -81,6 +81,9 @@ End Property
 Public Property Get HasCurrentTick(ByVal pTickType As TickTypes) As Boolean
 End Property
 
+Public Property Get IsDataDelayed() As Boolean
+End Property
+
 Public Property Get IsFinished() As Boolean
 End Property
 

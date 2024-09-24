@@ -186,13 +186,12 @@ End Function
 Public Function CreateTickStreamBuilder( _
                 ByVal pStreamId As Long, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pClockFuture As IFuture, _
-                Optional ByVal pIsDelayed As Boolean = False) As TickStreamBuilder
+                ByVal pClockFuture As IFuture) As TickStreamBuilder
 Const ProcName As String = "CreateTickStreamBuilder"
 On Error GoTo Err
 
 Set CreateTickStreamBuilder = New TickStreamBuilder
-CreateTickStreamBuilder.Initialise pStreamId, pContractFuture, pClockFuture, pIsDelayed
+CreateTickStreamBuilder.Initialise pStreamId, pContractFuture, pClockFuture
 
 Exit Function
 

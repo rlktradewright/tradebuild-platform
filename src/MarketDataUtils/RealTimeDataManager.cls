@@ -43,7 +43,8 @@ Implements IMarketDataManager
 Private Const ModuleName                            As String = "RealtimeDataManager"
 
 Private Const MyCapabilities                        As Long = MarketDataManagerCapabilities.MarketDataManagerStreaming + _
-                                                                MarketDataManagerCapabilities.MarketDataManagerSnapshots
+                                                                MarketDataManagerCapabilities.MarketDataManagerSnapshots + _
+                                                                MarketDataManagerCapabilities.MarketDataManagerProvidesDelayedData
 
 '@================================================================================
 ' Member variables
@@ -54,6 +55,8 @@ Private mDataManager                                As MarketDataManager
 Private mConfig                                     As ConfigurationSection
 
 Private mDefaultStateChangeListener                 As IStateChangeListener
+
+Private mDataDelaySeconds                           As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -116,6 +119,14 @@ Exit Function
 Err:
 GMktData.HandleUnexpectedError ProcName, ModuleName
 End Function
+
+Private Property Let IMarketDataManager_DataDelaySeconds(ByVal Value As Long)
+mDataDelaySeconds = Value
+End Property
+
+Private Property Get IMarketDataManager_DataDelaySeconds() As Long
+IMarketDataManager_DataDelaySeconds = mDataDelaySeconds
+End Property
 
 Private Property Get IMarketDataManager_DataSources() As EnumerableCollection
 Set IMarketDataManager_DataSources = DataSources

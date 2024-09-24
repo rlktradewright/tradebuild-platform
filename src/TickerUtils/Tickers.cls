@@ -147,6 +147,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
+Private Property Let IMarketDataManager_DataDelaySeconds(ByVal Value As Long)
+mMarketDataManager.DataDelaySeconds = Value
+End Property
+
+Private Property Get IMarketDataManager_DataDelaySeconds() As Long
+IMarketDataManager_DataDelaySeconds = mMarketDataManager.DataDelaySeconds
+End Property
+
 Private Property Get IMarketDataManager_DataSources() As EnumerableCollection
 Set IMarketDataManager_DataSources = mTickers
 End Property

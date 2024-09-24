@@ -33,6 +33,7 @@ Option Explicit
 Public Enum MarketDataManagerCapabilities
     MarketDataManagerSnapshots = 1
     MarketDataManagerStreaming = 2
+    MarketDataManagerProvidesDelayedData = 3
 End Enum
 
 '@================================================================================
@@ -66,6 +67,12 @@ Private Const ModuleName                            As String = "IMarketDataMana
 '@================================================================================
 
 Public Property Get Capabilities() As MarketDataManagerCapabilities
+End Property
+
+Public Property Let DataDelaySeconds(ByVal Value As Long)
+End Property
+
+Public Property Get DataDelaySeconds() As Long
 End Property
 
 Public Property Get DataSources() As EnumerableCollection

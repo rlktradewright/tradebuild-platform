@@ -322,6 +322,7 @@ Public Enum MarketDataSourceOptions
     MarketDataSourceOptNoImpliedTrades = 2
     MarketDataSourceOptNoVolumeAdjustments = 4
     MarketDataSourceOptUseFullSession = 8
+    MarketDataSourceOptAllowDelayedData = 16
 End Enum
 
 Public Enum OptionComputationTypes
@@ -613,9 +614,9 @@ Const ProcName As String = "CreateTickStreamBuilder"
 On Error GoTo Err
 
 Set CreateTickStreamBuilder = GTickUtils.CreateTickStreamBuilder( _
-                                    pStreamId, pContractFuture, _
-                                    pClockFuture, _
-                                    pIsDelayed)
+                                    pStreamId, _
+                                    pContractFuture, _
+                                    pClockFuture)
 
 Exit Function
 

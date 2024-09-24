@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#402.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -8,6 +8,15 @@ Begin VB.Form fTradeSkilDemo
    ClientLeft      =   225
    ClientTop       =   345
    ClientWidth     =   16665
+   BeginProperty Font 
+      Name            =   "Segoe UI Semibold"
+      Size            =   9.75
+      Charset         =   0
+      Weight          =   600
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
    Icon            =   "fTradeSkilDemo.frx":0000
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
@@ -27,6 +36,15 @@ Begin VB.Form fTradeSkilDemo
    Begin VB.PictureBox ShowInfoPanelPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   240
       Left            =   16320
       MouseIcon       =   "fTradeSkilDemo.frx":3307A
@@ -42,6 +60,15 @@ Begin VB.Form fTradeSkilDemo
    Begin VB.PictureBox ShowFeaturesPanelPicture 
       AutoSize        =   -1  'True
       BorderStyle     =   0  'None
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   240
       Left            =   0
       MouseIcon       =   "fTradeSkilDemo.frx":33756
@@ -102,7 +129,7 @@ Begin VB.Form fTradeSkilDemo
       ForeColor       =   7368816
       BeginProperty FontFixed {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "Segoe UI"
-         Size            =   9
+         Size            =   9.75
          Charset         =   0
          Weight          =   700
          Underline       =   0   'False
@@ -110,10 +137,10 @@ Begin VB.Form fTradeSkilDemo
          Strikethrough   =   0   'False
       EndProperty
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
+         Name            =   "Segoe UI"
+         Size            =   9.75
          Charset         =   0
-         Weight          =   400
+         Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
          Strikethrough   =   0   'False
@@ -210,6 +237,10 @@ Attribute mInfoPanelForm.VB_VarHelpID = -1
 Private mTheme                                      As ITheme
 
 Private mFinishing                                  As Boolean
+
+Private Sub Form_Click()
+Debug.Print "Form_Click()"
+End Sub
 
 '================================================================================
 ' Form Event Handlers
@@ -358,14 +389,14 @@ Select Case ev.State
 Case MarketDataSourceStates.MarketDataSourceStateCreated
 
 Case MarketDataSourceStates.MarketDataSourceStateReady
-    If lDataSource Is getSelectedDataSource Then mClockDisplay.SetClockFuture lDataSource.ClockFuture
+    If lDataSource Is getSelectedDataSource Then mClockDisplay.SetClockFuture lDataSource.ClockFuture, lDataSource.IsDataDelayed
 Case MarketDataSourceStates.MarketDataSourceStateRunning
     
 Case MarketDataSourceStates.MarketDataSourceStatePaused
 
 Case MarketDataSourceStates.MarketDataSourceStateStopped
     If Not getSelectedDataSource Is Nothing Then
-        mClockDisplay.SetClockFuture getSelectedDataSource.ClockFuture
+        mClockDisplay.SetClockFuture getSelectedDataSource.ClockFuture, getSelectedDataSource.IsDataDelayed
     End If
     
 End Select
@@ -1196,7 +1227,7 @@ Else
     If lTicker Is Nothing Then
         mClockDisplay.SetClock getDefaultClock
     ElseIf lTicker.State = MarketDataSourceStateRunning Then
-        mClockDisplay.SetClockFuture lTicker.ClockFuture
+        mClockDisplay.SetClockFuture lTicker.ClockFuture, lTicker.IsDataDelayed
     Else
         mClockDisplay.SetClock getDefaultClock
     End If
@@ -1518,5 +1549,7 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+
 
 

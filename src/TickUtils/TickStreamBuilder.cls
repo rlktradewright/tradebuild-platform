@@ -118,18 +118,17 @@ GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function IsMinimumPriceVariationSet() As Boolean
-IsMinimumPriceVariationSet = (mTickStream.GetMinimumPriceVariation <> 0)
+IsMinimumPriceVariationSet = (mTickStream.MinimumPriceVariation <> 0)
 End Function
 
 Friend Sub Initialise( _
                 ByVal pStreamId As Long, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pClockFuture As IFuture, _
-                ByVal pIsDelayed As Boolean)
+                ByVal pClockFuture As IFuture)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
-mTickStream.Initialise Me, pStreamId, pContractFuture, pClockFuture, pIsDelayed
+mTickStream.Initialise Me, pStreamId, pContractFuture, pClockFuture
 mTickStream.State = TickStreamStateReady
 fireStateChange TickStreamStateReady
 
@@ -230,14 +229,17 @@ Err:
 GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Public Sub SetMinimumPriceVariation(ByVal Value As Double)
+Public Sub SetDelayed(ByVal VAlue As Boolean)
+mTickStream.SetDelayed VAlue
+End Sub
+
+Public Sub SetMinimumPriceVariation(ByVal VAlue As Double)
 Const ProcName As String = "SetMinimumPriceVariation"
 On Error GoTo Err
 
-Assert mTickStream.GetMinimumPriceVariation = 0#, "MinimumPriceVariation has already been set"
-Assert Value > 0, "MinimumPriceVariation must be > 0"
+Assert VAlue > 0, "MinimumPriceVariation must be > 0"
 
-mTickStream.SetMinimumPriceVariation Value
+mTickStream.SetMinimumPriceVariation VAlue
 
 Exit Sub
 

@@ -66,6 +66,7 @@ Private Type TickerTableEntry
     ConsumerTimeZone        As TimeZone
     ErrorListener           As IMarketDataErrorListener
     DataHasBeenReceived     As Boolean
+    DataIsDelayed           As Boolean
     TickSizeHasBeenSet      As Boolean
     PrevBid                 As Double
     PrevBidValid            As Boolean
@@ -178,7 +179,14 @@ Case 200    ' security definition not known
     ' has been lost. If so, just ignore this error because we'll retry the
     ' market data request when connection is re-established.
     If Not mIsTwsConnectedToIBServers Then Exit Sub
-    
+Case 354
+    ' no market data subscription but delayed data is available
+    ' ignore this
+    Exit Sub
+Case 10167
+    ' requested market data is not subscribed. Displaying delayed market data
+    ' IGORE THIS
+    Exit Sub
 Case 10197  ' No markety data lumps during competing live session
     GIBEnhApi.Log "Spurious message from IB: " & pErrorMsg, ModuleName, ProcName
     ' ignore this
@@ -187,6 +195,23 @@ End Select
 
 mMarketDataTable(lIndex).ErrorListener.NotifyMarketDataError lIndex, pErrorCode, pErrorMsg
 releaseTableEntry mMarketDataTable, mMarketDataTableNextIndex, mMarketDataTableFirstFreeIndex, lIndex, False
+
+Exit Sub
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDataConsumer_NotifyMarketDataType(ByVal pTickerId As Long, ByVal pMarketDataType As IBBaseApi.TwsMarketDataTypes)
+Const ProcName As String = "IMarketDataConsumer_NotifyMarketDataType"
+On Error GoTo Err
+
+If pMarketDataType <> TwsMarketDataTypeDelayed Then Exit Sub
+
+Dim lIndex As Long
+lIndex = getIndexFromTickerId(pTickerId)
+mMarketDataTable(lIndex).DataIsDelayed = True
+mMarketDataTable(lIndex).TickStreamBuilder.SetDelayed True
 
 Exit Sub
 
@@ -236,6 +261,7 @@ With mMarketDataTable(lIndex)
     .DataHasBeenReceived = True
 
     lComputation.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
+    If .DataIsDelayed Then lComputation.Timestamp = lComputation.Timestamp - (900# / 86400#)
     lComputation.Delta = pDelta
     lComputation.Gamma = pGamma
     lComputation.ImpliedVolatility = pImpliedVolatility
@@ -246,13 +272,13 @@ With mMarketDataTable(lIndex)
     lComputation.Vega = pVega
     
     Select Case pTickType
-    Case TwsTickTypes.TwsTickAskOption
+    Case TwsTickTypes.TwsTickAskOption, TwsTickTypes.TwsTickDelayedAskOption
         lComputation.ComputationType = OptionComputationTypeAsk
-    Case TwsTickTypes.TwsTickBidOption
+    Case TwsTickTypes.TwsTickBidOption, TwsTickTypes.TwsTickDelayedBidOption
         lComputation.ComputationType = OptionComputationTypeBid
-    Case TwsTickTypes.TwsTickLastOption
+    Case TwsTickTypes.TwsTickLastOption, TwsTickTypes.TwsTickDelayedLastOption
         lComputation.ComputationType = OptionComputationTypeTrade
-    Case TwsTickTypes.TwsTickModelOption
+    Case TwsTickTypes.TwsTickModelOption, TwsTickTypes.TwsTickDelayedModelOption
         lComputation.ComputationType = OptionComputationTypeModel
     Case Else
         Assert False, "Unexpected option computation type"
@@ -292,9 +318,10 @@ With mMarketDataTable(lIndex)
     .DataHasBeenReceived = True
 
     lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
+    If .DataIsDelayed Then lTick.Timestamp = lTick.Timestamp - (900# / 86400#)
     
     Select Case pTickType
-    Case TwsTickTypes.TwsTickBid
+    Case TwsTickTypes.TwsTickBid, TwsTickTypes.TwsTickDelayedBid
         .PrevBidValid = validPrice(lTick.Price, .PrevBid, "bid", .Contract)
         If Not .PrevBidValid Then Exit Sub
         lTick.TickType = TickTypeBid
@@ -302,7 +329,7 @@ With mMarketDataTable(lIndex)
         .PrevBid = lTick.Price
         If lTick.Size <> 0 Then Set .PrevBidSize = lTick.Size
         If Not .TickSizeHasBeenSet Then setTickSize mMarketDataTable, lIndex, lTick.Price
-    Case TwsTickTypes.TwsTickAsk
+    Case TwsTickTypes.TwsTickAsk, TwsTickTypes.TwsTickDelayedAsk
         .PrevAskValid = validPrice(lTick.Price, .PrevAsk, "ask", .Contract)
         If Not .PrevAskValid Then Exit Sub
         lTick.TickType = TickTypeAsk
@@ -310,7 +337,7 @@ With mMarketDataTable(lIndex)
         .PrevAsk = lTick.Price
         If lTick.Size <> 0 Then Set .PrevAskSize = lTick.Size
         If Not .TickSizeHasBeenSet Then setTickSize mMarketDataTable, lIndex, lTick.Price
-    Case TwsTickTypes.TwsTickLast
+    Case TwsTickTypes.TwsTickLast, TwsTickTypes.TwsTickDelayedLast
         .PrevTradeValid = validPrice(lTick.Price, .PrevTrade, "trade", .Contract)
         If Not .PrevTradeValid Then Exit Sub
         lTick.TickType = TickTypeTrade
@@ -318,19 +345,19 @@ With mMarketDataTable(lIndex)
         .PrevTrade = lTick.Price
         If lTick.Size <> 0 Then Set .PrevTradeSize = lTick.Size
         If Not .TickSizeHasBeenSet Then setTickSize mMarketDataTable, lIndex, lTick.Price
-    Case TwsTickTypes.TwsTickHigh
+    Case TwsTickTypes.TwsTickHigh, TwsTickTypes.TwsTickDelayedHigh
         If Not validPrice(lTick.Price, .PrevHigh, "high", .Contract) Then Exit Sub
         lTick.TickType = TickTypeHighPrice
         .PrevHigh = lTick.Price
-    Case TwsTickTypes.TwsTickLow
+    Case TwsTickTypes.TwsTickLow, TwsTickTypes.TwsTickDelayedLow
         If Not validPrice(lTick.Price, .PrevLow, "low", .Contract) Then Exit Sub
         lTick.TickType = TickTypeLowPrice
         .PrevLow = lTick.Price
-    Case TwsTickTypes.TwsTickOpen
+    Case TwsTickTypes.TwsTickOpen, TwsTickTypes.TwsTickDelayedOpen
         If Not validPrice(lTick.Price, .PrevOpen, "open", .Contract) Then Exit Sub
         lTick.TickType = TickTypeOpenPrice
         .PrevOpen = lTick.Price
-    Case TwsTickTypes.TwsTickClose
+    Case TwsTickTypes.TwsTickClose, TwsTickTypes.TwsTickDelayedClose
         If Not validPrice(lTick.Price, .PrevClose, "close", .Contract) Then Exit Sub
         lTick.TickType = TickTypeClosePrice
         .PrevClose = lTick.Price
@@ -383,9 +410,10 @@ With mMarketDataTable(lIndex)
     .DataHasBeenReceived = True
     
     lTick.Timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .ConsumerTimeZone)
+    If .DataIsDelayed Then lTick.Timestamp = lTick.Timestamp - (900# / 86400#)
     
     Select Case pTickType
-    Case TwsTickTypes.TwsTickBidSize
+    Case TwsTickTypes.TwsTickBidSize, TwsTickTypes.TwsTickDelayedBidSize
         If pSize = .PrevBidSize Then
             ' this happens when Tws has sent a tick price including the
             ' Size. It then sends the Size again as a ticksize
@@ -398,7 +426,7 @@ With mMarketDataTable(lIndex)
         Set lTick.Size = pSize
         Set .PrevBidSize = pSize
     
-    Case TwsTickTypes.TwsTickAskSize
+    Case TwsTickTypes.TwsTickAskSize, TwsTickTypes.TwsTickDelayedAskSize
         If pSize = .PrevAskSize Then
             ' this happens when Tws has sent a tick price including the
             ' Size. It then sends the Size again as a ticksize
@@ -411,7 +439,7 @@ With mMarketDataTable(lIndex)
         Set lTick.Size = pSize
         Set .PrevAskSize = pSize
     
-    Case TwsTickTypes.TwsTickLastSize
+    Case TwsTickTypes.TwsTickLastSize, TwsTickTypes.TwsTickDelayedLastSize
         If pSize = .PrevTradeSize Then
             ' this happens when Tws has sent a tick price including the
             ' Size. It then sends the Size again as a ticksize
@@ -424,7 +452,7 @@ With mMarketDataTable(lIndex)
         Set lTick.Size = pSize
         Set .PrevTradeSize = pSize
     
-    Case TwsTickTypes.TwsTickVolume
+    Case TwsTickTypes.TwsTickVolume, TwsTickTypes.TwsTickDelayedVolume
         ' discard rogue sizes from IB
         If pSize > 1000000000 Then Exit Sub
         lTick.TickType = TickTypeVolume
@@ -621,6 +649,8 @@ Case ApiConnConnecting
 
 Case ApiConnConnected
     sHasBeenConnected = True
+    
+    mTwsAPI.RequestMarketDataType TwsMarketDataTypeDelayed
     
     ' we'll assume that TWS has a server connection: if not,
     ' it will soon tell us

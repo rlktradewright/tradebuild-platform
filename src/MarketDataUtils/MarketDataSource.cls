@@ -356,6 +356,10 @@ Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickTyp
 IMarketDataSource_HasCurrentTick = HasCurrentTick(pTickType)
 End Property
 
+Private Property Get IMarketDataSource_IsDataDelayed() As Boolean
+IMarketDataSource_IsDataDelayed = IsDataDelayed
+End Property
+
 Private Property Get IMarketDataSource_IsFinished() As Boolean
 IMarketDataSource_IsFinished = IsFinished
 End Property
@@ -763,6 +767,10 @@ End Property
 
 Friend Property Get HasPriceChangeListeners()
 HasPriceChangeListeners = (mPriceChangeListeners.Count <> 0)
+End Property
+
+Public Property Get IsDataDelayed() As Boolean
+IsDataDelayed = DataSourceBase.DataTickStream.IsDelayed
 End Property
 
 Public Property Get IsFinished() As Boolean
@@ -1327,6 +1335,13 @@ If pTick.TickType = TickTypeMarketDepth Or pTick.TickType = TickTypeMarketDepthR
     If Not mSubscribedToMarketDepth Then Exit Sub
 Else
     If Not mSubscribedToMarketData Then Exit Sub
+End If
+
+Static sGotFirstTick As Boolean
+If Not sGotFirstTick Then
+    sGotFirstTick = True
+    setState MarketDataSourceStateRunning
+    Refresh
 End If
 
 ' studies must be updated before notifying other listeners
@@ -1951,10 +1966,7 @@ On Error GoTo Err
 
 If mSubscribedToMarketData Then Exit Sub
 mSubscribedToMarketData = True
-setState MarketDataSourceStateRunning
 DataSourceBase.AddMarketDataSubscription
-
-Refresh
 
 Exit Sub
 

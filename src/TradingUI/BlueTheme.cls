@@ -185,7 +185,7 @@ If sFont Is Nothing Then
     sFont.Bold = False
     sFont.Italic = False
     sFont.Name = "Segoe UI"
-    sFont.Size = 9
+    sFont.Size = 10
     sFont.Strikethrough = False
     sFont.Underline = False
 End If

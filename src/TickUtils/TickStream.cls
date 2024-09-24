@@ -167,7 +167,7 @@ GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Property Get ITickStream_IsDelayed() As Boolean
-ITickStream_IsDelayed = mIsDelayed
+ITickStream_IsDelayed = IsDelayed
 End Property
 
 Private Property Get ITickStream_MinimumPriceVariation() As Double
@@ -246,12 +246,16 @@ Public Property Get ContractFuture() As IFuture
 Set ContractFuture = mContractFuture
 End Property
 
+Public Property Get IsDelayed() As Boolean
+IsDelayed = mIsDelayed
+End Property
+
 Public Property Get MinimumPriceVariation() As Double
 Const ProcName As String = "MinimumPriceVariation"
 On Error GoTo Err
 
-MinimumPriceVariation = GetMinimumPriceVariation
-Assert MinimumPriceVariation > 0, "MinimumPriceVariation has not been set"
+Assert mMinimumPriceVariation > 0, "MinimumPriceVariation has not been set"
+MinimumPriceVariation = mMinimumPriceVariation
 
 Exit Property
 
@@ -363,16 +367,11 @@ Err:
 GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Friend Function GetMinimumPriceVariation() As Double
-GetMinimumPriceVariation = mMinimumPriceVariation
-End Function
-
 Friend Sub Initialise( _
                 ByVal pBuilder As TickStreamBuilder, _
                 ByVal pStreamId As Long, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pClockFuture As IFuture, _
-                ByVal pIsDelayed As Boolean)
+                ByVal pClockFuture As IFuture)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -381,7 +380,6 @@ Set mBuilder = pBuilder
 mStreamId = pStreamId
 Set mContractFuture = pContractFuture
 Set mClockFuture = pClockFuture
-mIsDelayed = pIsDelayed
 
 Exit Sub
 
@@ -528,7 +526,12 @@ Err:
 GTicks.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Friend Sub SetDelayed(ByVal Value As Boolean)
+mIsDelayed = Value
+End Sub
+
 Friend Sub SetMinimumPriceVariation(ByVal Value As Double)
+Assert mMinimumPriceVariation = 0#, "MinimumPriceVariation has already been set"
 mMinimumPriceVariation = Value
 End Sub
 

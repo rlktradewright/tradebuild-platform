@@ -73,6 +73,12 @@ Public Sub NotifyError( _
                 ByVal pErrorMsg As String)
 End Sub
 
+Public Sub NotifyMarketDataType( _
+                ByVal pTickerId As Long, _
+                ByVal pMarketDataType As TwsMarketDataTypes)
+End Sub
+                
+
 Public Sub NotifyTickEFP( _
                 ByVal pTickerId As Long, _
                 ByVal pTickType As TwsTickTypes, _
