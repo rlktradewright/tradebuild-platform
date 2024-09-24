@@ -330,7 +330,7 @@ required contract's attributes into a single string.
 Examples (these are equivalent to the corresponding full contract
 specification examples above):
 
-CONTRACT FUR:ESM4@CME
+CONTRACT FUT:ESM4@CME
 
 CONTRACT E2AH4C5100
 
@@ -469,40 +469,40 @@ currently defined groups.
 
 Entry orders (and single orders) may use the following order types:
 
-Limit
-Limit If Touched
-Limit On Close
-Limit On Open
-Market
-Market If Touched
-Market On Close
-Market On Open
-Market To Limit
-Stop
-Stop Limit
-Trail
-Trail Limit
+* Limit
+* Limit If Touched
+* Limit On Close
+* Limit On Open
+* Market
+* Market If Touched
+* Market On Close
+* Market On Open
+* Market To Limit
+* Stop
+* Stop Limit
+* Trail
+* Trail Limit
 
 ###  Order Types for Stop-Loss Orders
 
 Stop-loss orders may use the following order types:
 
-Stop
-Stop Limit
-Trail
-Trail Limit
+* Stop
+* Stop Limit
+* Trail
+* Trail Limit
 
 ###  Order Types for Target Orders
 
 Target orders may use the following order types:
 
-Limit
-Limit If Touched
-Limit On Close
-Limit On Open
-Market If Touched
-Market On Close
-Market On Open
+* Limit
+* Limit If Touched
+* Limit On Close
+* Limit On Open
+* Market If Touched
+* Market On Close
+* Market On Open
 
 ## 7. Order Pricing
 
@@ -513,7 +513,7 @@ Price specifications have two parts: a base price and an optional offset. The
 offset adds or subtracts an amount from the base price to yield the actual price
 with which the order is submitted.
 
-Note that a price is considered to be 'more aggressive' than another price if it
+A price is said to be 'more aggressive' than another price if it
 has a greater likelihood of being filled, and 'less aggressive' if it has a
 lesser likelihood of being filled. Thus for a 'buy' order, a higher price is more
 aggressive than a lower price, and conversely for a 'sell' order.
@@ -655,7 +655,7 @@ Starts a bracket order specification.
 The bracket order specification is terminated with an [ENDBRACKET](#endbracket-command) command, and there must be at least an [ENTRY](#entry-command) command before the
 ENDBRACKET command.
 
-The bracket order specification may also include [STOPLOSS](#stoploss-command) and/or [TARGET](#target-command) commands.
+The bracket order specification may optionally include [STOPLOSS](#stoploss-command), [TARGET](#target-command) and [ROLLOVER](#rollover-command) commands.
 
 Syntax summary:
 
