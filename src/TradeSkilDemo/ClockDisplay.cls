@@ -44,12 +44,13 @@ Private Const ModuleName                            As String = "ClockDisplay"
 ' Member variables
 '@================================================================================
 
+Private mStatusBar                                  As StatusBar
 Private mClock                                      As Clock
 Attribute mClock.VB_VarHelpID = -1
 Private WithEvents mBaseClock                       As Clock
 Attribute mBaseClock.VB_VarHelpID = -1
 
-Private mDataIsDelayed                              As Boolean
+Private mIsDataDelayed                              As Boolean
 
 Private mTimePanel                                  As Panel
 Private mTimeframePanel                             As Panel
@@ -82,7 +83,7 @@ Private Sub mBaseClock_Tick()
 Const ProcName As String = "mBaseClock_Tick"
 On Error GoTo Err
 
-displayTime mDataIsDelayed
+displayTime mIsDataDelayed
 
 Exit Sub
 
@@ -106,8 +107,7 @@ If Not ev.Future.IsAvailable Then Exit Sub
 
 Dim lBoxedValue As BoxedValue
 Set lBoxedValue = ev.ContinuationData
-mDataIsDelayed = lBoxedValue.Value
-SetClock ev.Future.Value, mDataIsDelayed
+SetClock ev.Future.Value, lBoxedValue.Value
 
 Exit Sub
 
@@ -129,19 +129,25 @@ Set mClock = Nothing
 End Sub
 
 Friend Sub Initialise( _
+    ByVal pStatusBar As StatusBar, _
     ByVal pTimePanel As Panel, _
     ByVal pTimeframePanel As Panel)
+Set mStatusBar = pStatusBar
 Set mTimePanel = pTimePanel
 Set mTimeframePanel = pTimeframePanel
 End Sub
 
-Friend Sub SetClock(ByVal pClock As Clock, Optional ByVal pIsDataDelayed As Boolean)
+Friend Sub SetClock(ByVal pClock As Clock, ByVal pIsDataDelayed As Boolean)
 Const ProcName As String = "SetClockFuture"
 On Error GoTo Err
 
+If pClock Is mClock And pIsDataDelayed = mIsDataDelayed Then Exit Sub
 Set mClock = pClock
-mTimeframePanel.Text = mClock.TimeZone.StandardName
-displayTime pIsDataDelayed
+mIsDataDelayed = pIsDataDelayed
+mStatusBar.Font.Italic = mIsDataDelayed
+mTimeframePanel.Text = IIf(mIsDataDelayed, "(Delayed) ", "") & _
+                        mClock.TimeZone.StandardName
+displayTime mIsDataDelayed
 
 Exit Sub
 

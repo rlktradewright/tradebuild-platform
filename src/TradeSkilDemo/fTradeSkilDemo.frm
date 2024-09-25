@@ -111,6 +111,15 @@ Begin VB.Form fTradeSkilDemo
             Key             =   "datetime"
          EndProperty
       EndProperty
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "Segoe UI"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
    End
    Begin TradingUI27.TickerGrid TickerGrid1 
       Height          =   4695
@@ -260,8 +269,8 @@ LogMessage "Executing Form_Load"
 
 LogMessage "Setting up clock"
 Set mClockDisplay = New ClockDisplay
-mClockDisplay.Initialise StatusBar1.Panels("datetime"), StatusBar1.Panels("timezone")
-mClockDisplay.SetClock getDefaultClock
+mClockDisplay.Initialise StatusBar1, StatusBar1.Panels("datetime"), StatusBar1.Panels("timezone")
+mClockDisplay.SetClock getDefaultClock, False
 
 Exit Sub
 
@@ -583,6 +592,20 @@ Const ProcName As String = "ShowInfoPanelPicture_Click"
 On Error GoTo Err
 
 showInfoPanel
+
+Exit Sub
+
+Err:
+gNotifyUnhandledError ProcName, ModuleName
+End Sub
+
+Private Sub TickerGrid1_Click()
+Const ProcName As String = "TickerGrid1_Click"
+On Error GoTo Err
+
+If TickerGrid1.SelectedTickers.Count = 0 Then
+    mClockDisplay.SetClock getDefaultClock, False
+End If
 
 Exit Sub
 
@@ -1220,16 +1243,16 @@ Const ProcName As String = "handleSelectedTickers"
 On Error GoTo Err
 
 If TickerGrid1.SelectedTickers.Count = 0 Then
-    mClockDisplay.SetClock getDefaultClock
+    mClockDisplay.SetClock getDefaultClock, False
 Else
     Dim lTicker As Ticker
     Set lTicker = getSelectedDataSource
     If lTicker Is Nothing Then
-        mClockDisplay.SetClock getDefaultClock
+        mClockDisplay.SetClock getDefaultClock, False
     ElseIf lTicker.State = MarketDataSourceStateRunning Then
         mClockDisplay.SetClockFuture lTicker.ClockFuture, lTicker.IsDataDelayed
     Else
-        mClockDisplay.SetClock getDefaultClock
+        mClockDisplay.SetClock getDefaultClock, False
     End If
 End If
 
