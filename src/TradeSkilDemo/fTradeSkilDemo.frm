@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#402.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#402.1#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -1244,12 +1244,12 @@ On Error GoTo Err
 
 If TickerGrid1.SelectedTickers.Count = 0 Then
     mClockDisplay.SetClock getDefaultClock, False
+ElseIf TickerGrid1.SelectedTickers.Count > 1 Then
+    mClockDisplay.Clear
 Else
     Dim lTicker As Ticker
     Set lTicker = getSelectedDataSource
-    If lTicker Is Nothing Then
-        mClockDisplay.SetClock getDefaultClock, False
-    ElseIf lTicker.State = MarketDataSourceStateRunning Then
+    If lTicker.State = MarketDataSourceStateRunning Then
         mClockDisplay.SetClockFuture lTicker.ClockFuture, lTicker.IsDataDelayed
     Else
         mClockDisplay.SetClock getDefaultClock, False

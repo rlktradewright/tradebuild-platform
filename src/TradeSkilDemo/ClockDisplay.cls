@@ -123,6 +123,22 @@ End Sub
 ' Methods
 '@================================================================================
 
+Friend Sub Clear()
+Const ProcName As String = "Clear"
+On Error GoTo Err
+
+Set mClock = Nothing
+mIsDataDelayed = False
+mStatusBar.Font.Italic = False
+mTimeframePanel.Text = ""
+mTimePanel.Text = ""
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Friend Sub Finish()
 Set mBaseClock = Nothing
 Set mClock = Nothing
@@ -175,13 +191,13 @@ Private Sub displayTime(ByVal pIsDataDelayed As Boolean)
 Const ProcName As String = "displayTime"
 On Error GoTo Err
 
-Dim theTime As Date
-If Not mClock Is Nothing Then
-    theTime = mClock.TimeStamp - IIf(pIsDataDelayed, 900# / 86400#, 0)
-Else
-    theTime = mBaseClock.TimeStamp
+If mClock Is Nothing Then
+    mTimePanel.Text = ""
+    Exit Sub
 End If
 
+Dim theTime As Date
+theTime = mClock.TimeStamp - IIf(pIsDataDelayed, 900# / 86400#, 0)
 mTimePanel.Text = FormatDateTime(theTime, vbShortDate) & Format(theTime, " hh:mm:ss")
 
 Exit Sub
