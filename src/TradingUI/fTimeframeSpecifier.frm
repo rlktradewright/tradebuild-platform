@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fTimeframeSpecifier 
    BorderStyle     =   0  'None
    Caption         =   "Specify a timeframe"
@@ -26,6 +26,8 @@ Begin VB.Form fTimeframeSpecifier
       Width           =   2895
    End
    Begin TradingUI27.TimeframeSpecifier TimeframeSpecifier1 
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
       Height          =   855
       Left            =   150
       TabIndex        =   2
@@ -33,8 +35,6 @@ Begin VB.Form fTimeframeSpecifier
       Width           =   2415
       _ExtentX        =   4471
       _ExtentY        =   1508
-      BackColor       =   -2147483643
-      ForeColor       =   -2147483640
    End
    Begin TWControls40.TWButton CancelButton 
       Cancel          =   -1  'True

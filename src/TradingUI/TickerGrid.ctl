@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -315,7 +315,7 @@ RowSizingMode = TwGridRowSizeAll
 FillStyle = TwGridFillRepeat
 TickerGrid.SelectionMode = TwGridSelectionFree
 TickerGrid.FocusRect = TwGridFocusBroken
-TickerGrid.HighLight = TwGridHighlightWithFocus
+TickerGrid.HighLight = TwGridHighlightNever
 TickerGrid.FontFixed = UserControl.Ambient.Font
 TickerGrid.Font = UserControl.Ambient.Font
     
@@ -385,6 +385,7 @@ TickerGrid.FontFixed = PropBag.ReadProperty("FontFixed", UserControl.Ambient.Fon
 TickerGrid.Font = PropBag.ReadProperty("Font", UserControl.Ambient.Font)
 TickerGrid.ForeColorFixed = PropBag.ReadProperty("ForeColorFixed", -2147483630)
 TickerGrid.ForeColor = PropBag.ReadProperty("ForeColor", &H80000008)
+TickerGrid.HighLight = PropBag.ReadProperty("HighLight", TwGridHighlightNever)
 
 TickerGrid.FocusRect = TwGridFocusBroken
 TickerGrid.FixedRows = 1
@@ -393,7 +394,6 @@ TickerGrid.PopupScrollbars = True
 TickerGrid.FillStyle = TwGridFillRepeat
 TickerGrid.Cols = 2
 TickerGrid.ForeColorSel = -2147483634
-TickerGrid.HighLight = TwGridHighlightWithFocus
 TickerGrid.SelectionMode = TwGridSelectionFree
 
 'setupDefaultTickerGridColumns
@@ -433,7 +433,7 @@ Call PropBag.WriteProperty("Rows", TickerGrid.Rows, GridRowsInitial)
 Call PropBag.WriteProperty("RowHeightMin", TickerGrid.RowHeightMin, 0)
 Call PropBag.WriteProperty("RowBackColorOdd", TickerGrid.RowBackColorOdd, 0)
 Call PropBag.WriteProperty("RowBackColorEven", TickerGrid.RowBackColorEven, 0)
-Call PropBag.WriteProperty("HighLight", TickerGrid.HighLight, TwGridHighlightWithFocus)
+Call PropBag.WriteProperty("HighLight", TickerGrid.HighLight, TwGridHighlightNever)
 Call PropBag.WriteProperty("GridLinesFixed", TickerGrid.GridLinesFixed, TwGridGridFlat)
 Call PropBag.WriteProperty("GridLines", TickerGrid.GridLines, TwGridGridNone)
 Call PropBag.WriteProperty("GridLineWidth", TickerGrid.GridLineWidth, 1)
@@ -711,6 +711,8 @@ Then
     
     DeselectSelectedTickers
     SelectAllTickers
+    ' remove the 'selected visuals' from all rows
+    TickerGrid.SelectCells -1, -1, -1, -1
 ElseIf mShiftDown Then
     DeselectSelectedTickers
     
@@ -1415,6 +1417,31 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Property
 
+Public Property Let HighLight(ByVal Value As TWControls40.HighLightSettings)
+Const ProcName As String = "HighLight"
+On Error GoTo Err
+
+TickerGrid.HighLight = Value
+PropertyChanged "HighLight"
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
+Public Property Get HighLight() As TWControls40.HighLightSettings
+Const ProcName As String = "HighLight"
+On Error GoTo Err
+
+HighLight = TickerGrid.HighLight
+
+Exit Property
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Property
+
 Public Property Let HighlightPriceChanges(ByVal Value As Boolean)
 Const ProcName As String = "HighlightPriceChanges"
 On Error GoTo Err
@@ -1930,7 +1957,7 @@ Next
 
 ' recreate mSelectedTickers because an asynchronous operation
 ' might still be using the original (eg for creating charts)
-Set mSelectedTickers = New SelectedTickers
+Set mSelectedTickers = mSelectedTickers.CloneEmpty
 
 Exit Sub
 
@@ -2227,6 +2254,27 @@ For i = 1 To TickerGrid.Cols - 1
 Next
 
 TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = pErrorMessage
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Public Sub SetRowMessage(ByVal pRow As Long, ByVal pMessage As String)
+Const ProcName As String = "SetRowError"
+On Error GoTo Err
+
+If pRow < 0 Then Exit Sub
+
+Dim i As Long
+For i = 1 To TickerGrid.Cols - 1
+    TickerGrid.BeginCellEdit pRow, i
+    TickerGrid.CellBackColor = CMessagedRowBackColor
+    TickerGrid.EndCellEdit
+Next
+
+TickerGrid.TextMatrix(pRow, mColumnMap(TickerGridColumns.ErrorText)) = pMessage
 
 Exit Sub
 
@@ -2865,7 +2913,6 @@ lIndex = getTickerIndex(pDataSource)
 
 Dim lRow As Long
 lRow = getTickerGridRowFromIndex(lIndex)
-    
 Select Case pDataSource.State
 Case MarketDataSourceStates.MarketDataSourceStateCreated
     'setTickerNameColumnValue lRow,  "Starting"
@@ -2873,6 +2920,8 @@ Case MarketDataSourceStates.MarketDataSourceStateReady
     setTickerFields lRow, gGetContractFromContractFuture(pDataSource.ContractFuture)
     setFieldsHaveBeenSet lIndex
     storeTickerSettings pDataSource
+Case MarketDataSourceStates.MarketDataSourceStateRunning
+    If pDataSource.IsDataDelayed Then SetRowMessage lRow, "Data is delayed"
 Case MarketDataSourceStates.MarketDataSourceStateError
     If Not getFieldsHaveBeenSet(lIndex) Then
         If pDataSource.ContractFuture.IsAvailable Then
@@ -3276,7 +3325,6 @@ With TickerGrid
     .RowSizingMode = TwGridRowSizeAll
     .FillStyle = TwGridFillRepeat
     .FocusRect = TwGridFocusNone
-    .HighLight = TwGridHighlightNever
     
     .Cols = 2
     .Rows = GridRowsInitial

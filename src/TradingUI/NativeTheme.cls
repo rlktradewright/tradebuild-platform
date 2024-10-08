@@ -187,7 +187,17 @@ ITheme_GridBackColorFixed = &HF4F4F4
 End Property
 
 Private Property Get ITheme_GridFont() As stdole.Font
-
+Static sFont As StdFont
+If sFont Is Nothing Then
+    Set sFont = New StdFont
+    sFont.Bold = False
+    sFont.Italic = False
+    sFont.Name = "Segoe UI"
+    sFont.Size = 10
+    sFont.Strikethrough = False
+    sFont.Underline = False
+End If
+Set ITheme_GridFont = sFont
 End Property
 
 Private Property Get ITheme_GridFontFixed() As stdole.Font

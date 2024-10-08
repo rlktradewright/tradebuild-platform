@@ -68,6 +68,14 @@ Private mChanged                        As Boolean
 ' Properties
 '@================================================================================
 
+Friend Property Let IsChanging(ByVal Value As Boolean)
+mChanging = Value
+End Property
+
+Friend Property Let IsChanged(ByVal Value As Boolean)
+mChanged = Value
+End Property
+
 Public Property Get Enumerator() As Enumerator
 Set Enumerator = mTickers.Enumerator
 End Property
@@ -81,11 +89,8 @@ Const ProcName As String = "Add"
 On Error GoTo Err
 
 mTickers.Add pTicker
-If Not mChanging Then
-    RaiseEvent SelectionChanged
-Else
-    mChanged = True
-End If
+If Not mChanging Then RaiseEvent SelectionChanged
+mChanged = True
 
 Exit Sub
 
@@ -124,6 +129,12 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function CloneEmpty() As SelectedTickers
+Set CloneEmpty = New SelectedTickers
+CloneEmpty.IsChanging = mChanging
+CloneEmpty.IsChanged = mChanged
+End Function
 
 Public Function Contains( _
                 ByVal pTicker As IMarketDataSource) As Boolean
