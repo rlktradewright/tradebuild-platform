@@ -213,7 +213,7 @@ Private Const PropDfltChartBackColor                    As Long = &H643232
 Private Const PropDfltPointerDiscColor                  As Long = &H89FFFF
 Private Const PropDfltPointerCrosshairsColor            As Long = &HC1DFE
 Private Const PropDfltPointerStyle                      As Long = PointerStyles.PointerCrosshairs
-Private Const PropDfltHorizontalScrollBarVisible        As Boolean = True
+Private Const PropDfltHorizontalScrollBarVisible        As Boolean = False
 Private Const PropDfltPeriodWidth                       As Long = DefaultPeriodWidth
 Private Const PropDfltVerticalGridSpacing               As Long = 1
 Private Const PropDfltVerticalGridUnits                 As Long = TimePeriodHour
@@ -2017,7 +2017,7 @@ End If
 If mConfig.GetSetting(ConfigSettingAutoscrolling) <> "" Then Autoscrolling = mConfig.GetSetting(ConfigSettingAutoscrolling, "True")
 If mConfig.GetSetting(ConfigSettingChartBackColor) <> "" Then ChartBackColor = mConfig.GetSetting(ConfigSettingChartBackColor, CStr(vbWhite))
 If mConfig.GetSetting(ConfigSettingHorizontalMouseScrollingAllowed) <> "" Then HorizontalMouseScrollingAllowed = mConfig.GetSetting(ConfigSettingHorizontalMouseScrollingAllowed, "true")
-If mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible) <> "" Then HorizontalScrollBarVisible = mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible, "true")
+If mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible) <> "" Then HorizontalScrollBarVisible = mConfig.GetSetting(ConfigSettingHorizontalScrollBarVisible, "false")
 If mConfig.GetSetting(ConfigSettingPeriodWidth) <> "" Then PeriodWidth = mConfig.GetSetting(ConfigSettingPeriodWidth, DefaultPeriodWidth)
 If mConfig.GetSetting(ConfigSettingVerticalMouseScrollingAllowed) <> "" Then VerticalMouseScrollingAllowed = mConfig.GetSetting(ConfigSettingVerticalMouseScrollingAllowed, "true")
 If mConfig.GetSetting(ConfigSettingXAxisVisible) <> "" Then XAxisVisible = mConfig.GetSetting(ConfigSettingXAxisVisible, "true")

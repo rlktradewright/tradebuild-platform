@@ -130,7 +130,7 @@ gDefaultChartStyle.Initialise DefaultStyleName, _
 gDefaultChartStyle.Autoscrolling = True
 gDefaultChartStyle.ChartBackColor = vbWhite
 gDefaultChartStyle.HorizontalMouseScrollingAllowed = True
-gDefaultChartStyle.HorizontalScrollBarVisible = True
+gDefaultChartStyle.HorizontalScrollBarVisible = False
 gDefaultChartStyle.PeriodWidth = DefaultPeriodWidth
 gDefaultChartStyle.VerticalMouseScrollingAllowed = True
 gDefaultChartStyle.XAxisVisible = True
@@ -172,7 +172,7 @@ Set gHorizontalMouseScrollingAllowedProperty = RegisterExtendedProperty("Horizon
 Set gHorizontalScrollBarVisibleProperty = RegisterExtendedProperty("HorizontalScrollBarVisible", _
                                     vbBoolean, _
                                     TypeName(True), _
-                                    True)
+                                    False)
                 
 Set gPeriodWidthProperty = RegisterExtendedProperty("PeriodWidth", _
                                     vbLong, _
