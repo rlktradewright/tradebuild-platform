@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#34.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    ClientHeight    =   3990
    ClientLeft      =   0
@@ -351,6 +351,9 @@ TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeOption)
 TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeFuturesOption)
 TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeCash)
 TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeIndex)
+TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeCFD)
+TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeCrypto)
+TypeCombo.ComboItems.Add , , SecTypeToString(SecurityTypes.SecTypeWarrant)
 
 RightCombo.ComboItems.Add , , OptionRightToString(OptionRights.OptCall)
 RightCombo.ComboItems.Add , , OptionRightToString(OptionRights.OptPut)
