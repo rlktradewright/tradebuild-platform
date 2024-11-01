@@ -69,6 +69,8 @@ Public Enum SecurityTypes
     SecTypeCombo
     SecTypeIndex
     SecTypeWarrant
+    SecTypeCFD
+    SecTypeCrypto
 End Enum
 
 '@================================================================================

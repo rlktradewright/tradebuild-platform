@@ -1386,6 +1386,12 @@ Case SecTypeCombo
 Case SecTypeIndex
     min = 0
     max = 0
+Case SecTypeCFD
+    min = 1
+    max = 100
+Case SecTypeWarrant
+    min = 1
+    max = 100
 End Select
 
 Dim Quantity As BoxedDecimal
@@ -2766,6 +2772,8 @@ If Not mDataSource Is Nothing Then
 End If
 
 If mActiveOrderContext.IsReady Then
+    SimpleOrderOption.Enabled = True
+    BracketOrderOption.Enabled = True
     setupControls
 Else
     disableAll NotReadyMessage
@@ -3177,6 +3185,12 @@ Case SecTypeCombo
     QuantityText(pIndex) = 1
 Case SecTypeIndex
     QuantityText(pIndex) = 0
+Case SecTypeWarrant
+    QuantityText(pIndex) = 10
+Case SecTypeCFD
+    QuantityText(pIndex) = 1
+Case SecTypeCrypto
+    QuantityText(pIndex) = 0.002
 End Select
 End Sub
 

@@ -351,7 +351,9 @@ End Function
 Public Function ContractHasExpired(ByVal pContractSpec As TwsContractSpecifier) As Boolean
 If pContractSpec.SecType = TwsSecTypeCash Or _
     pContractSpec.SecType = TwsSecTypeIndex Or _
-    pContractSpec.SecType = TwsSecTypeStock _
+    pContractSpec.SecType = TwsSecTypeStock Or _
+    pContractSpec.SecType = TwsSecTypeCFD Or _
+    pContractSpec.SecType = TwsSecTypeCrypto _
 Then
     ContractHasExpired = False
     Exit Function
@@ -906,6 +908,10 @@ Case "INDEX", "IND"
     TwsSecTypeFromString = TwsSecTypeIndex
 Case "WARRANT", "WAR"
     TwsSecTypeFromString = TwsSecTypeWarrant
+Case "CFD"
+    TwsSecTypeFromString = TwsSecTypeCFD
+Case "CRYPTO"
+    TwsSecTypeFromString = TwsSecTypeCrypto
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, , "Value is not a valid Security Type"
 End Select
@@ -931,6 +937,10 @@ Case TwsSecTypeNone
     TwsSecTypeToShortString = ""
 Case TwsSecTypeWarrant
     TwsSecTypeToShortString = "WAR"
+Case TwsSecTypeCFD
+    TwsSecTypeToShortString = "CFD"
+Case TwsSecTypeCrypto
+    TwsSecTypeToShortString = "CRYPTO"
 Case Else
     TwsSecTypeToShortString = InvalidEnumValue
 End Select
@@ -956,6 +966,10 @@ Case TwsSecTypeNone
     TwsSecTypeToString = ""
 Case TwsSecTypeWarrant
     TwsSecTypeToString = "Warrant"
+Case TwsSecTypeCFD
+    TwsSecTypeToString = "CFD"
+Case TwsSecTypeCrypto
+    TwsSecTypeToString = "CRYPTO"
 Case Else
     TwsSecTypeToString = InvalidEnumValue
 End Select

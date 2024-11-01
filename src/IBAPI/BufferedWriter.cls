@@ -131,7 +131,7 @@ On Error GoTo Err
 With pContractSpec
     AddString .ConId, "ConId"
     AddString UCase$(.Symbol), "Symbol"
-    AddString TwsSecTypeToShortString(.Sectype), "Sec type"
+    AddString TwsSecTypeToShortString(.SecType), "Sec type"
     AddString .Expiry, "Expiry"
     AddString .Strike, "Strike"
     AddString TwsOptionRightToString(.OptRight), "Right"
@@ -143,8 +143,15 @@ With pContractSpec
     AddString .Exchange, "Exchange"
     If Not pIgnorePrimaryExchange Then AddString .PrimaryExch, "Primary Exchange"
     AddString .CurrencyCode, "Currency"
-    AddString UCase$(.LocalSymbol), "Local Symbol"
-    AddString .TradingClass, "Trading Class"
+    If .SecType = TwsSecTypeCFD Then
+        ' ignore LocalSymbol and TradingClass because
+        ' they don't work with CFDs
+        AddString "", "Local Symbol"
+        AddString "", "Trading Class"
+    Else
+        AddString UCase$(.LocalSymbol), "Local Symbol"
+        AddString .TradingClass, "Trading Class"
+    End If
 End With
 
 Exit Sub

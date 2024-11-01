@@ -219,6 +219,27 @@ Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Sub IMarketDataConsumer_NotifyRerouteMktDataReq(ByVal pReqId As Long, ByVal pConId As Long, ByVal pExchange As String)
+Const ProcName As String = "IMarketDataConsumer_NotifyRerouteMktDataReq"
+On Error GoTo Err
+
+Dim lContractSpec As New TwsContractSpecifier
+lContractSpec.ConId = pConId
+lContractSpec.Exchange = pExchange
+
+Dim lSnapshot As Boolean
+lSnapshot = mMarketDataTable(getIndexFromTickerId(pReqId)).IsSnapShot
+
+If Not lSnapshot Then mTwsAPI.CancelMarketData pReqId
+
+mTwsAPI.RequestMarketData pReqId, lContractSpec, "", lSnapshot, False
+
+Exit Sub
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
 
 End Sub
@@ -368,7 +389,8 @@ End With
 FireTick lIndex, lTick
 
 With mMarketDataTable(lIndex)
-    If .Contract.Specifier.SecType <> SecTypeCash Then
+    If Not .IsInUse Then
+    ElseIf .Contract.Specifier.SecType <> SecTypeCash Then
     ElseIf pTickType = TwsTickAsk Or pTickType = TwsTickBid Then
         lCashTradeTick.TickType = TickTypeTrade
         lCashTradeTick.Timestamp = lTick.Timestamp
@@ -611,6 +633,21 @@ With mMarketDataTable(lIndex)
 End With
 
 FireTick lIndex, lTick
+
+Exit Sub
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub IMarketDepthConsumer_NotifyRerouteMktDepthReq(ByVal pReqId As Long, ByVal pConId As Long, ByVal pExchange As String)
+Const ProcName As String = "IMarketDepthConsumer_NotifyRerouteMktDepthReq"
+On Error GoTo Err
+
+Dim lContractSpec As New TwsContractSpecifier
+lContractSpec.ConId = pConId
+lContractSpec.Exchange = pExchange
+mTwsAPI.RequestMarketDepth pReqId, lContractSpec
 
 Exit Sub
 

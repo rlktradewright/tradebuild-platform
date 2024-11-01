@@ -57,6 +57,7 @@ Private Const TwsWhatToShowBid                      As String = "BID"
 Private Const TwsWhatToShowBidAsk                   As String = "BID_ASK"
 Private Const TwsWhatToShowMidpoint                 As String = "MIDPOINT"
 Private Const TwsWhatToShowTrades                   As String = "TRADES"
+Private Const TwsWhatToShowAggTrades                As String = "AGGTRADES"
 
 '@================================================================================
 ' Member variables
@@ -685,7 +686,14 @@ Private Function generateTwsHistoricalDataRequest( _
 Const ProcName As String = "generateTwsHistoricalDataRequest"
 On Error GoTo Err
 
-Set pTwsRequest.ContractSpec = mTwsContract.Specifier
+If mTwsContract.Specifier.SecType = TwsSecTypeCFD Then
+    ' have to get data for underlying stock
+    Set pTwsRequest.ContractSpec = New TwsContractSpecifier
+    pTwsRequest.ContractSpec.ConId = mTargetContract.ProviderProperties.GetParameterValue("UnderConId")
+    pTwsRequest.ContractSpec.Exchange = mTargetContract.Specifier.Exchange
+Else
+    Set pTwsRequest.ContractSpec = mTwsContract.Specifier
+End If
 pTwsRequest.MainSessionOnly = Not mWorkingBarSpecifier.IncludeBarsOutsideSession
 
 ' Set the Tws bar Size and Duration to retrieve as many bars as possible in one
@@ -994,6 +1002,8 @@ Case BarTypes.BarTypeBid
 Case BarTypes.BarTypeTrade
     If pWorkingBarSpecifier.Contract.Specifier.SecType = SecTypeCash Then
         pTwsRequest.WhatToShow = TwsWhatToShowMidpoint
+    ElseIf pWorkingBarSpecifier.Contract.Specifier.SecType = SecTypeCrypto Then
+        pTwsRequest.WhatToShow = TwsWhatToShowAggTrades
     Else
         pTwsRequest.WhatToShow = TwsWhatToShowTrades
     End If

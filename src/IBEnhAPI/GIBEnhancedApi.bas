@@ -594,6 +594,10 @@ Case SecurityTypes.SecTypeIndex
     SecTypeToTwsSecType = TwsSecTypeIndex
 Case SecurityTypes.SecTypeWarrant
     SecTypeToTwsSecType = TwsSecTypeWarrant
+Case SecurityTypes.SecTypeCFD
+    SecTypeToTwsSecType = TwsSecTypeCFD
+Case SecurityTypes.SecTypeCrypto
+    SecTypeToTwsSecType = TwsSecTypeCrypto
 Case Else
     AssertArgument False, "Value is not a valid Security Type"
 End Select
@@ -667,7 +671,9 @@ With pTwsContractSpec
     End If
     
     Dim lMultiplier As Double
-    If .SecType = TwsSecTypeStock Then
+    If .SecType = TwsSecTypeStock Or _
+        .SecType = TwsSecTypeCFD _
+    Then
         lMultiplier = 1 / pPriceMagnifier
     Else
         lMultiplier = .Multiplier / pPriceMagnifier
@@ -741,6 +747,7 @@ With pTwsContract
     lProviderProps.SetParameterValue "MarketRuleID", getMarketRuleID(pTwsContract)
     lProviderProps.SetParameterValue "OrderTypes", .OrderTypes
     lProviderProps.SetParameterValue "PriceMagnifier", .PriceMagnifier
+    lProviderProps.SetParameterValue "UnderConId", .UnderConId
     
     Dim s As String
     If Not .SecIdList Is Nothing Then
@@ -866,6 +873,10 @@ Case TwsSecTypeIndex
     TwsSecTypeToSecType = SecurityTypes.SecTypeIndex
 Case TwsSecTypeWarrant
     TwsSecTypeToSecType = SecurityTypes.SecTypeWarrant
+Case TwsSecTypeCFD
+    TwsSecTypeToSecType = SecurityTypes.SecTypeCFD
+Case TwsSecTypeCrypto
+    TwsSecTypeToSecType = SecurityTypes.SecTypeCrypto
 Case Else
     AssertArgument False, "Value is not a valid Security Type"
 End Select

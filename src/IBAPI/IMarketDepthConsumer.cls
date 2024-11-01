@@ -81,6 +81,12 @@ Public Sub NotifyMarketDepth( _
                 
 End Sub
 
+Public Sub NotifyRerouteMktDepthReq( _
+                ByVal pReqId As Long, _
+                ByVal pConId As Long, _
+                ByVal pExchange As String)
+End Sub
+
 Public Sub ResetMarketDepth(ByVal pReEstablish As Boolean)
 
 End Sub

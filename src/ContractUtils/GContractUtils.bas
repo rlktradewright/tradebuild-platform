@@ -1011,7 +1011,10 @@ Const ProcName As String = "IsContractExpired"
 On Error GoTo Err
 
 Select Case pContract.Specifier.SecType
-Case SecTypeFuture, SecTypeOption, SecTypeFuturesOption, SecTypeWarrant
+Case SecTypeFuture, _
+        SecTypeOption, _
+        SecTypeFuturesOption, _
+        SecTypeWarrant
 Case Else
     Exit Function
 End Select
@@ -1465,6 +1468,10 @@ Case "INDEX", "IND"
     SecTypeFromString = SecTypeIndex
 Case "WARRANT", "WAR"
     SecTypeFromString = SecTypeWarrant
+Case "CFD"
+    SecTypeFromString = SecTypeCFD
+Case "CRYPTO CURRENCY", "CRYPTOCURRENCY", "CRYPTO"
+    SecTypeFromString = SecTypeCrypto
 Case Else
     SecTypeFromString = SecTypeNone
 End Select
@@ -1488,6 +1495,10 @@ Case SecTypeIndex
     SecTypeToString = "Index"
 Case SecTypeWarrant
     SecTypeToString = "Warrant"
+Case SecTypeCFD
+    SecTypeToString = "CFD"
+Case SecTypeCrypto
+    SecTypeToString = "Crypto Currency"
 End Select
 End Function
 
@@ -1509,6 +1520,10 @@ Case SecTypeIndex
     SecTypeToShortString = "IND"
 Case SecTypeWarrant
     SecTypeToShortString = "WAR"
+Case SecTypeCFD
+    SecTypeToShortString = "CFD"
+Case SecTypeCrypto
+    SecTypeToShortString = "CRYPTO"
 End Select
 End Function
 
@@ -1774,6 +1789,7 @@ addExchangeCode "OSE"
 addExchangeCode "OSE.JPN"
 addExchangeCode "OVERNIGHT"
 
+addExchangeCode "PAXOS"
 addExchangeCode "PEARL"
 addExchangeCode "PHLX"
 addExchangeCode "PINK"

@@ -77,7 +77,12 @@ Public Sub NotifyMarketDataType( _
                 ByVal pTickerId As Long, _
                 ByVal pMarketDataType As TwsMarketDataTypes)
 End Sub
-                
+
+Public Sub NotifyRerouteMktDataReq( _
+                ByVal pReqId As Long, _
+                ByVal pConId As Long, _
+                ByVal pExchange As String)
+End Sub
 
 Public Sub NotifyTickEFP( _
                 ByVal pTickerId As Long, _

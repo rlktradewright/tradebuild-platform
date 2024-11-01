@@ -149,96 +149,220 @@ Friend Sub ParseMessage(ByVal pMessageId As TwsSocketInMsgTypes, ByVal pVersion 
 Const ProcName As String = "ParseMessage"
 On Error GoTo Err
 
+Dim lDone As Boolean
 Select Case pMessageId
 Case TwsSocketInMsgTypes.TICK_PRICE
     getTickPrice pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.TICK_SIZE
     getTickSize pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.ORDER_STATUS
     getOrderStatus pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.ERR_MSG
     getErrorMsg pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.OPEN_ORDER
     getOpenOrder pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.ACCT_VALUE
     getAccountValue pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.PORTFOLIO_VALUE
     getPortfolioValue pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.ACCT_UPDATE_TIME
     getAccountTime pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.NEXT_VALID_ID
     getNextValidId pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.CONTRACT_DATA
     getContractData pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.EXECUTION_DATA
     getExecutionData pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.MARKET_DEPTH
     getMarketDepth pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.MARKET_DEPTH_L2
     getMarketDepthL2 pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.NEWS_BULLETINS
     getNewsBulletins pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.MANAGED_ACCTS
     getManagedAccounts pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.RECEIVE_FA
     getFAData pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.HISTORICAL_DATA
     getHistoricalData pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.BOND_CONTRACT_DATA
     getBondContractData pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.SCANNER_PARAMETERS
     getScannerParameters pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.SCANNER_DATA
     getScannerData pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.TICK_OPTION_COMPUTATION
     getTickOptionComputation pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.TICK_GENERIC
     getTickGeneric pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.TICK_STRING
     getTickString pVersion
-Case TwsSocketInMsgTypes.CONTRACT_DATA_END
-    getContractEnd pVersion
-Case TwsSocketInMsgTypes.OPEN_ORDER_END
-    getOpenOrderEnd pVersion
-Case TwsSocketInMsgTypes.ACCT_DOWNLOAD_END
-    getAccountDownloadEnd pVersion
-Case TwsSocketInMsgTypes.EXECUTION_DATA_END
-    getExecutionDataEnd pVersion
-Case TwsSocketInMsgTypes.DELTA_NEUTRAL_VALIDATION
-    getDeltaNeutralValidation pVersion
-Case TwsSocketInMsgTypes.TICK_SNAPSHOT_END
-    getTickSnapshotEnd pVersion
-Case TwsSocketInMsgTypes.Position
-    getPosition pVersion
-Case TwsSocketInMsgTypes.POSITION_END
-    getPositionEnd pVersion
-Case TwsSocketInMsgTypes.ACCOUNT_SUMMARY
-    getAccountSummary pVersion
-Case TwsSocketInMsgTypes.ACCOUNT_SUMMARY_END
-    getAccountSummaryEnd pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.TICK_EFP
     getTickEFP pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.CURRENT_TIME
     getCurrentTime pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.REAL_TIME_BARS
     getRealtimeBars pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.FUNDAMENTAL_DATA
     getFundamentalData pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.CONTRACT_DATA_END
+    getContractEnd pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.OPEN_ORDER_END
+    getOpenOrderEnd pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.ACCT_DOWNLOAD_END
+    getAccountDownloadEnd pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.EXECUTION_DATA_END
+    getExecutionDataEnd pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.DELTA_NEUTRAL_VALIDATION
+    getDeltaNeutralValidation pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.TICK_SNAPSHOT_END
+    getTickSnapshotEnd pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.MARKET_DATA_TYPE
     getMarketDataType pVersion
+    lDone = True
 Case TwsSocketInMsgTypes.COMMISSION_REPORT
     getCommissionReport pVersion
-Case TwsSocketInMsgTypes.TickRequestParams
-    getTickRequestParams
-Case TwsSocketInMsgTypes.MarketRule
-    getMarketRule
+    lDone = True
+Case TwsSocketInMsgTypes.Position
+    getPosition pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.POSITION_END
+    getPositionEnd pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.ACCOUNT_SUMMARY
+    getAccountSummary pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.ACCOUNT_SUMMARY_END
+    getAccountSummaryEnd pVersion
+    lDone = True
+Case TwsSocketInMsgTypes.VERIFYMESSAGEAPI
+
+Case TwsSocketInMsgTypes.VERIFYCOMPLETED
+
+Case TwsSocketInMsgTypes.DISPLAYGROUPLIST
+
+Case TwsSocketInMsgTypes.DISPLAYGROUPUPDATED
+
+Case TwsSocketInMsgTypes.VERIFYANDAUTHMESSAGEAPI
+
+Case TwsSocketInMsgTypes.VERIFYANDAUTHCOMPLETED
+
+Case TwsSocketInMsgTypes.POSITIONMULTI
+
+Case TwsSocketInMsgTypes.POSITIONMULTIEND
+
+Case TwsSocketInMsgTypes.ACCOUNTUPDATEMULTI
+
+Case TwsSocketInMsgTypes.ACCOUNTUPDATEMULTIEND
+
 Case TwsSocketInMsgTypes.OptionParameter
     getOptionParameter
+    lDone = True
 Case TwsSocketInMsgTypes.OptionParameterEnd
     getOptionParameterEnd
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalStateException, , "Invalid message code from Tws"
+    lDone = True
+Case TwsSocketInMsgTypes.SOFTDOLLARTIERS
+
+Case TwsSocketInMsgTypes.FAMILYCODES
+
+Case TwsSocketInMsgTypes.SYMBOLSAMPLES
+
+Case TwsSocketInMsgTypes.MARKETDEPTHEXCHANGES
+
+Case TwsSocketInMsgTypes.TickRequestParams
+    getTickRequestParams
+    lDone = True
+Case TwsSocketInMsgTypes.SMARTCOMPONENTS
+
+Case TwsSocketInMsgTypes.NEWSARTICLE
+
+Case TwsSocketInMsgTypes.TICKNEWS
+
+Case TwsSocketInMsgTypes.NEWSPROVIDERS
+
+Case TwsSocketInMsgTypes.HISTORICALNEWS
+
+Case TwsSocketInMsgTypes.HISTORICALNEWSEND
+
+Case TwsSocketInMsgTypes.HEADTIMESTAMP
+
+Case TwsSocketInMsgTypes.HISTOGRAMDATA
+
+Case TwsSocketInMsgTypes.HISTORICALDATAUPDATE
+
+Case TwsSocketInMsgTypes.REROUTEMARKETDATA
+    getRerouteMktDataReq
+    lDone = True
+Case TwsSocketInMsgTypes.REROUTEMARKETDEPTH
+    getRerouteMktDepthReq
+    lDone = True
+Case TwsSocketInMsgTypes.MarketRule
+    getMarketRule
+    lDone = True
+Case TwsSocketInMsgTypes.PNL
+
+Case TwsSocketInMsgTypes.PNLSINGLE
+
+Case TwsSocketInMsgTypes.HISTORICALTICKMIDPOINT
+
+Case TwsSocketInMsgTypes.HISTORICALTICKBIDASK
+
+Case TwsSocketInMsgTypes.HISTORICALTICKLAST
+
+Case TwsSocketInMsgTypes.TICKBYTICK
+
+Case TwsSocketInMsgTypes.OrderBound
+
+Case TwsSocketInMsgTypes.CompletedOrder
+
+Case TwsSocketInMsgTypes.CompletedOrdersEnd
+
+Case TwsSocketInMsgTypes.ReplaceFAEnd
+
+Case TwsSocketInMsgTypes.WshMetaData
+
+Case TwsSocketInMsgTypes.WshEventData
+
+Case TwsSocketInMsgTypes.HistoricalSchedule
+
+Case TwsSocketInMsgTypes.UserInformation
+
 End Select
+
+Assert lDone, "Invalid message code from Tws"
 
 Exit Sub
 
@@ -1661,6 +1785,38 @@ End With
 mReader.EndLogMessage
 
 If Not mHistDataConsumer Is Nothing Then mHistDataConsumer.NotifyRealtimeBar GIdManager.GetCallerId(lReqId, IdTypeHistoricalData), lBar
+
+Exit Sub
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub getRerouteMktDataReq()
+Const ProcName As String = "getRerouteMktDataReq"
+On Error GoTo Err
+
+Dim lReqId As Long: lReqId = GIdManager.GetCallerId(mReader.GetLong("ReqID"), IdTypeMarketData)
+Dim lConId As Long: lConId = mReader.GetLong("Conid")
+Dim lExchange As String: lExchange = mReader.GetString("Exchange")
+
+If Not mMarketDataConsumer Is Nothing Then mMarketDataConsumer.NotifyRerouteMktDataReq lReqId, lConId, lExchange
+
+Exit Sub
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+End Sub
+
+Private Sub getRerouteMktDepthReq()
+Const ProcName As String = "getRerouteMktDepthReq"
+On Error GoTo Err
+
+Dim lReqId As Long: lReqId = GIdManager.GetCallerId(mReader.GetLong("ReqID"), IdTypeMarketDepth)
+Dim lConId As Long: lConId = mReader.GetLong("Conid")
+Dim lExchange As String: lExchange = mReader.GetString("Exchange")
+
+If Not mMarketDepthConsumer Is Nothing Then mMarketDepthConsumer.NotifyRerouteMktDepthReq lReqId, lConId, lExchange
 
 Exit Sub
 
