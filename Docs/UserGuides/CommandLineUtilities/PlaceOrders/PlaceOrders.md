@@ -453,8 +453,10 @@ contract. There are two types of order recognised by the program:
 
   If you make a mistake that results in an error message, then the ENDBRACKET
   command will inform you that the bracket order cannot be actioned, and you
-  will have to reinput the definition. You can use the QUIT command to discard
-  the definition before you get as far as the ENDBRACKET command.
+  will have to reinput the definition. If you are working interactively, you
+  can avoid this by simply re-entering correctly the faulty line, or you can
+  use the QUIT command to discard the definition before you get as far as the
+  ENDBRACKET command.
 
 Note that as a matter of implementation convenience, single orders are actually
 implemented as bracket orders with an entry order but without the associated
@@ -469,40 +471,40 @@ currently defined groups.
 
 Entry orders (and single orders) may use the following order types:
 
-* Limit
-* Limit If Touched
-* Limit On Close
-* Limit On Open
-* Market
-* Market If Touched
-* Market On Close
-* Market On Open
-* Market To Limit
-* Stop
-* Stop Limit
-* Trail
-* Trail Limit
+* Limit (LMT)
+* Limit If Touched (LIT)
+* Limit On Close (LOC)
+* Limit On Open (LOO)
+* Market (MKT)
+* Market If Touched (MIT)
+* Market On Close (MOC)
+* Market On Open (MOO)
+* Market To Limit (MTL)
+* Stop (STP)
+* Stop Limit (STPLMT)
+* Trail (TRAIL)
+* Trail Limit (TRAILLMT)
 
 ###  Order Types for Stop-Loss Orders
 
 Stop-loss orders may use the following order types:
 
-* Stop
-* Stop Limit
-* Trail
-* Trail Limit
+* Stop (STP)
+* Stop Limit (SPLMT)
+* Trail (TRAIL)
+* Trail Limit (TRAILLMT)
 
 ###  Order Types for Target Orders
 
 Target orders may use the following order types:
 
-* Limit
-* Limit If Touched
-* Limit On Close
-* Limit On Open
-* Market If Touched
-* Market On Close
-* Market On Open
+* Limit (LMT)
+* Limit If Touched (LIT)
+* Limit On Close (LOC)
+* Limit On Open (LOO)
+* Market If Touched (MIT)
+* Market On Close (MOC)
+* Market On Open (MOO)
 
 ## 7. Order Pricing
 
