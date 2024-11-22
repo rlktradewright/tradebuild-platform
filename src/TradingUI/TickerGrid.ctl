@@ -2921,7 +2921,12 @@ Case MarketDataSourceStates.MarketDataSourceStateReady
     setFieldsHaveBeenSet lIndex
     storeTickerSettings pDataSource
 Case MarketDataSourceStates.MarketDataSourceStateRunning
-    If pDataSource.IsDataDelayed Then SetRowMessage lRow, "Data is delayed"
+    If pDataSource.IsDataDelayed Then
+        SetRowMessage lRow, "Data is delayed"
+        TickerGrid.BeginCellEdit lRow, TickerGridColumns.Selector
+        TickerGrid.CellBackColor = CSelectorDataDelayedBackColor
+        TickerGrid.EndCellEdit
+    End If
 Case MarketDataSourceStates.MarketDataSourceStateError
     If Not getFieldsHaveBeenSet(lIndex) Then
         If pDataSource.ContractFuture.IsAvailable Then

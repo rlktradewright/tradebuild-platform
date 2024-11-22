@@ -54,6 +54,8 @@ Public Const CErroredRowForeColor                   As Long = &H101FF
 
 Public Const CMessagedRowBackColor                  As Long = &H10101
 
+Public Const CSelectorDataDelayedBackColor          As Long = &HBBECFE
+
 Public Const ErroredFieldColor                      As Long = &HD2D2FF
 
 Public Const KeyDownShift                           As Integer = &H1
