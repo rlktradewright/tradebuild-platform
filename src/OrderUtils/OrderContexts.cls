@@ -176,6 +176,8 @@ Private Sub IGenericTickListener_NotifyTick(ev As GenericTickEventData)
 Const ProcName As String = "IGenericTickListener_NotifyTick"
 On Error GoTo Err
 
+If mDataSourceIsReady Then Exit Sub
+
 If IsDataSourceReady(mDataSource) Then
     mDataSource.RemoveGenericTickListener Me
     mDataSourceIsReady = True
@@ -559,7 +561,11 @@ Else
 End If
 
 Set mDataSource = pDataSource
-If Not IsDataSourceReady(mDataSource) Then mDataSource.AddGenericTickListener Me
+If IsDataSourceReady(mDataSource) Then
+    mDataSourceIsReady = True
+Else
+    mDataSource.AddGenericTickListener Me
+End If
 
 Set mOrderSubmitter = pOrderSubmitter
 Set mOrderAuthoriser = pOrderAuthoriser

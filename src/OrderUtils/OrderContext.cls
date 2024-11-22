@@ -357,6 +357,12 @@ End If
 If mSimulatedClockFuture Is Nothing Then
 ElseIf Not mSimulatedClockFuture.IsAvailable Then
     mNotReadyMessage = "Not ready - awaiting clock"
+    Exit Function
+End If
+
+If Not mDataSourceIsReady Then
+    mNotReadyMessage = "Not ready - data source not ready"
+    Exit Function
 End If
 
 mNotReadyMessage = ""
