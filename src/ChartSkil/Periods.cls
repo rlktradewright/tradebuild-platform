@@ -146,6 +146,7 @@ On Error GoTo Err
 
 If mTimePeriodSet Then Err.Raise ErrorCodes.ErrIllegalStateException, , "TimePeriod has already been set"
 
+gLogger.Log "TimePeriod set to: " & Value.ToShortString, ProcName, ModuleName, LogLevelDetail
 Set mTimePeriod = Value
 
 mTimePeriodSet = True
@@ -294,6 +295,8 @@ Friend Function GetXFromTimestamp( _
 Const ProcName As String = "GetXFromTimestamp"
 On Error GoTo Err
 
+Assert Not mTimePeriod Is Nothing, "mTimePeriod Is Nothing"
+Assert mTimePeriod.ToShortString <> "0", "mTimePeriod.ToShortString=" & mTimePeriod.ToShortString
 If canGenerateBarTimes(mTimePeriod.Units) Then
     GetXFromTimestamp = getXWithRegularPeriods(Timestamp)
 Else
