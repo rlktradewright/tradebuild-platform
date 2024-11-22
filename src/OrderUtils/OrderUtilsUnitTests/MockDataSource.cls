@@ -98,6 +98,10 @@ Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickTyp
 Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
 End Property
 
+Private Property Get IMarketDataSource_IsDataDelayed() As Boolean
+
+End Property
+
 Private Property Get IMarketDataSource_IsFinished() As Boolean
 Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
 End Property

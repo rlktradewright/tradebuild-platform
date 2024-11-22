@@ -37,7 +37,7 @@ mTestCompleted = False
 ReDim ReceivedTicks(15) As TickInfo
 NumberOfReceivedTicks = 0
 
-Set mTickfileStore = CreateTradingDBClient(DbSQLServer2005, "Essy\Live", "TradingDB").TickfileStore
+Set mTickfileStore = CreateTradingDBClient(DbSQLServer2005, "Sappy\Live", "TradingDB").TickfileStore
 Set mTickfileSpecs = New TickFileSpecifiers
 
 End Sub

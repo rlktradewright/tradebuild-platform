@@ -98,6 +98,14 @@ mDataSources.Add lDataSource
 Set IMarketDataManager_CreateSnapshotMarketDataSource = lDataSource
 End Function
 
+Private Property Let IMarketDataManager_DataDelaySeconds(ByVal RHS As Long)
+
+End Property
+
+Private Property Get IMarketDataManager_DataDelaySeconds() As Long
+
+End Property
+
 Private Property Get IMarketDataManager_DataSources() As EnumerableCollection
 Assert False, ErrorCodes.ErrUnsupportedOperationException, "Not implemented"
 End Property
