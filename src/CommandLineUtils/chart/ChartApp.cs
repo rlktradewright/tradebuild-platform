@@ -45,7 +45,6 @@ namespace TradeWright.TradeBuild.Applications.Chart
 
         private ConsoleHandler1 mConsoleHandler;
 
-        private Task mCommandProcessorTask;
         private static readonly CancellationTokenSource mCancellationTokenSource = new CancellationTokenSource();
 
         public event EventHandler<EventArgs> 
