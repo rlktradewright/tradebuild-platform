@@ -158,7 +158,7 @@ if not defined APIMESSAGELOGGING (
 if defined SH_TWSSERVER set TWS=-tws:"%SH_TWSSERVER%,%SH_PORT%,%SH_CLIENTID%,%SH_CONNECTIONRETRYINTERVAL%"
 if defined SH_DATABASESERVER set DB=-db:"%SH_DATABASESERVER%,%SH_DATABASEtype%,%SH_DATABASE%"
 
-set RUN_STRATEGYHOST=strategyhost27 -contract:"%SH_CONTRACT%" ^
+set RUN_STRATEGYHOST=start strategyhost27 -contract:"%SH_CONTRACT%" ^
 -strategy:"%SH_STRATEGY%" ^
 -stoplossstrategy:"%SH_STOPLOSSSTRATEGY%" ^
 -targetstrategy:"%SH_TARGETSTRATEGY%" ^

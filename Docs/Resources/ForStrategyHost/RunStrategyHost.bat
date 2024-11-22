@@ -45,8 +45,6 @@ set LOGLEVEL=N
 set LOGOVERWRITE=yes
 set LOGBACKUP=yes
 
-set APIMESSAGELOGGING=NNN
-
 set INSTALLFOLDER=
 
 
@@ -174,14 +172,6 @@ set INSTALLFOLDER=
 ::   Permitted values, in increasing level of detail, are N, D, M and H. For
 ::   normal operation N is recommended. Note that the higher the level of
 ::   detail, the larger the logfile.
-::
-:: APIMESSAGELOGGING
-::   This setting controls the logging of API messages and API message 
-::   statistics. It should be left at the default value of 'NNN' except under
-::   advice from the program developer. API message logging can cause 
-::   logfiles to become very large: the default setting turns off all API
-::   message logging except for those related to orders, API connections and
-::   API errors/notfications.
 ::
 ::
 :: INSTALLFOLDER
