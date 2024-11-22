@@ -62,6 +62,7 @@ End Enum
 '@================================================================================
 
 Public Type ContractCacheEntry
+    ClientID                As Long
     ContractsFutureBuilder  As FutureBuilder
     Contracts               As IContracts
     TwsContracts            As EnumerableCollection
@@ -75,6 +76,7 @@ Public Type MarketRuleRequestEntry
 End Type
 
 Public Type OptionParametersCacheEntry
+    ClientID                As Long
     OptionParametersFutureBuilder   As FutureBuilder
     OptionParameters        As OptionParametersStore
     CacheDate               As Date
@@ -88,6 +90,7 @@ Public Type OrderIdMapEntry
 End Type
 
 Public Type PriceIncrementRulesetCacheEntry
+    ClientID                As Long
     RulesetFutureBuilder    As FutureBuilder
     Ruleset                 As PriceIncrementRuleset
     CacheDate               As Date
@@ -128,7 +131,7 @@ End Type
 Public Function GetClient( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
-                ByVal pClientId As Long, _
+                ByVal pClientID As Long, _
                 Optional ByVal pSessionID As String, _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 60, _
                 Optional ByVal pLogApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
@@ -144,7 +147,7 @@ On Error GoTo Err
 
 Set GetClient = GIBEnhancedApi.GetClient(pServer, _
                             pPort, _
-                            pClientId, _
+                            pClientID, _
                             pSessionID, _
                             pConnectionRetryIntervalSecs, _
                             pLogApiMessages, _
