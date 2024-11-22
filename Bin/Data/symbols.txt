@@ -24,16 +24,16 @@ GBP		,CASH	,	,IDEALPRO	,USD
 USD		,CASH	,	,IDEALPRO	,JPY
 
 // Futures
-ES		,FUT	,202023	,CME		,		,		,		,true
-YM		,FUT	,202023	,CBOT		,		,		,		,true
-//Z		,FUT	,202023	,ICEEU		,		,		,		,true
-GBL		,FUT	,202023	,EUREX
-DAX		,FUT	,202023	,EUREX		,EUR		,		,25		,true
-ESTX50		,FUT	,202023	,EUREX
-EUR		,FUT	,202023	,CME
+ES		,FUT	,202412	,CME		,		,		,		,true
+YM		,FUT	,202412	,CBOT		,		,		,		,true
+Z		,FUT	,202412	,ICEEU
+GBL		,FUT	,202412	,EUREX
+DAX		,FUT	,202412	,EUREX		,EUR		,		,25		,true
+ESTX50		,FUT	,202412	,EUREX
+EUR		,FUT	,202412	,CME
 
 //////////////////////////////////////////////////
-EXIT
+//EXIT
 //////////////////////////////////////////////////
 
 
