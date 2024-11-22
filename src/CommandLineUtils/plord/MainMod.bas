@@ -2140,7 +2140,7 @@ ElseIf UCase$(pParams) = PositionsSubcommand Then
 ElseIf UCase$(pParams) = TradesSubcommand Then
     listTrades
 Else
-    gWriteErrorLine gCommands.ListCommand.Name & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & " or " & TradesSubcommand, ErrorCountIncrementNo
+    gWriteErrorLine gCommands.ListCommand.Name & " parameter must be one of " & GroupsSubcommand & ", " & PositionsSubcommand & ", " & TradesSubcommand & " or " & OrdersSubcommand, ErrorCountIncrementNo
 End If
 
 Exit Sub
