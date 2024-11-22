@@ -248,7 +248,7 @@ Public Function RecordTickData( _
 Const ProcName As String = "RecordTickData"
 On Error GoTo Err
 
-GTickfileUtils.RecordTickData pTickSource, pContractFuture, pTickfileStore, pOutputMonitor, pFormatIdentifier, pLocation
+Set RecordTickData = GTickfileUtils.RecordTickData(pTickSource, pContractFuture, pTickfileStore, pOutputMonitor, pFormatIdentifier, pLocation)
 
 Exit Function
 
