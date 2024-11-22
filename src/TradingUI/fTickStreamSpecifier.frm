@@ -14,7 +14,7 @@ Begin VB.Form fTickStreamSpecifier
    ScaleWidth      =   7665
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TradingUI27.TickStreamSpecifier TickStreamSpecifier1 
+   Begin TradingUI27.TickStreamSpecifier TickStreamSpecifier1
       Height          =   4215
       Left            =   120
       TabIndex        =   0

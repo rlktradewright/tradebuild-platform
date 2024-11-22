@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#281.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#341.1#0"; "ChartSkil27.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.7"
    ClientHeight    =   8865

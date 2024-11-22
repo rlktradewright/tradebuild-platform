@@ -483,7 +483,7 @@ End Sub
 
 Private Sub ConnectButton_Click()
 If ConnectButton.Caption = "Connect" Then
-    Set mIBAPI = GetApi(ServerText, CLng(PortText), CLng(ClientIdText), pLogApiMessageStats:=True)
+    Set mIBAPI = GetAPI(ServerText, CLng(PortText), CLng(ClientIdText), pLogApiMessageStats:=True)
     mIBAPI.ConnectionStatusConsumer = Me
     mIBAPI.ErrorAndNotificationConsumer = Me
     mIBAPI.MarketDataConsumer = Me
@@ -574,7 +574,7 @@ End Sub
 '================================================================================
 
 Private Sub IConnectionStatusConsumer_NotifyAPIConnectionStateChange( _
-                ByVal pState As IBBaseAPI.TwsConnectionStates, _
+                ByVal pState As IBBaseApi.TwsConnectionStates, _
                 ByVal pMessage As String)
 Select Case pState
 Case TwsConnNotConnected
@@ -637,19 +637,27 @@ Private Sub IMarketDataConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErro
 logMessage "Market data error " & pErrorCode & "(" & pTickerId & "): " & pErrorMsg
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
+Private Sub IMarketDataConsumer_NotifyMarketDataType(ByVal pTickerId As Long, ByVal pMarketDataType As IBBaseApi.TwsMarketDataTypes)
 
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pValue As Double)
+Private Sub IMarketDataConsumer_NotifyRerouteMktDataReq(ByVal pReqId As Long, ByVal pConId As Long, ByVal pExchange As String)
+
+End Sub
+
+Private Sub IMarketDataConsumer_NotifyTickEFP(ByVal pTickerId As Long, ByVal pTickType As IBBaseApi.TwsTickTypes, ByVal pBasisPoints As Double, ByVal pFormattedBasisPoints As String, ByVal pTotalDividends As Double, ByVal pHoldDays As Long, ByVal pFutureExpiry As String, ByVal pDividendImpact As Double, ByVal pDividendsToExpiry As Double)
+
+End Sub
+
+Private Sub IMarketDataConsumer_NotifyTickGeneric(ByVal pTickerId As Long, ByVal pTickType As IBBaseApi.TwsTickTypes, ByVal pValue As Double)
 incrementTotalTicks
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pImpliedVol As Double, ByVal pDelta As Double, ByVal pOptPrice As Double, ByVal pPvDividend As Double, ByVal pGamma As Double, ByVal pVega As Double, ByVal pTheta As Double, ByVal pUndPrice As Double)
+Private Sub IMarketDataConsumer_NotifyTickOptionComputation(ByVal pTickerId As Long, ByVal pTickType As IBBaseApi.TwsTickTypes, ByVal pImpliedVol As Double, ByVal pDelta As Double, ByVal pOptPrice As Double, ByVal pPvDividend As Double, ByVal pGamma As Double, ByVal pVega As Double, ByVal pTheta As Double, ByVal pUndPrice As Double)
 
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickPrice(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pPrice As Double, ByVal pSize As BoxedDecimal, ByRef pAttributes As TwsTickAttributes)
+Private Sub IMarketDataConsumer_NotifyTickPrice(ByVal pTickerId As Long, ByVal pTickType As IBBaseApi.TwsTickTypes, ByVal pPrice As Double, ByVal pSize As BoxedDecimal, ByRef pAttributes As TwsTickAttributes)
 incrementTotalTicks
 End Sub
 
@@ -661,7 +669,7 @@ Private Sub IMarketDataConsumer_NotifyTickSize(ByVal pTickerId As Long, ByVal pT
 incrementTotalTicks
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyTickString(ByVal pTickerId As Long, ByVal pTickType As IBBaseAPI.TwsTickTypes, ByVal pValue As String)
+Private Sub IMarketDataConsumer_NotifyTickString(ByVal pTickerId As Long, ByVal pTickType As IBBaseApi.TwsTickTypes, ByVal pValue As String)
 incrementTotalTicks
 End Sub
 
@@ -673,8 +681,12 @@ Private Sub IMarketDepthConsumer_NotifyError(ByVal pTickerId As Long, ByVal pErr
 logMessage "Market depth error " & pErrorCode & "(" & pTickerId & "): " & pErrorMsg
 End Sub
 
-Private Sub IMarketDepthConsumer_NotifyMarketDepth(ByVal pTickerId As Long, ByVal pPosition As Long, ByVal pMarketMaker As String, ByVal pOperation As IBBaseAPI.TwsDOMOperations, ByVal pSide As IBBaseAPI.TwsDOMSides, ByVal pPrice As Double, ByVal pSize As BoxedDecimal)
+Private Sub IMarketDepthConsumer_NotifyMarketDepth(ByVal pTickerId As Long, ByVal pPosition As Long, ByVal pMarketMaker As String, ByVal pOperation As IBBaseApi.TwsDOMOperations, ByVal pSide As IBBaseApi.TwsDOMSides, ByVal pPrice As Double, ByVal pSize As BoxedDecimal)
 incrementTotalTicks
+End Sub
+
+Private Sub IMarketDepthConsumer_NotifyRerouteMktDepthReq(ByVal pReqId As Long, ByVal pConId As Long, ByVal pExchange As String)
+
 End Sub
 
 Private Sub IMarketDepthConsumer_ResetMarketDepth(ByVal pReEstablish As Boolean)

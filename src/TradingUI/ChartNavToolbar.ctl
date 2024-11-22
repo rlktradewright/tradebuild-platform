@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#281.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#337.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
