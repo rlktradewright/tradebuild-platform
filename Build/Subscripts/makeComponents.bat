@@ -94,7 +94,6 @@ goto :EOF
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
 call makedll.bat AccountUtils AccountUtils /T:DLL /B:%BINARY_COMPAT%
 if errorlevel 1 pause
-if errorlevel 1 pause
 goto :EOF
 
 :BarUtils

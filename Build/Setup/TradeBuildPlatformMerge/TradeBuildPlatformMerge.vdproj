@@ -442,12 +442,6 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_3D161BA4AFFB4BBC8191F1DBF7250C4C"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_F31C5F775F2D636590C01D3AAFD1FCC1"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -532,6 +526,12 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_3D161BA4AFFB4BBC8191F1DBF7250C4C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_3B8D05A84A16B64267A4B4E4FF42D740"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -549,7 +549,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:..\\Bin\\TradeBuildPlatform-2.7.267.msm"
+        "OutputFilename" = "8:..\\Bin\\TradeBuildPlatform-2.7.268.msm"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -2243,7 +2243,7 @@
         "Module"
         {
         "ModuleSignature" = "8:MergeModule.4EB5B2E27A794B3384350D2FB58C0123"
-        "Version" = "8:2.7.0.267"
+        "Version" = "8:2.7.0.268"
         "Title" = "8:TradeBuildPlatformMerge"
         "Subject" = "8:"
         "Author" = "8:Richard L King"
