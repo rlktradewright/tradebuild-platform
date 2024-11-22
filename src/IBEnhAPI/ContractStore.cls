@@ -51,7 +51,7 @@ Private mContractCache                              As ContractCache
 Private mContractsFutures                           As New EnumerableCollection
 Private mStrikesFutures                             As New EnumerableCollection
 Private mExpiriesFutures                            As New EnumerableCollection
-
+Private mClientID                                   As Long
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -73,7 +73,8 @@ Set IContractStore_FetchContracts = GIBEnhancedApi.FetchContracts( _
                                                 pContractSpecifier, _
                                                 pListener, _
                                                 pCookie, _
-                                                False)
+                                                False, _
+                                                mClientID)
 mContractsFutures.Add IContractStore_FetchContracts
 
 Exit Function
@@ -97,7 +98,8 @@ Set IContractStore_FetchContractsSorted = GIBEnhancedApi.FetchContractsSorted( _
                                                 pSortkeys, _
                                                 pSortDescending, _
                                                 pCookie, _
-                                                False)
+                                                False, _
+                                                mClientID)
 
 Exit Function
 
@@ -184,9 +186,11 @@ End Function
 
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractsTwsRequester, _
-                ByVal pContractCache As ContractCache)
+                ByVal pContractCache As ContractCache, _
+                ByVal pClientID As Long)
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
+mClientID = pClientID
 End Sub
 
 '@================================================================================

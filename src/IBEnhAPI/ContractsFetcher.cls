@@ -142,7 +142,7 @@ Set lContract = GIBEnhancedApi.TwsContractToContract(pTwsContract)
 
 If Not mContractsForCachingBuilder.Contracts.Contains(lContract.Specifier) Then
     addCacheEntries lContract, pTwsContract
-    mTwsContracts.Add pTwsContract
+    If Not mTwsContracts.Contains(pTwsContract) Then mTwsContracts.Add pTwsContract
     mContractsForCachingBuilder.Add lContract
     processPriceIncrementRuleset lContract
 
@@ -344,7 +344,8 @@ Friend Sub FetchContracts( _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pInitialContractSpecifier As ContractSpecifier, _
                 ByVal pReturnTwsContracts As Boolean, _
-                ByVal pCookie As Variant)
+                ByVal pCookie As Variant, _
+                ByVal pClientID As Long)
 Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
@@ -373,7 +374,7 @@ ElseIf mContractCache.GetContractsFutureBuilder( _
 Else
     GIBEnhApi.Log "Fetching contract details from IBAPI for", ModuleName, ProcName, mContractSpecifier.ToString, LogLevelMediumDetail
     Set mResolvedContracts = New EnumerableCollection
-    fetchContractsFromIBApi mContractSpecifier
+    fetchContractsFromIBApi mContractSpecifier, pClientID
 End If
 
 Exit Sub
@@ -451,7 +452,8 @@ GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub fetchContractsFromIBApi( _
-                ByVal pContractSpec As IContractSpecifier)
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pClientID As Long)
 Const ProcName As String = "fetchContractsFromIBApi"
 On Error GoTo Err
 
@@ -460,7 +462,7 @@ Set mContractsForCachingFutureBuilder = New FutureBuilder
 Set mContractsForCachingBuilder = New ContractsBuilder
 mContractsForCachingBuilder.ContractSpecifier = pContractSpec
 
-mContractCache.SetContractsFutureBuilder pContractSpec, mContractsForCachingFutureBuilder, mTwsContracts
+mContractCache.SetContractsFutureBuilder pContractSpec, mContractsForCachingFutureBuilder, mTwsContracts, pClientID
 If GIBEnhApi.Logger.IsLoggable(LogLevelMediumDetail) Then GIBEnhApi.Log "Request contract details for", ModuleName, ProcName, pContractSpec.ToString, LogLevelMediumDetail
 mContractRequester.RequestContractDetails pContractSpec, Me
 

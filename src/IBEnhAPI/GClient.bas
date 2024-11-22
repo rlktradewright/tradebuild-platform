@@ -64,7 +64,7 @@ Public Function GetClient( _
                 ByVal pSessionID As String, _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
-                ByVal pClientId As Long, _
+                ByVal pClientID As Long, _
                 ByVal pConnectionRetryIntervalSecs As Long, _
                 ByVal pLogApiMessages As ApiMessageLoggingOptions, _
                 ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
@@ -81,7 +81,7 @@ Dim lKey As String
 
 If pServer = "" Then pServer = "127.0.0.1"
 
-lKey = generateTwsKey(pServer, pPort, pClientId)
+lKey = generateTwsKey(pServer, pPort, pClientID)
 
 If Not mClientCollection.Contains(lKey) Then
     Set GetClient = New Client
@@ -90,7 +90,7 @@ If Not mClientCollection.Contains(lKey) Then
     GetClient.Initialise pSessionID, _
                         pServer, _
                         pPort, _
-                        pClientId, _
+                        pClientID, _
                         pConnectionRetryIntervalSecs, _
                         pLogApiMessages, _
                         pLogRawApiMessages, _
@@ -115,7 +115,7 @@ Public Sub gReleaseClient(ByVal pClient As Client)
 Const ProcName As String = "gReleaseClient"
 On Error GoTo Err
 
-mClientCollection.Remove generateTwsKey(pClient.Server, pClient.Port, pClient.ClientId)
+mClientCollection.Remove generateTwsKey(pClient.Server, pClient.Port, pClient.ClientID)
 
 Exit Sub
 
@@ -130,8 +130,8 @@ End Sub
 Private Function generateTwsKey( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
-                ByVal pClientId As Long) As String
-generateTwsKey = pServer & vbNullChar & pPort & vbNullChar & pClientId
+                ByVal pClientID As Long) As String
+generateTwsKey = pServer & vbNullChar & pPort & vbNullChar & pClientID
 End Function
 
 

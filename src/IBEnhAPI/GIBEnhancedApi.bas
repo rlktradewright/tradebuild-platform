@@ -174,12 +174,13 @@ End Function
 Public Function ContractFutureToTwsContractFuture( _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pContractCache As ContractCache) As IFuture
+                ByVal pContractCache As ContractCache, _
+                ByVal pClientID As Long) As IFuture
 Const ProcName As String = "ContractFutureToTwsContractFuture"
 On Error GoTo Err
 
 Dim lFutureBuilder As New TwsContractDtlsFutBldr
-lFutureBuilder.Initialise pContractRequester, pContractFuture, pContractCache
+lFutureBuilder.Initialise pContractRequester, pContractFuture, pContractCache, pClientID
 Set ContractFutureToTwsContractFuture = lFutureBuilder.Future
 
 Exit Function
@@ -218,7 +219,8 @@ Public Function FetchContracts( _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
-                ByVal pReturnTwsContracts As Boolean) As IFuture
+                ByVal pReturnTwsContracts As Boolean, _
+                ByVal pClientID As Long) As IFuture
 Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
@@ -234,7 +236,8 @@ Set FetchContracts = lFetcher.Fetch( _
                                 pContractSpecifier, _
                                 pListener, _
                                 pCookie, _
-                                pReturnTwsContracts)
+                                pReturnTwsContracts, _
+                                pClientID)
 
 Exit Function
 
@@ -249,7 +252,8 @@ Public Function FetchContractsSorted( _
                 ByRef pSortkeys() As ContractSortKeyIds, _
                 ByVal pSortDescending As Boolean, _
                 ByVal pCookie As Variant, _
-                ByVal pReturnTwsContracts As Boolean) As IFuture
+                ByVal pReturnTwsContracts As Boolean, _
+                ByVal pClientID As Long) As IFuture
 Const ProcName As String = "FetchContractsSorted"
 On Error GoTo Err
 
@@ -263,7 +267,8 @@ Set FetchContractsSorted = lFetcher.FetchSorted( _
                                 pSortkeys, _
                                 pSortDescending, _
                                 pCookie, _
-                                pReturnTwsContracts)
+                                pReturnTwsContracts, _
+                                pClientID)
 
 Exit Function
 
@@ -290,7 +295,7 @@ End Function
 Public Function GetClient( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
-                ByVal pClientId As Long, _
+                ByVal pClientID As Long, _
                 Optional ByVal pSessionID As String, _
                 Optional ByVal pConnectionRetryIntervalSecs As Long = 60, _
                 Optional ByVal pLogApiMessages As ApiMessageLoggingOptions = ApiMessageLoggingOptionDefault, _
@@ -309,7 +314,7 @@ If pSessionID = "" Then pSessionID = GenerateGUIDString
 Set GetClient = GClient.GetClient(pSessionID, _
                             pServer, _
                             pPort, _
-                            pClientId, _
+                            pClientID, _
                             pConnectionRetryIntervalSecs, _
                             pLogApiMessages, _
                             pLogRawApiMessages, _
@@ -544,14 +549,14 @@ End Function
 Public Sub RequestExecutions( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pReqId As Long, _
-                ByVal pClientId As Long, _
+                ByVal pClientID As Long, _
                 ByVal pFrom As Date)
 Const ProcName As String = "RequestExecutions"
 On Error GoTo Err
 
 Dim lExecFilter As TwsExecutionFilter
 Set lExecFilter = New TwsExecutionFilter
-lExecFilter.ClientId = pClientId
+lExecFilter.ClientID = pClientID
 lExecFilter.Time = pFrom
 pTwsAPI.RequestExecutions pReqId, lExecFilter
 

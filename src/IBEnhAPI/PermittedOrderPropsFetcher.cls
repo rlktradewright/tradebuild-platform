@@ -54,6 +54,8 @@ Private mFutureBuilder                              As New FutureBuilder
 
 Private mContractCache                              As ContractCache
 
+Private mClientID                                   As Long
+
 Private mSelfRef                                    As Object
 
 '@================================================================================
@@ -85,7 +87,8 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
                                         mContractSpec, _
                                         Nothing, _
                                         ev.Future.Cookie, _
-                                        True)
+                                        True, _
+                                        mClientID)
 ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
     Dim lContracts As EnumerableCollection
     Set lContracts = ev.Future.Value
@@ -117,7 +120,8 @@ Friend Sub Initialise( _
                 ByVal pContractFuture As IFuture, _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
-                ByVal pCookie As Variant)
+                ByVal pCookie As Variant, _
+                ByVal pClientID As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
@@ -125,6 +129,7 @@ mFutureWaiter.Add pContractFuture
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 mFutureBuilder.Cookie = pCookie
+mClientID = pClientID
 Set mSelfRef = Me
 
 Exit Sub
@@ -273,6 +278,7 @@ For i = 0 To UBound(lOrderTypesStr)
             "TRAILLIT", _
             "TRAILLMT", _
             "TRAILMIT", _
+            "USESTKMD", _
             "VOLAT", _
             "WHATIF"
 

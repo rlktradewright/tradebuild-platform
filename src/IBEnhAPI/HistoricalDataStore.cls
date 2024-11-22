@@ -59,6 +59,8 @@ Private mContractCache                              As ContractCache
 
 Private mScanRequesters                             As New EnumerableCollection
 
+Private mClientID                                   As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -260,7 +262,7 @@ Set FetchBars = lHistDataFetchTask.Initialise( _
                 mHistDataRequester, _
                 mContractRequester, _
                 mContractCache, _
-                pCookie)
+                pCookie, mClientID)
 Dim lTc As TaskController
 Set lTc = StartTask(lHistDataFetchTask, PriorityLow, , pCookie)
 mTaskControllers.Add lTc
@@ -306,11 +308,13 @@ Friend Sub Initialise( _
                 ByVal pHistDataRequester As HistDataRequester, _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
-                ByVal pScanRequester As ScanRequester)
+                ByVal pScanRequester As ScanRequester, _
+                ByVal pClientID As Long)
 Set mHistDataRequester = pHistDataRequester
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mScanRequester = pScanRequester
+mClientID = pClientID
 End Sub
 
 Public Function RefreshScanData( _

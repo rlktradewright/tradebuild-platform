@@ -147,7 +147,8 @@ Friend Function Fetch( _
                 ByVal pContractSpecifier As IContractSpecifier, _
                 ByVal pListener As IContractFetchListener, _
                 ByVal pCookie As Variant, _
-                ByVal pReturnTwsContracts As Boolean) As IFuture
+                ByVal pReturnTwsContracts As Boolean, _
+                ByVal pClientID As Long) As IFuture
 Const ProcName As String = "Fetch"
 On Error GoTo Err
 
@@ -177,11 +178,11 @@ If Not mContractCache.GetContracts( _
     ' the required contracts are not already in the cache
     Select Case mContractSpecifier.SecType
     Case SecTypeNone
-        requestContractsForUnspecifiedSectype
+        requestContractsForUnspecifiedSectype pClientID
     Case SecTypeCash
-        requestContractsForCash
+        requestContractsForCash pClientID
     Case Else
-        requestContracts mContractSpecifier
+        requestContracts mContractSpecifier, pClientID
     End Select
     mFutureWaiter.Add mResultsContractsFutureBuilder.Future
     Set Fetch = mResultsContractsFutureBuilder.Future
@@ -228,7 +229,8 @@ Friend Function FetchSorted( _
                 ByRef pSortkeys() As ContractSortKeyIds, _
                 ByVal pSortDescending As Boolean, _
                 ByVal pCookie As Variant, _
-                ByVal pReturnTwsContracts As Boolean) As IFuture
+                ByVal pReturnTwsContracts As Boolean, _
+                ByVal pClientID As Long) As IFuture
 Const ProcName As String = "FetchSorted"
 On Error GoTo Err
 
@@ -242,7 +244,8 @@ Set FetchSorted = Fetch(pContractRequester, _
                     pContractSpecifier, _
                     Nothing, _
                     pCookie, _
-                    pReturnTwsContracts)
+                    pReturnTwsContracts, _
+                    pClientID)
 
 Exit Function
 
@@ -424,7 +427,9 @@ Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub requestContracts(ByVal pContractSpec As IContractSpecifier)
+Private Sub requestContracts( _
+                ByVal pContractSpec As IContractSpecifier, _
+                ByVal pClientID As Long)
 Const ProcName As String = "requestContracts"
 On Error GoTo Err
 
@@ -437,7 +442,8 @@ lFetcher.FetchContracts Me, _
                         pContractSpec, _
                         mContractSpecifier, _
                         mReturnTwsContracts, _
-                        mCookie
+                        mCookie, _
+                        pClientID
 
 mNumOutstandingRequests = mNumOutstandingRequests + 1
 
@@ -447,7 +453,8 @@ Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub requestContractsForCash()
+Private Sub requestContractsForCash( _
+                ByVal pClientID As Long)
 Const ProcName As String = "requestContractsForCash"
 On Error GoTo Err
 
@@ -459,7 +466,8 @@ requestContracts CreateContractSpecifier( _
                                         SecTypeCash, _
                                         mContractSpecifier.CurrencyCode, _
                                         "", _
-                                        mContractSpecifier.Multiplier)
+                                        mContractSpecifier.Multiplier), _
+                    pClientID
 If mContractSpecifier.LocalSymbol = "" Then
     requestContracts CreateContractSpecifier( _
                                         mContractSpecifier.Symbol, _
@@ -469,7 +477,8 @@ If mContractSpecifier.LocalSymbol = "" Then
                                         SecTypeCash, _
                                         mContractSpecifier.CurrencyCode, _
                                         "", _
-                                        mContractSpecifier.Multiplier)
+                                        mContractSpecifier.Multiplier), _
+                        pClientID
 End If
 
 If mContractSpecifier.Symbol = "" Then
@@ -481,7 +490,8 @@ If mContractSpecifier.Symbol = "" Then
                                         SecTypeCash, _
                                         mContractSpecifier.CurrencyCode, _
                                         "", _
-                                        mContractSpecifier.Multiplier)
+                                        mContractSpecifier.Multiplier), _
+                        pClientID
 End If
 
 Exit Sub
@@ -490,7 +500,8 @@ Err:
 GIBEnhApi.HandleUnexpectedError ProcName & "(LocalSymbol=" & mContractSpecifier.LocalSymbol & "; Symbol=" & mContractSpecifier.Symbol & ")", ModuleName
 End Sub
 
-Private Sub requestContractsForUnspecifiedSectype()
+Private Sub requestContractsForUnspecifiedSectype( _
+                ByVal pClientID As Long)
 Const ProcName As String = "requestContractsForUnspecifiedSectype"
 On Error GoTo Err
 
@@ -511,7 +522,8 @@ If Not GIBEnhancedApi.IsSmartExchange(mContractSpecifier.Exchange) Then
                                                     SecTypeFuture, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     mContractSpecifier.Expiry, _
-                                                    mContractSpecifier.Multiplier)
+                                                    mContractSpecifier.Multiplier), _
+                        pClientID
     
     If mContractSpecifier.LocalSymbol = "" Then _
         requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
@@ -521,7 +533,8 @@ If Not GIBEnhancedApi.IsSmartExchange(mContractSpecifier.Exchange) Then
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         mContractSpecifier.Expiry, _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                            pClientID
     
     If mContractSpecifier.Symbol = "" Then _
         requestContracts CreateContractSpecifier("", _
@@ -531,7 +544,8 @@ If Not GIBEnhancedApi.IsSmartExchange(mContractSpecifier.Exchange) Then
                                                         SecTypeFuture, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         mContractSpecifier.Expiry, _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                            pClientID
 End If
 
 If mContractSpecifier.Expiry = "" And _
@@ -546,7 +560,8 @@ Then
                                                         SecTypeIndex, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                            pClientID
     
         If mContractSpecifier.LocalSymbol = "" Then _
             requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
@@ -556,7 +571,8 @@ Then
                                                         SecTypeIndex, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                            pClientID
     
         If mContractSpecifier.Symbol = "" Then _
             requestContracts CreateContractSpecifier("", _
@@ -566,7 +582,8 @@ Then
                                                         SecTypeIndex, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                                pClientID
         
         requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                         mContractSpecifier.Symbol, _
@@ -575,7 +592,8 @@ Then
                                                         SecTypeCash, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                                pClientID
 
         If mContractSpecifier.LocalSymbol = "" Then _
             requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
@@ -585,7 +603,8 @@ Then
                                                         SecTypeCash, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                                pClientID
     
         If mContractSpecifier.Symbol = "" Then _
             requestContracts CreateContractSpecifier("", _
@@ -595,7 +614,8 @@ Then
                                                         SecTypeCash, _
                                                         mContractSpecifier.CurrencyCode, _
                                                         "", _
-                                                        mContractSpecifier.Multiplier)
+                                                        mContractSpecifier.Multiplier), _
+                                pClientID
     
     End If
     
@@ -606,7 +626,8 @@ Then
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     "", _
-                                                    mContractSpecifier.Multiplier)
+                                                    mContractSpecifier.Multiplier), _
+                                pClientID
 
     If mContractSpecifier.LocalSymbol = "" Then _
         requestContracts CreateContractSpecifier(mContractSpecifier.Symbol, _
@@ -616,7 +637,8 @@ Then
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     "", _
-                                                    mContractSpecifier.Multiplier)
+                                                    mContractSpecifier.Multiplier), _
+                                pClientID
 
     If mContractSpecifier.Symbol = "" Then _
         requestContracts CreateContractSpecifier("", _
@@ -626,7 +648,8 @@ Then
                                                     SecTypeStock, _
                                                     mContractSpecifier.CurrencyCode, _
                                                     "", _
-                                                    mContractSpecifier.Multiplier)
+                                                    mContractSpecifier.Multiplier), _
+                                pClientID
 
 Else
     
@@ -651,7 +674,9 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier, _
                                                     mContractSpecifier.Strike, _
-                                                    mContractSpecifier.Right)
+                                                    mContractSpecifier.Right), _
+                            pClientID
+                            
         requestContracts CreateContractSpecifier(mContractSpecifier.LocalSymbol, _
                                                     mContractSpecifier.Symbol, _
                                                     mContractSpecifier.TradingClass, _
@@ -661,7 +686,8 @@ Else
                                                     mContractSpecifier.Expiry, _
                                                     mContractSpecifier.Multiplier, _
                                                     mContractSpecifier.Strike, _
-                                                    mContractSpecifier.Right)
+                                                    mContractSpecifier.Right), _
+                            pClientID
     End If
 End If
 

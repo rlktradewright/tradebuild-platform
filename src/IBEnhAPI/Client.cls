@@ -55,7 +55,7 @@ Private mTwsAPI                                     As TwsAPI
 
 Private mServer                                     As String
 Private mPort                                       As Long
-Private mClientId                                   As Long
+Private mClientID                                   As Long
 Private mConnectionRetryIntervalSecs                As Long
 Private mLogApiMessages                             As ApiMessageLoggingOptions
 Private mLogRawApiMessages                          As ApiMessageLoggingOptions
@@ -103,8 +103,9 @@ If sSomeListeners Then
     For i = 0 To UBound(sCurrentListeners)
         Set lListener = sCurrentListeners(i)
         lListener.NotifyAPIConnectionStateChange Me, pState, pMessage
-        GIBEnhApi.Log "Notified API connection state change: " & mServer & "; " & mPort & "; " & mClientId, _
-            ModuleName, ProcName, , LogLevelDetail
+        GIBEnhApi.Log "Notified API connection state change (" & TwsConnectionStateToString(pState) & "): " & _
+                        mServer & "; " & mPort & "; " & mClientID, _
+                        ModuleName, ProcName, , LogLevelDetail
     Next
 End If
 
@@ -252,8 +253,8 @@ Public Property Get OrderSubmitterCapabilities() As OrderSubmitterCapabilities
 OrderSubmitterCapabilities = OrderSubmitterCapabilityCanStageOrders
 End Property
 
-Public Property Get ClientId() As Long
-ClientId = mClientId
+Public Property Get ClientID() As Long
+ClientID = mClientID
 End Property
 
 Public Property Get ConnectionRetryIntervalSecs() As Long
@@ -309,6 +310,8 @@ Const ProcName As String = "Finish"
 On Error GoTo Err
 
 If mTwsAPI Is Nothing Then Exit Sub
+
+gContractCache.CancelPendingRequests mClientID
 
 mTwsAPI.Disconnect "Client finished"
 
@@ -372,7 +375,7 @@ On Error GoTo Err
 Static sContractStore As ContractStore
 If sContractStore Is Nothing Then
     Set sContractStore = New ContractStore
-    sContractStore.Initialise getContractDetailsRequester, gContractCache
+    sContractStore.Initialise getContractDetailsRequester, gContractCache, mClientID
 End If
 
 Set GetContractStore = sContractStore
@@ -391,7 +394,7 @@ Static sHistoricalDataStore As HistoricalDataStore
 
 If sHistoricalDataStore Is Nothing Then
     Set sHistoricalDataStore = New HistoricalDataStore
-    sHistoricalDataStore.Initialise getHistDataRequester, getContractDetailsRequester, gContractCache, getScanRequester
+    sHistoricalDataStore.Initialise getHistDataRequester, getContractDetailsRequester, gContractCache, getScanRequester, mClientID
 End If
 
 Set GetHistoricalDataStore = sHistoricalDataStore
@@ -414,7 +417,7 @@ If Not mTwsAPI.MarketDataConsumer Is Nothing Then
     Set lMarketDataFactory = mTwsAPI.MarketDataConsumer
 Else
     Set lMarketDataFactory = New MarketDataFactory
-    lMarketDataFactory.Initialise mTwsAPI, getContractDetailsRequester, getHistDataRequester, gContractCache
+    lMarketDataFactory.Initialise mTwsAPI, getContractDetailsRequester, getHistDataRequester, gContractCache, mClientID
     mTwsAPI.MarketDataConsumer = lMarketDataFactory
     mTwsAPI.MarketDepthConsumer = lMarketDataFactory
     
@@ -441,7 +444,8 @@ lOrderSubmitter.Initialise mTwsAPI, _
                             GetContractStore, _
                             getContractDetailsRequester, _
                             gContractCache, _
-                            pDataSource
+                            pDataSource, _
+                            mClientID
 
 AddTwsConnectionStateListener lOrderSubmitter
 Set CreateOrderSubmitter = lOrderSubmitter
@@ -456,7 +460,7 @@ Friend Sub Initialise( _
                 ByVal pSessionID As String, _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
-                ByVal pClientId As Long, _
+                ByVal pClientID As Long, _
                 ByVal pConnectionRetryIntervalSecs As Long, _
                 ByVal pLogApiMessages As ApiMessageLoggingOptions, _
                 ByVal pLogRawApiMessages As ApiMessageLoggingOptions, _
@@ -472,13 +476,13 @@ On Error GoTo Err
 mSessionID = pSessionID
 mServer = pServer
 mPort = pPort
-mClientId = pClientId
+mClientID = pClientID
 mConnectionRetryIntervalSecs = pConnectionRetryIntervalSecs
 mLogApiMessages = pLogApiMessages
 mLogRawApiMessages = pLogRawApiMessages
 mLogApiMessageStats = pLogApiMessageStats
 
-Set mTwsAPI = getAPIInstance(pServer, pPort, pClientId)
+Set mTwsAPI = getAPIInstance(pServer, pPort, pClientID)
 
 If Not pConnectionStateListener Is Nothing Then AddTwsConnectionStateListener pConnectionStateListener
 
@@ -489,7 +493,7 @@ Set mApiErrorListener = pApiErrorListener
 Set mApiNotificationListener = pApiNotificationListener
 
 If Not pDeferConnection Then
-    GIBEnhApi.Log "API client connecting: " & mServer & "; " & mPort & "; " & mClientId, _
+    GIBEnhApi.Log "API client connecting: " & mServer & "; " & mPort & "; " & mClientID, _
             ModuleName, ProcName, , LogLevelDetail
     mTwsAPI.Connect
 End If
@@ -545,13 +549,13 @@ End Sub
 Private Function getAPIInstance( _
                 ByVal pServer As String, _
                 ByVal pPort As Long, _
-                ByVal pClientId As Long) As TwsAPI
+                ByVal pClientID As Long) As TwsAPI
 Const ProcName As String = "getAPIInstance"
 On Error GoTo Err
 
 Set getAPIInstance = GetAPI(pServer, _
                             pPort, _
-                            pClientId, _
+                            pClientID, _
                             mConnectionRetryIntervalSecs, _
                             mLogApiMessages, _
                             mLogRawApiMessages, _

@@ -268,6 +268,9 @@ Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSo
 Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionStateChange"
 On Error GoTo Err
 
+GIBEnhApi.Log "Connection state :" & TwsConnectionStateToString(pState) & "; " & pMessage, _
+                ModuleName, ProcName, , LogLevelDetail
+
 Select Case pState
 Case ApiConnNotConnected
 Case ApiConnConnecting

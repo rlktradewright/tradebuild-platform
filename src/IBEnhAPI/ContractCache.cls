@@ -48,11 +48,11 @@ Private Const ContinuationDataTypeOptionParams      As String = "OPTIONPARAMS"
 ' Member variables
 '@================================================================================
 
-Private mContractEntries                            As New EnumerableCollection
+Private mContractEntries                            As SortedDictionary
 
-Private mOptionParametersEntries                    As New EnumerableCollection
+Private mOptionParametersEntries                    As SortedDictionary
 
-Private mPriceIncrementRulesetsEntries              As New EnumerableCollection
+Private mPriceIncrementRulesetsEntries              As SortedDictionary
 
 Private WithEvents mFutureWaiter                    As FutureWaiter
 Attribute mFutureWaiter.VB_VarHelpID = -1
@@ -62,6 +62,9 @@ Attribute mFutureWaiter.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub Class_Initialize()
+Set mContractEntries = CreateSortedDictionary(KeyTypeString, False)
+Set mOptionParametersEntries = CreateSortedDictionary(KeyTypeString, False)
+Set mPriceIncrementRulesetsEntries = CreateSortedDictionary(KeyTypeString, False)
 Set mFutureWaiter = New FutureWaiter
 End Sub
 
@@ -170,6 +173,8 @@ If Not IsValidExchangeCode(pTwsContract.Specifier.Exchange) Then Exit Sub
 
 Dim lEntry As ContractCacheEntry
 If Not tryGetContractCacheEntry(pKey, lEntry) Then
+ElseIf lEntry.Contracts Is Nothing Then
+    mContractEntries.Remove pKey
 ElseIf lEntry.Contracts.Count = 0 Then
     mContractEntries.Remove pKey
 Else
@@ -258,6 +263,21 @@ Exit Sub
 Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
+
+Friend Function CancelPendingRequests( _
+                ByVal pClientID As Long)
+Const ProcName As String = "CancelPendingRequests"
+On Error GoTo Err
+
+cancelPendingContractRequests pClientID
+cancelPendingOptionParametersRequests pClientID
+cancelPendingPriceIncrementRulesetRequests pClientID
+
+Exit Function
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Function
 
 Friend Function ContainsContract( _
                 ByVal pKey As String) As Boolean
@@ -482,7 +502,8 @@ End Function
 Friend Sub SetContractsFutureBuilder( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pContractsFutureBuilder As FutureBuilder, _
-                ByVal pTwsContracts As EnumerableCollection)
+                ByVal pTwsContracts As EnumerableCollection, _
+                ByVal pClientID As Long)
 Const ProcName As String = "SetContractsFutureBuilder"
 On Error GoTo Err
 
@@ -491,6 +512,7 @@ If pContractSpec.SecType = SecTypeCombo Then Exit Sub
 Dim lEntry As ContractCacheEntry
 Assert Not tryGetContractCacheEntry(pContractSpec.Key, lEntry), "Cache entry already exists for: " & pContractSpec.Key
     
+lEntry.ClientID = pClientID
 Set lEntry.ContractsFutureBuilder = pContractsFutureBuilder
 Set lEntry.TwsContracts = pTwsContracts
 lEntry.CacheDate = Now
@@ -563,6 +585,108 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function cancelPendingContractRequests( _
+                ByVal pClientID As Long)
+Const ProcName As String = "cancelPendingContractRequests"
+On Error GoTo Err
+
+GIBEnhApi.Logger.Log "Cancelling pending contract cache requests for clientID: " & pClientID, _
+                        ProcName, ModuleName, LogLevelDetail
+
+Dim en As Enumerator
+Set en = mContractEntries.EntryEnumerator
+
+Do While en.MoveNext
+    Dim lDictEntry As DictionaryEntry
+    Set lDictEntry = en.Current
+    
+    Dim lCacheEntry As ContractCacheEntry
+    lCacheEntry = lDictEntry.data
+    If lCacheEntry.ClientID = pClientID And _
+        Not lCacheEntry.ContractsFutureBuilder Is Nothing _
+    Then
+        mFutureWaiter.Remove lCacheEntry.ContractsFutureBuilder.Future
+        Set lCacheEntry.ContractsFutureBuilder = Nothing
+        GIBEnhApi.Logger.Log "Removed pending contract entry from cache: " & lDictEntry.Key, _
+                            ProcName, ModuleName, LogLevelDetail
+        en.Remove
+    End If
+Loop
+
+Exit Function
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function cancelPendingOptionParametersRequests( _
+                ByVal pClientID As Long)
+Const ProcName As String = "cancelPendingOptionParametersRequests"
+On Error GoTo Err
+
+GIBEnhApi.Logger.Log "Cancelling pending option parameters cache requests for clientID: " & pClientID, _
+                        ProcName, ModuleName, LogLevelDetail
+
+Dim en As Enumerator
+Set en = mOptionParametersEntries.EntryEnumerator
+
+Do While en.MoveNext
+    Dim lDictEntry As DictionaryEntry
+    Set lDictEntry = en.Current
+    
+    Dim lCacheEntry As OptionParametersCacheEntry
+    lCacheEntry = lDictEntry.data
+    If lCacheEntry.ClientID = pClientID And _
+        Not lCacheEntry.OptionParametersFutureBuilder Is Nothing _
+    Then
+        mFutureWaiter.Remove lCacheEntry.OptionParametersFutureBuilder.Future
+        Set lCacheEntry.OptionParametersFutureBuilder = Nothing
+        GIBEnhApi.Logger.Log "Removed pending option parameters entry from cache: " & lDictEntry.Key, _
+                            ProcName, ModuleName, LogLevelDetail
+        en.Remove
+    End If
+Loop
+
+Exit Function
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Function
+
+Private Function cancelPendingPriceIncrementRulesetRequests( _
+                ByVal pClientID As Long)
+Const ProcName As String = "cancelPendingPriceIncrementRulesetRequests"
+On Error GoTo Err
+
+GIBEnhApi.Logger.Log "Cancelling pending price increment ruleset cache requests for clientID: " & pClientID, _
+                        ProcName, ModuleName, LogLevelDetail
+
+Dim en As Enumerator
+Set en = mPriceIncrementRulesetsEntries.EntryEnumerator
+
+Do While en.MoveNext
+    Dim lDictEntry As DictionaryEntry
+    Set lDictEntry = en.Current
+    
+    Dim lCacheEntry As PriceIncrementRulesetCacheEntry
+    lCacheEntry = lDictEntry.data
+    If lCacheEntry.ClientID = pClientID And _
+        Not lCacheEntry.RulesetFutureBuilder Is Nothing _
+    Then
+        mFutureWaiter.Remove lCacheEntry.RulesetFutureBuilder.Future
+        Set lCacheEntry.RulesetFutureBuilder = Nothing
+        GIBEnhApi.Logger.Log "Removed pending prince increment ruleset entry from cache: " & lDictEntry.Key, _
+                            ProcName, ModuleName, LogLevelDetail
+        en.Remove
+    End If
+Loop
+
+Exit Function
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Function
 
 Private Function generateEndOptionParametersKey( _
                 ByVal pContractSpec As IContractSpecifier)

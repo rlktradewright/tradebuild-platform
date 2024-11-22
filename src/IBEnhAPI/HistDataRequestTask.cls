@@ -65,7 +65,7 @@ Private Const TwsWhatToShowAggTrades                As String = "AGGTRADES"
 
 Private mHistDataRequester                          As HistDataRequester
 Private mContractRequester                          As ContractsTwsRequester
-
+Private mClientID                                   As Long
 Private mState                                      As States
 
 Private mTargetBarSpecifier                         As BarDataSpecifier
@@ -317,7 +317,7 @@ ElseIf TypeOf ev.Future.Value Is IContract Then
     
     GIBEnhApi.Log "Getting TwsContract", ModuleName, ProcName, , LogLevelDetail
     failpoint = "Get TWS contract"
-    mFutureWaiter.Add GIBEnhancedApi.ContractFutureToTwsContractFuture(mContractRequester, CreateFuture(mTargetContract), mContractCache)
+    mFutureWaiter.Add GIBEnhancedApi.ContractFutureToTwsContractFuture(mContractRequester, CreateFuture(mTargetContract), mContractCache, mClientID)
     
     If mClockExpected And mClock Is Nothing Then Exit Sub
 
@@ -412,12 +412,14 @@ Friend Function Initialise( _
                 ByVal pHistDataRequester As HistDataRequester, _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
-                ByVal pCookie As Variant) As IFuture
+                ByVal pCookie As Variant, _
+                ByVal pClientID) As IFuture
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 GIBEnhApi.Log "Initialising HistDataRequestTask", ModuleName, ProcName, , LogLevelDetail
 
+mClientID = pClientID
 Set mTargetBarSpecifier = pBarSpecifier
 mSpecialFromTime = pSpecialFromTime
 mSpecialToTime = pSpecialToTime

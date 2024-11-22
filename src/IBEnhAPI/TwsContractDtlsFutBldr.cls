@@ -51,6 +51,7 @@ Private WithEvents mTaskController                  As TaskController
 Attribute mTaskController.VB_VarHelpID = -1
 
 Private mContractRequester                          As ContractsTwsRequester
+Private mClientID                                   As Long
 
 Private mContract                                   As IContract
 Private mTwsContract                                As TwsContract
@@ -191,13 +192,15 @@ End Property
 Friend Sub Initialise( _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractFuture As IFuture, _
-                ByVal pContractCache As ContractCache)
+                ByVal pContractCache As ContractCache, _
+                ByVal pClientID As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mContractRequester = pContractRequester
 mFutureWaiter.Add pContractFuture
 Set mContractCache = pContractCache
+mClientID = pClientID
 
 Exit Sub
 
@@ -218,7 +221,7 @@ If pContract.Specifier.SecType = SecTypeCombo Then
     lTask.Initialise mContractRequester, pContract.Specifier
     Set mTaskController = StartTask(lTask, PriorityNormal)
 Else
-    mFutureWaiter.Add GIBEnhancedApi.FetchContracts(mContractRequester, mContractCache, pContract.Specifier, Nothing, Empty, True)
+    mFutureWaiter.Add GIBEnhancedApi.FetchContracts(mContractRequester, mContractCache, pContract.Specifier, Nothing, Empty, True, mClientID)
 End If
 
 Exit Sub
