@@ -25,6 +25,7 @@ Option Explicit
 
 Implements IGenericTickListener
 Implements IOrderSubmitter
+Implements IStateChangeListener
 Implements ITwsConnectionStateListener
 Implements ITaskCompletionListener
 
@@ -64,6 +65,7 @@ Private mOrderPlacer                                As OrderPlacer
 
 Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
+Private mClientID                                   As Long
 Private mContractRequester                          As ContractsTwsRequester
 Private mContractCache                              As ContractCache
 Private mContractStore                              As IContractStore
@@ -398,6 +400,25 @@ IOrderSubmitter_State = State
 End Property
 
 '================================================================================
+' IStateChangeListener Interface Members
+'================================================================================
+
+Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
+Const ProcName As String = "IStateChangeListener_Change"
+On Error GoTo Err
+
+If Not mDataSource.State = MarketDataSourceStateRunning Then Exit Sub
+
+If mTicksizeRequestPending Then doGetTickSize
+mDataSource.RemoveStateChangeListener Me
+
+Exit Sub
+
+Err:
+GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
 ' ITwsConnectionStateListener Interface Members
 '================================================================================
 
@@ -407,6 +428,7 @@ On Error GoTo Err
 
 Select Case pState
 Case ApiConnNotConnected
+    GIBEnhApi.Log "OrderSubmitter is not Ready", ModuleName, ProcName
     setState OrderSubmitterStateNotReady
 Case ApiConnConnecting
 
@@ -414,8 +436,10 @@ Case ApiConnConnected
     ' we'll assume that TWS has a server connection: if not,
     ' it will soon tell us
     mIsTwsConnectedToIBServers = True
+    GIBEnhApi.Log "OrderSubmitter is Ready", ModuleName, ProcName
     setState OrderSubmitterStateReady
 Case ApiConnFailed
+    GIBEnhApi.Log "OrderSubmitter is not Ready", ModuleName, ProcName
     setState OrderSubmitterStateNotReady
 End Select
 
@@ -429,6 +453,7 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionClosed(ByVal pSo
 Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionClosed"
 On Error GoTo Err
 
+GIBEnhApi.Log "OrderSubmitter is not Ready", ModuleName, ProcName
 setState OrderSubmitterStateNotReady
 
 Exit Sub
@@ -441,6 +466,7 @@ Private Sub ITwsConnectionStateListener_NotifyIBServerConnectionRecovered(ByVal 
 Const ProcName As String = "ITwsConnectionStateListener_NotifyIBServerConnectionRecovered"
 On Error GoTo Err
 
+GIBEnhApi.Log "OrderSubmitter is Ready", ModuleName, ProcName
 setState OrderSubmitterStateReady
 
 Exit Sub
@@ -751,7 +777,7 @@ On Error GoTo Err
 
 Dim lFetcher As New PermittedOrderPropsFetcher
 
-lFetcher.Initialise pContractFuture, mContractRequester, mContractCache, pCookie
+lFetcher.Initialise pContractFuture, mContractRequester, mContractCache, pCookie, mClientID
 Set FetchPermittedOrderProperties = lFetcher.Future
 
 Exit Function
@@ -781,6 +807,8 @@ Set GetTickSize = mTicksizeFutureBuilder.Future
 
 If mContract Is Nothing Then
     mTicksizeRequestPending = True
+ElseIf mDataSource.State <> MarketDataSourceStateRunning Then
+    mTicksizeRequestPending = True
 Else
     doGetTickSize
 End If
@@ -796,21 +824,26 @@ Friend Sub Initialise( _
                 ByVal pContractStore As IContractStore, _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pContractCache As ContractCache, _
-                ByVal pDataSource As IMarketDataSource)
+                ByVal pDataSource As IMarketDataSource, _
+                ByVal pClientID As Long)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
 
 Set mOrderPlacer = pOrderPlacer
 Set mTwsAPI = pTwsAPI
+mClientID = pClientID
 If mTwsAPI.ConnectionState = TwsConnConnected Then
+    GIBEnhApi.Log "OrderSubmitter is Ready", ModuleName, ProcName
     setState OrderSubmitterStateReady
 Else
+    GIBEnhApi.Log "OrderSubmitter is not Ready", ModuleName, ProcName
     setState OrderSubmitterStateNotReady
 End If
 Set mContractStore = pContractStore
 Set mContractRequester = pContractRequester
 Set mContractCache = pContractCache
 Set mDataSource = pDataSource
+If mDataSource.State <> MarketDataSourceStateRunning Then mDataSource.AddStateChangeListener Me
 mFutureWaiter.Add mDataSource.ContractFuture
 
 Exit Sub

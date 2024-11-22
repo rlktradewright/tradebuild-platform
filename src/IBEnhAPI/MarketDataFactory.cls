@@ -102,6 +102,7 @@ Private Const MarketDepthIdOffset                   As Long = &H40000000
 
 Private mTwsAPI                                     As TwsAPI
 Attribute mTwsAPI.VB_VarHelpID = -1
+Private mClientID                                   As Long
 
 Private mMarketDataTable()                          As TickerTableEntry
 Private mMarketDataTableFirstFreeIndex              As Long
@@ -693,14 +694,13 @@ Case ApiConnConnected
     ' it will soon tell us
     mIsTwsConnectedToIBServers = True
     
-    If sWasDisconnected Then
-        ' reset any market depth
-        ResetMarketDepth False
-        
-        ' restart any market data and market depth tickers that were
-        ' previously in operation
-        reEstablishTickers MarketDataReestablishmentModes.All
-    End If
+	' reset any market depth
+	ResetMarketDepth False
+	
+	' restart any market data and market depth tickers that were
+	' previously in operation (or were set up before connection
+	' succeeded)
+	reEstablishTickers MarketDataReestablishmentModes.All
 Case ApiConnFailed
 
 End Select
@@ -1006,11 +1006,13 @@ Friend Sub Initialise( _
                 ByVal pTwsAPI As TwsAPI, _
                 ByVal pContractRequester As ContractsTwsRequester, _
                 ByVal pHistoricalDataRequester As HistDataRequester, _
-                ByVal pContractCache As ContractCache)
+                ByVal pContractCache As ContractCache, _
+                ByVal pClientID As Long)
 Set mTwsAPI = pTwsAPI
 Set mContractRequester = pContractRequester
 Set mHistoricalDataRequester = pHistoricalDataRequester
 Set mContractCache = pContractCache
+mClientID = pClientID
 End Sub
 
 '@================================================================================
@@ -1320,7 +1322,8 @@ If TypeOf pFuture.Value Is IContract Then
         pFutureWaiter.Add GIBEnhancedApi.ContractFutureToTwsContractFuture( _
                                     mContractRequester, _
                                     pTickerTable(pStreamId).ContractFuture, _
-                                    mContractCache), _
+                                    mContractCache, _
+                                    mClientID), _
                             pStreamId
     End If
         
@@ -1451,7 +1454,7 @@ If pContractFuture.IsAvailable Then
         pFutureWaiter.Add GIBEnhancedApi.ContractFutureToTwsContractFuture( _
                                     mContractRequester, _
                                     pContractFuture, _
-                                    mContractCache), _
+                                    mContractCache, mClientID), _
                             pStreamId
     End If
 Else
