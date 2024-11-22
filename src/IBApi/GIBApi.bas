@@ -555,6 +555,22 @@ Err:
 GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Function
 
+Public Function TwsConnectionStateToString( _
+                ByVal pValue As TwsConnectionStates) As String
+Select Case pValue
+Case TwsConnNotConnected
+    TwsConnectionStateToString = "NotConnected"
+Case TwsConnConnecting
+    TwsConnectionStateToString = "Connecting"
+Case TwsConnConnected
+    TwsConnectionStateToString = "Connected"
+Case TwsConnFailed
+    TwsConnectionStateToString = "Failed"
+Case Else
+    AssertArgument False, "Value is not a valid TwsConnectionState"
+End Select
+End Function
+
 Public Function TwsDateStringToDate( _
                 ByRef pDateString As String, _
                 Optional ByRef pTimezoneName As String) As Date

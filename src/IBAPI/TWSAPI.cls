@@ -155,7 +155,7 @@ End If
 mServerVersion = pServerVersion
 If mLogLevel <> 0 Then sendLogLevel
 
-setConnectionState TwsConnConnected, ConnectionString
+setConnectionState TwsConnectionStates.TwsConnConnected, ConnectionString
 
 Exit Sub
 

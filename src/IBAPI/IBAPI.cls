@@ -187,6 +187,8 @@ Public Enum TwsSecTypes
     TwsSecTypeCombo
     TwsSecTypeIndex
     TwsSecTypeWarrant
+    TwsSecTypeCFD
+    TwsSecTypeCrypto
 End Enum
 
 Public Enum TwsShortSaleSlotCodes
@@ -206,6 +208,7 @@ Public Enum TwsStopTriggerMethods
 End Enum
 
 Public Enum TwsTickTypes
+' 0
     TwsTickBidSize
     TwsTickBid
     TwsTickAsk
@@ -216,6 +219,7 @@ Public Enum TwsTickTypes
     TwsTickLow
     TwsTickVolume
     TwsTickClose
+' 10
     TwsTickBidOption
     TwsTickAskOption
     TwsTickLastOption
@@ -226,6 +230,7 @@ Public Enum TwsTickTypes
     TwsTickLow26Week
     TwsTickHigh26Week
     TwsTickLow52Week
+' 20
     TwsTickHigh52Week
     TwsTickAvgVolume
     TwsTickOpenInterest
@@ -236,6 +241,7 @@ Public Enum TwsTickTypes
     TwsTickOptionCallOpenInterest
     TwsTickOptionPutOpenInterest
     TwsTickOptionCallVolume
+' 30
     TwsTickOptionPutVolume
     TwsTickIndexFuturePremium
     TwsTickBidExch
@@ -246,6 +252,7 @@ Public Enum TwsTickTypes
     TwsTickMarkPrice
     TwsTickBidEfpComputation
     TwsTickAskEfpComputation
+' 40
     TwsTickLastEfpComputation
     TwsTickHighEfpComputation
     TwsTickLowEfpComputation
@@ -256,6 +263,7 @@ Public Enum TwsTickTypes
     TwsTickFundamentals
     TwsTickRTVolume
     TwsTickHalted
+' 50
     TwsTickBidYield
     TwsTickAskYield
     TwsTickLastYield
@@ -266,6 +274,7 @@ Public Enum TwsTickTypes
     TwsTickLastRTHTrade
     TwsTickRTHistoricalVol
     TwsTickIBDividends
+' 60
     TwsTickBondFactorMultiplier
     TwsTickRegulatoryImbalance
     TwsTickNewsTick
@@ -276,6 +285,7 @@ Public Enum TwsTickTypes
     TwsTickDelayedAsk
     TwsTickDelayedLast
     TwsTickDelayedBidSize
+' 70
     TwsTickDelayedAskSize
     TwsTickDelayedLastSize
     TwsTickDelayedHigh
@@ -286,6 +296,7 @@ Public Enum TwsTickTypes
     TwsTickRTTrdVolume
     TwsTickCreditmanMarkPrice
     TwsTickCreditmanSlowMarkPrice
+' 80
     TwsTickDelayedBidOption
     TwsTickDelayedAskOption
     TwsTickDelayedLastOption
@@ -296,6 +307,7 @@ Public Enum TwsTickTypes
     TwsTickAverageOptionVolume
     TwsTickDelayedLastTimestamp
     TwsTickShortableShares
+' 90
     TwsTickDelayedHalted
     TwsTickReuters2MutualFunds
     TwsTickEtfNavClose
@@ -306,6 +318,7 @@ Public Enum TwsTickTypes
     TwsTickEtfFrozenNavLast
     TwsTickEtfNavHigh
     TwsTickEtfNavLow
+' 100
     TwsTickSocialMarketAnalytics
     TwsTickEstimatedIpoMidpoint
     TwsTickFinalIpoLast
@@ -395,6 +408,19 @@ Const ProcName As String = "GetAPI"
 On Error GoTo Err
 
 Set GetAPI = GIBApi.GetAPI(pServer, pPort, pClientId, pConnectionRetryIntervalSecs, pLogApiMessages, pLogRawApiMessages, pLogApiMessageStats)
+
+Exit Function
+
+Err:
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
+End Function
+
+Public Function TwsConnectionStateToString( _
+                ByVal pValue As TwsConnectionStates) As String
+Const ProcName As String = "TwsConnectionStateToString"
+On Error GoTo Err
+
+TwsConnectionStateToString = GIBApi.TwsConnectionStateToString(pValue)
 
 Exit Function
 
