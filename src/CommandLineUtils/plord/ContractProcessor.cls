@@ -654,12 +654,7 @@ Friend Sub ProcessQuitCommand()
 Const ProcName As String = "ProcessQuitCommand"
 On Error GoTo Err
 
-If Not deferProcessing(gCommands.QuitCommand, _
-                            "", _
-                            "", _
-                            "Bracket order definition terminated") _
-Then
-
+If Not deferProcessing(gCommands.QuitCommand, "") Then
     Set mBOSpec = Nothing
     gWriteLineToConsole "Command definition terminated"
 End If
