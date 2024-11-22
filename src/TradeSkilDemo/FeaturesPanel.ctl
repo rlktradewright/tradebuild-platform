@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#404.0#0"; "TradingUI27.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
    BackColor       =   &H00CDF3FF&
@@ -426,7 +426,7 @@ Begin VB.UserControl FeaturesPanel
             CalendarTrailingForeColor=   65280
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   102563843
+            Format          =   141230083
             CurrentDate     =   39365
          End
          Begin VB.TextBox NumHistHistoryBarsText 
@@ -480,7 +480,7 @@ Begin VB.UserControl FeaturesPanel
             _Version        =   393216
             CheckBox        =   -1  'True
             CustomFormat    =   "yyy-MM-dd HH:mm"
-            Format          =   102563843
+            Format          =   141230083
             CurrentDate     =   39365
          End
          Begin TWControls40.TWImageCombo HistChartStylesCombo 
@@ -873,6 +873,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IDeferredAction
 Implements IStateChangeListener
 Implements IThemeable
 
@@ -1041,7 +1042,25 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 '================================================================================
-' StateChangeListener Interface Members
+' IDeferredAction Interface Members
+'================================================================================
+
+Private Sub IDeferredAction_Run(ByVal Data As Variant)
+Const ProcName As String = "IDeferredAction_Run"
+On Error GoTo Err
+
+Dim lNewAppInstanceConfig As ConfigurationSection
+Set lNewAppInstanceConfig = Data
+gLoadMainForm lNewAppInstanceConfig
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+'================================================================================
+' IStateChangeListener Interface Members
 '================================================================================
 
 Private Sub IStateChangeListener_Change(ev As StateChangeEventData)
@@ -1181,8 +1200,10 @@ If lNewAppInstanceConfig Is Nothing Then
     SetupCurrentConfigCombo
     RaiseEvent ConfigsChanged
 Else
+    LogMessage "Shutting down current config"
     gMainForm.Shutdown
-    gLoadMainForm lNewAppInstanceConfig
+    LogMessage "Loading new config: " & lNewAppInstanceConfig.name
+    DeferAction Me, lNewAppInstanceConfig
 End If
 
 Exit Sub
@@ -2176,6 +2197,9 @@ lStyleName = mAppInstanceConfig.GetSetting(pConfigSettingName, "")
 
 If ChartStylesManager.Contains(lStyleName) Then
     pComboItems.Item(lStyleName).Selected = True
+ElseIf lStyleName = "" Then
+    pComboItems.Item(ChartStyleNameBlack).Selected = True
+    mAppInstanceConfig.SetSetting pConfigSettingName, ChartStyleNameBlack
 Else
     pComboItems.Item(ChartStyleNameAppDefault).Selected = True
     mAppInstanceConfig.SetSetting pConfigSettingName, ChartStyleNameAppDefault

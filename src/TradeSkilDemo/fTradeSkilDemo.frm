@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#402.1#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#404.0#0"; "TradingUI27.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -195,6 +195,10 @@ Implements IStateChangeListener
     
 Private Const ModuleName                            As String = "fTradeSkilDemo"
 
+Private Const ChartsCreated                         As String = "ChartsCreated"
+Private Const HistChartsCreated                     As String = "HistChartsCreated"
+
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -257,8 +261,6 @@ End Sub
 
 Private Sub Form_Initialize()
 InitialiseCommonControls
-Set mOrderRecoveryFutureWaiter = New FutureWaiter
-Set mChartsCreationFutureWaiter = New FutureWaiter
 End Sub
 
 Private Sub Form_Load()
@@ -320,6 +322,18 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
+Private Sub Form_Terminate()
+Const ProcName As String = "Form_Terminate"
+On Error GoTo Err
+
+LogMessage "Main form is terminated"
+
+Exit Sub
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
 Private Sub Form_Unload(Cancel As Integer)
 Const ProcName As String = "Form_Unload"
 On Error GoTo Err
@@ -373,7 +387,7 @@ Next
 LogMessage "Stopping tickers"
 If Not mTickers Is Nothing Then mTickers.Finish
 
-LogMessage "Unloading main form"
+LogMessage "Main form is unloaded"
 
 If mFinishing Then gSetFinished
 
@@ -676,11 +690,24 @@ End Sub
 ' mChartsCreationFutureWaiter Event Handlers
 '================================================================================
 
-Private Sub mChartsCreationFutureWaiter_WaitAllCompleted(ev As FutureWaitCompletedEventData)
-Const ProcName As String = "mChartsCreationFutureWaiter_WaitAllCompleted"
+Private Sub mChartsCreationFutureWaiter_WaitCompleted(ev As FutureWaitCompletedEventData)
+Const ProcName As String = "mChartsCreationFutureWaiter_WaitCompleted"
 On Error GoTo Err
 
-loadAppInstanceCompletion
+Static sChartsCreated As Boolean
+Static sHistChartsCreated As Boolean
+
+If ev.ContinuationData = ChartsCreated Then
+    sChartsCreated = True
+ElseIf ev.ContinuationData = HistChartsCreated Then
+    sHistChartsCreated = True
+End If
+
+If sChartsCreated And sHistChartsCreated Then
+    loadAppInstanceCompletion
+    sChartsCreated = False
+    sHistChartsCreated = False
+End If
 
 Exit Sub
 
@@ -1109,6 +1136,7 @@ If mTickers Is Nothing Then
 End If
 
 LogMessage "Recovering orders from last session"
+Set mOrderRecoveryFutureWaiter = New FutureWaiter
 mOrderRecoveryFutureWaiter.Add CreateFutureFromTask(mTradeBuildAPI.RecoverOrders())
 
 Initialise = True
@@ -1133,6 +1161,8 @@ finishUIControls
 
 LogMessage "Removing service providers"
 mTradeBuildAPI.ServiceProviders.RemoveAll
+
+gUnloadMainForm
 
 Exit Sub
 
@@ -1286,11 +1316,17 @@ TickerGrid1.LoadFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(Con
 LogMessage "Loading configuration: loading default study configurations"
 LoadDefaultStudyConfigurationsFromConfig mAppInstanceConfig.AddPrivateConfigurationSection(ConfigSectionDefaultStudyConfigs)
 
+Set mChartsCreationFutureWaiter = New FutureWaiter
+'mChartsCreationFutureWaiter.DiagnosticID = "ChartsCreation"
+
 LogMessage "Loading configuration: creating charts"
-mChartsCreationFutureWaiter.Add startCharts
+Dim lChartsFuture As IFuture: Set lChartsFuture = startCharts
 
 LogMessage "Loading configuration: creating historical charts"
-mChartsCreationFutureWaiter.Add startHistoricalCharts
+Dim lHistChartsFuture As IFuture: Set lHistChartsFuture = startHistoricalCharts
+
+mChartsCreationFutureWaiter.Add lChartsFuture, "ChartsCreated"
+mChartsCreationFutureWaiter.Add lHistChartsFuture, "HistChartsCreated"
 
 LogMessage "Loading configuration: initialising Info Panels"
 setupInfoPanels

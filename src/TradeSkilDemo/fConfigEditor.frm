@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fConfigEditor 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Configuration editor"
@@ -218,6 +218,7 @@ Const ProcName As String = "ConfigureButton_Click"
 On Error GoTo Err
 
 updateSettings
+LogMessage "Loading selected configuration: " & ConfigManager1.SelectedAppConfig.name
 Set mSelectedAppConfig = ConfigManager1.SelectedAppConfig
 mOverridePositionSettings = False
 Me.Hide

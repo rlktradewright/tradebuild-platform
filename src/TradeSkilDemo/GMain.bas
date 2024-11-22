@@ -316,7 +316,9 @@ Do
     LogMessage "Loading main form for config: " & pAppInstanceConfig.InstanceQualifier
     
     Dim lErrorMessage As String
-    If lMainForm.Initialise(lTradeBuildAPI, mConfigStore, pAppInstanceConfig, lErrorMessage) Then Exit Do
+    If lMainForm.Initialise(lTradeBuildAPI, mConfigStore, pAppInstanceConfig, lErrorMessage) Then
+        Exit Do
+    End If
 
     lTradeBuildAPI.ServiceProviders.RemoveAll
     gUnloadMainForm
@@ -379,6 +381,11 @@ ModelessMsgBox prompt, buttons, title, gMainForm, pTheme
 Exit Sub
 
 Err:
+If Err.Number = 373 Then
+    ' This interaction between compiled and design environment
+    ' components is not supported.
+    Exit Sub
+End If
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 

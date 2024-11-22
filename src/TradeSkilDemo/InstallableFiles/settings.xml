@@ -5,7 +5,7 @@
 				<ServiceProviders __Renderer="TradeBuildUI27.SPConfigurer">
 					<ServiceProvider __Name="Realtime data" Enabled="True" ProgId="IBTWSSP27.RealtimeDataServiceProvider">
 						<Properties>
-							<Property __Name="Server"/>
+							<Property __Name="Server"></Property>
 							<Property __Name="Port">7497</Property>
 							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
@@ -17,7 +17,7 @@
 					<ServiceProvider __Name="Primary contract data" Enabled="True" ProgId="IBTWSSP27.ContractInfoServiceProvider">
 						<Properties>
 							<Property __Name="Role">Primary</Property>
-							<Property __Name="Server"/>
+							<Property __Name="Server"></Property>
 							<Property __Name="Port">7497</Property>
 							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
@@ -26,21 +26,21 @@
 							<Property __Name="Provider Key"/>
 						</Properties>
 					</ServiceProvider>
-					<ServiceProvider __Name="Secondary contract data" Enabled="False" ProgId="IBTWSSP27.ContractInfoServiceProvider">
+					<ServiceProvider __Name="Secondary contract data" Enabled="False" ProgId="TBInfoBase27.ContractInfoSrvcProvider">
 						<Properties>
+							<Property __Name="Server"></Property>
+							<Property __Name="Database Type">SQL Server 2005</Property>
+							<Property __Name="Database Name">Trading</Property>
+							<Property __Name="User Name"/>
+							<Property __Name="Password"/>
+							<Property __Name="Use Synchronous Reads">False</Property>
+							<Property __Name="Use Synchronous Writes">False</Property>
 							<Property __Name="Role">Secondary</Property>
-							<Property __Name="Server"/>
-							<Property __Name="Port">7497</Property>
-							<Property __Name="Client Id">194362192</Property>
-							<Property __Name="Keep Connection">True</Property>
-							<Property __Name="Connection Retry Interval Secs">60</Property>
-							<Property __Name="TWS Log Level">ERROR</Property>
-							<Property __Name="Provider Key"/>
 						</Properties>
 					</ServiceProvider>
 					<ServiceProvider __Name="Historical bar data retrieval" Enabled="True" ProgId="IBTWSSP27.HistDataServiceProvider">
 						<Properties>
-							<Property __Name="Server"/>
+							<Property __Name="Server"></Property>
 							<Property __Name="Port">7497</Property>
 							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
@@ -56,7 +56,7 @@
 					</ServiceProvider>
 					<ServiceProvider __Name="Live order submission" Enabled="True" ProgId="IBTWSSP27.OrderSubmissionSrvcProvider">
 						<Properties>
-							<Property __Name="Server"/>
+							<Property __Name="Server"></Property>
 							<Property __Name="Port">7497</Property>
 							<Property __Name="Client Id">194362192</Property>
 							<Property __Name="Keep Connection">True</Property>
@@ -68,111 +68,278 @@
 					<ServiceProvider __Name="Simulated order submission" Enabled="True" ProgId="TradeBuild27.OrderSimulatorSP">
 						<Properties/>
 					</ServiceProvider>
-					<ServiceProvider __Name="Tickfile replay" Enabled="True" ProgId="TickfileSP27.TickfileServiceProvider">
+					<ServiceProvider __Name="Tickfile replay" Enabled="False" ProgId="TickfileSP27.TickfileServiceProvider">
 						<Properties>
-							<Property __Name="Role">Input</Property>
+							<Property __Name="Role">INPUT</Property>
 							<Property __Name="Tickfile Path"/>
 						</Properties>
 					</ServiceProvider>
 				</ServiceProviders>
-				<MarketDataSources/>
+				<MarketDataSources>
+					<MarketDataSource __Name="0EE7EFF2-8B7B-4077-BAD6-DFEDAE60D707" IsMarketDataRequested="False" IsMarketDepthRequested="False">
+						<Contract DaysBeforeExpiryToSwitch="0" Description="APPLE INC" ExpiryDate="1899-12-30" SessionEndTime="16:00:00" SessionStartTime="09:30:00" FullSessionEndTime="20:00:00" FullSessionStartTime="04:00:00" TickSize="0.01" Timezone="EASTERN STANDARD TIME">
+							<Specifier LocalSymbol="AAPL" Symbol="AAPL" Exchange="SMART-ISLAND" SecType="Stock" Currency="USD" Multiplier="1" StrikePrice="0"/>
+						</Contract>
+					</MarketDataSource>
+					<MarketDataSource __Name="988EE1C6-8C1D-4286-A93E-07AAECC82599" IsMarketDataRequested="False" IsMarketDepthRequested="False">
+						<Contract DaysBeforeExpiryToSwitch="0" Description="MICROSOFT CORP" ExpiryDate="1899-12-30" SessionEndTime="16:00:00" SessionStartTime="09:30:00" FullSessionEndTime="20:00:00" FullSessionStartTime="04:00:00" TickSize="0.01" Timezone="EASTERN STANDARD TIME">
+							<Specifier LocalSymbol="MSFT" Symbol="MSFT" Exchange="SMART-ISLAND" SecType="Stock" Currency="USD" Multiplier="1" StrikePrice="0"/>
+						</Contract>
+					</MarketDataSource>
+					<MarketDataSource __Name="A541AEC4-0BD5-4868-843C-18A04D794D1C" IsMarketDataRequested="False" IsMarketDepthRequested="False">
+						<Contract DaysBeforeExpiryToSwitch="0" Description="TESLA INC" ExpiryDate="1899-12-30" SessionEndTime="16:00:00" SessionStartTime="09:30:00" FullSessionEndTime="20:00:00" FullSessionStartTime="04:00:00" TickSize="0.01" Timezone="EASTERN STANDARD TIME">
+							<Specifier LocalSymbol="TSLA" Symbol="TSLA" Exchange="SMART-ISLAND" SecType="Stock" Currency="USD" Multiplier="1" StrikePrice="0"/>
+						</Contract>
+					</MarketDataSource>
+					<MarketDataSource __Name="342D2480-E051-4C30-A202-D1FA476A3E32" OffsetExpiry="0[1D]" IsMarketDataRequested="False" IsMarketDepthRequested="False">
+						<Contract DaysBeforeExpiryToSwitch="0" Description="E-mini S&amp;P 500" ExpiryDate="2024-12-20" SessionEndTime="16:00:00" SessionStartTime="08:30:00" FullSessionEndTime="16:00:00" FullSessionStartTime="17:00:00" TickSize="0.25" Timezone="CENTRAL STANDARD TIME">
+							<Specifier LocalSymbol="ESZ4" Symbol="ES" TradingClass="ES" Exchange="CME" SecType="Future" Currency="USD" Expiry="20241220" Multiplier="50" StrikePrice="0"/>
+						</Contract>
+					</MarketDataSource>
+					<MarketDataSource __Name="B9818056-3CF1-48B8-847B-E8E6D1A7E942" IsMarketDataRequested="False" IsMarketDepthRequested="False">
+						<Contract DaysBeforeExpiryToSwitch="0" Description="European Monetary Union Euro" ExpiryDate="2024-12-16" SessionEndTime="16:00:00" SessionStartTime="08:30:00" FullSessionEndTime="16:00:00" FullSessionStartTime="17:00:00" TickSize="0.00005" Timezone="CENTRAL STANDARD TIME">
+							<Specifier LocalSymbol="6EZ4" Symbol="EUR" TradingClass="6E" Exchange="CME" SecType="Future" Currency="USD" Expiry="20241216" Multiplier="125000" StrikePrice="0"/>
+						</Contract>
+					</MarketDataSource>
+				
+				
+					<MarketDataSource __Name="EB70BCC9-A751-4CC8-88DA-0689EE6261D3" IsMarketDataRequested="False" IsMarketDepthRequested="False">
+						<Contract DaysBeforeExpiryToSwitch="0" Description="British pound" ExpiryDate="1899-12-30" SessionEndTime="17:00:00" SessionStartTime="17:15:00" FullSessionEndTime="17:00:00" FullSessionStartTime="17:15:00" TickSize="0.00005" Timezone="EASTERN STANDARD TIME">
+							<Specifier LocalSymbol="GBP.USD" Symbol="GBP" TradingClass="GBP.USD" Exchange="IDEALPRO" SecType="Cash" Currency="USD" Multiplier="0" StrikePrice="0"/>
+						</Contract>
+					</MarketDataSource>
+				</MarketDataSources>
 				<StudyLibraries>
 					<StudyLibrary __Name="BuiltIn" Enabled="True" BuiltIn="True"/>
 				</StudyLibraries>
 				<BarFormatterLibraries __Renderer="BarFormattersUI27.BarFormatterLibConfigurer">
 					<BarFormatterLibrary __Name="BuiltIn" Enabled="True" BuiltIn="True"/>
 				</BarFormatterLibraries>
+				<Workspaces __Private="True">
+					<Workspace __Name="Default">
+						<Tickers>
+							<Ticker __Name="0EE7EFF2-8B7B-4077-BAD6-DFEDAE60D707"/>
+							<Ticker __Name="988EE1C6-8C1D-4286-A93E-07AAECC82599"/>
+							<Ticker __Name="A541AEC4-0BD5-4868-843C-18A04D794D1C"/>
+							<Ticker __Name="342D2480-E051-4C30-A202-D1FA476A3E32"/>
+							<Ticker __Name="B9818056-3CF1-48B8-847B-E8E6D1A7E942"/>
+						
+						
+							<Ticker __Name="EB70BCC9-A751-4CC8-88DA-0689EE6261D3"/>
+						</Tickers>
+					</Workspace>
+				</Workspaces>
 			</TradeBuild>
+			<Application __Private="True" CurrentChartStyle="Black" CurrentHistChartStyle="Black"/>
+			<TickerGrid __Private="True" IncreasedValueColor="7526419" DecreasedValueColor="4474091" NegativeChangeBackColor="4474091" NegativeChangeForeColor="16777215" PositiveChangeBackColor="753219" PositiveChangeForeColor="16777215">
+				<Tickers>
+					<Ticker __Name="0EE7EFF2-8B7B-4077-BAD6-DFEDAE60D707" RowIndex="1"/>
+					<Ticker __Name="988EE1C6-8C1D-4286-A93E-07AAECC82599" RowIndex="2"/>
+					<Ticker __Name="A541AEC4-0BD5-4868-843C-18A04D794D1C" RowIndex="3"/>
+					<Ticker __Name="342D2480-E051-4C30-A202-D1FA476A3E32" RowIndex="5"/>
+					<Ticker __Name="B9818056-3CF1-48B8-847B-E8E6D1A7E942" RowIndex="6"/>
+				
+				
+					<Ticker __Name="EB70BCC9-A751-4CC8-88DA-0689EE6261D3" RowIndex="8"/>
+				</Tickers>
+				<Grid BorderStyle="0" BackColorBkg="6316128" BackColorFixed="4210752" ForeColor="14737632" ForeColorFixed="65535" GridColor="4473924" GridColorFixed="5263440" RowBackColorEven="6316128" RowBackColorOdd="8421504" RowForeColorEven="0" RowForeColorOdd="0">
+					<Columns>
+						<Column __Name="DE8E5072-6780-44E8-B223-5EF0C3C17887" Width="300" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="6067C9E8-B5BF-4E91-BD7F-AC28729171CD" Width="1100" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="B4A8193B-FA1E-4818-88A4-32E13CF7D5E6" Width="500" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="E0B5946D-CF0C-43C3-82A3-62D6354FC6E9" Width="688" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="81AB4F88-2016-44F3-98B5-9B1E84CF2E89" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="7998B7D4-8086-48E8-B25A-F6AAA3867FA4" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="88CEF0E2-1DD4-4AEC-ACD7-B310CC307D5C" Width="688" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="E63B5F13-641D-40DD-8743-E8E6BCD7BDA2" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="CB9CE475-5AFC-4BF2-A944-88D465C84EB1" Width="688" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="E0559BED-E6B1-4420-9E34-35FB5B191ABB" Width="860" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="7E3AA2D4-9DAC-4DDA-B437-26796703308A" Width="602" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="E637A53A-2D33-4C3B-8111-26F40248815C" Width="602" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="4F0B9DC6-EF4F-466F-8A7F-D9EF8BDA58A7" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="D224DACB-DB35-4396-B07D-4FC8C295ED79" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="E87019A9-224C-4341-8FB1-361D512D62C2" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="F163010F-F217-4170-AF6A-5FC1124D6981" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="E5B65DB9-605A-4777-882D-EF1BF3F17512" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="5F765332-6A01-4924-8495-84A6263C3D0F" Width="2000" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="06CA4F4E-1FB1-4330-BAB3-3502E8D3747F" Width="500" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="08C20AF2-EB52-4236-8977-E9683C4A624D" Width="1000" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="6448B417-62D8-4EFC-903D-DC6B989E108E" Width="1000" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="F98F35B2-4779-4B2C-92E1-D2BAB7BF8ABA" Width="1000" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="AAC2F0B8-2792-435D-A3B9-4CD784469599" Width="500" Alignment="1" FixedAlignment="4"/>
+						<Column __Name="71D5527E-2D1A-458F-B988-19E8523EDC34" Width="774" Alignment="4" FixedAlignment="4"/>
+						<Column __Name="5D3CDB50-544B-41CB-8A82-24A0C741BEAD" Width="3000" Alignment="1" FixedAlignment="4"/>
+					</Columns>
+					<Font Bold="False" Name="Segoe UI" Italic="False" Size="9.75" Strikethrough="False" Underline="False"/>
+					<FontFixed Bold="False" Name="Segoe UI" Italic="False" Size="8.25" Strikethrough="False" Underline="False"/>
+				</Grid>
+			
+				<ColumnMap>0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24</ColumnMap>
+			</TickerGrid>
+			<DefaultStudyConfigs __Private="True">
+				<DefaultStudyConfig __Name="4FC51FB3-D6E0-4109-A20A-F30CDAB9C62F">
+					<Name>Constant Time Bars</Name>
+					<StudyLibraryName/>
+					<InstanceFullyQualifiedName/>
+					<InputValueNames>$DEFAULT,Total volume,Tick volume,Open interest</InputValueNames>
+					<ChartRegionName>$custom</ChartRegionName>
+					<Parameters>
+						<Parameter __Name="628641BE-19B9-495C-9465-80B116A28E2D" Name="Bar length" Value="5"/>
+						<Parameter __Name="88793ABC-0E89-4EF8-A7B8-F24C9619842B" Name="Time units" Value="Minutes"/>
+					</Parameters>
+					<StudyValueConfigurations>
+						<StudyValueConfiguration __Name="2006B91D-D8AF-49E4-9F59-504BEA10083B" IncludeInChart="True" ValueName="Bar" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<BarStyle Name="EA3F1D98-DA57-457D-827F-EB02A66A71A0" StyleType="Bar Styles" Color="-1" DisplayMode="1" DownColor="7895249" IncludeInAutoscale="True" Layer="46" OutlineThickness="1" SolidUpBody="True" TailThickness="1" Thickness="2" UpColor="10214811" Width="0.6"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="466A5E34-D4E4-4B7A-B16B-433D3EFA3F7F" IncludeInChart="False" ValueName="Open" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="65189EC9-E4E1-4AD8-9E05-22D239FDCC0A" StyleType="Data Point Styles" LineThickness="1" Color="32768" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="2" HistWidth="0.6" IncludeInAutoscale="True" Layer="71"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="E742EB95-9F58-4AD9-B2BB-B2B750774A45" IncludeInChart="False" ValueName="High" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="159D8074-64D9-42E2-8BDA-2DB23042D162" StyleType="Data Point Styles" LineThickness="1" Color="16711680" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="2" HistWidth="0.6" IncludeInAutoscale="True" Layer="47"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="974DEE78-9C7D-4DE7-8C43-26AA8A648BBE" IncludeInChart="False" ValueName="Low" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="0246442A-BC90-47E9-B69D-E3BB8DF4254D" StyleType="Data Point Styles" LineThickness="1" Color="255" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="2" HistWidth="0.6" IncludeInAutoscale="True" Layer="47"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="62AF12B2-DE53-4EB7-92C7-31D5C045065D" IncludeInChart="False" ValueName="Close" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="43567511-998E-41CD-8CA8-3A88D17F4302" StyleType="Data Point Styles" LineThickness="1" Color="128" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="2" HistWidth="0.6" IncludeInAutoscale="True" Layer="47"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="019FE00D-B2F2-4E4D-B5A4-C162F9B66646" IncludeInChart="False" ValueName="Volume" ChartRegionName="$custom" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="7D4DA00A-DD67-4AD8-A25B-191E5F2A4ADD" StyleType="Data Point Styles" LineThickness="1" Color="-2147483647" UpColor="4243520" DownColor="4210880" LineStyle="0" PointStyle="0" DisplayMode="4" HistWidth="0.6" IncludeInAutoscale="True" Layer="71"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="AAED42B7-202A-4808-8774-3E0BBDFC834B" IncludeInChart="False" ValueName="Tick Volume" ChartRegionName="$custom" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="0E3EB126-97F5-4142-BDD3-34B75D8808DA" StyleType="Data Point Styles" LineThickness="1" Color="8388608" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="4" HistWidth="0.6" IncludeInAutoscale="True" Layer="71"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="9F40A65E-B3E8-4CE8-86A4-9F9DFC7BC33A" IncludeInChart="False" ValueName="Open Interest" ChartRegionName="$custom" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="F688EF28-FD5B-47F8-A3A0-1D0F1BCE62F0" StyleType="Data Point Styles" LineThickness="1" Color="128" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="4" HistWidth="0.6" IncludeInAutoscale="True" Layer="71"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="B4037A8B-92C8-4586-ADE5-F1525C7B3E27" IncludeInChart="False" ValueName="(H+L)/2" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="078BBA91-1250-48AB-986B-D347A110F396" StyleType="Data Point Styles" LineThickness="1" Color="255" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="2" HistWidth="0.6" IncludeInAutoscale="True" Layer="48"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="E8F796A3-CF11-4504-BDD5-B612EED66B8F" IncludeInChart="False" ValueName="(H+L+C)/3" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="D46E810E-1EB4-4BF1-94B4-FA59B901AFB3" StyleType="Data Point Styles" LineThickness="1" Color="65280" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="2" HistWidth="0.6" IncludeInAutoscale="True" Layer="48"/>
+						</StudyValueConfiguration>
+						<StudyValueConfiguration __Name="6B9DE241-C9B8-43DE-A900-D98FB09E01A2" IncludeInChart="False" ValueName="(O+H+L+C)/4" ChartRegionName="$default" Layer="-1" X="0" Y="0">
+							<DataPointStyle Name="704F794E-08EA-40AE-A151-61024AD6B62F" StyleType="Data Point Styles" LineThickness="1" Color="16711680" UpColor="-1" DownColor="-1" LineStyle="0" PointStyle="0" DisplayMode="2" HistWidth="0.6" IncludeInAutoscale="True" Layer="48"/>
+						</StudyValueConfiguration>
+					</StudyValueConfigurations>
+					<StudyHorizontalRules/>
+					<StudyConfigs/>
+				</DefaultStudyConfig>
+			</DefaultStudyConfigs>
+			<Charts __Private="True">
+			
+			
+			
+			</Charts>
+			<HistoricCharts __Private="True"/>
+			<MainForm __Private="True" Windowstate="Normal" Left="0" Top="0" Width="1127" Height="703"/>
+		
+			<ConfigEditor __Private="True" Left="0" Top="826"/>
+		
+			<OrderTicket __Private="True" Left="2" Top="725"/>
+		
+			<FloatingFeaturesPanel __Private="True" Left="130" Top="130" Width="341" Height="663"/>
 		</AppConfig>
 	</AppConfigs>
 	<ChartStyles __Private="True">
-	
 		<ChartStyle __Name="Platform Default" Autoscrolling="True" ChartBackColor="16777215" HorizontalMouseScrollingAllowed="True" HorizontalScrollBarVisible="False" PeriodWidth="7" VerticalMouseScrollingAllowed="True" XAxisVisible="True" YAxisVisible="True" YAxisWidthCm="1.8">
 		
-			<CrosshairLineStyle Name="BD05741D-56A2-451C-94B5-9D31462303CD" StyleType="Line Styles" Color="255" LineStyle="0" Thickness="1"/>
-			<DefaultRegionStyle Name="700ED952-C558-4C3A-9BAD-82BEA23B19C2" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="16316664,16316664">
-				<XGridlineStyle Name="CEF8B6BF-DCEE-4C67-B59F-0C0A6C616950" StyleType="Line Styles" Color="15263976"/>
-				<YGridlineStyle Name="223A7E06-BA06-4C37-9863-D9FBD220D5C1" StyleType="Line Styles" Color="15263976"/>
-				<SessionEndGridlineStyle Name="DE979B7C-6572-4EAB-8574-28E0318670BF" StyleType="Line Styles" Color="15263976" LineStyle="1"/>
-				<SessionStartGridlineStyle Name="D69926FC-1BCE-46B9-9E7E-E14557E34E21" StyleType="Line Styles" Color="15263976" Thickness="3"/>
+			<CrosshairLineStyle Name="4C28D02E-2185-4D22-B9EC-1FCD5CB10706" StyleType="Line Styles" Color="255" LineStyle="0" Thickness="1"/>
+			<DefaultRegionStyle Name="47685026-F54C-44D9-8294-68DF99745728" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="16316664,16316664">
+				<XGridlineStyle Name="00B60A74-A43B-43F0-856C-F47AA6281D48" StyleType="Line Styles" Color="15263976"/>
+				<YGridlineStyle Name="26C55C05-9A82-43FB-9524-B3BC924D0E5D" StyleType="Line Styles" Color="15263976"/>
+				<SessionEndGridlineStyle Name="B17FA2C8-BE41-4A5D-8CA5-7C735E55FA14" StyleType="Line Styles" Color="15263976" LineStyle="1"/>
+				<SessionStartGridlineStyle Name="E860D0C7-634A-4397-9A56-B55E6DADB246" StyleType="Line Styles" Color="15263976" Thickness="3"/>
 			</DefaultRegionStyle>
-			<DefaultYAxisRegionStyle Name="BAA8F04B-CC5B-45ED-AEF5-AFE65140ADC9" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="False" HasYGrid="False" HasYGridText="True" CursorTextMode="2" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="False" IntegerYScale="False" YScaleQuantum="0.0001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="True" BackGradientFillColors="16316664,16316664">
-				<YGridTextStyle Name="E99EB894-DACF-460C-A6EE-48BC8661335D" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5">
+			<DefaultYAxisRegionStyle Name="AD108360-77B1-4A20-A1B5-0062042E1E66" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="False" HasYGrid="False" HasYGridText="True" CursorTextMode="2" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="False" IntegerYScale="False" YScaleQuantum="0.00001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="True" BackGradientFillColors="16316664,16316664">
+				<YGridTextStyle Name="7B93ADED-EE2C-47C4-BD01-960F1E25D2E5" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5">
 					<Offset Width="0.2" Height="0" CoordSystemWidth="2" CoordSystemHeight="2"/>
 				</YGridTextStyle>
-				<YCursorTextStyle Name="682FFDC0-39AA-4241-B244-1A9B5715E747" StyleType="Text Styles" Box="True" BoxFillColor="16777215">
+				<YCursorTextStyle Name="3D77944E-F8F0-412B-B342-5F24F013381B" StyleType="Text Styles" Box="True" BoxFillColor="16777215">
 					<Offset Width="0.1" Height="0" CoordSystemWidth="2" CoordSystemHeight="2"/>
 				</YCursorTextStyle>
 			</DefaultYAxisRegionStyle>
-			<XAxisRegionStyle Name="9ACD5A39-5B45-4BD4-A4AC-059ED408E8D5" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="True" HasYGrid="False" HasYGridText="False" CursorTextMode="1" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.0001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="False" BackGradientFillColors="16316664,16316664">
-				<XGridTextStyle Name="593EB68A-8862-40EA-A3C9-91641E2527AC" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5"/>
-				<XCursorTextStyle Name="0B503774-CEE3-4670-9616-F2C059E66F63" StyleType="Text Styles" Box="True" BoxFillColor="16777215"/>
+			<XAxisRegionStyle Name="02746DE3-4134-492E-BDEE-4A1DECB205C0" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="True" HasYGrid="False" HasYGridText="False" CursorTextMode="1" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.00001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="False" BackGradientFillColors="16316664,16316664">
+				<XGridTextStyle Name="7E70291C-556B-4B03-BE10-A97426A94408" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5"/>
+				<XCursorTextStyle Name="35A4E068-8C4C-4671-9D1A-57ED1518983E" StyleType="Text Styles" Box="True" BoxFillColor="16777215"/>
 			</XAxisRegionStyle>
 		</ChartStyle>
+
+
+
 		<ChartStyle __Name="Application default" BasedOn="Platform Default" ChartBackColor="12632256">
 		
-			<CrosshairLineStyle Name="F313009D-3B14-4972-BA7A-66A7A371A622" StyleType="Line Styles" Color="127"/>
-			<DefaultRegionStyle Name="A755778E-F906-4035-9C8D-25BF1BA00A08" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="12632256,16316664">
-				<XGridlineStyle Name="E6957DAA-3A3E-4861-B1C5-C1EB8A08F4BC" StyleType="Line Styles" Color="13684944"/>
-				<YGridlineStyle Name="AC2EC074-E651-43D0-AA5E-8B542D8F7FAC" StyleType="Line Styles" Color="13684944"/>
-				<SessionEndGridlineStyle Name="C0846D88-0CA6-4EAA-A666-304C3491AF79" StyleType="Line Styles" Color="13684944" LineStyle="1"/>
-				<SessionStartGridlineStyle Name="8E0CA645-8F27-4185-BD11-CEB23B1A409D" StyleType="Line Styles" Color="13684944" Thickness="3"/>
+			<CrosshairLineStyle Name="C16EBE4C-736A-4923-BA7F-C1166C854BC8" StyleType="Line Styles" Color="127"/>
+			<DefaultRegionStyle Name="996F0CEB-6556-4887-A7D0-A6B25DE6B966" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="12632256,16316664">
+				<XGridlineStyle Name="8533B26B-B782-4E6C-821A-B20C36DF6DDE" StyleType="Line Styles" Color="13684944"/>
+				<YGridlineStyle Name="DB2C4015-3DB7-4E28-B6F8-05393A2D3FAB" StyleType="Line Styles" Color="13684944"/>
+				<SessionEndGridlineStyle Name="E23119C9-1E0D-4FF2-A3FE-8AC7E33D281B" StyleType="Line Styles" Color="13684944" LineStyle="1"/>
+				<SessionStartGridlineStyle Name="3D371863-8C8B-4EA2-B4C2-F097D097C0EF" StyleType="Line Styles" Color="13684944" Thickness="3"/>
 			</DefaultRegionStyle>
-			<DefaultYAxisRegionStyle Name="9934A935-906E-4F0C-9AA3-1E28486521C6" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="False" HasYGrid="False" HasYGridText="True" CursorTextMode="2" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="False" IntegerYScale="False" YScaleQuantum="0.0001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="True" BackGradientFillColors="16709354,16774882">
-				<YGridTextStyle Name="5333BAD0-A9BB-41E9-8AFA-5E1650D8742E" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5">
+			<DefaultYAxisRegionStyle Name="0B8D80C3-3D57-4901-A91B-5A5DEABD9847" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="False" HasYGrid="False" HasYGridText="True" CursorTextMode="2" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="False" IntegerYScale="False" YScaleQuantum="0.00001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="True" BackGradientFillColors="16709354,16774882">
+				<YGridTextStyle Name="6DE03093-41CC-49DB-9897-FC80F38AE644" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5">
 					<Offset Width="0.2" Height="0" CoordSystemWidth="2" CoordSystemHeight="2"/>
 				</YGridTextStyle>
-				<YCursorTextStyle Name="88594E34-19A0-43C8-AFCF-2CFFEEDA9EBC" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="128" PaddingX="2" PaddingY="0">
+				<YCursorTextStyle Name="7BC8B587-CA28-44A2-8BBC-5C12315DF230" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="128" PaddingX="2" PaddingY="0">
 					<Font FontName="Courier New" FontBold="True" FontItalic="False" FontSize="8.25" FontStrikethrough="False" FontUnderline="False"/>
 				</YCursorTextStyle>
 			</DefaultYAxisRegionStyle>
-			<XAxisRegionStyle Name="AB2E984E-E4F3-4594-9F14-12549AEE8373" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="True" HasYGrid="False" HasYGridText="False" CursorTextMode="1" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.0001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="False" BackGradientFillColors="13626598,14150878">
-				<XGridTextStyle Name="83CF77D0-A50D-4E8A-B436-28139DB6DCD1" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5"/>
-				<XCursorTextStyle Name="88594E34-19A0-43C8-AFCF-2CFFEEDA9EBC" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="128" PaddingX="2" PaddingY="0">
+			<XAxisRegionStyle Name="87C1AE61-E98F-4067-81F2-39CC1B5D147D" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="True" HasYGrid="False" HasYGridText="False" CursorTextMode="1" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.00001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="False" BackGradientFillColors="13626598,14150878">
+				<XGridTextStyle Name="61B2BB72-E6BF-4C7F-9D30-5D26F2A4F776" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5"/>
+				<XCursorTextStyle Name="7BC8B587-CA28-44A2-8BBC-5C12315DF230" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="128" PaddingX="2" PaddingY="0">
 					<Font FontName="Courier New" FontBold="True" FontItalic="False" FontSize="8.25" FontStrikethrough="False" FontUnderline="False"/>
 				</XCursorTextStyle>
 			</XAxisRegionStyle>
 		</ChartStyle>
+
+
+
 		<ChartStyle __Name="Black" BasedOn="Application default" ChartBackColor="2105376">
 		
-			<CrosshairLineStyle Name="17BBD65F-5F83-44B4-85D2-F02FDEFAF4D6" StyleType="Line Styles" Color="128"/>
-			<DefaultRegionStyle Name="F3D169D8-FCFF-4122-9129-AAA63270DBDF" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="2105376,2105376">
-				<XGridlineStyle Name="D2B7F284-A779-466A-AEC8-1D1284A01416" StyleType="Line Styles" Color="3158064"/>
-				<YGridlineStyle Name="D27FD9EE-933E-4BA3-B683-F7293F72E3D6" StyleType="Line Styles" Color="3158064"/>
-				<SessionEndGridlineStyle Name="E14F943D-3C55-4D3D-B42D-4338B0C17948" StyleType="Line Styles" Color="3158064" LineStyle="1"/>
-				<SessionStartGridlineStyle Name="3AA0D926-F644-4282-B297-B49B314C2FCC" StyleType="Line Styles" Color="3158064" Thickness="3"/>
+			<CrosshairLineStyle Name="37FA1E5C-DAD2-4562-AA0D-E9D6ACAEBBAD" StyleType="Line Styles" Color="128"/>
+			<DefaultRegionStyle Name="CA111578-52B9-4C1D-9839-E309D6C7FD21" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="2105376,2105376">
+				<XGridlineStyle Name="B9A52104-B8BC-40BA-AD76-04895587401C" StyleType="Line Styles" Color="3158064"/>
+				<YGridlineStyle Name="5B32A50C-636D-49D7-8042-1F0DAE5817D8" StyleType="Line Styles" Color="3158064"/>
+				<SessionEndGridlineStyle Name="44F9F6CB-9DB7-4CAA-8130-3DED76375D39" StyleType="Line Styles" Color="3158064" LineStyle="1"/>
+				<SessionStartGridlineStyle Name="B9FF7FA9-C680-4405-A3BA-E5FCDF165AD9" StyleType="Line Styles" Color="3158064" Thickness="3"/>
 			</DefaultRegionStyle>
-			<DefaultYAxisRegionStyle Name="35A766EE-AEEE-40B8-B75A-DEA3F19B8DA0" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="False" HasYGrid="False" HasYGridText="True" CursorTextMode="2" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="False" IntegerYScale="False" YScaleQuantum="0.0001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="True" BackGradientFillColors="0,0">
-				<YGridTextStyle Name="0D5BC7CF-78F5-40D4-B5BA-2A2028041423" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" Color="13684944"/>
-				<YCursorTextStyle Name="310A68AF-0BBC-4F37-BEF7-C2D6EF48F71A" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="255" PaddingX="2" PaddingY="0">
+			<DefaultYAxisRegionStyle Name="422EC6CB-57A0-4418-A1C7-8A5E3CBDBD58" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="False" HasYGrid="False" HasYGridText="True" CursorTextMode="2" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="False" IntegerYScale="False" YScaleQuantum="0.00001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="True" BackGradientFillColors="0,0">
+				<YGridTextStyle Name="45A957F8-322C-4C5B-AFC3-B7C39D30CE5C" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" Color="13684944"/>
+				<YCursorTextStyle Name="54888295-5207-49FC-A349-150C5EAA431C" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="255" PaddingX="2" PaddingY="0">
 					<Font FontName="Courier New" FontBold="True" FontItalic="False" FontSize="8.25" FontStrikethrough="False" FontUnderline="False"/>
 				</YCursorTextStyle>
 			</DefaultYAxisRegionStyle>
-			<XAxisRegionStyle Name="AFBF0ABB-2794-4490-8067-B094895C72B4" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="True" HasYGrid="False" HasYGridText="False" CursorTextMode="1" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.0001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="False" BackGradientFillColors="0,0">
-				<XGridTextStyle Name="0D5BC7CF-78F5-40D4-B5BA-2A2028041423" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" Color="13684944"/>
-				<XCursorTextStyle Name="310A68AF-0BBC-4F37-BEF7-C2D6EF48F71A" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="255" PaddingX="2" PaddingY="0">
+			<XAxisRegionStyle Name="8001C352-A6B7-4453-84EF-1BEB9192741B" StyleType="Chart Region Styles" HasXGrid="False" HasXGridText="True" HasYGrid="False" HasYGridText="False" CursorTextMode="1" CursorTextPosition="11" XCursorTextPosition="1" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.00001" YGridlineSpacing="1.8" MinimumHeight="0.0001" CursorSnapsToTickBoundaries="False" BackGradientFillColors="0,0">
+				<XGridTextStyle Name="45A957F8-322C-4C5B-AFC3-B7C39D30CE5C" StyleType="Text Styles" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" Color="13684944"/>
+				<XCursorTextStyle Name="54888295-5207-49FC-A349-150C5EAA431C" StyleType="Text Styles" Align="12" Box="True" BoxFillWithBackgroundColor="True" BoxStyle="5" BoxThickness="0" Color="255" PaddingX="2" PaddingY="0">
 					<Font FontName="Courier New" FontBold="True" FontItalic="False" FontSize="8.25" FontStrikethrough="False" FontUnderline="False"/>
 				</XCursorTextStyle>
 			</XAxisRegionStyle>
 		</ChartStyle>
+
+
+
 		<ChartStyle __Name="Dark blue fade" BasedOn="Application default" ChartBackColor="6566450">
 		
-			<CrosshairLineStyle Name="9B4679B9-0B81-4674-84EE-554F14C20649" StyleType="Line Styles" Color="255"/>
-			<DefaultRegionStyle Name="BB63A578-2A1F-4B9D-A047-452EC9FBF12D" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="6566450,8405056">
-				<XGridlineStyle Name="0BE20D71-F290-4A00-B7AC-E36B0442A180" StyleType="Line Styles" Color="5263440"/>
-				<YGridlineStyle Name="15FD4F89-8558-4AAB-B390-B1F5720D96BB" StyleType="Line Styles" Color="5263440"/>
-				<SessionEndGridlineStyle Name="2619B9AD-F361-41A2-9E16-4C0C62819581" StyleType="Line Styles" Color="5263440" LineStyle="1"/>
-				<SessionStartGridlineStyle Name="66335C84-0FB4-4BFC-9A49-32276DAA10AA" StyleType="Line Styles" Color="5263440" Thickness="3"/>
+			<CrosshairLineStyle Name="8F507FA1-5E0D-43CE-BF90-121C55CE0980" StyleType="Line Styles" Color="255"/>
+			<DefaultRegionStyle Name="0F1F8B43-3C84-486E-B6F5-068D38E7E3F1" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="6566450,8405056">
+				<XGridlineStyle Name="4ACB4AF6-8C34-4B13-9445-D3348C551A8A" StyleType="Line Styles" Color="5263440"/>
+				<YGridlineStyle Name="A4E080AE-626B-409A-B701-56160F30D0F7" StyleType="Line Styles" Color="5263440"/>
+				<SessionEndGridlineStyle Name="C2B72A8D-0AD2-4B97-8903-48B41C301026" StyleType="Line Styles" Color="5263440" LineStyle="1"/>
+				<SessionStartGridlineStyle Name="E1E72A5B-D40F-4812-95AF-AF0C594B7824" StyleType="Line Styles" Color="5263440" Thickness="3"/>
 			</DefaultRegionStyle>
 		</ChartStyle>
+
+
+
 		<ChartStyle __Name="Gold fade" BasedOn="Application default" ChartBackColor="8576998">
 		
-			<CrosshairLineStyle Name="948B787F-EDB1-43FB-BB53-3A6C12C563B1" StyleType="Line Styles" Color="127"/>
-			<DefaultRegionStyle Name="095F6BF3-7DD5-4451-AA86-19BC48B1865D" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="8576998,15465211">
-				<XGridlineStyle Name="481398A9-CBC0-4CD3-A71E-833AB232D117" StyleType="Line Styles" Color="14737632"/>
-				<YGridlineStyle Name="503E72AF-0417-4599-8052-3689E63C3B0A" StyleType="Line Styles" Color="14737632"/>
-				<SessionEndGridlineStyle Name="529EA550-2490-400E-BA76-656341504AAB" StyleType="Line Styles" Color="14737632" LineStyle="1"/>
-				<SessionStartGridlineStyle Name="8B45A0F5-5B70-4D40-A438-7A6814A0FEA5" StyleType="Line Styles" Color="14737632" Thickness="3"/>
+			<CrosshairLineStyle Name="885DF796-3CC4-41A2-90ED-AF49D8F1CE4A" StyleType="Line Styles" Color="127"/>
+			<DefaultRegionStyle Name="C301F4FE-FFAF-48A5-9885-9634C9B12CCC" StyleType="Chart Region Styles" HasXGrid="True" HasXGridText="False" HasYGrid="True" HasYGridText="False" CursorTextMode="0" CursorTextPosition="11" XCursorTextPosition="2" YCursorTextPosition="0" XGridTextPosition="1" YGridTextPosition="1" Autoscale="True" IntegerYScale="False" YScaleQuantum="0.015625" YGridlineSpacing="1.8" MinimumHeight="0.015625" CursorSnapsToTickBoundaries="True" BackGradientFillColors="8576998,15465211">
+				<XGridlineStyle Name="66D24FD1-FB18-49FD-A711-0BF78F82C90B" StyleType="Line Styles" Color="14737632"/>
+				<YGridlineStyle Name="12DE0351-F2F7-4219-8F85-6312731115DB" StyleType="Line Styles" Color="14737632"/>
+				<SessionEndGridlineStyle Name="4303FA6C-86F4-46B3-9919-8F3659F0D0E7" StyleType="Line Styles" Color="14737632" LineStyle="1"/>
+				<SessionStartGridlineStyle Name="C95D0DC0-E917-49E0-BF35-CC0C33982F17" StyleType="Line Styles" Color="14737632" Thickness="3"/>
 			</DefaultRegionStyle>
 		</ChartStyle>
 	</ChartStyles>
