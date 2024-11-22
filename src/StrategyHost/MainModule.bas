@@ -422,6 +422,9 @@ If pClp.Switch("tws") Then
         MsgBox "Error setting up tws service provider - see log at " & DefaultLogFileName(Command) & vbCrLf & getUsageString, vbCritical, "Error"
         Exit Function
     End If
+ElseIf Not pSimulateOrders Then
+    MsgBox "Must use simulated orders if /tws not supplied: " & vbCrLf & getUsageString, vbCritical, "Error"
+    Exit Function
 End If
 
 If pClp.Switch("db") Then
