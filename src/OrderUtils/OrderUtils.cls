@@ -181,7 +181,7 @@ Public Function NewPriceSpecifier( _
                 Optional ByVal pPriceType As PriceValueTypes = PriceValueTypeNone, _
                 Optional ByVal pOffset As Double = 0#, _
                 Optional ByVal pOffsetType As PriceOffsetTypes = PriceOffsetTypeNone) As PriceSpecifier
-Set NewPriceSpecifier = GOrderUtils.NewPriceSpecifier(pPrice, pPriceType, pOffset, pOffsetType)
+Set NewPriceSpecifier = GOrderUtils.NewPriceSpecifier(pPrice, pPriceString, pPriceType, pOffset, pOffsetType)
 End Function
 
 Public Function OptionStrikeSelectionModeFromString( _
