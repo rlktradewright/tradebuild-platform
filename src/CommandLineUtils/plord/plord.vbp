@@ -50,7 +50,6 @@ RevisionVer=0
 AutoIncrementVer=0
 ServerSupportFiles=0
 VersionCompanyName="TradeWright Software Systems"
-VersionFileDescription="beta.2"
 VersionLegalCopyright="Copyright Richard L King (TradeWright Software Systems) 2020"
 VersionProductName="TradeBuild Place Orders Command Line Utility"
 CompilationType=0
