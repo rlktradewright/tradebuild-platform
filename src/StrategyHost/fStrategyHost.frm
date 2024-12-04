@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#404.0#0"; "TradingUI27.ocx"
+Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#407.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -980,17 +980,17 @@ Private mTradingPlatformStarted                         As Boolean
 
 Private mParams                                         As Parameters
 
-Private mProfitStudyBase                                As StudyBaseForDoubleInput
+Private mProfitStudyBase                                As StudyBaseForDecimalInput
 
 Private mPriceChartTimePeriod                           As TimePeriod
 
 Private mTradeStudyBase                                 As StudyBaseForDoubleInput
 
-Private mPosition                                       As Long
-Private mOverallProfit                                  As Double
-Private mSessionProfit                                  As Double
-Private mMaxProfit                                      As Double
-Private mDrawdown                                       As Double
+Private mPosition                                       As BoxedDecimal
+Private mOverallProfit                                  As BoxedDecimal
+Private mSessionProfit                                  As BoxedDecimal
+Private mMaxProfit                                      As BoxedDecimal
+Private mDrawdown                                       As BoxedDecimal
 
 Private mDetailsHidden                                  As Boolean
 
@@ -1297,7 +1297,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStrategyHostView_NotifyBracketOrderProfile(ByRef Value As BracketOrderProfile)
+Private Sub IStrategyHostView_NotifyBracketOrderProfile(ByVal Value As BracketOrderProfile)
 Const ProcName As String = "IStrategyHostView_NotifyBracketOrderProfile"
 On Error GoTo Err
 
@@ -1368,8 +1368,8 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStrategyHostView_NotifyPosition(ByVal Value As Long)
-mPosition = Value
+Private Sub IStrategyHostView_NotifyPosition(ByVal Value As BoxedDecimal)
+Set mPosition = Value
 Position.Caption = mPosition
 End Sub
 
@@ -1391,17 +1391,17 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Private Sub IStrategyHostView_NotifyReplayStarted()
-mOverallProfit = 0#
-mSessionProfit = 0#
-mMaxProfit = 0#
-mDrawdown = 0#
+Set mOverallProfit = DecimalZero
+Set mSessionProfit = DecimalZero
+Set mMaxProfit = DecimalZero
+Set mDrawdown = DecimalZero
 End Sub
 
-Private Sub IStrategyHostView_NotifySessionDrawdown(ByVal Value As Double)
+Private Sub IStrategyHostView_NotifySessionDrawdown(ByVal Value As BoxedDecimal)
 Const ProcName As String = "IStrategyHostView_NotifySessionDrawdown"
 On Error GoTo Err
 
-mDrawdown = Value
+Set mDrawdown = Value
 If Not mModel.IsTickReplay Then processDrawdown
 
 Exit Sub
@@ -1410,11 +1410,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStrategyHostView_NotifySessionMaxProfit(ByVal Value As Double)
+Private Sub IStrategyHostView_NotifySessionMaxProfit(ByVal Value As BoxedDecimal)
 Const ProcName As String = "IStrategyHostView_NotifySessionMaxProfit"
 On Error GoTo Err
 
-mMaxProfit = Value
+Set mMaxProfit = Value
 If Not mModel.IsTickReplay Then processMaxProfit
 
 Exit Sub
@@ -1423,11 +1423,11 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStrategyHostView_NotifySessionProfit(ByVal Value As Double, ByVal pTimestamp As Date)
+Private Sub IStrategyHostView_NotifySessionProfit(ByVal Value As BoxedDecimal, ByVal pTimestamp As Date)
 Const ProcName As String = "IStrategyHostView_NotifySessionProfit"
 On Error GoTo Err
 
-mSessionProfit = Value
+Set mSessionProfit = Value
 If Not mModel.IsTickReplay Then processSessionProfit
 updateProfitCharts pTimestamp
 
@@ -1512,7 +1512,7 @@ For i = 1 To TickfileOrganiser1.TickFileSpecifiers.Count
     End If
 Next
 
-mOverallProfit = mOverallProfit + mSessionProfit
+Set mOverallProfit = mOverallProfit.Add(mSessionProfit)
 
 Exit Sub
 
@@ -1561,7 +1561,7 @@ Private Sub IStrategyHostView_ResetTradeChart()
 Set mTradeStudyBase = Nothing
 End Sub
 
-Private Sub IStrategyHostView_ShowTradeLine(ByVal pStartTime As Date, ByVal pEndTime As Date, ByVal pEntryPrice As Double, ByVal pExitPrice As Double, ByVal pProfit As Double)
+Private Sub IStrategyHostView_ShowTradeLine(ByVal pStartTime As Date, ByVal pEndTime As Date, ByVal pEntryPrice As Double, ByVal pExitPrice As Double, ByVal pProfit As BoxedDecimal)
 Const ProcName As String = "IStrategyHostView_ShowTradeLine"
 On Error GoTo Err
 
@@ -2113,7 +2113,7 @@ If Not mModel.ShowChart Then Exit Sub
 
 gLog "ProfitChart id is: " & ProfitChart.ChartID, ProcName, ModuleName, , LogLevelHighDetail
 
-Set mProfitStudyBase = CreateStudyBaseForDoubleInput( _
+Set mProfitStudyBase = CreateStudyBaseForDecimalInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
@@ -2212,8 +2212,8 @@ Const ProcName As String = "updateProfitCharts"
 On Error GoTo Err
 
 If mModel.ShowChart And mPosition <> 0 Then
-    mProfitStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp
-    mTradeStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp
+    mProfitStudyBase.NotifyValue mOverallProfit.Add(mSessionProfit), pTimestamp
+    mTradeStudyBase.NotifyValue mOverallProfit.Add(mSessionProfit), pTimestamp
 End If
 
 Exit Sub

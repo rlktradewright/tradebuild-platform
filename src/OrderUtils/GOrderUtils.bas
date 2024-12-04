@@ -463,7 +463,7 @@ GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LogProfit( _
-                ByVal pData As Currency, _
+                ByVal pData As BoxedDecimal, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -613,7 +613,7 @@ GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LogDrawDown( _
-                ByVal pData As Currency, _
+                ByVal pData As BoxedDecimal, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -636,7 +636,7 @@ GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LogMaxLoss( _
-                ByVal pData As Currency, _
+                ByVal pData As BoxedDecimal, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)
@@ -659,7 +659,7 @@ GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub LogMaxProfit( _
-                ByVal pData As Currency, _
+                ByVal pData As BoxedDecimal, _
                 ByVal pSimulated As Boolean, _
                 ByVal pSource As Object, _
                 Optional ByVal pLogLevel As LogLevels = LogLevelNormal)

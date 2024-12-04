@@ -474,17 +474,19 @@ Public Property Get PreventUnprotectedPositions() As Boolean
 PreventUnprotectedPositions = mPreventUnprotectedPositions
 End Property
 
-Public Property Get Risk() As Currency
+Public Property Get Risk() As BoxedDecimal
 Const ProcName As String = "Risk"
 On Error GoTo Err
 
+Dim lRisk As BoxedDecimal: Set lRisk = DecimalZero
+
 Dim lBracketOrder As IBracketOrder
 For Each lBracketOrder In mActiveBracketOrders
-    If lBracketOrder.Risk = MaxCurrency Then
-        Risk = MaxCurrency
+    If lBracketOrder.Risk Is DecimalMax Then
+        Set lRisk = DecimalMax
         Exit For
     End If
-    Risk = Risk + lBracketOrder.Risk
+    Set lRisk = lRisk.Add(lBracketOrder.Risk)
 Next
 
 Exit Property
@@ -844,6 +846,8 @@ Public Function CreateStopLossOrder( _
 Const ProcName As String = "CreateStopLossOrder"
 On Error GoTo Err
 
+If pStopLossType = OrderTypeNone Then Exit Function
+
 AssertArgument IsStopLossOrderType(pStopLossType), "Invalid stop-loss order type"
 
 Dim lOrder As IOrder
@@ -881,6 +885,8 @@ Public Function CreateTargetOrder( _
                     Optional ByVal pOutsideRTH As Boolean = False) As IOrder
 Const ProcName As String = "CreateTargetOrder"
 On Error GoTo Err
+
+If pTargetType = OrderTypeNone Then Exit Function
 
 AssertArgument IsTargetOrderType(pTargetType), "Invalid target order type"
 

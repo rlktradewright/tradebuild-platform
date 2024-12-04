@@ -628,7 +628,7 @@ GOrderUtils.LogBracketOrderProfileString _
             mProfit & "," & _
             mMaxProfit & "," & _
             mMaxLoss & "," & _
-            IIf(mBracketOrder.Risk = MaxCurrency, "Max", mBracketOrder.Risk), _
+            IIf(mBracketOrder.Risk Is DecimalMax, "Max", mBracketOrder.Risk), _
             mBracketOrder.IsSimulated, _
             Me
 

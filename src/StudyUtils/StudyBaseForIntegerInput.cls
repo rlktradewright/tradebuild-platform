@@ -104,13 +104,13 @@ mInputHandleValue = mStudyManager.AddInput(mStudyInputHandler, _
                         "Value", _
                         StudyInputTypes.InputTypeInteger, _
                         True, _
-                        1)
+                        DecimalOne)
 mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
                         BarNumberInputName, _
                         "Bar number", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
-                        1)
+                        DecimalOne)
 
 Exit Sub
 

@@ -230,7 +230,7 @@ Set mModel = pModel
 Set mView = pView
 End Sub
 
-Private Sub IStrategyHostController_NotifyBracketOrderProfile(Value As BracketOrderProfile)
+Private Sub IStrategyHostController_NotifyBracketOrderProfile(ByVal Value As BracketOrderProfile)
 Const ProcName As String = "IStrategyHostController_NotifyBracketOrderProfile"
 On Error GoTo Err
 
@@ -243,7 +243,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IStrategyHostController_NotifyPosition(ByVal pPosition As Long)
+Private Sub IStrategyHostController_NotifyPosition(ByVal pPosition As BoxedDecimal)
 Const ProcName As String = "IStrategyHostController_NotifyPosition"
 On Error GoTo Err
 

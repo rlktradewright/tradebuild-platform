@@ -49,7 +49,7 @@ Private Const ModuleName                            As String = "StudyBaseForDou
 Private mStudyManager                               As StudyManager
 Private mStudyInputHandler                          As StudyInputHandler
 
-Private mInputHandleValue                               As Long
+Private mInputHandleValue                           As Long
 Private mInputHandleBarNumber                       As Long
 
 
@@ -91,7 +91,7 @@ End Property
 
 Friend Sub Initialise( _
                 ByVal pStudyManager As StudyManager, _
-                ByVal pQuantum As Double, _
+                ByVal pQuantum As BoxedDecimal, _
                 ByVal pName As String)
 Const ProcName As String = "Initialise"
 On Error GoTo Err
@@ -112,7 +112,7 @@ mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
                         "Bar number", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
-                        1)
+                        DecimalOne)
 
 Exit Sub
 

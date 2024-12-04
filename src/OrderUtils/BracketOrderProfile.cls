@@ -50,10 +50,10 @@ Private mAction                                     As OrderActions
 Private mQuantity                                   As Long
 Private mEntryPrice                                 As Double
 Private mExitPrice                                  As Double
-Private mProfit                                     As Currency
-Private mMaxProfit                                  As Currency
-Private mMaxLoss                                    As Currency
-Private mRisk                                       As Currency
+Private mProfit                                     As BoxedDecimal
+Private mMaxProfit                                  As BoxedDecimal
+Private mMaxLoss                                    As BoxedDecimal
+Private mRisk                                       As BoxedDecimal
 Private mStartTime                                  As Date
 Private mEndTime                                    As Date
 Private mDescription                                As String
@@ -65,6 +65,13 @@ Private mTimezoneName                               As String
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mProfit = DecimalZero
+Set mMaxProfit = DecimalZero
+Set mMaxLoss = DecimalZero
+Set mRisk = DecimalZero
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -106,24 +113,24 @@ Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Get MaxLoss() As Currency
-MaxLoss = mMaxLoss
+Public Property Get MaxLoss() As BoxedDecimal
+Set MaxLoss = mMaxLoss
 End Property
 
-Public Property Get MaxProfit() As Currency
-MaxProfit = mMaxProfit
+Public Property Get MaxProfit() As BoxedDecimal
+Set MaxProfit = mMaxProfit
 End Property
 
-Public Property Get Profit() As Currency
-Profit = mProfit
+Public Property Get Profit() As BoxedDecimal
+Set Profit = mProfit
 End Property
 
 Public Property Get Quantity() As Long
 Quantity = mQuantity
 End Property
 
-Public Property Get Risk() As Currency
-Risk = mRisk
+Public Property Get Risk() As BoxedDecimal
+Set Risk = mRisk
 End Property
 
 Public Property Get StartTime() As Date
@@ -173,24 +180,24 @@ Friend Property Let ExitPrice(ByVal Value As Double)
 mExitPrice = Value
 End Property
 
-Friend Property Let MaxLoss(ByVal Value As Currency)
-mMaxLoss = Value
+Friend Property Let MaxLoss(ByVal Value As BoxedDecimal)
+Set mMaxLoss = Value
 End Property
 
-Friend Property Let MaxProfit(ByVal Value As Currency)
-mMaxProfit = Value
+Friend Property Let MaxProfit(ByVal Value As BoxedDecimal)
+Set mMaxProfit = Value
 End Property
 
-Friend Property Let Profit(ByVal Value As Currency)
-mProfit = Value
+Friend Property Let Profit(ByVal Value As BoxedDecimal)
+Set mProfit = Value
 End Property
 
 Friend Property Let Quantity(ByVal Value As Long)
 mQuantity = Value
 End Property
 
-Friend Property Let Risk(ByVal Value As Currency)
-mRisk = Value
+Friend Property Let Risk(ByVal Value As BoxedDecimal)
+Set mRisk = Value
 End Property
 
 Friend Property Let StartTime(ByVal Value As Date)

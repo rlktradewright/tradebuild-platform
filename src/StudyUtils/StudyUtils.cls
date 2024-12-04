@@ -332,9 +332,27 @@ Err:
 GStudies.HandleUnexpectedError ProcName, ModuleName
 End Function
 
+Public Function CreateStudyBaseForDecimalInput( _
+                ByVal pStudyManager As StudyManager, _
+                Optional ByVal pQuantum As BoxedDecimal, _
+                Optional ByVal pName As String) As IStudyBase
+Const ProcName As String = "CreateStudyBaseForDecimalInput"
+On Error GoTo Err
+
+Set CreateStudyBaseForDecimalInput = GStudyUtils.CreateStudyBaseForDecimalInput( _
+                                                pStudyManager, _
+                                                pQuantum, _
+                                                pName)
+
+Exit Function
+
+Err:
+GStudies.HandleUnexpectedError ProcName, ModuleName
+End Function
+
 Public Function CreateStudyBaseForDoubleInput( _
                 ByVal pStudyManager As StudyManager, _
-                Optional ByVal pQuantum As Double = 0#, _
+                Optional ByVal pQuantum As BoxedDecimal, _
                 Optional ByVal pName As String) As IStudyBase
 Const ProcName As String = "CreateStudyBaseForDoubleInput"
 On Error GoTo Err

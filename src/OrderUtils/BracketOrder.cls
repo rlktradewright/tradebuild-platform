@@ -595,8 +595,8 @@ Err:
 GOrders.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Property Get IBracketOrder_Risk() As Currency
-IBracketOrder_Risk = Risk
+Private Property Get IBracketOrder_Risk() As BoxedDecimal
+Set IBracketOrder_Risk = Risk
 End Property
 
 Private Property Let IBracketOrder_RolloverSpecification(ByVal Value As RolloverSpecification)
@@ -1178,18 +1178,18 @@ End If
 mSummary.CancelPrice = 0
 
 'If Not mStopLossOrder Is Nothing Then
-'    Dim Risk As Currency
+'    Dim Risk As BoxedDecimal
 '    If LongPosition Then
 '        If mStopLossOrder.OrderType = OrderTypes.OrderTypeAutoStop Then
-'            Risk = (mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * mStopLossOrder.Offset * mContract.TickValue
+'            set Risk = CreateBoxedDecimal((mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * mStopLossOrder.Offset * mContract.TickValue)
 '        Else
-'            Risk = (mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * (pExec.Price - mStopLossOrder.TriggerPrice) * mContract.Multiplier
+'            set Risk = CreateBoxedDecimal((mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * (pExec.Price - mStopLossOrder.TriggerPrice) * mContract.Multiplier)
 '        End If
 '    Else
 '        If mStopLossOrder.OrderType = OrderTypes.OrderTypeAutoStop Then
-'            Risk = -(mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * mStopLossOrder.Offset * mContract.TickValue
+'            set Risk = CreateBoxedDecimal(-(mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * mStopLossOrder.Offset * mContract.TickValue)
 '        Else
-'            Risk = (mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * (mStopLossOrder.TriggerPrice - pExec.Price) * mContract.Multiplier
+'            set Risk = CreateBoxedDecimal((mEntryOrder.Quantity + mEntryOrder.QuantityFilled) * (mStopLossOrder.TriggerPrice - pExec.Price) * mContract.Multiplier)
 '        End If
 '    End If
 'End If
@@ -1902,7 +1902,7 @@ Public Property Get IsRiskUnlimited() As Boolean
 Const ProcName As String = "IsRiskUnlimited"
 On Error GoTo Err
 
-IsRiskUnlimited = (Risk = MaxCurrency)
+IsRiskUnlimited = (Risk Is DecimalMax)
 
 Exit Property
 
@@ -2060,14 +2060,13 @@ Err:
 GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Risk() As Currency
+Public Property Get Risk() As BoxedDecimal
 Const ProcName As String = "Risk"
 On Error GoTo Err
 
-If mStopLossOrder Is Nothing Then
-    Risk = MaxCurrency
-    Exit Property
-End If
+Set Risk = DecimalMax
+
+If mStopLossOrder Is Nothing Then Exit Property
 
 If mStateEngine.State = BracketOrderStates.BracketOrderStateClosed Then Exit Property
 
@@ -2076,24 +2075,24 @@ If mStopLossOrder.Status = OrderStatuses.OrderStatusFilled Then Exit Property
 ' the amount at Risk has two parts - that due to fills already obtained, and
 ' that due to fills pending.
 
-Dim filledTotalPrice As Double
-filledTotalPrice = mEntryOrder.QuantityFilled * mEntryOrder.AveragePrice
+Dim filledTotalPrice As BoxedDecimal
+Set filledTotalPrice = CreateBoxedDecimal(mEntryOrder.QuantityFilled * mEntryOrder.AveragePrice)
 
-Dim pendingTotalPrice As Double
+Dim pendingTotalPrice As BoxedDecimal
 Select Case EntryOrder.OrderType
     Case OrderTypes.OrderTypeMarket
-        pendingTotalPrice = mEntryOrder.QuantityRemaining * _
-                IIf(LongPosition, mDataSource.CurrentTick(TickTypeAsk).Price, mDataSource.CurrentTick(TickTypeBid).Price)
+        Set pendingTotalPrice = CreateBoxedDecimal(mEntryOrder.QuantityRemaining * _
+                IIf(LongPosition, mDataSource.CurrentTick(TickTypeAsk).Price, mDataSource.CurrentTick(TickTypeBid).Price))
     Case OrderTypes.OrderTypeMidprice
-        pendingTotalPrice = mEntryOrder.QuantityRemaining * _
-                (mDataSource.CurrentTick(TickTypeAsk).Price + mDataSource.CurrentTick(TickTypeBid).Price) / 2#
+        Set pendingTotalPrice = CreateBoxedDecimal(mEntryOrder.QuantityRemaining * _
+                (mDataSource.CurrentTick(TickTypeAsk).Price + mDataSource.CurrentTick(TickTypeBid).Price) / 2#)
     Case OrderTypes.OrderTypeLimit, _
             OrderTypes.OrderTypeStopLimit, _
             OrderTypeLimitIfTouched, _
             OrderTypeMarketIfTouched
-        pendingTotalPrice = mEntryOrder.QuantityRemaining * mEntryOrder.LimitPrice
+        Set pendingTotalPrice = CreateBoxedDecimal(mEntryOrder.QuantityRemaining * mEntryOrder.LimitPrice)
     Case OrderTypes.OrderTypeStop
-        pendingTotalPrice = mEntryOrder.QuantityRemaining * mEntryOrder.TriggerPrice
+        Set pendingTotalPrice = CreateBoxedDecimal(mEntryOrder.QuantityRemaining * mEntryOrder.TriggerPrice)
     
     
 ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2111,13 +2110,13 @@ Select Case EntryOrder.OrderType
     Case OrderTypePeggedToPrimary
 End Select
 
-Dim stopTotalPrice As Double
-stopTotalPrice = mStopLossOrder.TriggerPrice * _
-                        (mEntryOrder.Quantity + mEntryOrder.QuantityFilled)
+Dim stopTotalPrice As BoxedDecimal
+Set stopTotalPrice = CreateBoxedDecimal(mStopLossOrder.TriggerPrice * _
+                        (mEntryOrder.Quantity + mEntryOrder.QuantityFilled))
 If LongPosition Then
-    Risk = mContract.TickValue * (filledTotalPrice + pendingTotalPrice - stopTotalPrice) / mContract.TickSize
+    Set Risk = CreateBoxedDecimal(mContract.TickValue * (filledTotalPrice + pendingTotalPrice - stopTotalPrice) / mContract.TickSize)
 Else
-    Risk = mContract.TickValue * (stopTotalPrice - filledTotalPrice - pendingTotalPrice) / mContract.TickSize
+    Set Risk = CreateBoxedDecimal(mContract.TickValue * (stopTotalPrice - filledTotalPrice - pendingTotalPrice) / mContract.TickSize)
 End If
 
 Exit Property

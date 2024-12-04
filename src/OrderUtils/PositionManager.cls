@@ -852,7 +852,7 @@ Const ProcName As String = "IsRiskUnlimited"
 On Error GoTo Err
 
 checkInitialised
-IsRiskUnlimited = (Risk = MaxCurrency)
+IsRiskUnlimited = (Risk Is DecimalMax)
 
 Exit Property
 
@@ -1092,26 +1092,27 @@ Err:
 GOrders.HandleUnexpectedError ProcName, ModuleName
 End Property
 
-Public Property Get Risk() As Currency
+Public Property Get Risk() As BoxedDecimal
 Const ProcName As String = "Risk"
 On Error GoTo Err
 
 checkInitialised
 
-Dim totRisk As Currency
+Dim totRisk As BoxedDecimal
+Set totRisk = DecimalZero
 
 Dim OrderContext As OrderContext
 For Each OrderContext In mOrderContexts
-    Dim ocRisk As Currency
-    ocRisk = OrderContext.Risk
-    If ocRisk = MaxCurrency Then
-        totRisk = MaxCurrency
+    Dim ocRisk As BoxedDecimal
+    Set ocRisk = OrderContext.Risk
+    If ocRisk Is DecimalMax Then
+        Set totRisk = DecimalMax
         Exit For
     End If
-    totRisk = totRisk + ocRisk
+    Set totRisk = totRisk.Add(ocRisk)
 Next
 
-Risk = totRisk
+Set Risk = totRisk
 
 Exit Property
 

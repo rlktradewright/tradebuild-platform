@@ -75,17 +75,17 @@ Case "strategy.tradereason"
     mView.WriteLogText lMessage
     logStrategyHostMessage lMessage
 Case "position.profit"
-    mView.NotifySessionProfit CDbl(pLogrec.Data), mModel.Ticker.Timestamp
+    mView.NotifySessionProfit pLogrec.Data, mModel.Ticker.Timestamp
 Case "position.drawdown"
-    mView.NotifySessionDrawdown CDbl(pLogrec.Data)
+    mView.NotifySessionDrawdown pLogrec.Data
 Case "position.maxprofit"
-    mView.NotifySessionMaxProfit CDbl(pLogrec.Data)
+    mView.NotifySessionMaxProfit pLogrec.Data
 Case "position.bracketorderprofilestruct"
     Dim lBracketOrderProfile As BracketOrderProfile
     Set lBracketOrderProfile = pLogrec.Data
     mController.NotifyBracketOrderProfile lBracketOrderProfile
 Case "position.position"
-    mController.NotifyPosition CLng(pLogrec.Data)
+    mController.NotifyPosition pLogrec.Data
 Case "position.order", _
     "position.moneymanagement"
     lMessage = formatLogRecord(pLogrec, True)

@@ -49,7 +49,7 @@ Public Type InputDescriptor
     Description         As String
     InputType           As StudyInputTypes
     IsDefault           As Boolean
-    TickSize            As Double
+    TickSize            As BoxedDecimal
 End Type
 
 '@================================================================================
@@ -195,7 +195,7 @@ Public Function AddInput( _
                 ByVal Description As String, _
                 ByVal InputType As StudyInputTypes, _
                 ByVal IsDefault As Boolean, _
-                ByVal TickSize As Double) As Long
+                ByVal TickSize As BoxedDecimal) As Long
 Const ProcName As String = "AddInput"
 On Error GoTo Err
 
@@ -209,7 +209,7 @@ mInputs(mNextInputIndex).InputName = InputName
 mInputs(mNextInputIndex).Description = Description
 mInputs(mNextInputIndex).InputType = InputType
 mInputs(mNextInputIndex).IsDefault = IsDefault
-mInputs(mNextInputIndex).TickSize = TickSize
+Set mInputs(mNextInputIndex).TickSize = TickSize
 AddInput = mNextInputIndex
 mNextInputIndex = mNextInputIndex + 1
 
@@ -448,7 +448,7 @@ Assert Not mSession Is Nothing, "Session is not yet set"
 
 Dim ev As StudyValueEventData
 ev.sVal.Timestamp = pTimestamp
-ev.sVal.Value = pInputValue
+SetVariant ev.sVal.Value, pInputValue
 ev.sVal.BarStartTime = 0  ' a higher level study must generate this
 ev.ValueName = mInputs(pInputHandle).InputName
 

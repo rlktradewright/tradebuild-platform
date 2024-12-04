@@ -153,7 +153,7 @@ End Property
 Public Property Get PreventUnprotectedPosition() As Boolean
 End Property
 
-Public Property Get Risk() As Currency
+Public Property Get Risk() As BoxedDecimal
 End Property
 
 Public Property Let RolloverSpecification(ByVal Value As RolloverSpecification)

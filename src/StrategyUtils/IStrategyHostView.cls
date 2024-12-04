@@ -118,7 +118,7 @@ End Sub
 Public Sub NotifyError(ByVal pTitle As String, ByVal pMessage As String, ByVal pSeverity As ErrorSeverities)
 End Sub
 
-Public Sub NotifyBracketOrderProfile(ByRef Value As BracketOrderProfile)
+Public Sub NotifyBracketOrderProfile(ByVal Value As BracketOrderProfile)
 End Sub
 
 Public Sub NotifyEventsPerSecond(ByVal Value As Long)
@@ -133,7 +133,7 @@ End Sub
 Public Sub NotifyNewTradeBar(ByVal pBarNumber As Long, ByVal pTimestamp As Date)
 End Sub
 
-Public Sub NotifyPosition(ByVal Value As Long)
+Public Sub NotifyPosition(ByVal Value As BoxedDecimal)
 End Sub
 
 Public Sub NotifyReplayStarted()
@@ -145,13 +145,13 @@ Public Sub NotifyReplayProgress( _
                 ByVal pPercentComplete As Single)
 End Sub
 
-Public Sub NotifySessionDrawdown(ByVal Value As Double)
+Public Sub NotifySessionDrawdown(ByVal Value As BoxedDecimal)
 End Sub
 
-Public Sub NotifySessionMaxProfit(ByVal Value As Double)
+Public Sub NotifySessionMaxProfit(ByVal Value As BoxedDecimal)
 End Sub
 
-Public Sub NotifySessionProfit(ByVal Value As Double, ByVal pTimestamp As Date)
+Public Sub NotifySessionProfit(ByVal Value As BoxedDecimal, ByVal pTimestamp As Date)
 End Sub
 
 Public Sub NotifyTick(ev As GenericTickEventData)
@@ -183,7 +183,7 @@ Public Sub ShowTradeLine( _
                 ByVal pEndTime As Date, _
                 ByVal pEntryPrice As Double, _
                 ByVal pExitPrice As Double, _
-                ByVal pProfit As Double)
+                ByVal pProfit As BoxedDecimal)
 End Sub
 
 Public Sub UpdateLastChartBars()

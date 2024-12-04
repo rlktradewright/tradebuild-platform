@@ -149,10 +149,10 @@ On Error GoTo Err
 If pContractFuture.IsAvailable Then
     Dim lContract As IContract
     Set lContract = pContractFuture.Value
-    init pStudyManager, lContract.Specifier.ToString, lContract.TickSize
+    init pStudyManager, lContract.Specifier.ToString, CreateBoxedDecimal(lContract.TickSize)
 Else
     waitForFuture pContractFuture
-    init pStudyManager, CStr(GetObjectKey(pContractFuture)), 0#
+    init pStudyManager, CStr(GetObjectKey(pContractFuture)), DecimalZero
 End If
 
 Exit Sub
@@ -167,7 +167,7 @@ Public Sub InitialiseWithContract( _
 Const ProcName As String = "InitialiseWithContract"
 On Error GoTo Err
 
-init pStudyManager, pContract.Specifier.ToString, pContract.TickSize
+init pStudyManager, pContract.Specifier.ToString, CreateBoxedDecimal(pContract.TickSize)
 
 Exit Sub
 
@@ -219,7 +219,7 @@ End Sub
 Private Sub init( _
                 ByVal pStudyManager As StudyManager, _
                 ByVal pName As String, _
-                ByVal pTickSize As Double)
+                ByVal pTickSize As BoxedDecimal)
 Const ProcName As String = "init"
 On Error GoTo Err
 
@@ -246,13 +246,13 @@ mInputHandleOpenInterest = mStudyManager.AddInput(mStudyInputHandler, _
                         "OpenInterest", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
-                        1)
+                        DecimalOne)
 mInputHandleTickVolume = mStudyManager.AddInput(mStudyInputHandler, _
                         TickVolumeInputName, _
                         "Tick Volume", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
-                        1)
+                        DecimalOne)
 mInputHandleTrade = mStudyManager.AddInput(mStudyInputHandler, _
                         TradeInputName, _
                         "Trade prices", _
@@ -264,13 +264,13 @@ mInputHandleVolume = mStudyManager.AddInput(mStudyInputHandler, _
                         "Volume", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
-                        1)
+                        DecimalOne)
 mInputHandleBarNumber = mStudyManager.AddInput(mStudyInputHandler, _
                         BarNumberInputName, _
                         "Bar number", _
                         StudyInputTypes.InputTypeInteger, _
                         False, _
-                        1)
+                        DecimalOne)
 
 Exit Sub
 
