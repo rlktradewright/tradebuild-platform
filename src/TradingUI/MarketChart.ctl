@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#346.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#350.0#0"; "ChartSkil27.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -1241,7 +1241,7 @@ Public Sub Start()
 Const ProcName As String = "Start"
 On Error GoTo Err
 
-Assert mDeferStart And mState = ChartStates.ChartStateCreated, "Start method only permitted for charts with deferred start and with state ChartStateCreated"
+Assert mState = ChartStates.ChartStateCreated, "Start method only permitted for charts with state = ChartStateCreated"
 
 deferredStart SecTypeNone, 0#, True
 
