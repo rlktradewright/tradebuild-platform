@@ -78,7 +78,7 @@ Private mLow As Double
 
 Private mClose As Double
 
-Private mVolume As Long
+Private mVolume As BoxedDecimal
 
 Private mOpenInterest As Long
 
@@ -95,6 +95,7 @@ mOpen = MaxDouble
 mLow = MaxDouble
 mHigh = MinDouble
 mClose = MaxDouble
+Set mVolume = DecimalZero
 End Sub
 
 '@================================================================================
@@ -211,8 +212,8 @@ Public Property Get TickVolume() As Long
 TickVolume = mTickVolume
 End Property
 
-Public Property Get Volume() As Long
-Volume = mVolume
+Public Property Get Volume() As BoxedDecimal
+Set Volume = mVolume
 End Property
 
 Public Property Get VolumeChanged() As Boolean
@@ -244,7 +245,7 @@ Public Sub Initialise( _
                 ByVal HighValue As Double, _
                 ByVal LowValue As Double, _
                 ByVal CloseValue As Double, _
-                Optional ByVal Volume As Long, _
+                Optional ByVal Volume As BoxedDecimal, _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long)
 Const ProcName As String = "Initialise"
@@ -255,12 +256,12 @@ mOpen = OpenValue
 mHigh = HighValue
 mLow = LowValue
 mClose = CloseValue
-mVolume = Volume
+Set mVolume = Volume
 mTickVolume = TickVolume
 mOpenInterest = OpenInterest
 
 mBarChanges = (BarChangeOpenChanged Or BarChangeHighChanged Or BarChangeLowChanged Or BarChangeCloseChanged)
-If mVolume <> 0 Then mBarChanges = (mBarChanges Or BarChangeVolumeChanged)
+If mVolume Is DecimalZero Then mBarChanges = (mBarChanges Or BarChangeVolumeChanged)
 If mOpenInterest <> 0 Then mBarChanges = (mBarChanges Or BarChangeOpenInterestChanged)
 
 fireChange BarPriceChanged Or _
@@ -327,13 +328,13 @@ GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Friend Sub NotifyVolume( _
-                ByVal Volume As Long)
+                ByVal Volume As BoxedDecimal)
 Const ProcName As String = "NotifyVolume"
 On Error GoTo Err
 
 ' note that we don't set mBlank to false because the Bar is blank until
 ' the first Value is notified
-mVolume = Volume
+Set mVolume = Volume
 mBarChanges = BarChangeVolumeChanged
 fireChange BarVolumeChanged
 
@@ -350,7 +351,7 @@ If mHigh <> MinDouble Then mBarChanges = mBarChanges Or BarChangeHighChanged
 If mLow <> MaxDouble Then mBarChanges = mBarChanges Or BarChangeLowChanged
 If mClose <> MaxDouble Then mBarChanges = mBarChanges Or BarChangeCloseChanged
 If mOpenInterest <> 0 Then mBarChanges = mBarChanges Or BarChangeOpenInterestChanged
-If mVolume <> 0 Then mBarChanges = mBarChanges Or BarChangeVolumeChanged
+If Not mVolume Is DecimalZero Then mBarChanges = mBarChanges Or BarChangeVolumeChanged
 End Sub
 
 Public Function ToString() As String
@@ -359,7 +360,7 @@ ToString = "Bar{Time:" & FormatTimestamp(mTimestamp, TimestampDateAndTimeISO8601
             ", High:" & mHigh & _
             ", Low:" & mLow & _
             ", Close:" & mClose & _
-            ", Volume:" & mVolume & _
+            ", Volume:" & mVolume.ToString & _
             ", TickVolume:" & mTickVolume & _
             ", OpenInterest:" & mOpenInterest & "}"
 End Function

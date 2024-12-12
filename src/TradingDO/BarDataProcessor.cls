@@ -106,7 +106,13 @@ On Error GoTo Err
 
 If mRS.EOF Then Exit Function
 
-ProcessBar mRS(ColumnNameDateTime), mRS(ColumnNameOpenValue), mRS(ColumnNameHighValue), mRS(ColumnNameLowValue), mRS(ColumnNameCloseValue), mRS(ColumnNameVolume), mRS(ColumnNameTickVolume)
+ProcessBar mRS(ColumnNameDateTime), _
+            mRS(ColumnNameOpenValue), _
+            mRS(ColumnNameHighValue), _
+            mRS(ColumnNameLowValue), _
+            mRS(ColumnNameCloseValue), _
+            mRS(ColumnNameVolume), _
+            mRS(ColumnNameTickVolume)
 
 mRS.MoveNext
 ProcessNextBar = True
@@ -167,7 +173,7 @@ mTargetBarsBuilder.NotifyBar pTimestamp, _
                             pHighValue, _
                             pLowValue, _
                             pCloseValue, _
-                            pVolume, _
+                            CreateBoxedDecimal(pVolume), _
                             pTickVolume
                             
 mAccumulatedVolume = mAccumulatedVolume + pVolume

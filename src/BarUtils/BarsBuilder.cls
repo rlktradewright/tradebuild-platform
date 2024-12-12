@@ -149,7 +149,7 @@ Public Sub AddBar( _
                 ByVal HighValue As Double, _
                 ByVal LowValue As Double, _
                 ByVal CloseValue As Double, _
-                Optional ByVal Volume As Long, _
+                Optional ByVal Volume As BoxedDecimal, _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long)
 Const ProcName As String = "AddBar"
@@ -365,7 +365,7 @@ Public Sub NotifyBar( _
     ByVal pHighValue As Double, _
     ByVal pLowValue As Double, _
     ByVal pCloseValue As Double, _
-    ByVal pVolume As Long, _
+    ByVal pVolume As BoxedDecimal, _
     ByVal pTickVolume As Long)
 Const ProcName As String = "NotifyBar"
 On Error GoTo Err
@@ -425,7 +425,7 @@ End If
 If mBarTimePeriod.Length = 0 Then
     ' the caller will supply Bar numbers
     If newBar(oi.BarNumber) Then
-        createNewCustomPeriodBar oi.BarStartTime, mCurrentBar.CloseValue, 0, mOpenInterestParser.Notify(oi.Value)
+        createNewCustomPeriodBar oi.BarStartTime, mCurrentBar.CloseValue, DecimalZero, mOpenInterestParser.Notify(oi.Value)
     Else
         mCurrentBar.NotifyOpenInterest mOpenInterestParser.Notify(oi.Value)
     End If
@@ -452,15 +452,15 @@ If IsEmpty(Value.Value) Then Exit Sub
 If mBarTimePeriod.Units = TimePeriodNone Or mBarTimePeriod.Length = 0 Then
     ' the caller sUpplies Bar numbers
     If newBar(Value.BarNumber) Then
-        createNewCustomPeriodBar Value.BarStartTime, Value.Value, 0, 0
+        createNewCustomPeriodBar Value.BarStartTime, Value.Value, DecimalZero, 0
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
 ElseIf mCurrentBar Is Nothing Then
-    createNewBar Value.Timestamp, Value.Value, 0, 0
+    createNewBar Value.Timestamp, Value.Value, DecimalZero, 0
 ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
     If mCurrentBar.Volume >= mBarTimePeriod.Length Then
-        createNewBar Value.Timestamp, Value.Value, 0, 0
+        createNewBar Value.Timestamp, Value.Value, DecimalZero, 0
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
@@ -472,13 +472,13 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickMovement Then
         newHigh = mCurrentBar.LowValue + mMaxBarRange
         mCurrentBar.NotifyValue newHigh
         
-        createNewBar Value.Timestamp, newHigh + mTickSize, 0, 0
+        createNewBar Value.Timestamp, newHigh + mTickSize, DecimalZero, 0
         
         Do While (Value.Value - mCurrentBar.LowValue) > mMaxBarRange
             newHigh = mCurrentBar.LowValue + mMaxBarRange
             mCurrentBar.NotifyValue newHigh
             
-            createNewBar Value.Timestamp, newHigh + mTickSize, 0, 0
+            createNewBar Value.Timestamp, newHigh + mTickSize, DecimalZero, 0
         Loop
         
     ElseIf (mCurrentBar.HighValue - Value.Value) > mMaxBarRange Then
@@ -486,20 +486,20 @@ ElseIf mBarTimePeriod.Units = TimePeriodTickMovement Then
         newLow = mCurrentBar.HighValue - mMaxBarRange
         mCurrentBar.NotifyValue newLow
         
-        createNewBar Value.Timestamp, newLow - mTickSize, 0, 0
+        createNewBar Value.Timestamp, newLow - mTickSize, DecimalZero, 0
         
         Do While (mCurrentBar.HighValue - Value.Value) > mMaxBarRange
             newLow = mCurrentBar.HighValue - mMaxBarRange
             mCurrentBar.NotifyValue newLow
             
-            createNewBar Value.Timestamp, newLow - mTickSize, 0, 0
+            createNewBar Value.Timestamp, newLow - mTickSize, DecimalZero, 0
         Loop
         
     End If
     mCurrentBar.NotifyValue Value.Value
 ElseIf mBarTimePeriod.Units = TimePeriodTickVolume Then
     If mCurrentBar.TickVolume >= mBarTimePeriod.Length Then
-        createNewBar Value.Timestamp, Value.Value, 0, 0
+        createNewBar Value.Timestamp, Value.Value, DecimalZero, 0
     Else
         mCurrentBar.NotifyValue Value.Value
     End If
@@ -507,7 +507,7 @@ ElseIf GBarUtils.BarEndTime(Value.Timestamp, _
                             mBarTimePeriod, _
                             mMainSession.SessionStartTime, _
                             mMainSession.SessionEndTime) > mBarEndTime Then
-    createNewBar Value.Timestamp, Value.Value, 0, 0
+    createNewBar Value.Timestamp, Value.Value, DecimalZero, 0
 Else
     mCurrentBar.NotifyValue Value.Value
 End If
@@ -525,8 +525,10 @@ On Error GoTo Err
 
 If IsEmpty(vol.Value) Then Exit Sub
 
-Dim volIncrement As Long
-volIncrement = mVolumeParser.Notify(vol.Value)
+Dim volDecimal As BoxedDecimal: Set volDecimal = vol.Value
+
+Dim volIncrement As BoxedDecimal
+Set volIncrement = mVolumeParser.Notify(volDecimal)
 
 If mCurrentBar Is Nothing Then
     ' a Bar with no price causes all sorts of problems so do nothing
@@ -538,19 +540,19 @@ If mBarTimePeriod.Length = 0 Then
     If newBar(vol.BarNumber) Then
         createNewBar vol.BarStartTime, mCurrentBar.CloseValue, volIncrement, 0
     Else
-        mCurrentBar.NotifyVolume mCurrentBar.Volume + volIncrement
+        mCurrentBar.NotifyVolume mCurrentBar.Volume.Add(volIncrement)
     End If
 ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
     If volIncrement + mCurrentBar.Volume >= mBarTimePeriod.Length Then
         
-        volIncrement = volIncrement - (mBarTimePeriod.Length - mCurrentBar.Volume)
-        mCurrentBar.NotifyVolume mBarTimePeriod.Length
+        Set volIncrement = volIncrement.Subtr(CreateBoxedDecimal(mBarTimePeriod.Length).Subtr(mCurrentBar.Volume))
+        mCurrentBar.NotifyVolume CreateBoxedDecimal(mBarTimePeriod.Length)
         
         ' need to create one or more new Bars
         
         Do While volIncrement >= mBarTimePeriod.Length
-            createNewBar vol.Timestamp, mCurrentBar.CloseValue, mBarTimePeriod.Length, 0
-            volIncrement = volIncrement - mBarTimePeriod.Length
+            createNewBar vol.Timestamp, mCurrentBar.CloseValue, CreateBoxedDecimal(mBarTimePeriod.Length), 0
+            Set volIncrement = volIncrement.Subtr(CreateBoxedDecimal(mBarTimePeriod.Length))
         Loop
         
         If volIncrement > 0 Then
@@ -559,13 +561,13 @@ ElseIf mBarTimePeriod.Units = TimePeriodVolume Then
             Set mCurrentBar = Nothing
         End If
     Else
-        mCurrentBar.NotifyVolume volIncrement + mCurrentBar.Volume
+        mCurrentBar.NotifyVolume volIncrement.Add(mCurrentBar.Volume)
     End If
 Else
     ' we assume that a Volume notification belongs to the same Bar as the
     ' preceding price notification, so we don't check the Timestamp
     
-    mCurrentBar.NotifyVolume mCurrentBar.Volume + volIncrement
+    mCurrentBar.NotifyVolume mCurrentBar.Volume.Add(volIncrement)
 End If
 
 Exit Sub
@@ -596,7 +598,7 @@ End Sub
 Private Sub createNewBar( _
                 ByVal Timestamp As Date, _
                 ByVal initialValue As Double, _
-                ByVal initialVolume As Long, _
+                ByVal initialVolume As BoxedDecimal, _
                 ByVal initialOpenInterest As Long)
 Const ProcName As String = "createNewBar"
 On Error GoTo Err
@@ -614,7 +616,7 @@ lBar.Timestamp = GBarUtils.BarStartTime(Timestamp, _
 addABar lBar
 
 If initialValue <> MaxDouble Then lBar.NotifyValue initialValue
-If initialVolume <> 0 Then lBar.NotifyVolume initialVolume
+If Not initialVolume Is DecimalZero Then lBar.NotifyVolume initialVolume
 If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
 
 Exit Sub
@@ -626,7 +628,7 @@ End Sub
 Private Sub createNewCustomPeriodBar( _
                 ByVal Timestamp As Date, _
                 ByVal initialValue As Double, _
-                ByVal initialVolume As Long, _
+                ByVal initialVolume As BoxedDecimal, _
                 ByVal initialOpenInterest As Long)
 Const ProcName As String = "createNewCustomPeriodBar"
 On Error GoTo Err
@@ -645,7 +647,7 @@ If Not mBars Is Nothing Then mBars.Add lBar, mCurrentBarNumber, Timestamp
 FireBarAdded lBar
 
 If initialValue <> MaxDouble Then lBar.NotifyValue initialValue
-If initialVolume <> 0 Then lBar.NotifyVolume initialVolume
+If Not initialVolume Is DecimalZero Then lBar.NotifyVolume initialVolume
 If initialOpenInterest <> 0 Then lBar.NotifyOpenInterest initialOpenInterest
 
 Exit Sub
@@ -704,7 +706,7 @@ Private Sub notifyBarForConstantTimeOrTickMovement( _
     ByVal pHighValue As Double, _
     ByVal pLowValue As Double, _
     ByVal pCloseValue As Double, _
-    ByVal pVolume As Long, _
+    ByVal pVolume As BoxedDecimal, _
     ByVal pTickVolume As Long)
 Const ProcName As String = "notifyBarForConstantTimeOrTickMovement"
 On Error GoTo Err
@@ -718,9 +720,9 @@ Dim lTickVolumePerNotify As Long
 lTickVolumePerNotify = Int((pTickVolume - lNumberOfPrices) / lNumberOfPrices)
 If lTickVolumePerNotify < 0 Then lTickVolumePerNotify = 0
 
-Dim lVolumePerNotify As Long
-lVolumePerNotify = Int((pVolume - lNumberOfPrices) / lNumberOfPrices)
-If lVolumePerNotify < 0 Then lVolumePerNotify = 0
+Dim lVolumePerNotify As BoxedDecimal
+Set lVolumePerNotify = CreateBoxedDecimal(Int((pVolume - lNumberOfPrices) / lNumberOfPrices))
+If lVolumePerNotify < 0 Then Set lVolumePerNotify = DecimalZero
 
 notifyBarValue pOpenValue, lNumberOfPrices, lNumberOfPricesNotified, pTimestamp, lTickVolumePerNotify, pTickVolume, lVolumePerNotify, pVolume
 
@@ -746,7 +748,7 @@ Private Sub notifyBarForTickVolume( _
     ByVal pHighValue As Double, _
     ByVal pLowValue As Double, _
     ByVal pCloseValue As Double, _
-    ByVal pVolume As Long, _
+    ByVal pVolume As BoxedDecimal, _
     ByVal pTickVolume As Long)
 Const ProcName As String = "notifyBarForTickVolume"
 On Error GoTo Err
@@ -755,20 +757,20 @@ Dim lNumberOfIntermediateBars As Long
 Dim lFirstTickVolume As Long
 Dim lLastTickVolume As Long
 
-Dim lIntermediateVolume As Long
-Dim lLastVolume As Long
+Dim lIntermediateVolume As BoxedDecimal
+Dim lLastVolume As BoxedDecimal
 
-If mCurrentBar Is Nothing Then createNewBar pTimestamp, pOpenValue, 0, 0
+If mCurrentBar Is Nothing Then createNewBar pTimestamp, pOpenValue, DecimalZero, 0
 
 If mCurrentBar.TickVolume + pTickVolume <= mBarTimePeriod.Length Then
     lFirstTickVolume = pTickVolume
-    lIntermediateVolume = pVolume
+    Set lIntermediateVolume = pVolume
 Else
     lFirstTickVolume = mBarTimePeriod.Length - mCurrentBar.TickVolume
     lNumberOfIntermediateBars = Int((pTickVolume - lFirstTickVolume + mBarTimePeriod.Length - 1) / mBarTimePeriod.Length) - 1
     lLastTickVolume = pTickVolume - lFirstTickVolume - lNumberOfIntermediateBars * mBarTimePeriod.Length
-    lIntermediateVolume = (pVolume + lNumberOfIntermediateBars) / (lNumberOfIntermediateBars + 1)
-    lLastVolume = pVolume - (lNumberOfIntermediateBars + 1) * lIntermediateVolume
+    Set lIntermediateVolume = CreateBoxedDecimal((pVolume + lNumberOfIntermediateBars) / (lNumberOfIntermediateBars + 1))
+    Set lLastVolume = CreateBoxedDecimal(pVolume - (lNumberOfIntermediateBars + 1) * lIntermediateVolume)
 End If
 
 Dim lIsUpBar As Boolean
@@ -789,7 +791,7 @@ NotifyValue lValue
 
 IncrementTickVolume lFirstTickVolume - 4
 
-lValue.Value = lIntermediateVolume + mVolumeParser.CurrSessionVolume
+lValue.Value = lIntermediateVolume.Add(mVolumeParser.CurrSessionVolume)
 NotifyVolume lValue
 
 'build intermediate bars
@@ -809,7 +811,7 @@ For i = 1 To lNumberOfIntermediateBars
     
     IncrementTickVolume mBarTimePeriod.Length - 2
     
-    lValue.Value = lIntermediateVolume + mVolumeParser.CurrSessionVolume
+    Set lValue.Value = lIntermediateVolume.Add(mVolumeParser.CurrSessionVolume)
     NotifyVolume lValue
 Next
 
@@ -826,7 +828,7 @@ If lLastTickVolume <> 0 Then
     
     IncrementTickVolume lLastTickVolume - 4
     
-    lValue.Value = lLastVolume + mVolumeParser.CurrSessionVolume
+    Set lValue.Value = lLastVolume.Add(mVolumeParser.CurrSessionVolume)
     NotifyVolume lValue
 End If
 
@@ -842,27 +844,27 @@ Private Sub notifyBarForVolume( _
     ByVal pHighValue As Double, _
     ByVal pLowValue As Double, _
     ByVal pCloseValue As Double, _
-    ByVal pVolume As Long, _
+    ByVal pVolume As BoxedDecimal, _
     ByVal pTickVolume As Long)
 Const ProcName As String = "notifyBarForVolume"
 On Error GoTo Err
 
 Dim lNumberOfIntermediateBars As Long
-Dim lFirstVolume As Long
-Dim lLastVolume As Long
+Dim lFirstVolume As BoxedDecimal
+Dim lLastVolume As BoxedDecimal
 
 Dim lIntermediateTickVolume As Long
 Dim lLastTickVolume As Long
 
-If mCurrentBar Is Nothing Then createNewBar pTimestamp, pOpenValue, 0, 0
+If mCurrentBar Is Nothing Then createNewBar pTimestamp, pOpenValue, DecimalZero, 0
 
 If mCurrentBar.Volume + pVolume <= mBarTimePeriod.Length Then
-    lFirstVolume = pVolume
+    Set lFirstVolume = pVolume
     lIntermediateTickVolume = pTickVolume
 Else
-    lFirstVolume = mBarTimePeriod.Length - mCurrentBar.Volume
+    Set lFirstVolume = CreateBoxedDecimal(mBarTimePeriod.Length - mCurrentBar.Volume)
     lNumberOfIntermediateBars = Int((pVolume - lFirstVolume + mBarTimePeriod.Length - 1) / mBarTimePeriod.Length) - 1
-    lLastVolume = pVolume - lFirstVolume - lNumberOfIntermediateBars * mBarTimePeriod.Length
+    Set lLastVolume = CreateBoxedDecimal(pVolume - lFirstVolume - lNumberOfIntermediateBars * mBarTimePeriod.Length)
     lIntermediateTickVolume = (pTickVolume + lNumberOfIntermediateBars) / (lNumberOfIntermediateBars + 1)
     lLastTickVolume = pTickVolume - (lNumberOfIntermediateBars + 1) * lIntermediateTickVolume
 End If
@@ -885,7 +887,7 @@ NotifyValue lValue
 
 IncrementTickVolume lIntermediateTickVolume - 4
 
-lValue.Value = lFirstVolume + mVolumeParser.CurrSessionVolume
+Set lValue.Value = lFirstVolume.Add(mVolumeParser.CurrSessionVolume)
 NotifyVolume lValue
 
 'build intermediate bars
@@ -905,7 +907,7 @@ For i = 1 To lNumberOfIntermediateBars
     
     IncrementTickVolume lIntermediateTickVolume - 2
     
-    lValue.Value = mBarTimePeriod.Length + mVolumeParser.CurrSessionVolume
+    Set lValue.Value = CreateBoxedDecimal(mBarTimePeriod.Length + mVolumeParser.CurrSessionVolume)
     NotifyVolume lValue
 Next
 
@@ -922,7 +924,7 @@ If lLastTickVolume <> 0 Then
     
     IncrementTickVolume lLastTickVolume - 4
     
-    lValue.Value = lLastVolume + mVolumeParser.CurrSessionVolume
+    Set lValue.Value = lLastVolume.Add(mVolumeParser.CurrSessionVolume)
     NotifyVolume lValue
 End If
 
@@ -939,8 +941,8 @@ Private Sub notifyBarValue( _
                 ByVal pTimestamp As Date, _
                 ByVal pTickVolumePerNotify As Long, _
                 ByVal pTickVolume As Long, _
-                ByVal pVolumePerNotify As Long, _
-                ByVal pVolume As Long)
+                ByVal pVolumePerNotify As BoxedDecimal, _
+                ByVal pVolume As BoxedDecimal)
 Const ProcName As String = "notifyBarValue"
 On Error GoTo Err
 
@@ -954,11 +956,11 @@ pNumberOfPricesNotified = pNumberOfPricesNotified + 1
 IncrementTickVolume IIf(pNumberOfPricesNotified < pNumberOfPrices, _
                         pTickVolumePerNotify, _
                         pTickVolume - (pNumberOfPrices - 1) * (pTickVolumePerNotify + 1) - 1)
-
-lValue.Value = mVolumeParser.CurrSessionVolume + _
-                IIf(pNumberOfPricesNotified < pNumberOfPrices, _
-                    pNumberOfPricesNotified * pVolumePerNotify, _
-                    pVolume)
+If pNumberOfPricesNotified < pNumberOfPrices Then
+    Set lValue.Value = mVolumeParser.CurrSessionVolume.Add(CreateBoxedDecimal(pNumberOfPricesNotified * pVolumePerNotify.DecimalValue))
+Else
+    Set lValue.Value = mVolumeParser.CurrSessionVolume.Add(pVolume)
+End If
 
 NotifyVolume lValue
 

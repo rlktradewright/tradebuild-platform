@@ -118,7 +118,7 @@ Public Function CreateBar( _
                 ByVal HighValue As Double, _
                 ByVal LowValue As Double, _
                 ByVal CloseValue As Double, _
-                Optional ByVal Volume As Long, _
+                Optional ByVal Volume As BoxedDecimal, _
                 Optional ByVal TickVolume As Long, _
                 Optional ByVal OpenInterest As Long) As Bar
 Const ProcName As String = "CreateBar"

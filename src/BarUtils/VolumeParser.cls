@@ -53,8 +53,8 @@ Attribute mSession.VB_VarHelpID = -1
 ' clock may not be precisely synchronised with ours)
 Private mVolumeResetPending                 As Boolean
 
-Private mCurrSessionVolume                  As Long
-Private mPrevSessionVolume                  As Long
+Private mCurrSessionVolume                  As BoxedDecimal
+Private mPrevSessionVolume                  As BoxedDecimal
 
 ' Data may start in the middle of a session, so we need to
 ' treat the first Volume received as simply setting the current accumulated
@@ -69,6 +69,7 @@ Private mObjId                              As Long
 
 Private Sub Class_Initialize()
 mObjId = ObjPtr(Me)
+Set mCurrSessionVolume = DecimalZero
 End Sub
 
 '@================================================================================
@@ -86,8 +87,8 @@ End Sub
 Private Sub mSession_SessionStarted( _
                 ev As SessionEventData)
 If mGotFirstVolume Then
-    mPrevSessionVolume = mCurrSessionVolume
-    mCurrSessionVolume = 0
+    Set mPrevSessionVolume = mCurrSessionVolume
+    Set mCurrSessionVolume = DecimalZero
     mVolumeResetPending = True
 End If
 End Sub
@@ -96,8 +97,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get CurrSessionVolume() As Long
-CurrSessionVolume = mCurrSessionVolume
+Friend Property Get CurrSessionVolume() As BoxedDecimal
+Set CurrSessionVolume = mCurrSessionVolume
 End Property
 
 '@================================================================================
@@ -154,39 +155,43 @@ GBars.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function Notify( _
-                ByVal pTotalVolume As Long) As Long
+                ByVal pTotalVolume As BoxedDecimal) As BoxedDecimal
 Const ProcName As String = "Notify"
 On Error GoTo Err
 
 'Debug.Print "VolumeParser(" & mObjId & "): Notify: " & pTotalVolume
 If Not mGotFirstVolume Then
-    mCurrSessionVolume = pTotalVolume
+    Set mCurrSessionVolume = pTotalVolume
     mGotFirstVolume = True
-    ' Note that we don't notify the first volume figure received because if this was after
-    ' the start of the session it would give the first bar generated an incorrectly
-    ' large volume
-    'Notify = mCurrSessionVolume
+    ' Note that we don't notify the first volume figure received because if this
+    ' was after the start of the session it would give the first bar generated
+    ' an incorrectly large volume
     Debug.Print "VolumeParser(" & mObjId & "): current session Volume set to " & pTotalVolume
+    Set Notify = DecimalZero
     Exit Function
 End If
 
 If mVolumeResetPending Then
     ' we've started a new session and are expecting the data source to
     ' start sending Low Volume figures
-    If mPrevSessionVolume = 0 Or pTotalVolume < mPrevSessionVolume Then
+    If mPrevSessionVolume Is DecimalZero Or pTotalVolume.LT(mPrevSessionVolume) Then
         mVolumeResetPending = False
         'Debug.Print "VolumeParser(" & mObjId & "): first Volume for new session received"
     Else
-        pTotalVolume = pTotalVolume - mPrevSessionVolume
-        'Debug.Print "VolumeParser(" & mObjId & "): adjusted to " & pTotalVolume
+        Set pTotalVolume = pTotalVolume.Subtr(mPrevSessionVolume)
+        'Debug.Print "VolumeParser(" & mObjId & "): adjusted to " & pTotalVolume.ToString
     End If
 End If
 
-If pTotalVolume > mCurrSessionVolume Then Notify = pTotalVolume - mCurrSessionVolume
+If pTotalVolume.GT(mCurrSessionVolume) Then
+    Set Notify = pTotalVolume.Subtr(mCurrSessionVolume)
+Else
+    Set Notify = DecimalZero
+End If
 
-mCurrSessionVolume = pTotalVolume
+Set mCurrSessionVolume = pTotalVolume
 
-'Debug.Print "VolumeParser(" & mObjId & "): Volume increment returned " & Notify
+'Debug.Print "VolumeParser(" & mObjId & "): Volume increment returned " & Notify.ToString
 
 Exit Function
 
