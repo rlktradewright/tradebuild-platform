@@ -173,7 +173,7 @@ End If
 
 If mVolumeResetPending Then
     ' we've started a new session and are expecting the data source to
-    ' start sending Low Volume figures
+    ' start sending low volume figures
     If mPrevSessionVolume Is DecimalZero Or pTotalVolume.LT(mPrevSessionVolume) Then
         mVolumeResetPending = False
         'Debug.Print "VolumeParser(" & mObjId & "): first Volume for new session received"
