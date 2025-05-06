@@ -296,7 +296,6 @@ Const ProcName As String = "GetXFromTimestamp"
 On Error GoTo Err
 
 Assert Not mTimePeriod Is Nothing, "mTimePeriod Is Nothing"
-Assert mTimePeriod.ToShortString <> "0", "mTimePeriod.ToShortString=" & mTimePeriod.ToShortString
 If canGenerateBarTimes(mTimePeriod.Units) Then
     GetXFromTimestamp = getXWithRegularPeriods(Timestamp)
 Else
