@@ -77,7 +77,7 @@ inputDef.InputType = InputTypeReal
 inputDef.Description = "Value"
 
 Set inputDef = lStudyDefinition.StudyInputDefinitions.Add(pInputTotalVolumeName)
-inputDef.InputType = InputTypeInteger
+inputDef.InputType = InputTypeReal
 inputDef.Description = "Accumulated volume"
 
 Set inputDef = lStudyDefinition.StudyInputDefinitions.Add(pInputTickVolumeName)
@@ -137,7 +137,7 @@ valueDef.Description = "Bar volume"
 valueDef.DefaultRegion = StudyValueDefaultRegionCustom
 valueDef.ValueMode = ValueModeNone
 valueDef.ValueStyle = gCreateDataPointStyle(Color:=&H80000001, DisplayMode:=DataPointDisplayModeHistogram, DownColor:=&H4040C0, Layer:=LayerDataPoints, UpColor:=&H40C040)
-valueDef.ValueType = ValueTypeInteger
+valueDef.ValueType = ValueTypeReal
 
 Set valueDef = lStudyDefinition.StudyValueDefinitions.Add(BarStudyValueTickVolume)
 valueDef.Description = "Bar tick volume"
@@ -185,7 +185,7 @@ End Function
 Public Sub gNotifyBarValues( _
                 ByVal pSource As Object, _
                 ByVal pStudyFoundation As StudyFoundation, _
-                ByVal pCurrentBar As Barutils27.Bar, _
+                ByVal pCurrentBar As BarUtils27.Bar, _
                 ByVal pTimestamp As Date)
 Const ProcName As String = "gNotifyBarValues"
 On Error GoTo Err
@@ -230,7 +230,7 @@ If pCurrentBar.CloseChanged Then
 End If
 
 If pCurrentBar.VolumeChanged Then
-    evOut.sVal.Value = pCurrentBar.volume
+    Set evOut.sVal.Value = pCurrentBar.volume
     evOut.valueName = BarStudyValueVolume
     pStudyFoundation.notifyValue evOut
 End If

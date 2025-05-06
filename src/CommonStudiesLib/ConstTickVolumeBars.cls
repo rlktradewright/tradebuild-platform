@@ -291,7 +291,7 @@ Case UCase$(BarStudyValueClose), UCase$(DefaultStudyValueName)
 Case UCase$(BarStudyValueTickVolume)
         sv.Value = Bar.TickVolume
 Case UCase$(BarStudyValueVolume)
-        sv.Value = Bar.volume
+        Set sv.Value = Bar.volume
 Case UCase$(BarStudyValueOpenInterest)
         sv.Value = Bar.OpenInterest
 Case UCase$(BarStudyValueHL2)

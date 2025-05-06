@@ -7,8 +7,17 @@ Option Explicit
 
 Private Const ModuleName                As String = "GAccDist"
 
-Public Const AccDistInputPrice As String = "Price"
-Public Const AccDistInputPriceUcase As String = "PRICE"
+Public Const AccDistInputOpen As String = "Open"
+Public Const AccDistInputOpenUcase As String = "OPEN"
+
+Public Const AccDistInputHigh As String = "High"
+Public Const AccDistInputHighUcase As String = "HIGH"
+
+Public Const AccDistInputLow As String = "Low"
+Public Const AccDistInputLowUcase As String = "LOW"
+
+Public Const AccDistInputClose As String = "Close"
+Public Const AccDistInputCloseUcase As String = "CLOSE"
 
 Public Const AccDistInputVolume As String = "Volume"
 Public Const AccDistInputVolumeUcase As String = "VOLUME"
@@ -90,12 +99,24 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.DefaultRegion = StudyDefaultRegions.StudyDefaultRegionCustom
     
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputPrice)
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputOpen)
     inputDef.InputType = InputTypeReal
-    inputDef.Description = "Price"
+    inputDef.Description = "Open"
+    
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputHigh)
+    inputDef.InputType = InputTypeReal
+    inputDef.Description = "High"
+    
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputLow)
+    inputDef.InputType = InputTypeReal
+    inputDef.Description = "Low"
+    
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputClose)
+    inputDef.InputType = InputTypeReal
+    inputDef.Description = "Close"
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(AccDistInputVolume)
-    inputDef.InputType = InputTypeInteger
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Volume"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(AccDistValueAccDist)

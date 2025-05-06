@@ -447,8 +447,8 @@ gHandleUnexpectedError ProcName, ModuleName
 End Property
 
 Public Property Get RangeIntersectsCentreBand( _
-                    ByVal lowValue As Double, _
-                    ByVal highValue As Double, _
+                    ByVal LowValue As Double, _
+                    ByVal HighValue As Double, _
                     Optional ByVal ref As Long) As SValue
 Dim bandUpper As Double
 Dim bandLower As Double
@@ -462,11 +462,11 @@ If IsEmpty(RangeIntersectsCentreBand.Value) Then Exit Property
 bandUpper = RangeIntersectsCentreBand.Value + (mCentreBandWidth / 2#)
 bandLower = bandUpper - mCentreBandWidth
 
-If highValue >= bandLower And highValue <= bandUpper Then
+If HighValue >= bandLower And HighValue <= bandUpper Then
     RangeIntersectsCentreBand.Value = True
-ElseIf lowValue >= bandLower And lowValue <= bandUpper Then
+ElseIf LowValue >= bandLower And LowValue <= bandUpper Then
     RangeIntersectsCentreBand.Value = True
-ElseIf lowValue < bandLower And highValue > bandUpper Then
+ElseIf LowValue < bandLower And HighValue > bandUpper Then
     RangeIntersectsCentreBand.Value = True
 Else
     RangeIntersectsCentreBand.Value = False

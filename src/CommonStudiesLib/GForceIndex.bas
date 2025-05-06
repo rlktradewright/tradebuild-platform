@@ -105,7 +105,7 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Price"
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(FiInputVolume)
-    inputDef.InputType = InputTypeInteger
+    inputDef.InputType = InputTypeReal
     inputDef.Description = "Volume"
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(FiParamShortPeriods)

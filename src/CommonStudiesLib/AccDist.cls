@@ -65,14 +65,24 @@ Private mAccDist As Double
 Private mAccDistAtBarStart As Double
 Private mAccDistCache As ValueCache
 
-Private mBarsBuilder As BarsBuilder
-Private mBars As Bars
-Private mCurrentBar As BarUtils27.Bar
-Private mCurrentBarVolume As Long
+Private mOpen As Double
+Private mHigh As Double
+Private mLow As Double
+Private mClose As Double
+Private mVolume As BoxedDecimal
+
+'Private mBarsBuilder As BarsBuilder
+'Private mBars As Bars
+'Private mCurrentBar As BarUtils27.Bar
+'Private mCurrentBarVolume As BoxedDecimal
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mVolume = DecimalZero
+End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "Accumulation/Distribution terminated"
@@ -98,11 +108,11 @@ Set mSession = pSession
 customProcessParameters Parameters
 Set mAccDistCache = mStudyFoundation.FindValueCache(AccDistValueAccDist)
 
-Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
-                        mSession, _
-                        0, _
-                        1)
-Set mBars = mBarsBuilder.Bars
+'Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
+'                        mSession, _
+'                        DecimalZero, _
+'                        1)
+'Set mBars = mBarsBuilder.Bars
 
 Exit Sub
 
@@ -112,32 +122,36 @@ End Sub
 
 Private Sub customNotify( _
                 ByRef ev As StudyValueEventData)
-Static sPrevVal As Variant
-Dim evOut As StudyValueEventData
-
 Const ProcName As String = "customNotify"
 On Error GoTo Err
 
 If mStudyFoundation.IsNewBar Then
-    mCurrentBarVolume = 0
+    Set mVolume = DecimalZero
+    mOpen = 0
+    mHigh = 0
+    mLow = 0
+    mClose = 0
     mAccDistAtBarStart = mAccDist
 End If
 
 ev.valueName = UCase$(ev.valueName)
 If ev.valueName = AccDistInputVolumeUcase Then
-    mCurrentBarVolume = ev.sVal.Value
+    Set mVolume = ev.sVal.Value
     calcAccDist
     mAccDistCache.UpdateValue mAccDist, mStudyFoundation.BarNumber, ev.sVal.Timestamp
 Else
-    If Not mStudyFoundation.IsNewBar Then
-        If ev.sVal.Value = sPrevVal Then Exit Sub
-    End If
-    sPrevVal = ev.sVal.Value
-    
-    mBarsBuilder.notifyValue ev.sVal
-
-    If mStudyFoundation.IsNewBar Then
-        Set mCurrentBar = mBars.Bar(0)
+    If ev.valueName = AccDistInputOpenUcase Then
+        If ev.sVal.Value = mOpen Then Exit Sub
+        mOpen = ev.sVal.Value
+    ElseIf ev.valueName = AccDistInputHighUcase Then
+        If ev.sVal.Value = mHigh Then Exit Sub
+        mHigh = ev.sVal.Value
+    ElseIf ev.valueName = AccDistInputLowUcase Then
+        If ev.sVal.Value = mLow Then Exit Sub
+        mLow = ev.sVal.Value
+    ElseIf ev.valueName = AccDistInputCloseUcase Then
+        If ev.sVal.Value = mClose Then Exit Sub
+        mClose = ev.sVal.Value
     End If
     
     calcAccDist
@@ -149,11 +163,7 @@ Else
     End If
 End If
 
-Set evOut.Source = Me
-evOut.sVal = ev.sVal
-evOut.sVal.Value = IIf(mStudyFoundation.LocalBarNumber = 1, Empty, mAccDist)
-evOut.valueName = AccDistValueAccDist
-mStudyFoundation.notifyValue evOut
+notifyAccDist ev.sVal
 
 Exit Sub
 
@@ -226,17 +236,26 @@ Private Sub calcAccDist()
 Const ProcName As String = "calcAccDist"
 On Error GoTo Err
 
-If mCurrentBar.highValue <> mCurrentBar.lowValue Then
+If mHigh <> mLow Then
     mAccDist = mAccDistAtBarStart + _
-            mCurrentBarVolume * _
-            (mCurrentBar.CloseValue - mCurrentBar.OpenValue) / _
-            (mCurrentBar.highValue - mCurrentBar.lowValue)
+            mVolume * _
+            ((mClose - mLow) - (mHigh - mClose)) / _
+            (mHigh - mLow)
 End If
 
 Exit Sub
 
 Err:
 gHandleUnexpectedError ProcName, ModuleName
+End Sub
+
+Private Sub notifyAccDist(ByRef sVal As SValue)
+Dim evOut As StudyValueEventData
+Set evOut.Source = Me
+evOut.sVal = sVal
+evOut.sVal.Value = IIf(mStudyFoundation.LocalBarNumber = 1, Empty, mAccDist)
+evOut.valueName = AccDistValueAccDist
+mStudyFoundation.notifyValue evOut
 End Sub
 
 
