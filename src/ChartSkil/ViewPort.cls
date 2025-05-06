@@ -765,7 +765,7 @@ End If
 Exit Function
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, pErrorDesc:=Err.Description & ": Value=" & Value
 End Function
 
 Public Function ConvertLogicalToRelativeX(ByVal Value As Double) As Double

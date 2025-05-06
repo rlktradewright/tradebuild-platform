@@ -320,7 +320,7 @@ mSurface.Line (x1, y1)-(x2, y2)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, pErrorDesc:=Err.Description & ": Line: (" & x1 & ", " & y1 & "), (" & x2 & ", " & y2 & ")"
 End Sub
 
 Public Sub DrawPoint( _
