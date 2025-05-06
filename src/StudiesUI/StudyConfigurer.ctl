@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl StudyConfigurer 
    ClientHeight    =   12015
@@ -382,11 +382,11 @@ Begin VB.UserControl StudyConfigurer
          Begin TWControls40.TWImageCombo InputValueCombo 
             Height          =   270
             Index           =   0
-            Left            =   0
+            Left            =   1255
             TabIndex        =   1
-            Top             =   3000
-            Width           =   3855
-            _ExtentX        =   6800
+            Top             =   2760
+            Width           =   2655
+            _ExtentX        =   4683
             _ExtentY        =   476
             Appearance      =   0
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -444,8 +444,8 @@ Begin VB.UserControl StudyConfigurer
             Index           =   0
             Left            =   0
             TabIndex        =   9
-            Top             =   2760
-            Width           =   1455
+            Top             =   2815
+            Width           =   955
          End
       End
    End
@@ -1061,10 +1061,10 @@ For i = 1 To studyInputDefinitions.Count
         InputValueNameLabel(0).Visible = True
     Else
         Load InputValueNameLabel(i - 1)
-        InputValueNameLabel(i - 1).Top = InputValueNameLabel(i - 2).Top + 600
+        InputValueNameLabel(i - 1).Top = InputValueNameLabel(i - 2).Top + 300
         InputValueNameLabel(i - 1).Visible = True
         Load InputValueCombo(i - 1)
-        InputValueCombo(i - 1).Top = InputValueCombo(i - 2).Top + 600
+        InputValueCombo(i - 1).Top = InputValueCombo(i - 2).Top + 300
         InputValueCombo(i - 1).Visible = True
         InputValueCombo(i - 1).TabIndex = nextTabIndex
     End If
