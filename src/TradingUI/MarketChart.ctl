@@ -125,11 +125,14 @@ Private mState                                          As ChartStates
 
 Private mIsHistoricChart                                As Boolean
 
+Private mStartRequested                                 As Boolean
+
 Private mChartSpec                                      As ChartSpecifier
 Private mChartStyle                                     As ChartStyle
 
+Private mContract                                       As IContract
 Private mLocalSymbol                                    As String
-'Private mSecType                                        As SecurityTypes
+Private mSecType                                        As SecurityTypes
 Private mExchange                                       As String
 Private mTickSize                                       As Double
 Private mSessionEndTime                                 As Date
@@ -255,20 +258,15 @@ On Error GoTo Err
 
 If Not ev.Future.IsAvailable Then Exit Sub
 If TypeOf ev.Future.Value Is IContract Then
-    Dim lContract As IContract: Set lContract = ev.Future.Value
-    setContractProperties mTimeframes.ContractFuture.Value
+    Set mContract = ev.Future.Value
+    setContractProperties mContract
     
-    If mDeferStart Then
-        deferredStart lContract.Specifier.SecType, lContract.TickSize, False
-        mDeferStart = False
-    Else
-        Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
-
-        setupStudies lContract.Specifier.SecType
-        Set mPriceFormatter = createPriceFormatter(lContract.Specifier.SecType, _
-                                                    lContract.TickSize)
-        LoadChart includeVolumeRegion(lContract.Specifier.SecType), mPriceFormatter
-    End If
+    If Not mDeferStart Or mStartRequested Then Start
+    mDeferStart = False
+ElseIf TypeOf ev.Future.Value Is BoxedValue Then
+    Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
+    setupStudies SecTypeNone
+    
 End If
 
 Exit Sub
@@ -1075,6 +1073,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Sub SetupChart( _
+                ByVal pDeferStart As Boolean, _
                 ByVal pTimeframes As Timeframes, _
                 ByVal pTimePeriod As TimePeriod, _
                 ByVal pChartSpec As ChartSpecifier, _
@@ -1094,7 +1093,7 @@ AssertArgument (pBarFormatterLibraryName = "" And pBarFormatterFactoryName = "")
 
 Assert Not mIsRaw, "Already initialised as raw"
 
-mDeferStart = True
+mDeferStart = pDeferStart
 
 If Not mTimeframes Is Nothing Then
     mInitialised = False
@@ -1151,7 +1150,8 @@ Public Sub ShowChart( _
 Const ProcName As String = "ShowChart"
 On Error GoTo Err
 
-SetupChart pTimeframes, _
+SetupChart False, _
+            pTimeframes, _
             pTimePeriod, _
             pChartSpec, _
             pChartStyle, _
@@ -1161,6 +1161,8 @@ SetupChart pTimeframes, _
             pBarFormatterLibraryName, _
             pExcludeCurrentBar, _
             pTitle
+
+Start
 
 Exit Sub
 
@@ -1241,9 +1243,19 @@ Public Sub Start()
 Const ProcName As String = "Start"
 On Error GoTo Err
 
-Assert mState = ChartStates.ChartStateCreated, "Start method only permitted for charts with state = ChartStateCreated"
+If mContract Is Nothing Then
+    mStartRequested = True
+    Exit Sub
+End If
 
-deferredStart SecTypeNone, 0#, True
+Static sStarted As Boolean
+Assert Not sStarted, "Start method has already been called"
+sStarted = True
+
+Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
+setupStudies mSecType
+Set mPriceFormatter = createPriceFormatter(mSecType, mTickSize)
+LoadChart includeVolumeRegion(mSecType), mPriceFormatter
 
 Exit Sub
 
@@ -1325,37 +1337,6 @@ Exit Function
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
-
-Private Sub deferredStart( _
-                ByVal pSecType As SecurityTypes, _
-                ByVal pTickSize As Double, _
-                ByVal pStartRequestedByApp As Boolean)
-Const ProcName As String = "deferredStart"
-On Error GoTo Err
-
-Static sStartRequestedByApp As Boolean
-Static sSecType As SecurityTypes
-Static sTickSize As Double
-
-If pStartRequestedByApp Then
-    sStartRequestedByApp = True
-Else
-    sSecType = pSecType
-    sTickSize = pTickSize
-End If
-
-If Not sStartRequestedByApp Then Exit Sub
-
-Set mTimeframe = createTimeframe(mTimeframes, mTimePeriod, mChartSpec, mExcludeCurrentBar)
-
-setupStudies sSecType
-LoadChart includeVolumeRegion(sSecType), createPriceFormatter(sSecType, sTickSize)
-
-Exit Sub
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Sub
 
 Private Function includeVolumeRegion( _
                 ByVal pSecType As SecurityTypes) As Boolean
@@ -1473,6 +1454,7 @@ Const ProcName As String = "setContractProperties"
 On Error GoTo Err
 
 If Not pContract Is Nothing Then
+    mSecType = pContract.Specifier.SecType
     mLocalSymbol = pContract.Specifier.LocalSymbol
     mExchange = pContract.Specifier.Exchange
     mTickSize = pContract.TickSize

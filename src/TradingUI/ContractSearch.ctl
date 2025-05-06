@@ -6,6 +6,15 @@ Begin VB.UserControl ContractSearch
    ClientTop       =   0
    ClientWidth     =   4800
    DefaultCancel   =   -1  'True
+   BeginProperty Font 
+      Name            =   "MS Sans Serif"
+      Size            =   8.25
+      Charset         =   0
+      Weight          =   400
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
    ScaleHeight     =   4605
    ScaleWidth      =   4800
    Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
@@ -71,6 +80,15 @@ Begin VB.UserControl ContractSearch
    End
    Begin VB.Label MessageLabel 
       Caption         =   "*** Error Message quite a long one really isn't it? ***"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   495
       Left            =   0
       TabIndex        =   1

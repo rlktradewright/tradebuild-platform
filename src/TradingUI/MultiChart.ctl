@@ -674,7 +674,7 @@ Public Function Add( _
                 Optional ByVal pUpdatePerTick As Boolean = True, _
                 Optional ByVal pInitialNumberOfBars As Long = -1, _
                 Optional ByVal pIncludeBarsOutsideSession As Boolean = False, _
-                Optional ByVal pDelayShow As Boolean) As Long
+                Optional ByVal pDeferStart As Boolean) As Long
 Const ProcName As String = "Add"
 On Error GoTo Err
 
@@ -700,18 +700,14 @@ gLogger.Log "Added button with index " & lButton.Index, ProcName, ModuleName
 ' the ChartStates.ChartStateRunning event
 fireChange MultiChartAdd
 
-If pDelayShow Then
-    lChart.SetupChart mTimeframes, pPeriodLength, lChartSpec, mStyle, pUpdatePerTick, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
-    resize
-Else
-    lChart.ShowChart mTimeframes, pPeriodLength, lChartSpec, mStyle, pUpdatePerTick, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
-End If
+lChart.SetupChart pDeferStart, mTimeframes, pPeriodLength, lChartSpec, mStyle, pUpdatePerTick, mBarFormatterLibManager, mBarFormatterFactoryName, mBarFormatterLibraryName, mExcludeCurrentBar, pTitle
+resize
 
 If Not mConfig Is Nothing Then
     lChart.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionMarketCharts).AddConfigurationSection(ConfigSectionMarketChart & "(" & GenerateGUIDString & ")")
 End If
 
-If Not pDelayShow Then
+If Not pDeferStart Then
     If mCurrentIndex > 0 Then ChartSelectorToolbar.Buttons(mCurrentIndex).Value = tbrUnpressed
     lButton.Value = tbrPressed
     
@@ -753,7 +749,7 @@ Set lChart = loadChartControl
 Dim lButton As MSComctlLib.Button
 Set lButton = addChartSelectorButton(pTimeframe.TimePeriod)
 
-' we notify the add before calling lChart.ShowChart so that it's before
+' we notify the add before calling lChart.ShowChartRaw so that it's before
 ' the ChartStates.ChartStateRunning event
 fireChange MultiChartAdd
 
@@ -1258,6 +1254,43 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
+Private Function displayChart( _
+                ByVal Index As Long) As MarketChart
+Const ProcName As String = "displayChart"
+On Error GoTo Err
+
+If Index = 0 Then Exit Function
+
+gLogger.Log "Showing chart " & Index, ProcName, ModuleName
+
+Dim lChart As MarketChart: Set lChart = getChartFromButtonIndex(Index)
+
+If lChart.State = ChartStates.ChartStateCreated Then lChart.Start
+
+If lChart.State = ChartStateRunning Then
+    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelDetail
+    lChart.EnableDrawing
+    ControlToolbar.Buttons("change").Enabled = True
+Else
+    ControlToolbar.Buttons("change").Enabled = False
+End If
+
+TBChart(getChartControlIndexFromButtonIndex(Index)).Align = AlignConstants.vbAlignTop
+TBChart(getChartControlIndexFromButtonIndex(Index)).Height = ChartSelectorToolbar.Top
+TBChart(getChartControlIndexFromButtonIndex(Index)).Visible = True
+
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, Index
+
+If Not mIsRaw Then TimeframeSelector1.SelectTimeframe lChart.TimePeriod
+
+Set displayChart = lChart
+
+Exit Function
+
+Err:
+gHandleUnexpectedError ProcName, ModuleName
+End Function
+
 Private Function generateTooltipText(ByVal pPeriodLength As TimePeriod) As String
 generateTooltipText = "Switch to " & pPeriodLength.ToString & " chart"
 End Function
@@ -1351,7 +1384,6 @@ On Error GoTo Err
 
 Load TBChart(TBChart.UBound + 1)
 TBChart(TBChart.UBound).Height = ChartSelectorToolbar.Top
-'resize
 mCount = mCount + 1
 Set loadChartControl = TBChart(TBChart.UBound).object
 
@@ -1402,43 +1434,6 @@ Exit Sub
 Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
-
-Private Function ShowChart( _
-                ByVal Index As Long) As MarketChart
-Const ProcName As String = "ShowChart"
-On Error GoTo Err
-
-If Index = 0 Then Exit Function
-
-gLogger.Log "Showing chart " & Index, ProcName, ModuleName
-
-Dim lChart As MarketChart: Set lChart = getChartFromButtonIndex(Index)
-
-If lChart.State = ChartStates.ChartStateCreated Then lChart.Start
-
-If lChart.State = ChartStateRunning Then
-    gLogger.Log "EnableDrawing", ProcName, ModuleName, LogLevelDetail
-    lChart.EnableDrawing
-    ControlToolbar.Buttons("change").Enabled = True
-Else
-    ControlToolbar.Buttons("change").Enabled = False
-End If
-
-TBChart(getChartControlIndexFromButtonIndex(Index)).Align = AlignConstants.vbAlignTop
-TBChart(getChartControlIndexFromButtonIndex(Index)).Height = ChartSelectorToolbar.Top
-TBChart(getChartControlIndexFromButtonIndex(Index)).Visible = True
-
-If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingCurrentChart, Index
-
-If Not mIsRaw Then TimeframeSelector1.SelectTimeframe lChart.TimePeriod
-
-Set ShowChart = lChart
-
-Exit Function
-
-Err:
-gHandleUnexpectedError ProcName, ModuleName
-End Function
 
 Private Sub showTimeframeSelector()
 Const ProcName As String = "showTimeframeSelector"
@@ -1502,7 +1497,7 @@ End If
 gLogger.Log "Selecting chart " & Index, ProcName, ModuleName
 gLogger.Log "Hide chart " & mCurrentIndex, ProcName, ModuleName
 hideChart mCurrentIndex
-ShowChart Index
+displayChart Index
 
 Exit Function
 
