@@ -113,9 +113,9 @@ Else
         mFutureBuilder.Value = lContract
         mFutureBuilder.Complete
     Else
-        Dim s As String: s = "Can't find contract with offset " & mExpiryOffset & ": " & mContractSpec.ToString
-        GContracts.Logger.Log s, ProcName, ModuleName, LogLevelDetail
-        mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, s, ""
+        GContracts.Logger.Log "Can't find contract with offset " & mExpiryOffset & ": " & mContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+        mFutureBuilder.Value = Nothing
+        mFutureBuilder.Complete
     End If
 End If
 

@@ -67,7 +67,6 @@ Private mSingleContractOnly                         As Boolean
 
 Private mGotAllSampleContracts                      As Boolean
 Private mOffsetContractsOutstanding                 As Long
-Private mOffsetContractErrorMessage                 As String
 
 Private mListener                                   As IContractFetchListener
 
@@ -377,13 +376,7 @@ Dim lContract As IContract
 
 If ev.Future.IsCancelled Then Exit Sub
 
-If Not ev.Future.IsFaulted Then
-    Set lContract = ev.Future.Value
-    GContracts.Logger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
-ElseIf ev.Future.ErrorNumber = ErrorCodes.ErrIllegalArgumentException Then
-    GContracts.Logger.Log ev.Future.ErrorMessage, ProcName, ModuleName, LogLevelDetail
-    mOffsetContractErrorMessage = ev.Future.ErrorMessage
-Else
+If ev.Future.IsFaulted Then
     mOffsetContractFutureWaiter.Clear
     If Not mListener Is Nothing Then mListener.FetchFailed _
                                             mContractsFutureBuilder.Cookie, _
@@ -393,6 +386,13 @@ Else
     mTaskContext.Error ev.Future.ErrorNumber, ev.Future.ErrorSource, ev.Future.ErrorMessage
     Set mSelfRef = Nothing
     Exit Sub
+End If
+
+Set lContract = ev.Future.Value
+If lContract Is Nothing Then
+    GContracts.Logger.Log "Required offset contract not found: " & mInitialContractSpec.ToString, ProcName, ModuleName, LogLevelDetail
+Else
+    GContracts.Logger.Log "Got required offset contract: " & lContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
 End If
 
 mOffsetContractsOutstanding = mOffsetContractsOutstanding - 1
@@ -581,34 +581,25 @@ On Error GoTo Err
 
 Dim lContracts As IContracts: Set lContracts = mContractsBuilder.Contracts
 
-If lContracts.Count = 0 And _
-    mOffsetContractErrorMessage = "" And _
-    Not mUsedSecondaryContractStore _
-Then
+If lContracts.Count = 0 And Not mUsedSecondaryContractStore Then
     If trySecondaryContractStore Then Exit Sub
 End If
 
 If mSingleContractOnly Then
     mFutureWaiter.Add mContractFutureBuilder.Future, mCallerCookie
-    If mOffsetContractErrorMessage <> "" Then
-        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, mOffsetContractErrorMessage, ""
-    ElseIf lContracts.Count = 1 Then
-        If mContractFutureBuilder.Future.IsPending Then
+    If mContractFutureBuilder.Future.IsPending Then
+        If lContracts.Count = 0 Then
+            mContractFutureBuilder.Value = Nothing
+        ElseIf lContracts.Count = 1 Then
             mContractFutureBuilder.Value = lContracts.ItemAtIndex(1)
-            mContractFutureBuilder.Complete
         End If
-    Else
-        mContractFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "No such contract", ""
+        mContractFutureBuilder.Complete
     End If
 Else
     mFutureWaiter.Add mContractsFutureBuilder.Future, mCallerCookie
-    If mOffsetContractErrorMessage <> "" And lContracts.Count = 0 Then
-        mContractsFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, mOffsetContractErrorMessage, ""
-    Else
-        If mContractsFutureBuilder.Future.IsPending Then
-            mContractsFutureBuilder.Value = lContracts
-            mContractsFutureBuilder.Complete
-        End If
+    If mContractsFutureBuilder.Future.IsPending Then
+        mContractsFutureBuilder.Value = lContracts
+        mContractsFutureBuilder.Complete
     End If
 End If
 
