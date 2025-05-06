@@ -316,6 +316,7 @@ Clone.InputValueNames = mInputValueNames
 Clone.Name = mName
 Clone.Parameters = mParameters.Clone
 Clone.StudyLibraryName = mStudyLibraryName
+Clone.Study = mStudy
 
 Dim newHrs As StudyHorizontalRules
 Set newHrs = Clone.StudyHorizontalRules
@@ -329,8 +330,6 @@ For Each hr In mStudyHorizontalRules
     newHr.Thickness = hr.Thickness
     newHr.Y = hr.Y
 Next
-
-Clone.Study = mStudy
 
 Dim newSvcs As StudyValueConfigurations
 Set newSvcs = Clone.StudyValueConfigurations

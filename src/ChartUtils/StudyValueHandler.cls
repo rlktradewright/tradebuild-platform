@@ -581,7 +581,12 @@ sCurrentBarNumber = ev.sVal.BarNumber
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError ProcName, ModuleName, _
+                    pErrorDesc:=Err.Description & ": sVal={" & _
+                    "BarNumber=" & ev.sVal.BarNumber & _
+                    ", Timestamp=" & FormatTimestamp(ev.sVal.timestamp, TimestampDateAndTimeISO8601) & _
+                    ", Value=" & ev.sVal.Value & _
+                    "}"
 End Sub
 
 Private Sub processLine( _

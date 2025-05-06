@@ -458,6 +458,7 @@ If Not mConfig Is Nothing Then
     
     Dim studyConfig As StudyConfiguration
     Set studyConfig = New StudyConfiguration
+    AssertArgument Not pBaseStudy Is Nothing, "pBaseStudy is Nothing"
     studyConfig.Study = pBaseStudy
     studyConfig.UnderlyingStudy = mStudyManager.GetUnderlyingStudy(pBaseStudy)
     
@@ -603,6 +604,7 @@ inputDescr = mStudyManager.GetInputDescriptor(inputHandle)
 
 Dim lInputHandler As IStudy
 Set lInputHandler = inputDescr.StudyInputHandler
+Assert Not lInputHandler Is Nothing, "lInputHandler is NOthing"
 
 Dim studyConfig As StudyConfiguration
 If mAllStudyConfigs.Contains(lInputHandler.ID) Then
@@ -707,6 +709,8 @@ On Error GoTo Err
 Assert Not mBaseStudy Is Nothing, "Base Study has not yet been set"
 AssertArgument Not studyConfig Is Nothing, "studyConfig is nothing"
 
+gLogger.Log "Adding study: " & studyConfig.Name, ProcName, ModuleName
+
 If studyConfig.UnderlyingStudy Is Nothing Then
     studyConfig.UnderlyingStudy = mBaseStudy
 End If
@@ -720,8 +724,11 @@ Set lStudy = mStudyManager.AddStudy(studyConfig.Name, _
                             studyConfig.StudyLibraryName)
 
 AssertArgument Not lStudy Is mBaseStudy, "Use the BaseStudyConfiguration property to set the base Study config"
+Assert Not lStudy Is Nothing, "lStudy Is Nothing"
 
 studyConfig.Study = lStudy
+gLogger.Log "StudyConfig (" & studyConfig.Name & ") is : " & GetObjectKey(mBaseStudyConfig), ProcName, ModuleName
+gLogger.Log "mBaseStudyConfig is now: " & GetObjectKey(mBaseStudyConfig), ProcName, ModuleName
 
 Set AddStudy = lStudy
 
@@ -1108,6 +1115,7 @@ If Not mBaseStudyConfig Is Nothing Then
     mBaseStudyConfig.RemoveFromConfig
 End If
 
+gLogger.Log "mBaseStudyConfig is: " & GetObjectKey(studyConfig), ProcName, ModuleName
 Set mBaseStudyConfig = studyConfig
 Set mBaseStudy = studyConfig.Study
 

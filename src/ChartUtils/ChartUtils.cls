@@ -119,6 +119,8 @@ On Error GoTo Err
 Dim lStudy As IStudy
 Set lStudy = pTimeframe.BarStudy
 
+Assert Not lStudy Is Nothing, "lStudy Is Nothing"
+
 Dim studyConfig As StudyConfiguration
 Set studyConfig = gGetDefaultStudyConfiguration(lStudy.Name, pStudyLibManager, lStudy.LibraryName)
 studyConfig.Study = lStudy
