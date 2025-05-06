@@ -120,7 +120,8 @@ Private mTotalBarsRetrieved                         As Long
 Private WithEvents mTargetBarsBuilder               As BarsBuilder
 Attribute mTargetBarsBuilder.VB_VarHelpID = -1
 
-Private mAccumulatedVolume                          As Long
+Private mAccumulatedVolume                          As BoxedDecimal
+
 Private mCurrentBar                                 As Bar
 
 Private mTwsContract                                As TwsContract
@@ -154,6 +155,7 @@ ReDim mTWSBarsCollections(3) As EnumerableCollection
 mRequesterID = NullIndex
 Set mFutureWaiter = New FutureWaiter
 Set mFutureBuilder = New FutureBuilder
+Set mAccumulatedVolume = DecimalZero
 End Sub
 
 '@================================================================================
@@ -218,7 +220,7 @@ ElseIf mState = DataRetrieved Then
     Else
         mCurrTWSBarsCollectionIndex = mTWSBarsCollectionsIndex - 1
     
-        mAccumulatedVolume = 0
+        Set mAccumulatedVolume = DecimalZero
         
         mState = ProcessingBars
     
@@ -1313,7 +1315,7 @@ Then
 Else
     Dim lChange As SessionEventData
     lChange = pSessionBuilder.SetSessionCurrentTime(pTimeStamp)
-    If lChange.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
+    If lChange.ChangeType = SessionChangeStart Then Set mAccumulatedVolume = DecimalZero
     
     If Not mIsFromDateCalculated And pTimeStamp < pFromDate Then
         notifyTimestamp = False
@@ -1350,7 +1352,7 @@ End If
 
 mFirstBarTimeInMessage = 0
 mNumberOfBarsInMessage = 0
-mAccumulatedVolume = 0
+Set mAccumulatedVolume = DecimalZero
 
 Exit Sub
 
@@ -1374,7 +1376,7 @@ mTotalTwsBarsProcessed = mTotalTwsBarsProcessed + 1
 
 Dim lSessEv As SessionEventData
 lSessEv = mTargetSessionBuilder.SetSessionCurrentTime(lTimestamp)
-If lSessEv.ChangeType = SessionChangeStart Then mAccumulatedVolume = 0
+If lSessEv.ChangeType = SessionChangeStart Then Set mAccumulatedVolume = DecimalZero
 
 mTargetBarsBuilder.NotifyBar lTimestamp, _
                             pBar.OpenValue, _
@@ -1384,7 +1386,7 @@ mTargetBarsBuilder.NotifyBar lTimestamp, _
                             pBar.Volume, _
                             pBar.TickVolume
                             
-mAccumulatedVolume = mAccumulatedVolume + pBar.Volume
+Set mAccumulatedVolume = mAccumulatedVolume.Add(pBar.Volume)
 
 Exit Sub
 
