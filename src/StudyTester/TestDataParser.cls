@@ -248,13 +248,13 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function getVolume(ByRef pTokens() As String) As Long
+Private Function getVolume(ByRef pTokens() As String) As BoxedDecimal
 Const ProcName As String = "getVolume"
 On Error GoTo Err
 
 Dim vol As String
 vol = getToken(pTokens, TestDataFileColumns.Volume)
-If vol <> "" Then getVolume = CLng(vol)
+If vol <> "" Then getVolume = CreateBoxedDecimal(vol)
 
 Exit Function
 
