@@ -37,6 +37,7 @@ Class=InputMessageParser; InputMessageParser.cls
 Class=TwsSoftDollarTier; TwsSoftDollarTier.cls
 Module=GIdManager; GIdManager.bas
 Module=GIBApi; GIBApi.bas
+Class=TwsContracts; TwsContracts.cls
 Startup="(None)"
 HelpFile=""
 Title="IBAPI"

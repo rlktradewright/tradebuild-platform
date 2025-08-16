@@ -128,6 +128,19 @@ Public Property Get Exchange() As String
 Exchange = mExchange
 End Property
 
+Public Property Get Key() As String
+Key = LocalSymbol & "|" & _
+    CStr(SecType) & "|" & _
+    Symbol & "|" & _
+    TradingClass & "|" & _
+    Expiry & "|" & _
+    Strike & "|" & _
+    OptRight & "|" & _
+    Exchange & "|" & _
+    CurrencyCode & "|" & _
+    Multiplier
+End Property
+
 Public Property Let LocalSymbol(ByVal Value As String)
 mLocalSymbol = Value
 End Property

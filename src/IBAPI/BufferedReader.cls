@@ -172,7 +172,7 @@ End If
 Exit Sub
 
 Err:
-'gIB.HandleUnexpectedError ProcName, ModuleName
+GIB.HandleUnexpectedError Nothing, ProcName, ModuleName
 End Sub
 
 Friend Sub ClearBuffer()

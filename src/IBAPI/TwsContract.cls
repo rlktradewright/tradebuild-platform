@@ -136,6 +136,10 @@ Public Property Get Industry() As String
 Industry = mIndustry
 End Property
 
+Public Property Get Key() As String
+Key = mSpecifier.Key
+End Property
+
 Public Property Let LiquidHours(ByVal Value As String)
 mLiquidHours = Value
 End Property
