@@ -116,8 +116,8 @@ ElseIf ev.Future.IsFaulted Then
 ElseIf TypeOf ev.Future.Value Is IContract Then
     Set mContract = ev.Future.Value
     processContract mContract
-ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
-    Dim lTwsContracts As EnumerableCollection
+ElseIf TypeOf ev.Future.Value Is TwsContracts Then
+    Dim lTwsContracts As TwsContracts
     Set lTwsContracts = ev.Future.Value
     If lTwsContracts.Count = 0 Then
         mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract not found", ProjectName & "." & ModuleName & ":" & ProcName
@@ -125,7 +125,7 @@ ElseIf TypeOf ev.Future.Value Is EnumerableCollection Then
         mFutureBuilder.Fail ErrorCodes.ErrIllegalArgumentException, "Contract's specifier is not uniquely specified", ProjectName & "." & ModuleName & ":" & ProcName
     Else
         GIBEnhApi.Logger.Log "TwsContract retrieved for IContract: " & mContract.Specifier.ToString, ProcName, ModuleName, LogLevelDetail
-        mFutureBuilder.Value = lTwsContracts.Item(1)
+        mFutureBuilder.Value = lTwsContracts.ItemAtIndex(1)
         mFutureBuilder.Complete
         Set mSelfRef = Nothing
     End If

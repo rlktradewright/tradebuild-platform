@@ -182,11 +182,10 @@ Else
 End If
 
 lEntry.CacheDate = Now
-Dim lContractsBuilder As New ContractsBuilder
-lContractsBuilder.Add pContract
-lContractsBuilder.ContractSpecifier = pContract.Specifier
-Set lEntry.Contracts = lContractsBuilder.Contracts
-If lEntry.TwsContracts Is Nothing Then Set lEntry.TwsContracts = New EnumerableCollection
+If lEntry.ContractsBuilder Is Nothing Then Set lEntry.ContractsBuilder = New ContractsBuilder
+lEntry.ContractsBuilder.Add pContract
+lEntry.ContractsBuilder.ContractSpecifier = pContract.Specifier
+If lEntry.TwsContracts Is Nothing Then Set lEntry.TwsContracts = New TwsContracts
 lEntry.TwsContracts.Add pTwsContract
 mContractEntries.Add lEntry, pKey
 GIBEnhApi.Logger.Log "Added 1 contract to cache for key: " & pKey, ProcName, ModuleName, LogLevelDetail
@@ -307,10 +306,10 @@ If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
 
 If Not lEntry.ContractsFutureBuilder Is Nothing Then
 Else
-    Assert lEntry.Contracts.Count = 1, "Contract is not uniquely specified"
+    Assert lEntry.ContractsBuilder.Contracts.Count = 1, "Contract is not uniquely specified"
     GetContract = True
-    Set pContract = lEntry.Contracts.ItemAtIndex(1)
-    Set pTwsContract = lEntry.TwsContracts(1)
+    Set pContract = lEntry.ContractsBuilder.Contracts.ItemAtIndex(1)
+    Set pTwsContract = lEntry.TwsContracts.ItemAtIndex(1)
     GIBEnhApi.Logger.Log "Retrieved 1 contract from cache for key", _
                 ProcName, ModuleName, LogLevelMediumDetail, _
                 pContractSpec.Key
@@ -325,7 +324,7 @@ End Function
 Friend Function GetContracts( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByRef pContracts As IContracts, _
-                ByRef pTwsContracts As EnumerableCollection) As Boolean
+                ByRef pTwsContracts As TwsContracts) As Boolean
 Const ProcName As String = "GetContracts"
 On Error GoTo Err
 
@@ -337,11 +336,11 @@ If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
 If Not lEntry.ContractsFutureBuilder Is Nothing Then
 Else
     GetContracts = True
-    Set pContracts = lEntry.Contracts
+    Set pContracts = lEntry.ContractsBuilder.Contracts
     Set pTwsContracts = lEntry.TwsContracts
     GIBEnhApi.Logger.Log "Retrieved " & _
-                lEntry.Contracts.Count & _
-                IIf(lEntry.Contracts.Count = 1, " contract", " contracts") & _
+                lEntry.ContractsBuilder.Contracts.Count & _
+                IIf(lEntry.ContractsBuilder.Contracts.Count = 1, " contract", " contracts") & _
                 " from cache for key", _
                 ProcName, ModuleName, LogLevelMediumDetail, _
                 pContractSpec.Key
@@ -356,7 +355,7 @@ End Function
 Friend Function GetContractsFutureBuilder( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByRef pContractsFutureBuilder As FutureBuilder, _
-                ByRef pTwsContracts As EnumerableCollection) As Boolean
+                ByRef pTwsContracts As TwsContracts) As Boolean
 Const ProcName As String = "GetContractsFutureBuilder"
 On Error GoTo Err
 
@@ -502,7 +501,7 @@ End Function
 Friend Sub SetContractsFutureBuilder( _
                 ByVal pContractSpec As IContractSpecifier, _
                 ByVal pContractsFutureBuilder As FutureBuilder, _
-                ByVal pTwsContracts As EnumerableCollection, _
+                ByVal pTwsContracts As TwsContracts, _
                 ByVal pClientID As Long)
 Const ProcName As String = "SetContractsFutureBuilder"
 On Error GoTo Err

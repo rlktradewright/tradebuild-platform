@@ -63,7 +63,7 @@ Private mCookie                                     As Variant
 
 Private mReturnTwsContracts                         As Boolean
 
-Private mTwsContracts                               As EnumerableCollection
+Private mTwsContracts                               As TwsContracts
 
 Private mContractCache                              As ContractCache
 
@@ -78,7 +78,7 @@ Private mSelfRef                                    As Object
 
 Private Sub Class_Initialize()
 Set mFutureWaiter = New FutureWaiter
-Set mTwsContracts = New EnumerableCollection
+Set mTwsContracts = New TwsContracts
 Set mResultsContractsFutureBuilder = New FutureBuilder
 Set mFetchers = New EnumerableCollection
 End Sub
@@ -169,7 +169,7 @@ mReturnTwsContracts = pReturnTwsContracts
 GIBEnhApi.Logger.Log "Fetch " & IIf(mReturnTwsContracts, "TWS ", "") & "contracts for: " & mContractSpecifier.ToString, ProcName, ModuleName, LogLevelMediumDetail
 
 Dim lCachedContracts As IContracts
-Dim lCachedTwsContracts As EnumerableCollection
+Dim lCachedTwsContracts As TwsContracts
 
 If Not mContractCache.GetContracts( _
                 mContractSpecifier, _
@@ -397,7 +397,7 @@ End Sub
 
 Private Sub replayCachedContracts( _
                 pCachedContracts As IContracts, _
-                pCachedTwsContracts As EnumerableCollection)
+                pCachedTwsContracts As TwsContracts)
 Const ProcName As String = "replayCachedContracts"
 On Error GoTo Err
 

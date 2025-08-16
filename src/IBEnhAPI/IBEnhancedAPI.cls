@@ -63,9 +63,10 @@ End Enum
 
 Public Type ContractCacheEntry
     ClientID                As Long
+    ContractsBuilder        As ContractsBuilder
     ContractsFutureBuilder  As FutureBuilder
     Contracts               As IContracts
-    TwsContracts            As EnumerableCollection
+    TwsContracts            As TwsContracts
     CacheDate               As Date
 End Type
 

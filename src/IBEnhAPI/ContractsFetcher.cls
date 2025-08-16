@@ -61,7 +61,7 @@ Private mContractsForCachingBuilder                 As ContractsBuilder
 
 Private mCachedContracts                            As IContracts
 Private mResolvedContracts                          As EnumerableCollection
-Private mTwsContracts                               As EnumerableCollection
+Private mTwsContracts                               As TwsContracts
 
 Private mContractCache                              As ContractCache
 
@@ -142,7 +142,7 @@ Set lContract = GIBEnhancedApi.TwsContractToContract(pTwsContract)
 
 If Not mContractsForCachingBuilder.Contracts.Contains(lContract.Specifier) Then
     addCacheEntries lContract, pTwsContract
-    If Not mTwsContracts.Contains(pTwsContract) Then mTwsContracts.Add pTwsContract
+    If Not mTwsContracts.Contains(pTwsContract.Specifier) Then mTwsContracts.Add pTwsContract
     mContractsForCachingBuilder.Add lContract
     processPriceIncrementRuleset lContract
 
@@ -386,7 +386,7 @@ End Sub
 Friend Sub ReplayContracts( _
                 ByVal pRequestManager As ContractsRequestManager, _
                 ByVal pContracts As IContracts, _
-                ByVal pTwsContracts As EnumerableCollection)
+                ByVal pTwsContracts As TwsContracts)
 Const ProcName As String = "ReplayContracts"
 On Error GoTo Err
 
@@ -457,7 +457,7 @@ Private Sub fetchContractsFromIBApi( _
 Const ProcName As String = "fetchContractsFromIBApi"
 On Error GoTo Err
 
-Set mTwsContracts = New EnumerableCollection
+Set mTwsContracts = New TwsContracts
 Set mContractsForCachingFutureBuilder = New FutureBuilder
 Set mContractsForCachingBuilder = New ContractsBuilder
 mContractsForCachingBuilder.ContractSpecifier = pContractSpec
