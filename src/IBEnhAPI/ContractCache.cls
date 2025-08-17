@@ -304,16 +304,16 @@ If pContractSpec.SecType = SecTypeCombo Then Exit Function
 Dim lEntry As ContractCacheEntry
 If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
 
-If Not lEntry.ContractsFutureBuilder Is Nothing Then
-Else
-    Assert lEntry.ContractsBuilder.Contracts.Count = 1, "Contract is not uniquely specified"
-    GetContract = True
-    Set pContract = lEntry.ContractsBuilder.Contracts.ItemAtIndex(1)
-    Set pTwsContract = lEntry.TwsContracts.ItemAtIndex(1)
-    GIBEnhApi.Logger.Log "Retrieved 1 contract from cache for key", _
-                ProcName, ModuleName, LogLevelMediumDetail, _
-                pContractSpec.Key
-End If
+If Not lEntry.ContractsFutureBuilder Is Nothing Then Exit Function
+
+If lEntry.Contracts Is Nothing Then Set lEntry.Contracts = lEntry.ContractsBuilder.Contracts
+Assert lEntry.Contracts.Count = 1, "Contract is not uniquely specified"
+GetContract = True
+Set pContract = lEntry.Contracts.ItemAtIndex(1)
+Set pTwsContract = lEntry.TwsContracts.ItemAtIndex(1)
+GIBEnhApi.Logger.Log "Retrieved 1 contract from cache for key", _
+                    ProcName, ModuleName, LogLevelMediumDetail, _
+                    pContractSpec.Key
 
 Exit Function
 
@@ -333,18 +333,18 @@ If pContractSpec.SecType = SecTypeCombo Then Exit Function
 Dim lEntry As ContractCacheEntry
 If Not tryGetContractCacheEntry(pContractSpec.Key, lEntry) Then Exit Function
 
-If Not lEntry.ContractsFutureBuilder Is Nothing Then
-Else
-    GetContracts = True
-    Set pContracts = lEntry.ContractsBuilder.Contracts
-    Set pTwsContracts = lEntry.TwsContracts
-    GIBEnhApi.Logger.Log "Retrieved " & _
-                lEntry.ContractsBuilder.Contracts.Count & _
-                IIf(lEntry.ContractsBuilder.Contracts.Count = 1, " contract", " contracts") & _
-                " from cache for key", _
-                ProcName, ModuleName, LogLevelMediumDetail, _
-                pContractSpec.Key
-End If
+If Not lEntry.ContractsFutureBuilder Is Nothing Then Exit Function
+
+GetContracts = True
+If lEntry.Contracts Is Nothing Then Set lEntry.Contracts = lEntry.ContractsBuilder.Contracts
+Set pContracts = lEntry.Contracts
+Set pTwsContracts = lEntry.TwsContracts
+GIBEnhApi.Logger.Log "Retrieved " & _
+                    lEntry.Contracts.Count & _
+                    IIf(lEntry.Contracts.Count = 1, " contract", " contracts") & _
+                    " from cache for key", _
+                    ProcName, ModuleName, LogLevelMediumDetail, _
+                    pContractSpec.Key
 
 Exit Function
 
