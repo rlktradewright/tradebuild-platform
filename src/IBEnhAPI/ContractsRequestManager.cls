@@ -318,7 +318,7 @@ Friend Sub NotifyTwsContract( _
 Const ProcName As String = "NotifyTwsContract"
 On Error GoTo Err
 
-If Not mTwsContracts.Contains(pTwsContract) Then
+If Not mTwsContracts.Contains(pTwsContract.Specifier) Then
     mTwsContracts.Add pTwsContract
 End If
 
