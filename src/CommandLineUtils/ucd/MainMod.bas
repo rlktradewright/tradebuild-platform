@@ -155,7 +155,9 @@ Do While inString <> gCon.EofString
             Dim Class As String
             
             Class = Trim$(Right$(inString, Len(inString) - Len(ClassCommand)))
+            gCon.WriteLineToConsole ""
             gCon.WriteLineToConsole "Using contract class " & Class
+            gCon.WriteLineToConsole ""
             Set gInstrumentClass = gDb.InstrumentClassFactory.LoadByName(Class)
             If gInstrumentClass Is Nothing Then
                 gCon.WriteErrorLine Class & " is not a valid contract class"
