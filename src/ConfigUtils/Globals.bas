@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "ConfigUtils27"
+Public Const ProjectName                            As String = "ConfigLib"
 Private Const ModuleName                            As String = "Globals"
 
 '@================================================================================
