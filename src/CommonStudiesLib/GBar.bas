@@ -185,7 +185,7 @@ End Function
 Public Sub gNotifyBarValues( _
                 ByVal pSource As Object, _
                 ByVal pStudyFoundation As StudyFoundation, _
-                ByVal pCurrentBar As BarUtils27.Bar, _
+                ByVal pCurrentBar As BarLib.Bar, _
                 ByVal pTimestamp As Date)
 Const ProcName As String = "gNotifyBarValues"
 On Error GoTo Err
@@ -212,13 +212,13 @@ If pCurrentBar.OpenChanged Then
 End If
 
 If pCurrentBar.HighChanged Then
-    evOut.sVal.Value = pCurrentBar.highValue
+    evOut.sVal.Value = pCurrentBar.HighValue
     evOut.valueName = BarStudyValueHigh
     pStudyFoundation.notifyValue evOut
 End If
 
 If pCurrentBar.LowChanged Then
-    evOut.sVal.Value = pCurrentBar.lowValue
+    evOut.sVal.Value = pCurrentBar.LowValue
     evOut.valueName = BarStudyValueLow
     pStudyFoundation.notifyValue evOut
 End If

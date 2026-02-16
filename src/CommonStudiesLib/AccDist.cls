@@ -73,7 +73,7 @@ Private mVolume As BoxedDecimal
 
 'Private mBarsBuilder As BarsBuilder
 'Private mBars As Bars
-'Private mCurrentBar As BarUtils27.Bar
+'Private mCurrentBar As BarLib.Bar
 'Private mCurrentBarVolume As BoxedDecimal
 
 '@================================================================================

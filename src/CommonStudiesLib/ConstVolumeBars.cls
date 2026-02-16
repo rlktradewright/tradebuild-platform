@@ -68,7 +68,7 @@ Attribute mBarStudySupport.VB_VarHelpID = -1
 
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private WithEvents mBar As Barutils27.Bar
+Private WithEvents mBar As BarLib.Bar
 Attribute mBar.VB_VarHelpID = -1
 
 Private mPriceTickSize As Double
@@ -267,7 +267,7 @@ End Sub
 Private Function customGetStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As SValue
-Dim Bar As Barutils27.Bar
+Dim Bar As BarLib.Bar
 Dim sv As SValue
 
 Const ProcName As String = "customGetStudyValue"
@@ -285,9 +285,9 @@ Case UCase$(BarStudyValueBar)
 Case UCase$(BarStudyValueOpen)
         sv.Value = Bar.OpenValue
 Case UCase$(BarStudyValueHigh)
-        sv.Value = Bar.highValue
+        sv.Value = Bar.HighValue
 Case UCase$(BarStudyValueLow)
-        sv.Value = Bar.lowValue
+        sv.Value = Bar.LowValue
 Case UCase$(BarStudyValueClose), UCase$(DefaultStudyValueName)
         sv.Value = Bar.CloseValue
 Case UCase$(BarStudyValueTickVolume)
