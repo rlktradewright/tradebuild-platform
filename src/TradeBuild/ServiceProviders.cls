@@ -383,7 +383,7 @@ Assert Not IsAnyServiceProviderConfigured, "Service providers have already been 
 mPermittedServiceProviderRoles = pPermittedServiceProviderRoles
 
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleRealtimeData Then
-    Add "IBTWSSP27.RealtimeDataServiceProvider", _
+    Add "IBTWSSPLib.RealtimeDataServiceProvider", _
         True, _
         "Server=" & pTwsServer & _
         ";Port=" & pTwsPort & _
@@ -395,7 +395,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleRealtimeData Th
         
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataPrimary Then
-    Add "IBTWSSP27.ContractInfoServiceProvider", _
+    Add "IBTWSSPLib.ContractInfoServiceProvider", _
         True, _
         "Server=" & pTwsServer & _
         ";Port=" & pTwsPort & _
@@ -409,7 +409,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleContractDataSec
     ' not relevant in default scenario
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleHistoricalDataInput Then
-    Add "IBTWSSP27.HistDataServiceProvider", _
+    Add "IBTWSSPLib.HistDataServiceProvider", _
         True, _
         "Server=" & pTwsServer & _
         ";Port=" & pTwsPort & _
@@ -429,7 +429,7 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderPersistenc
         "Default Order Persistence Service Provider"
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmissionLive Then
-    Add "IBTWSSP27.OrderSubmissionSrvcProvider", _
+    Add "IBTWSSPLib.OrderSubmissionSrvcProvider", _
         True, _
         "Server=" & pTwsServer & _
         ";Port=" & pTwsPort & _
@@ -446,14 +446,14 @@ If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleOrderSubmission
 
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileInput Then
-    Add "TickfileSP27.TickfileServiceProvider", _
+    Add "TickfileSPLib.TickfileServiceProvider", _
         True, _
         "Access Mode=Read only" & _
         ";Tickfile Path=" & pTickfilesPath, _
         "Default Tickfile Data Input Service Provider"
 End If
 If mPermittedServiceProviderRoles And ServiceProviderRoles.SPRoleTickfileOutput Then
-    Add "TickfileSP27.TickfileServiceProvider", _
+    Add "TickfileSPLib.TickfileServiceProvider", _
         True, _
         "Access Mode=Write only" & _
         ";Tickfile Path=" & pTickfilesPath, _

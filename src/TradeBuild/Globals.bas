@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "TradeBuild27"
+Public Const ProjectName                            As String = "TradeBuild"
 Private Const ModuleName                            As String = "Globals"
 
 Public Const AttributeNameEnabled                   As String = "Enabled"
@@ -31,22 +31,18 @@ Public Const ConfigSettingUseExchangeTimezone       As String = "&UseExchangeTim
 
 Public Const DefaultWorkspaceName                   As String = "Default"
 
-'Public Const ProgIdQtBarData                        As String = "QTSP27.QTHistDataServiceProvider"
-'Public Const ProgIdQtRealtimeData                   As String = "QTSP27.QTRealtimeDataServiceProvider"
-'Public Const ProgIdQtTickData                       As String = "QTSP27.QTTickfileServiceProvider"
+Public Const ProgIdTbBarData                        As String = "TBInfoBaseLib.HistDataServiceProvider"
+Public Const ProgIdTbContractData                   As String = "TBInfoBaseLib.ContractInfoSrvcProvider"
+Public Const ProgIdTbOrderPersistence               As String = "TradeBuildLib.OrderPersistenceSP"
+Public Const ProgIdTbOrders                         As String = "TradeBuildLib.OrderSimulatorSP"
+Public Const ProgIdTbTickData                       As String = "TBInfoBaseLib.TickfileServiceProvider"
 
-Public Const ProgIdTbBarData                        As String = "TBInfoBase27.HistDataServiceProvider"
-Public Const ProgIdTbContractData                   As String = "TBInfoBase27.ContractInfoSrvcProvider"
-Public Const ProgIdTbOrderPersistence               As String = "TradeBuild27.OrderPersistenceSP"
-Public Const ProgIdTbOrders                         As String = "TradeBuild27.OrderSimulatorSP"
-Public Const ProgIdTbTickData                       As String = "TBInfoBase27.TickfileServiceProvider"
+Public Const ProgIdFileTickData                     As String = "TickfileSPLib.TickfileServiceProvider"
 
-Public Const ProgIdFileTickData                     As String = "TickfileSP27.TickfileServiceProvider"
-
-Public Const ProgIdTwsBarData                       As String = "IBTWSSP27.HistDataServiceProvider"
-Public Const ProgIdTwsContractData                  As String = "IBTWSSP27.ContractInfoServiceProvider"
-Public Const ProgIdTwsOrders                        As String = "IBTWSSP27.OrderSubmissionSrvcProvider"
-Public Const ProgIdTwsRealtimeData                  As String = "IBTWSSP27.RealtimeDataServiceProvider"
+Public Const ProgIdTwsBarData                       As String = "IBTWSSPLib.HistDataServiceProvider"
+Public Const ProgIdTwsContractData                  As String = "IBTWSSPLib.ContractInfoServiceProvider"
+Public Const ProgIdTwsOrders                        As String = "IBTWSSPLib.OrderSubmissionSrvcProvider"
+Public Const ProgIdTwsRealtimeData                  As String = "IBTWSSPLib.RealtimeDataServiceProvider"
 
 Public Const PropertyNameRole                       As String = "Role"
 
@@ -81,7 +77,7 @@ Public Const SrvcProviderNameTickfileInput          As String = "Tickfile replay
 Public Const SrvcProviderNameTickfileOutput         As String = "Tickfile storage"
 Public Const SrvcProviderNameOrderPersistence       As String = "Order persistence"
 
-Public Const ServiceProvidersRenderer               As String = "TradeBuildUI27.SPConfigurer"
+Public Const ServiceProvidersRenderer               As String = "TradeBuildUI.SPConfigurer"
 
 '@================================================================================
 ' Enums

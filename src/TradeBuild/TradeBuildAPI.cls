@@ -325,7 +325,7 @@ Public Function FetchContracts( _
 Const ProcName As String = "FetchContracts"
 On Error GoTo Err
 
-Set FetchContracts = ContractUtils27.FetchContracts(pContractSpec, mServiceProviders.ContractStorePrimary, , mServiceProviders.ContractStoreSecondary, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, pCookie)
+Set FetchContracts = ContractLib.FetchContracts(pContractSpec, mServiceProviders.ContractStorePrimary, , mServiceProviders.ContractStoreSecondary, PriorityNormal, "LoadContracts/" & pContractSpec.ToString, pCookie)
 
 Exit Function
 
@@ -454,8 +454,8 @@ mServiceProviders.ConfigureDefaultServiceProviders pPermittedServiceProviderRole
                                                     pTickfilesPath, _
                                                     pOrderPersistenceFilePath
 
-mStudyLibraryManager.AddStudyLibrary "CmnStudiesLib27.StudyLib", True, "Built-in"
-mBarFormatterLibManager.AddBarFormatterLibrary "BarFormatters27.BarFormattersLib", True, "Built-in"
+mStudyLibraryManager.AddStudyLibrary "CommonStudiesLib.StudyLib", True, "Built-in"
+mBarFormatterLibManager.AddBarFormatterLibrary "BarFormatterLib.BarFormattersLib", True, "Built-in"
 
 Exit Sub
 
