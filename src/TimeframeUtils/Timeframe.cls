@@ -130,7 +130,7 @@ Else
     Dim lBarSpec As BarDataSpecifier
     
     #If SingleDll = 0 Then
-    Set lBarSpec = HistDataUtils27.CreateBarDataSpecifier( _
+    Set lBarSpec = HistDataLib.CreateBarDataSpecifier( _
                         mTimePeriod, _
                         mFromTime, _
                         mToTime, _

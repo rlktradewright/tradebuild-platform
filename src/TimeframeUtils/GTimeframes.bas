@@ -26,10 +26,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-#If SingleDll = 0 Then
-Public Const ProjectName                            As String = "TimeframeUtils27"
-#End If
-
 Private Const ModuleName                            As String = "GTimeframes"
 
 '@================================================================================
@@ -54,7 +50,7 @@ Private Const ModuleName                            As String = "GTimeframes"
 
 Public Property Get Logger() As FormattingLogger
 Static sLogger As FormattingLogger
-If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("timeframeutils", ProjectName)
+If sLogger Is Nothing Then Set sLogger = CreateFormattingLogger("timeframeutils", App.EXEName)
 Set Logger = sLogger
 End Property
 
@@ -75,7 +71,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-TWUtilities.HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+TWUtilities.HandleUnexpectedError pProcedureName, App.EXEName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
 Public Sub NotifyUnhandledError( _
@@ -89,7 +85,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-TWUtilities.UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+TWUtilities.UnhandledErrorHandler.Notify pProcedureName, pModuleName, App.EXEName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 '@================================================================================
