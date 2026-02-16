@@ -254,7 +254,7 @@ Private Property Get IMarketDataSource_Handle() As Long
 IMarketDataSource_Handle = Handle
 End Property
 
-Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickUtils27.TickTypes) As Boolean
+Private Property Get IMarketDataSource_HasCurrentTick(ByVal pTickType As TickLib.TickTypes) As Boolean
 IMarketDataSource_HasCurrentTick = HasCurrentTick(pTickType)
 End Property
 
@@ -943,7 +943,12 @@ If mTimeframes Is Nothing Then
     Assert Me.State = MarketDataSourceStateReady Or _
             Me.State = MarketDataSourceStatePaused Or _
             Me.State = MarketDataSourceStateRunning, "Ticker state must be Ready, Paused or Running"
-    Set mTimeframes = CreateTimeframes(StudyBase, ContractFuture, mHistDataStore, lClockFuture)
+    Assert TypeOf StudyBase Is IStudyBase, "TypeOf StudyBase Is not IStudyBase"
+    Assert TypeOf mDataSource.ContractFuture Is IFuture, "TypeOf mDataSource.ContractFuture Is not IFuture"
+'    Assert TypeOf mHistDataStore Is IHistoricalDataStore, "TypeOf mHistDataStore Is not IHistoricalDataStore"
+    Assert TypeOf lClockFuture Is IFuture, "TypeOf lClockFuture Is not IFuture"
+    Debug.Print "All ok to create timeframes"
+    Set mTimeframes = CreateTimeframes(StudyBase, mDataSource.ContractFuture, mHistDataStore, lClockFuture)
 End If
 Set Timeframes = mTimeframes
 
@@ -1187,7 +1192,7 @@ If sSecType = SecTypeNone Then
 End If
 
 If blankIfZero And pPrice = 0# Then Exit Function
-FormatPrice = ContractUtils27.FormatPrice(pPrice, sSecType, sTickSize)
+FormatPrice = ContractLib.FormatPrice(pPrice, sSecType, sTickSize)
 
 Exit Function
 
@@ -1303,7 +1308,7 @@ If sSecType = SecTypeNone Then
     sTickSize = lContract.TickSize
 End If
 
-ParsePrice = ContractUtils27.ParsePrice(priceString, sSecType, sTickSize, Price)
+ParsePrice = ContractLib.ParsePrice(priceString, sSecType, sTickSize, Price)
 
 Exit Function
 
