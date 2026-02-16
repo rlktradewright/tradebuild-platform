@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '@===============================================================================
 
-Public Const ProjectName                As String = "TBInfoBase27"
+Public Const ProjectName                As String = "TBInfoBaseLib"
 Private Const ModuleName                As String = "Globals"
 
 Public Const OneMicrosecond             As Double = 1# / 86400000000#
