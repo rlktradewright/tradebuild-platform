@@ -27,7 +27,7 @@ Option Explicit
 '@================================================================================
 
 #If SingleDll = 0 Then
-Public Const ProjectName                            As String = "OrderUtils27"
+Public Const ProjectName                            As String = "OrderLib"
 #End If
 
 Private Const ModuleName                            As String = "Gorders"
