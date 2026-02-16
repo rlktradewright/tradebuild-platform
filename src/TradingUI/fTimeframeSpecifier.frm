@@ -25,7 +25,7 @@ Begin VB.Form fTimeframeSpecifier
       Top             =   120
       Width           =   2895
    End
-   Begin TradingUI27.TimeframeSpecifier TimeframeSpecifier1 
+   Begin TradeUI.TimeframeSpecifier TimeframeSpecifier1 
       BackColor       =   &H80000005&
       ForeColor       =   &H80000008&
       Height          =   855

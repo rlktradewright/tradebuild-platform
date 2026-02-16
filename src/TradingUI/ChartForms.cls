@@ -347,7 +347,7 @@ Dim lConfig As ConfigurationSection
 If Not pConfig Is Nothing Then
     Set lConfig = pConfig.AddConfigurationSection(ConfigSectionChart & "(" & GenerateGUIDString & ")")
 End If
-    
+
 Dim lChartForm As New fChart
 lChartForm.InitialiseHistoric pPeriodLength, pContractFuture, pStudyManager, pHistDataStore, pBarFormatterLibManager, lConfig, pSpec, pStyle, pOwner
 mChartForms.Add lChartForm

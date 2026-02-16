@@ -69,7 +69,7 @@ Begin VB.UserControl TickfileOrganiser
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradingUI27.TickfileListManager TickfileListManager1 
+   Begin TradeUI.TickfileListManager TickfileListManager1 
       Height          =   1920
       Left            =   0
       TabIndex        =   0
@@ -78,7 +78,7 @@ Begin VB.UserControl TickfileOrganiser
       _ExtentX        =   9128
       _ExtentY        =   3387
    End
-   Begin TradingUI27.TickfileChooser TickfileChooser1 
+   Begin TradeUI.TickfileChooser TickfileChooser1 
       Left            =   0
       TabIndex        =   4
       Top             =   1800

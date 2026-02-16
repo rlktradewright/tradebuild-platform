@@ -3285,6 +3285,10 @@ Private Sub setupDefaultTickerGridHeaders()
 Const ProcName As String = "setupDefaultTickerGridHeaders"
 On Error GoTo Err
 
+gLogger.Log "Setting up default ticker grid headers", ProcName, ModuleName, LogLevelDetail
+
+TickerGrid.Redraw = False
+
 setupTickerGridHeader TickerGridColumns.Selector, ""
 setupTickerGridHeader TickerGridColumns.TickerName, "Name"
 setupTickerGridHeader TickerGridColumns.CurrencyCode, "Curr"
@@ -3310,6 +3314,10 @@ setupTickerGridHeader TickerGridColumns.Exchange, "Exchange"
 setupTickerGridHeader TickerGridColumns.OptionRight, "Right"
 setupTickerGridHeader TickerGridColumns.Strike, "Strike"
 setupTickerGridHeader TickerGridColumns.ErrorText, "Error message"
+
+TickerGrid.Redraw = True
+
+gLogger.Log "Default ticker grid headers setup completed", ProcName, ModuleName, LogLevelDetail
 
 Exit Sub
 

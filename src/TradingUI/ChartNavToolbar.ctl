@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#337.0#0"; "ChartSkil27.ocx"
+Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#337.0#0"; "ChartCtrl.ocx"
 Begin VB.UserControl ChartNavToolbar 
    Alignable       =   -1  'True
    ClientHeight    =   3600
@@ -8,7 +8,7 @@ Begin VB.UserControl ChartNavToolbar
    ClientWidth     =   6555
    ScaleHeight     =   3600
    ScaleWidth      =   6555
-   Begin ChartSkil27.ChartToolbar ChartToolbar1 
+   Begin ChartUI.ChartToolbar ChartToolbar1 
       Height          =   330
       Left            =   0
       TabIndex        =   0

@@ -17,7 +17,7 @@ Begin VB.UserControl ContractSearch
    EndProperty
    ScaleHeight     =   4605
    ScaleWidth      =   4800
-   Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
+   Begin TradeUI.ContractSpecBuilder ContractSpecBuilder1 
       Height          =   3870
       Left            =   0
       TabIndex        =   3
@@ -68,7 +68,7 @@ Begin VB.UserControl ContractSearch
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradingUI27.ContractSelector ContractSelector1 
+   Begin TradeUI.ContractSelector ContractSelector1 
       Height          =   3255
       Left            =   0
       TabIndex        =   4

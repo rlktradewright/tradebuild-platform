@@ -50,7 +50,7 @@ Begin VB.UserControl MultiChart
             ImageIndex      =   3
          EndProperty
       EndProperty
-      Begin TradingUI27.TimeframeSelector TimeframeSelector1 
+      Begin TradeUI.TimeframeSelector TimeframeSelector1 
          Height          =   270
          Left            =   0
          TabIndex        =   1
@@ -124,7 +124,7 @@ Begin VB.UserControl MultiChart
       Style           =   1
       _Version        =   393216
    End
-   Begin TradingUI27.MarketChart TBChart 
+   Begin TradeUI.MarketChart TBChart 
       Align           =   1  'Align Top
       Height          =   7170
       Index           =   0

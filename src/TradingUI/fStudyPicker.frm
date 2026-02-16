@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#253.0#0"; "StudiesUI27.ocx"
+Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#253.0#0"; "StudyUI.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   4  'Fixed ToolWindow
    Caption         =   "Form1"
@@ -14,7 +14,7 @@ Begin VB.Form fStudyPicker
    ScaleWidth      =   8700
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin StudiesUI27.StudyPicker StudyPicker1 
+   Begin StudyUI.StudyPicker StudyPicker1 
       Height          =   4335
       Left            =   0
       TabIndex        =   0

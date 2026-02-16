@@ -13,7 +13,7 @@ Begin VB.Form fChart
    ScaleHeight     =   6780
    ScaleWidth      =   11280
    ShowInTaskbar   =   0   'False
-   Begin TradingUI27.MultiChart MultiChart1 
+   Begin TradeUI.MultiChart MultiChart1 
       Align           =   1  'Align Top
       Height          =   5415
       Left            =   0
@@ -95,7 +95,7 @@ Begin VB.Form fChart
       Width4          =   1410
       UseCoolbarColors4=   0   'False
       NewRow4         =   0   'False
-      Begin TradingUI27.ChartStylePicker ChartStylePicker 
+      Begin TradeUI.ChartStylePicker ChartStylePicker 
          Height          =   330
          Left            =   8400
          TabIndex        =   5
@@ -115,7 +115,7 @@ Begin VB.Form fChart
          EndProperty
          ListWidth       =   3000
       End
-      Begin TradingUI27.BarFormatterPicker BarFormatterPicker 
+      Begin TradeUI.BarFormatterPicker BarFormatterPicker 
          Height          =   270
          Left            =   6990
          TabIndex        =   4
@@ -135,7 +135,7 @@ Begin VB.Form fChart
          EndProperty
          ListWidth       =   3000
       End
-      Begin TradingUI27.ChartNavToolbar ChartNavToolbar1 
+      Begin TradeUI.ChartNavToolbar ChartNavToolbar1 
          Height          =   330
          Left            =   165
          TabIndex        =   2

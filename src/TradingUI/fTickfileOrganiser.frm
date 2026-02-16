@@ -14,7 +14,7 @@ Begin VB.Form fTickfileOrganiser
    ScaleWidth      =   7890
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
+   Begin TradeUI.TickfileOrganiser TickfileOrganiser1 
       Height          =   4065
       Left            =   240
       TabIndex        =   2

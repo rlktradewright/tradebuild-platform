@@ -25,7 +25,7 @@ Begin VB.UserControl TickStreamSpecifier
          TabIndex        =   21
          Top             =   240
          Width           =   2535
-         Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
+         Begin TradeUI.ContractSpecBuilder ContractSpecBuilder1 
             Height          =   3510
             Left            =   0
             TabIndex        =   0

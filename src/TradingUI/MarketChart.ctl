@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{5EF6A0B6-9E1F-426C-B84A-601F4CBF70C4}#350.0#0"; "ChartSkil27.ocx"
+Object = "{C3427D12-A820-465D-A194-8F1B598E1B0F}#1.0#0"; "ChartUI.ocx"
 Begin VB.UserControl MarketChart 
    Alignable       =   -1  'True
    ClientHeight    =   5475
@@ -10,7 +10,7 @@ Begin VB.UserControl MarketChart
    ScaleHeight     =   5475
    ScaleWidth      =   7740
    ToolboxBitmap   =   "MarketChart.ctx":0000
-   Begin ChartSkil27.Chart Chart1 
+   Begin ChartUI.Chart Chart1 
       Align           =   1  'Align Top
       Height          =   1695
       Left            =   0
@@ -138,7 +138,7 @@ Private mTickSize                                       As Double
 Private mSessionEndTime                                 As Date
 Private mSessionStartTime                               As Date
 
-Private mPriceFormatter                                 As TradingUI27.PriceFormatter
+Private mPriceFormatter                                 As TradeUI.PriceFormatter
 
 Private mPriceRegion                                    As ChartRegion
 
@@ -731,7 +731,7 @@ On Error GoTo Err
 Set mStudyManager = Value
 mManager.Finish
 Chart1.Controller.TimePeriod = mTimePeriod
-Set mManager = CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, False)
+Set mManager = ChartDeployLib.CreateChartManager(Chart1.Controller, mStudyManager, mBarFormatterLibManager, False)
 mManager.UpdatePerTick = mUpdatePerTick
 initialiseChart mChartSpec.IncludeBarsOutsideSession
 
@@ -1507,7 +1507,7 @@ Const ProcName As String = "setupLoadingText"
 On Error GoTo Err
 
 Dim lText As Text
-Set lText = mPriceRegion.AddText(, ChartSkil27.LayerNumbers.LayerHighestUser)
+Set lText = mPriceRegion.AddText(, ChartUI.LayerNumbers.LayerHighestUser)
 Dim Font As New stdole.StdFont
 Font.Size = 18
 lText.Font = Font
