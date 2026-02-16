@@ -617,7 +617,7 @@ Case TimePeriodDay
         #If SingleDll Then
         calcBarStartTime = GBarUtils.dateToCentiSeconds(GSessionUtils.GetSessionTimes(Timestamp, SessionStartTime, SessionEndTime).StartTime)
         #Else
-        calcBarStartTime = GBarUtils.dateToCentiSeconds(SessionUtils27.GetSessionTimes(Timestamp, SessionStartTime, SessionEndTime).StartTime)
+        calcBarStartTime = GBarUtils.dateToCentiSeconds(SessionLib.GetSessionTimes(Timestamp, SessionStartTime, SessionEndTime).StartTime)
         #End If
     Else
         Dim workingDayNum As Long
