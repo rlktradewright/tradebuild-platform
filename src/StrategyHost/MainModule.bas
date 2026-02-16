@@ -500,7 +500,7 @@ End If
     
 If setupDbServiceProviders Then
     mTB.ServiceProviders.Add _
-                        ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
+                        ProgId:="TBInfoBaseLib.ContractInfoSrvcProvider", _
                         Enabled:=True, _
                         ParamString:="Role=PRIMARY" & _
                                     ";Database Name=" & database & _
@@ -512,7 +512,7 @@ If setupDbServiceProviders Then
                         Description:="Primary contract data"
 
     mTB.ServiceProviders.Add _
-                        ProgId:="TBInfoBase27.HistDataServiceProvider", _
+                        ProgId:="TBInfoBaseLib.HistDataServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Role=INPUT" & _
                                     ";Database Name=" & database & _
@@ -525,7 +525,7 @@ If setupDbServiceProviders Then
 
     If pAllowTickfiles Then
         mTB.ServiceProviders.Add _
-                            ProgId:="TBInfoBase27.TickfileServiceProvider", _
+                            ProgId:="TBInfoBaseLib.TickfileServiceProvider", _
                             Enabled:=True, _
                             ParamString:="Role=INPUT" & _
                                         ";Database Name=" & database & _
@@ -550,7 +550,7 @@ On Error GoTo Err
 
 If pSimulateOrders Then
     mTB.ServiceProviders.Add _
-                        ProgId:="TradeBuild27.OrderSimulatorSP", _
+                        ProgId:="TradeBuildLib.OrderSimulatorSP", _
                         Enabled:=True, _
                         Name:="TradeBuild Exchange Simulator for Main Orders", _
                         ParamString:="Role=LIVE", _
@@ -558,7 +558,7 @@ If pSimulateOrders Then
 End If
 
 mTB.ServiceProviders.Add _
-                    ProgId:="TradeBuild27.OrderSimulatorSP", _
+                    ProgId:="TradeBuildLib.OrderSimulatorSP", _
                     Enabled:=True, _
                     Name:="TradeBuild Exchange Simulator for Dummy Orders", _
                     ParamString:="Role=SIMULATED", _
@@ -604,7 +604,7 @@ End If
     
 If setupPaperTwsServiceProviders Then
     mTB.ServiceProviders.Add _
-                        ProgId:="IBTWSSP27.OrderSubmissionSrvcProvider", _
+                        ProgId:="IBTWSSPLib.OrderSubmissionSrvcProvider", _
                         Enabled:=True, _
                         ParamString:="Server=" & Server & _
                                     ";Port=" & Port & _
@@ -654,7 +654,7 @@ End If
     
 If setupTwsServiceProviders Then
     mTB.ServiceProviders.Add _
-                        ProgId:="IBTWSSP27.RealtimeDataServiceProvider", _
+                        ProgId:="IBTWSSPLib.RealtimeDataServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Server=" & Server & _
                                     ";Port=" & Port & _
@@ -664,7 +664,7 @@ If setupTwsServiceProviders Then
     
     If pAllowLiveTrades Then
         mTB.ServiceProviders.Add _
-                            ProgId:="IBTWSSP27.OrderSubmissionSrvcProvider", _
+                            ProgId:="IBTWSSPLib.OrderSubmissionSrvcProvider", _
                             Enabled:=True, _
                             ParamString:="Server=" & Server & _
                                         ";Port=" & Port & _
@@ -674,7 +674,7 @@ If setupTwsServiceProviders Then
     End If
     If pNoDB Then
         mTB.ServiceProviders.Add _
-                            ProgId:="IBTWSSP27.ContractInfoServiceProvider", _
+                            ProgId:="IBTWSSPLib.ContractInfoServiceProvider", _
                             Enabled:=True, _
                             ParamString:="Role=PRIMARY" & _
                                         ";Server=" & Server & _
@@ -684,7 +684,7 @@ If setupTwsServiceProviders Then
                             Description:="Primary contract data"
     
         mTB.ServiceProviders.Add _
-                            ProgId:="IBTWSSP27.HistDataServiceProvider", _
+                            ProgId:="IBTWSSPLib.HistDataServiceProvider", _
                             Enabled:=True, _
                             ParamString:="Server=" & Server & _
                                         ";Port=" & Port & _

@@ -3,7 +3,7 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "ComDlg32.OCX"
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDatGrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#407.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#5.0#0"; "TradeUI.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fStrategyHost 
    Caption         =   "TradeBuild Strategy Host v2.7"
@@ -49,19 +49,16 @@ Begin VB.Form fStrategyHost
       TabPicture(1)   =   "fStrategyHost.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "ParametersPicture"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "Log"
       TabPicture(2)   =   "fStrategyHost.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "LogPicture"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       TabCaption(3)   =   "Results"
       TabPicture(3)   =   "fStrategyHost.frx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "ResultsPicture"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       Begin VB.PictureBox ResultsPicture 
          Appearance      =   0  'Flat
@@ -567,7 +564,7 @@ Begin VB.Form fStrategyHost
             MouseOverBackColor=   0
             PushedBackColor =   0
          End
-         Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
+         Begin TradeUI.TickfileOrganiser TickfileOrganiser1 
             Height          =   2535
             Left            =   120
             TabIndex        =   1
@@ -799,7 +796,7 @@ Begin VB.Form fStrategyHost
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "BracketOrderList"
       Tab(3).ControlCount=   1
-      Begin TradingUI27.MultiChart PriceChart 
+      Begin TradeUI.MultiChart PriceChart 
          Height          =   4845
          Left            =   0
          TabIndex        =   23
@@ -808,7 +805,7 @@ Begin VB.Form fStrategyHost
          _ExtentX        =   19500
          _ExtentY        =   8546
       End
-      Begin TradingUI27.MarketChart ProfitChart 
+      Begin TradeUI.MarketChart ProfitChart 
          Height          =   5325
          Left            =   -75000
          TabIndex        =   24
@@ -839,7 +836,7 @@ Begin VB.Form fStrategyHost
          Appearance      =   0
          NumItems        =   0
       End
-      Begin TradingUI27.MarketChart TradeChart 
+      Begin TradeUI.MarketChart TradeChart 
          Height          =   5325
          Left            =   -75000
          TabIndex        =   25
@@ -860,7 +857,7 @@ Begin VB.Form fStrategyHost
          TabIndex        =   56
          Top             =   360
          Width           =   11055
-         Begin TradingUI27.ChartNavToolbar ChartNavToolbar 
+         Begin TradeUI.ChartNavToolbar ChartNavToolbar 
             Height          =   330
             Left            =   240
             TabIndex        =   57
@@ -1027,6 +1024,12 @@ On Error GoTo Err
 Me.ScaleMode = vbTwips
 setupBracketOrderList
 Set mChartStyle = gCreateChartStyle
+
+Set mOverallProfit = DecimalZero
+Set mSessionProfit = DecimalZero
+Set mMaxProfit = DecimalZero
+Set mDrawdown = DecimalZero
+
 LogMessage "Form loaded"
 
 ChartNavToolbar.Initialise , PriceChart
@@ -1359,7 +1362,7 @@ On Error GoTo Err
 
 If mModel.ShowChart Then
     mTradeStudyBase.NotifyBarNumber pBarNumber, pTimestamp
-    mTradeStudyBase.NotifyValue mOverallProfit + mSessionProfit, pTimestamp
+    mTradeStudyBase.NotifyValue mOverallProfit.Add(mSessionProfit), pTimestamp
 End If
 
 Exit Sub
@@ -1567,7 +1570,7 @@ On Error GoTo Err
 
 If Not mModel.ShowChart Then Exit Sub
 
-Dim lBracketOrderLine As ChartSkil27.Line
+Dim lBracketOrderLine As ChartUI.Line
 Set lBracketOrderLine = mBracketOrderLineSeries.Add
 
 lBracketOrderLine.Point1 = NewPoint(PriceChart.BaseChartController.GetXFromTimestamp(pStartTime), pEntryPrice)
@@ -2117,7 +2120,7 @@ Set mProfitStudyBase = CreateStudyBaseForDecimalInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
-                                                    GetTimeZone(mContract.TimeZoneName)))
+                                                    GetTimeZone(mContract.TimezoneName)))
 
 'gLog "DisableDrawing for ProfitChart", ProcName, ModuleName, , LogLevelDetail
 
@@ -2148,7 +2151,7 @@ Set mTradeStudyBase = CreateStudyBaseForDoubleInput( _
                                     mModel.StudyLibraryManager.CreateStudyManager( _
                                                     mContract.SessionStartTime, _
                                                     mContract.SessionEndTime, _
-                                                    GetTimeZone(mContract.TimeZoneName)))
+                                                    GetTimeZone(mContract.TimezoneName)))
 
 'gLog "DisableDrawing for TradeChart", ProcName, ModuleName, , LogLevelDetail
 
