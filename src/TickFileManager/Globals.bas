@@ -26,7 +26,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "TickFileManager27"
 Private Const ModuleName                    As String = "Globals"
 
 Public Const AppName                        As String = "TickfileManager"
@@ -68,7 +67,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-HandleUnexpectedError pProcedureName, ProjectName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
+HandleUnexpectedError pProcedureName, App.EXEName, pModuleName, pFailpoint, pReRaise, pLog, errNum, errDesc, errSource
 End Sub
 
 Public Sub gNotifyUnhandledError( _
@@ -82,7 +81,7 @@ Dim errSource As String: errSource = IIf(pErrorSource <> "", pErrorSource, Err.S
 Dim errDesc As String: errDesc = IIf(pErrorDesc <> "", pErrorDesc, Err.Description)
 Dim errNum As Long: errNum = IIf(pErrorNumber <> 0, pErrorNumber, Err.Number)
 
-UnhandledErrorHandler.Notify pProcedureName, pModuleName, ProjectName, pFailpoint, errNum, errDesc, errSource
+UnhandledErrorHandler.Notify pProcedureName, pModuleName, App.EXEName, pFailpoint, errNum, errDesc, errSource
 End Sub
 
 '@================================================================================
