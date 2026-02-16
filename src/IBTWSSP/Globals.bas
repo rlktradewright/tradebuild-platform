@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const ProjectName                        As String = "IBTWSSP27"
+Public Const ProjectName                        As String = "IBTWSSPLib"
 Private Const ModuleName                        As String = "Globals"
 
 Public Const InvalidEnumValue                   As String = "*ERR*"
