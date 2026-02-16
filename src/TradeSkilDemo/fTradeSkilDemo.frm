@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#404.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#4.0#0"; "TradeUI.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   5  'Sizable ToolWindow
    Caption         =   "TradeSkil Demo Edition"
@@ -23,7 +23,7 @@ Begin VB.Form fTradeSkilDemo
    MinButton       =   0   'False
    ScaleHeight     =   9960
    ScaleWidth      =   16665
-   Begin TradeSkilDemo27.InfoPanel InfoPanel 
+   Begin TradeSkilDemo.InfoPanel InfoPanel 
       Height          =   4755
       Left            =   4320
       TabIndex        =   5
@@ -121,7 +121,7 @@ Begin VB.Form fTradeSkilDemo
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradingUI27.TickerGrid TickerGrid1 
+   Begin TradeUI.TickerGrid TickerGrid1 
       Height          =   4695
       Left            =   4320
       TabIndex        =   1
@@ -155,7 +155,7 @@ Begin VB.Form fTradeSkilDemo
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradeSkilDemo27.FeaturesPanel FeaturesPanel 
+   Begin TradeSkilDemo.FeaturesPanel FeaturesPanel 
       Height          =   8580
       Left            =   120
       TabIndex        =   4

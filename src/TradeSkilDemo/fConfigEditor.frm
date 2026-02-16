@@ -52,7 +52,7 @@ Begin VB.Form fConfigEditor
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradeSkilDemo27.ConfigManager ConfigManager1 
+   Begin TradeSkilDemo.ConfigManager ConfigManager1 
       Height          =   4095
       Left            =   120
       TabIndex        =   0

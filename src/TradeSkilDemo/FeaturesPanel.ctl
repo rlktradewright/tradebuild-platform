@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#404.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#3.0#0"; "TradeUI.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl FeaturesPanel 
    Appearance      =   0  'Flat
@@ -361,7 +361,7 @@ Begin VB.UserControl FeaturesPanel
                Strikethrough   =   0   'False
             EndProperty
          End
-         Begin TradingUI27.TickfileOrganiser TickfileOrganiser1 
+         Begin TradeUI.TickfileOrganiser TickfileOrganiser1 
             Height          =   3720
             Left            =   120
             TabIndex        =   34
@@ -451,7 +451,7 @@ Begin VB.UserControl FeaturesPanel
             Value           =   1  'Checked
             Width           =   1215
          End
-         Begin TradingUI27.ContractSearch HistContractSearch 
+         Begin TradeUI.ContractSearch HistContractSearch 
             Height          =   4455
             Left            =   120
             TabIndex        =   21
@@ -460,7 +460,7 @@ Begin VB.UserControl FeaturesPanel
             _ExtentX        =   6800
             _ExtentY        =   7858
          End
-         Begin TradingUI27.TimeframeSelector HistChartTimeframeSelector 
+         Begin TradeUI.TimeframeSelector HistChartTimeframeSelector 
             Height          =   270
             Left            =   1920
             TabIndex        =   24
@@ -619,7 +619,7 @@ Begin VB.UserControl FeaturesPanel
             MouseIcon       =   "FeaturesPanel.ctx":00FC
             Text            =   ""
          End
-         Begin TradingUI27.TimeframeSelector LiveChartTimeframeSelector 
+         Begin TradeUI.TimeframeSelector LiveChartTimeframeSelector 
             Height          =   270
             Left            =   1920
             TabIndex        =   16
@@ -664,7 +664,7 @@ Begin VB.UserControl FeaturesPanel
          TabIndex        =   7
          Top             =   0
          Width           =   4125
-         Begin TradingUI27.ContractSearch LiveContractSearch 
+         Begin TradeUI.ContractSearch LiveContractSearch 
             Height          =   5415
             Left            =   120
             TabIndex        =   6

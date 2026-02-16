@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#150.0#0"; "TradeBuildUI27.ocx"
-Object = "{464F646E-C78A-4AAC-AC11-FBC7E41F58BB}#242.0#0"; "StudiesUI27.ocx"
+Object = "{EF43DFCF-B2A0-49CA-B802-1E21DD984E78}#3.0#0"; "TradeBuildUI.ocx"
+Object = "{D0C2EAB7-BC11-4355-A342-0C993FFB90C5}#3.0#0"; "StudyUI.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
@@ -49,7 +49,7 @@ Begin VB.UserControl ConfigManager
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
+   Begin TradeBuildUI.SPConfigurer SPConfigurer1 
       Height          =   4005
       Left            =   120
       TabIndex        =   2
@@ -58,7 +58,7 @@ Begin VB.UserControl ConfigManager
       _ExtentX        =   13229
       _ExtentY        =   7064
    End
-   Begin StudiesUI27.StudyLibConfigurer StudyLibConfigurer1 
+   Begin StudyUI.StudyLibConfigurer StudyLibConfigurer1 
       Height          =   4005
       Left            =   8520
       TabIndex        =   3

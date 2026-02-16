@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#3.0#0"; "TradeUI.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.Form fMarketDepth 
    BorderStyle     =   5  'Sizable ToolWindow
@@ -37,7 +37,7 @@ Begin VB.Form fMarketDepth
       MouseOverBackColor=   0
       PushedBackColor =   0
    End
-   Begin TradingUI27.DOMDisplay DOMDisplay1 
+   Begin TradeUI.DOMDisplay DOMDisplay1 
       Height          =   5520
       Left            =   0
       TabIndex        =   0

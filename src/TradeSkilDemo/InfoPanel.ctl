@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#3.0#0"; "TradeUI.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
 Begin VB.UserControl InfoPanel 
    Appearance      =   0  'Flat
@@ -253,7 +253,7 @@ Begin VB.UserControl InfoPanel
                Strikethrough   =   0   'False
             EndProperty
          End
-         Begin TradingUI27.OrdersSummary LiveOrdersSummary 
+         Begin TradeUI.OrdersSummary LiveOrdersSummary 
             Height          =   3735
             Left            =   0
             TabIndex        =   14
@@ -262,7 +262,7 @@ Begin VB.UserControl InfoPanel
             _ExtentX        =   19500
             _ExtentY        =   6588
          End
-         Begin TradingUI27.OrdersSummary SimulatedOrdersSummary 
+         Begin TradeUI.OrdersSummary SimulatedOrdersSummary 
             Height          =   3615
             Left            =   0
             TabIndex        =   4
@@ -271,7 +271,7 @@ Begin VB.UserControl InfoPanel
             _ExtentX        =   19288
             _ExtentY        =   6376
          End
-         Begin TradingUI27.OrdersSummary TickfileOrdersSummary 
+         Begin TradeUI.OrdersSummary TickfileOrdersSummary 
             Height          =   3615
             Left            =   0
             TabIndex        =   6
@@ -331,7 +331,7 @@ Begin VB.UserControl InfoPanel
                Width           =   900
             End
          End
-         Begin TradingUI27.ExecutionsSummary LiveExecutionsSummary 
+         Begin TradeUI.ExecutionsSummary LiveExecutionsSummary 
             Height          =   3750
             Left            =   0
             TabIndex        =   16
@@ -340,7 +340,7 @@ Begin VB.UserControl InfoPanel
             _ExtentX        =   21511
             _ExtentY        =   6615
          End
-         Begin TradingUI27.ExecutionsSummary SimulatedExecutionsSummary 
+         Begin TradeUI.ExecutionsSummary SimulatedExecutionsSummary 
             Height          =   3750
             Left            =   0
             TabIndex        =   5
@@ -349,7 +349,7 @@ Begin VB.UserControl InfoPanel
             _ExtentX        =   21511
             _ExtentY        =   6615
          End
-         Begin TradingUI27.ExecutionsSummary TickfileExecutionsSummary 
+         Begin TradeUI.ExecutionsSummary TickfileExecutionsSummary 
             Height          =   3750
             Left            =   0
             TabIndex        =   7

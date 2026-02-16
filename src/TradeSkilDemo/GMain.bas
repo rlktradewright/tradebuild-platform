@@ -18,7 +18,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "TradeSkilDemo27"
+Public Const ProjectName                            As String = "TradeSkilDemo"
 Private Const ModuleName                            As String = "GMain"
 
 Public Const ConfigFileVersion                      As String = "1.3"
@@ -1062,7 +1062,7 @@ On Error GoTo Err
 
 If gCommandLineParser.Switch("?") Then
     MsgBox vbCrLf & _
-            "tradeskildemo27 [configfile] " & vbCrLf & _
+            "tradeskildemo [configfile] " & vbCrLf & _
             "                [/config:configtoload] " & vbCrLf & _
             "                [/log:filename] " & vbCrLf & _
             "                [/loglevel:levelName]" & vbCrLf & _

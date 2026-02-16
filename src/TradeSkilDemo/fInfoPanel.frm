@@ -16,7 +16,7 @@ Begin VB.Form fInfoPanel
    ScaleWidth      =   9405
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TradeSkilDemo27.InfoPanel InfoPanel 
+   Begin TradeSkilDemo.InfoPanel InfoPanel 
       Height          =   3735
       Left            =   600
       TabIndex        =   0

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#3.0#0"; "TradeUI.ocx"
 Begin VB.Form fOrderTicket 
    BorderStyle     =   4  'Fixed ToolWindow
    ClientHeight    =   6135
@@ -13,7 +13,7 @@ Begin VB.Form fOrderTicket
    ScaleWidth      =   8745
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TradingUI27.OrderTicket OrderTicket1 
+   Begin TradeUI.OrderTicket OrderTicket1 
       Height          =   6135
       Left            =   0
       TabIndex        =   0

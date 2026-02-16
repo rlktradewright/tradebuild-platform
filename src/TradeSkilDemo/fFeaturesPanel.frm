@@ -17,7 +17,7 @@ Begin VB.Form fFeaturesPanel
    ScaleWidth      =   4910.454
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TradeSkilDemo27.FeaturesPanel FeaturesPanel 
+   Begin TradeSkilDemo.FeaturesPanel FeaturesPanel 
       Height          =   9675
       Left            =   0
       TabIndex        =   0
