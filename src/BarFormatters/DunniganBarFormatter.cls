@@ -63,8 +63,8 @@ End Sub
 '@================================================================================
 
 Private Sub IBarFormatter_FormatBar( _
-                ByVal sourceBar As BarUtils27.Bar, _
-                ByVal chartBar As ChartSkil27.Bar)
+                ByVal sourceBar As BarLib.Bar, _
+                ByVal chartBar As ChartUI.Bar)
 Const ProcName As String = "IBarFormatter_FormatBar"
 On Error GoTo Err
 
@@ -79,7 +79,7 @@ lPrevBarIndex = sourceBar.BarNumber - lFirstBarNumber
 
 If lPrevBarIndex < 1 Then Exit Sub
 
-Dim lPrevBar As BarUtils27.Bar
+Dim lPrevBar As BarLib.Bar
 Set lPrevBar = mBars.Bar(lPrevBarIndex)
 
 If sourceBar.HighValue > lPrevBar.HighValue And _

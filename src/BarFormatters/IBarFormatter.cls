@@ -64,7 +64,7 @@ Private Const ModuleName                    As String = "IBarFormatter"
 ' Methods
 '@================================================================================
 
-Sub FormatBar(ByVal sourceBar As BarUtils27.Bar, ByVal chartBar As ChartSkil27.Bar)
+Sub FormatBar(ByVal sourceBar As BarLib.Bar, ByVal chartBar As ChartUI.Bar)
 
 End Sub
 
