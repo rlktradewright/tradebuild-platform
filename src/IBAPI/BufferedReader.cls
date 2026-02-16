@@ -226,9 +226,10 @@ End If
 End Function
 
 Friend Function GetDecimal( _
-                ByRef pFieldName As String) As BoxedDecimal
+                ByRef pFieldName As String, _
+                Optional ByVal pIsLastField As Boolean) As BoxedDecimal
 Dim s As String
-s = GetString(pFieldName)
+s = GetString(pFieldName, pIsLastField)
 If s = "" Then
     Set GetDecimal = DecimalZero
 Else
@@ -261,9 +262,10 @@ End If
 End Function
 
 Friend Function GetLong( _
-                ByRef pFieldName As String) As Long
+                ByRef pFieldName As String, _
+                Optional ByVal pIsLastField As Boolean) As Long
 Dim s As String
-s = GetString(pFieldName)
+s = GetString(pFieldName, pIsLastField)
 If s = "" Then
     GetLong = 0&
 Else
@@ -300,7 +302,8 @@ GetRawMessage = MidB(mBuffer, mMessageStartIndex + 1, mInputParseIndex - mMessag
 End Function
 
 Friend Function GetString( _
-                ByRef pFieldName As String) As String
+                ByRef pFieldName As String, _
+                Optional ByVal pIsLastField As Boolean) As String
 Dim s As String
 Dim i As Long
 
@@ -325,10 +328,16 @@ For i = mInputParseIndex To mMessageEndIndex - 1
     s = s & Chr$(mBuffer(i))
 Next
 
-' we've got to the end of the current message before completing the
-' string, which should never happen
-'Debug.Print "Failed to get string"
-Assert False, "API message incomplete", DataIncomplete
+' we've got to the end of the current message before reaching the
+' field's zero terminator, which never happened before 18/01/2026:
+' after that, tickPrice and tickSize API messages which were the last
+' item of socketdata received sometimes had no zero terminator, so
+' the received API message would just finish at the end of the last
+' field.
+If Not pIsLastField Then
+    'Debug.Print "Failed to get string"
+    Assert False, "API message incomplete", DataIncomplete
+End If
 End Function
 
 Friend Sub Initialise( _
@@ -417,7 +426,7 @@ On Error GoTo Err
 If mBufferNextFreeIndex < mInputParseIndex + MessageLengthHeaderLength Then Exit Function
 
 mMessageLength = GetMessageLength
-If mBufferNextFreeIndex < mInputParseIndex + mMessageLength Then Exit Function
+If mBufferNextFreeIndex < mInputParseIndex + MessageLengthHeaderLength + mMessageLength Then Exit Function
 
 mInputParseIndex = mInputParseIndex + MessageLengthHeaderLength
 

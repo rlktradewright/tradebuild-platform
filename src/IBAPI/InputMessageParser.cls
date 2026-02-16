@@ -477,14 +477,14 @@ On Error GoTo Err
 
 mReader.BeginLogMessage
 
-Dim key As String: key = mReader.GetString("Key")
+Dim Key As String: Key = mReader.GetString("Key")
 Dim val As String: val = mReader.GetString("Value")
 Dim cur As String: cur = mReader.GetString("Currency")
 Dim accountName As String: If pVersion >= 2 Then accountName = mReader.GetString("Account Name")
 
 mReader.EndLogMessage
 
-If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyAccountValue key, val, cur, accountName
+If Not mAccountDataConsumer Is Nothing Then mAccountDataConsumer.NotifyAccountValue Key, val, cur, accountName
 
 Exit Sub
 
@@ -506,6 +506,14 @@ mReader.GetString "Symbol"
 mReader.GetString "SecType"
 mReader.GetString "Cusip"
 mReader.GetDouble "Coupon"
+Dim lMaturity As String: lMaturity = mReader.GetString("Maturity")
+'If lMaturity <> "" Then
+'    Dim ar() As String
+'    ar = Split(lExpiry, "-")
+'    If UBound(ar) >= 0 Then lContractSpec.Expiry = ar(0)
+'    If UBound(ar) >= 1 Then lContract.LastTradeTime = CDate(ar(1))
+'    If UBound(ar) >= 2 Then lContract.TimeZoneId = ar(2)
+'End If
 mReader.GetString "Maturity"
 mReader.GetString "IssueDate"
 mReader.GetString "Ratings"
@@ -588,16 +596,16 @@ lContract.Specifier = lContractSpec
 If (pVersion >= 3) Then lReqId = GIdManager.GetCallerId(mReader.GetLong("Req Id"), IdTypeContractData)
 
 lContractSpec.Symbol = mReader.GetString("Symbol")
-lContractSpec.SecType = TwsSecTypeFromString(mReader.GetString("Sec type"))
+lContractSpec.Sectype = TwsSecTypeFromString(mReader.GetString("Sec type"))
 
 Dim lExpiry As String: lExpiry = mReader.GetString("Expiry")
 If lExpiry <> "" Then
     Dim ar() As String
-    If InStr(1, lExpiry, "-") <> 0 Then
-        ar = Split(lExpiry, "-")
-    Else
+'    If InStr(1, lExpiry, "-") <> 0 Then
+'        ar = Split(lExpiry, "-")
+'    Else
         ar = Split(lExpiry, " ")
-    End If
+'    End If
     If UBound(ar) >= 0 Then lContractSpec.Expiry = ar(0)
     If UBound(ar) >= 1 Then lContract.LastTradeTime = CDate(ar(1))
     If UBound(ar) >= 2 Then lContract.TimeZoneId = ar(2)
@@ -616,7 +624,7 @@ lContract.MinTick = mReader.GetDouble("Minimum tick")
 ' note that IB gives very small tick sizes for some UK stocks, eg 0.000001 for VOD and TSCO
 ' (possibly all FTSE 100 stocks). This causes us tick encoding problems, so we up it to
 ' something that reflects reality!
-If lContractSpec.CurrencyCode = "GBP" And lContractSpec.SecType = TwsSecTypeStock And lContract.MinTick < 0.0001 Then lContract.MinTick = 0.0001
+If lContractSpec.CurrencyCode = "GBP" And lContractSpec.Sectype = TwsSecTypeStock And lContract.MinTick < 0.0001 Then lContract.MinTick = 0.0001
 
 If mServerVersion >= ApiServerVersions.MD_SIZE_MULTIPLIER And _
     mServerVersion < ApiServerVersions.SIZE_RULES _
@@ -893,7 +901,7 @@ Dim lContract As New TwsContractSpecifier
 With lContract
     If (pVersion >= 5) Then .ConId = mReader.GetLong("Con Id")
     .Symbol = mReader.GetString("Symbol")
-    .SecType = TwsSecTypeFromString(mReader.GetString("Sec type"))
+    .Sectype = TwsSecTypeFromString(mReader.GetString("Sec type"))
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = TwsOptionRightFromString(mReader.GetString("Right"))
@@ -1244,7 +1252,7 @@ lOrder.OrderId = mReader.GetLong("Id")
 With lContractSpec
     .ConId = mReader.GetLong("conId")
     .Symbol = mReader.GetString("Symbol")
-    .SecType = TwsSecTypeFromString(mReader.GetString("Sec type"))
+    .Sectype = TwsSecTypeFromString(mReader.GetString("Sec type"))
     .Expiry = mReader.GetString("Expiry")
     .Strike = mReader.GetDouble("Strike")
     .OptRight = TwsOptionRightFromString(mReader.GetString("Right"))
@@ -1677,7 +1685,7 @@ Dim lContract As New TwsContractSpecifier
 lContract.ConId = mReader.GetLong("Contract id")
 
 lContract.Symbol = mReader.GetString("Symbol")
-lContract.SecType = TwsSecTypeFromString(mReader.GetString("Sec type"))
+lContract.Sectype = TwsSecTypeFromString(mReader.GetString("Sec type"))
 lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = TwsOptionRightFromString(mReader.GetString("Right"))
@@ -1720,7 +1728,7 @@ Dim lAccount As String: lAccount = mReader.GetString("Account")
 Dim lContract As New TwsContractSpecifier
 lContract.ConId = mReader.GetLong("Contract id")
 lContract.Symbol = mReader.GetString("Symbol")
-lContract.SecType = TwsSecTypeFromString(mReader.GetString("SecType"))
+lContract.Sectype = TwsSecTypeFromString(mReader.GetString("SecType"))
 lContract.Expiry = mReader.GetString("Expiry")
 lContract.Strike = mReader.GetDouble("Strike")
 lContract.OptRight = TwsOptionRightFromString(mReader.GetString("Right"))
@@ -1856,7 +1864,7 @@ For i = 0 To lNumberOfElements - 1
     If (pVersion >= 3) Then lContractSpec.ConId = mReader.GetLong("ConId")
     
     lContractSpec.Symbol = mReader.GetString("Symbol")
-    lContractSpec.SecType = TwsSecTypeFromString(mReader.GetString("Sec type"))
+    lContractSpec.Sectype = TwsSecTypeFromString(mReader.GetString("Sec type"))
     lContractSpec.Expiry = mReader.GetString("Expiry")
     lContractSpec.Strike = mReader.GetDouble("Strike")
     lContractSpec.OptRight = TwsOptionRightFromString(mReader.GetString("Right"))
@@ -2041,7 +2049,7 @@ If pVersion >= 3 Then
     Const PastLimit = &H2&
     Const PreOpen = &H4&
 
-    Dim lAttrMask As Long: lAttrMask = mReader.GetLong("Attr Mask")
+    Dim lAttrMask As Long: lAttrMask = mReader.GetLong("Attr Mask", True)
     lAttributes.CanAutoExecute = (lAttrMask = 1)
 
     If mServerVersion >= ApiServerVersions.PAST_LIMIT Then
@@ -2097,7 +2105,7 @@ Dim lSize As BoxedDecimal
 
 lTickerId = mReader.GetLong("Ticker id")
 lTickType = mReader.GetLong("Tick type")
-Set lSize = mReader.GetDecimal("Size")
+Set lSize = mReader.GetDecimal("Size", True)
 
 mReader.EndLogMessage
 
