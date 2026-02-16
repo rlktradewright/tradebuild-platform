@@ -27,7 +27,7 @@ Option Explicit
 '@================================================================================
 
 #If SingleDll = 0 Then
-Public Const ProjectName                            As String = "TickfileUtils27"
+Public Const ProjectName                            As String = "TickfileLib"
 #End If
 
 Private Const ModuleName                            As String = "GTickfiles"

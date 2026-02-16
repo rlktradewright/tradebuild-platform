@@ -254,7 +254,7 @@ Set mContractSpecifier = GContractUtils.CreateContractSpecifier( _
                                         , _
                                         pHeaderLineFields(TickfileFieldsV1.Expiry))
 #Else
-Set mContractSpecifier = ContractUtils27.CreateContractSpecifier( _
+Set mContractSpecifier = ContractLib.CreateContractSpecifier( _
                                         , _
                                         pHeaderLineFields(TickfileFieldsV1.Symbol), _
                                         , _
