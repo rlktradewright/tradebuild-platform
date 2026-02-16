@@ -698,24 +698,38 @@ End Sub
 
 Friend Sub SetScale(ByRef pBoundary As TRectangle)
 Const ProcName As String = "SetScale"
-
 On Error GoTo Err
 
+Dim failpoint As String
+
 If mSurface Is Nothing Then Exit Sub
+failpoint = "0100"
 mSurface.ScaleHeight = pBoundary.Bottom - pBoundary.Top
+failpoint = "0200"
 mSurface.ScaleWidth = pBoundary.Right - pBoundary.Left
+failpoint = "0300"
 mSurface.ScaleTop = pBoundary.Top
+failpoint = "0400"
 mSurface.ScaleLeft = pBoundary.Left
 
 'now adjust pBoundary to reflect the fact that ScaleHeight etc are singles not doubles
+failpoint = "0500"
 pBoundary.Top = mSurface.ScaleTop
+failpoint = "0600"
 pBoundary.Left = mSurface.ScaleLeft
+failpoint = "0700"
 pBoundary.Bottom = mSurface.ScaleHeight + pBoundary.Top
+failpoint = "0800"
 pBoundary.Right = mSurface.ScaleWidth + pBoundary.Left
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+If Err.Number = VBErrorCodes.VbErrInvalidPropertyValue Then
+    gLogger.Log "pBoundary:" & RectToString(pBoundary), ProcName, ModuleName, LogLevelHighDetail
+    gLogger.Log "mSurface:" & "Bottom=" & mSurface.ScaleHeight + pBoundary.Top & "; Left=" & mSurface.ScaleLeft & "; Top=" & mSurface.ScaleTop & "; Right=" & mSurface.ScaleWidth + pBoundary.Left, ProcName, ModuleName, LogLevelHighDetail
+End If
+
+gHandleUnexpectedError ProcName, ModuleName, failpoint
 End Sub
 
 Public Sub SetPenAttributes( _

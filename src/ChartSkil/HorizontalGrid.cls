@@ -241,7 +241,7 @@ Const ProcName As String = "clearRemainingLines"
 On Error GoTo Err
 
 Do While pEn.MoveNext
-    Dim aLine As ChartSkil27.Line
+    Dim aLine As ChartUI.Line
     Set aLine = pEn.Current
     aLine.SetPosition gNewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
                         gNewPoint(-1000, 0, CoordsLogical, CoordsLogical)
@@ -282,7 +282,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Function
 
 Private Sub removeLines()
-Dim ln As ChartSkil27.Line
+Dim ln As ChartUI.Line
 Const ProcName As String = "removeLines"
 
 On Error GoTo Err

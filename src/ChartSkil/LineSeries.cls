@@ -217,7 +217,7 @@ On Error GoTo Err
 
 On Error Resume Next
 
-Dim lLine As ChartSkil27.Line
+Dim lLine As ChartUI.Line
 Set lLine = Value
 
 mLines.Remove lLine.Key
@@ -1054,13 +1054,13 @@ End Property
 
 Public Function Add( _
                 Optional ByVal Key As String, _
-                Optional ByVal LocalStyle As LineStyle) As ChartSkil27.Line
+                Optional ByVal LocalStyle As LineStyle) As ChartUI.Line
 Const ProcName As String = "Add"
 On Error GoTo Err
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, , "Line series is finished"
 
-Dim lLine As New ChartSkil27.Line
+Dim lLine As New ChartUI.Line
 If Key = "" Then Key = GetObjectKey(lLine)
 lLine.Initialise Me, Key, mGOSP, mViewport, LocalStyle
 
@@ -1095,7 +1095,7 @@ Set mViewport = Nothing
 gClearSeries mLines, mLinesIndex
 End Sub
 
-Public Function Item(ByVal index As Variant) As ChartSkil27.Line
+Public Function Item(ByVal index As Variant) As ChartUI.Line
 Attribute Item.VB_UserMemId = 0
 Const ProcName As String = "Item"
 On Error GoTo Err
@@ -1127,7 +1127,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil27.Line)
+Public Sub RemoveObject(ByVal Value As ChartUI.Line)
 On Error GoTo Err
 
 mLines.Remove Value.Key

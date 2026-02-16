@@ -214,7 +214,7 @@ On Error GoTo Err
 
 On Error Resume Next
 
-Dim lText As ChartSkil27.Text
+Dim lText As ChartUI.Text
 Set lText = Value
 
 mTexts.Remove lText.Key
@@ -1270,7 +1270,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTexts.Enumerator
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil27.Text)
+Public Sub RemoveObject(ByVal Value As ChartUI.Text)
 On Error GoTo Err
 
 mTexts.Remove Value.Key

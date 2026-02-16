@@ -250,7 +250,7 @@ Const ProcName As String = "clearRemainingGridLines"
 On Error GoTo Err
 
 Do While pEn.MoveNext
-    Dim aLine As ChartSkil27.Line
+    Dim aLine As ChartUI.Line
     Set aLine = pEn.Current
     aLine.SetPosition gNewPoint(-1000, 0, CoordsLogical, CoordsLogical), _
                         gNewPoint(-1000, 0, CoordsLogical, CoordsLogical)
@@ -485,7 +485,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub setupGridLine(ByVal pPeriod As Period, ByVal pLine As ChartSkil27.Line)
+Private Sub setupGridLine(ByVal pPeriod As Period, ByVal pLine As ChartUI.Line)
 Const ProcName As String = "setupGridLine"
 On Error GoTo Err
 

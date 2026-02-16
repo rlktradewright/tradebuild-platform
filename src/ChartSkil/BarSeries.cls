@@ -206,7 +206,7 @@ On Error GoTo Err
 
 On Error Resume Next
 
-Dim lBar As ChartSkil27.Bar
+Dim lBar As ChartUI.Bar
 Set lBar = Value
 
 mBars.Remove lBar.Key
@@ -774,7 +774,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil27.Bar)
+Public Sub RemoveObject(ByVal Value As ChartUI.Bar)
 On Error GoTo Err
 
 mBars.Remove Value.Key

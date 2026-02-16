@@ -216,7 +216,7 @@ On Error GoTo Err
 
 On Error Resume Next
 
-Dim dp As ChartSkil27.DataPoint
+Dim dp As ChartUI.DataPoint
 Set dp = Value
 
 mDataPoints.Remove dp.Key
@@ -753,7 +753,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Public Sub RemoveObject(ByVal Value As ChartSkil27.DataPoint)
+Public Sub RemoveObject(ByVal Value As ChartUI.DataPoint)
 On Error GoTo Err
 
 mDataPoints.Remove Value.Key
