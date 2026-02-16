@@ -27,7 +27,7 @@ Option Explicit
 '@================================================================================
 
 #If SingleDll = 0 Then
-Public Const ProjectName                                As String = "CurrencyUtils27"
+Public Const ProjectName                                As String = "CurrencyLib"
 #End If
 
 Private Const ModuleName                                As String = "GCurrency"
