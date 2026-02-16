@@ -60,21 +60,21 @@ Private mLineSpecs()                        As FibLineSpecifier
 
 Private mLineSeries                         As LineSeries
 
-Private WithEvents mLine1                   As ChartSkil27.Line
+Private WithEvents mLine1                   As ChartUI.Line
 Attribute mLine1.VB_VarHelpID = -1
-Private WithEvents mLine2                   As ChartSkil27.Line
+Private WithEvents mLine2                   As ChartUI.Line
 Attribute mLine2.VB_VarHelpID = -1
-Private WithEvents mLine3                   As ChartSkil27.Line
+Private WithEvents mLine3                   As ChartUI.Line
 Attribute mLine3.VB_VarHelpID = -1
-Private WithEvents mLine4                   As ChartSkil27.Line
+Private WithEvents mLine4                   As ChartUI.Line
 Attribute mLine4.VB_VarHelpID = -1
-Private WithEvents mLine5                   As ChartSkil27.Line
+Private WithEvents mLine5                   As ChartUI.Line
 Attribute mLine5.VB_VarHelpID = -1
-Private WithEvents mLine6                   As ChartSkil27.Line
+Private WithEvents mLine6                   As ChartUI.Line
 Attribute mLine6.VB_VarHelpID = -1
-Private WithEvents mLine7                   As ChartSkil27.Line
+Private WithEvents mLine7                   As ChartUI.Line
 Attribute mLine7.VB_VarHelpID = -1
-Private WithEvents mLine8                   As ChartSkil27.Line
+Private WithEvents mLine8                   As ChartUI.Line
 Attribute mLine8.VB_VarHelpID = -1
 
 Private mTextSeries                         As TextSeries
@@ -85,8 +85,8 @@ Private mControlPoint2                      As Point
 Private mLineStyle                          As LineStyle
 Private mTextStyle                          As TextStyle
 
-Private mStartPoint1                        As ChartSkil27.Point
-Private mStartPoint2                        As ChartSkil27.Point
+Private mStartPoint1                        As ChartUI.Point
+Private mStartPoint2                        As ChartUI.Point
 
 Private mLayer                              As LayerNumbers
 
@@ -146,11 +146,11 @@ If mLineSeries Is Nothing Then
     If UBound(mLineSpecs) >= 7 Then Set mLine8 = addRetracementLine(7, X, Y)
     
 Else
-    Dim ln As ChartSkil27.Line
+    Dim ln As ChartUI.Line
     For Each ln In mLineSeries
         ln.Layer = mLayer
     Next
-    Dim txt As ChartSkil27.Text
+    Dim txt As ChartUI.Text
     For Each txt In mTextSeries
         txt.Layer = mLayer
     Next
@@ -225,14 +225,14 @@ On Error GoTo Err
 Set mControlPoint1 = NewPoint(mControlPoint1.X + X - mPrevX, mControlPoint1.Y + Y - mPrevY)
 Set mControlPoint2 = NewPoint(mControlPoint2.X + X - mPrevX, mControlPoint2.Y + Y - mPrevY)
 
-Dim ln As ChartSkil27.Line
+Dim ln As ChartUI.Line
 For Each ln In mLineSeries
     ln.Point1 = NewPoint(ln.Point1.X + X - mPrevX, ln.Point1.Y + Y - mPrevY)
     ln.Point2 = NewPoint(ln.Point2.X + X - mPrevX, ln.Point2.Y + Y - mPrevY)
 Next
 Dim i As Long
 For i = 1 To mTextSeries.Count
-    Dim txt As ChartSkil27.Text: Set txt = mTextSeries(i)
+    Dim txt As ChartUI.Text: Set txt = mTextSeries(i)
     txt.Position = NewPoint(txt.Position.X + X - mPrevX, txt.Position.Y + Y - mPrevY)
     SetText txt, i
 Next
@@ -277,7 +277,7 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Property Let IChartTool_Region(ByVal RHS As ChartSkil27.ChartRegion)
+Private Property Let IChartTool_Region(ByVal RHS As ChartUI.ChartRegion)
 Const ProcName As String = "IChartTool_Region"
 On Error GoTo Err
 
@@ -305,7 +305,7 @@ Set mControlPoint2 = NewPoint(X, Y)
 
 Dim i As Long
 For i = 1 To mLineSeries.Count
-    Dim ln As ChartSkil27.Line: Set ln = mLineSeries(i)
+    Dim ln As ChartUI.Line: Set ln = mLineSeries(i)
     Dim retr As Double: retr = mControlPoint2.Y - _
                                 (mControlPoint2.Y - mControlPoint1.Y) * _
                                 mLineSpecs(i - 1).Percentage / 100
@@ -360,7 +360,7 @@ Set mControlPoint2 = mStartPoint2
 
 Dim i As Long
 For i = 1 To mLineSeries.Count
-    Dim ln As ChartSkil27.Line: Set ln = mLineSeries(i)
+    Dim ln As ChartUI.Line: Set ln = mLineSeries(i)
     Dim retr As Double: retr = mControlPoint2.Y - _
                                 (mControlPoint2.Y - mControlPoint1.Y) * _
                                 mLineSpecs(i - 1).Percentage / 100
@@ -520,13 +520,13 @@ Private Function addRetracementLine( _
 Const ProcName As String = "addRetracementLine"
 On Error GoTo Err
 
-Dim ln As ChartSkil27.Line: Set ln = mLineSeries.Add(, mLineSpecs(index).Style)
+Dim ln As ChartUI.Line: Set ln = mLineSeries.Add(, mLineSpecs(index).Style)
 ln.IsSelectable = True
 ln.Layer = LayerNumbers.LayerMax
 ln.SetPosition NewPoint(X, Y), NewPoint(X, Y)
 mAbstractTool.AddSelectableObject ln
 
-Dim txt As ChartSkil27.Text: Set txt = mTextSeries.Add
+Dim txt As ChartUI.Text: Set txt = mTextSeries.Add
 txt.Color = mLineSpecs(index).Style.Color
 txt.Position = NewPoint(X, Y)
 txt.Offset = NewSize(0.2, 0)
@@ -567,13 +567,13 @@ On Error GoTo Err
 
 Dim i As Long
 For i = 1 To mLineSeries.Count
-    Dim ln As ChartSkil27.Line: Set ln = mLineSeries(i)
+    Dim ln As ChartUI.Line: Set ln = mLineSeries(i)
     Dim retr As Double: retr = mControlPoint2.Y - _
                                 (mControlPoint2.Y - mControlPoint1.Y) * _
                                 mLineSpecs(i - 1).Percentage / 100
     ln.Point1 = NewPoint(mControlPoint1.X, retr)
     ln.Point2 = NewPoint(mControlPoint2.X, retr)
-    Dim txt As ChartSkil27.Text: Set txt = mTextSeries(i)
+    Dim txt As ChartUI.Text: Set txt = mTextSeries(i)
     txt.Position = ln.Point2
     SetText txt, i
 Next
@@ -644,11 +644,11 @@ On Error GoTo Err
 Set mStartPoint1 = mControlPoint1
 Set mStartPoint2 = mControlPoint2
 
-Dim ln As ChartSkil27.Line
+Dim ln As ChartUI.Line
 For Each ln In mLineSeries
     ln.Layer = LayerNumbers.LayerMax
 Next
-Dim txt As ChartSkil27.Text
+Dim txt As ChartUI.Text
 For Each txt In mTextSeries
     txt.Layer = LayerNumbers.LayerMax
 Next

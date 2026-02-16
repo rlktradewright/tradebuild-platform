@@ -52,13 +52,13 @@ Private mAbstractTool                       As AbstractChartTool
 Private mRegion                             As ChartRegion
 
 Private mLineSeries                         As LineSeries
-Private WithEvents mLine                    As ChartSkil27.Line
+Private WithEvents mLine                    As ChartUI.Line
 Attribute mLine.VB_VarHelpID = -1
 
 Private mLineStyle                          As LineStyle
 
-Private mStartPoint1                        As ChartSkil27.Point
-Private mStartPoint2                        As ChartSkil27.Point
+Private mStartPoint1                        As ChartUI.Point
+Private mStartPoint2                        As ChartUI.Point
 
 Private mLayer                              As LayerNumbers
 
@@ -199,7 +199,7 @@ gNotifyUnhandledError ProcName, ModuleName
 
 End Sub
 
-Private Property Let IChartTool_Region(ByVal RHS As ChartSkil27.ChartRegion)
+Private Property Let IChartTool_Region(ByVal RHS As ChartUI.ChartRegion)
 Const ProcName As String = "IChartTool_Region"
 On Error GoTo Err
 
