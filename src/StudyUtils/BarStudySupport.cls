@@ -164,7 +164,7 @@ Set InitialBarFetchListener = mBarFetchListener
 #If SingleDll Then
 Set mBarsBuilder = GBarUtils.CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
 #Else
-Set mBarsBuilder = BarUtils27.CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
+Set mBarsBuilder = BarLib.CreateBarsBuilder(mTimePeriod, mSession, mPriceTickSize)
 #End If
 setupBars mBarsBuilder
 
@@ -184,6 +184,7 @@ Assert mBarFetchListener Is Nothing, "InitialBarFetchListener has been requested
 mInitialBarsFutureSupplied = True
 
 Set mBarsFutureBuilder = New FutureBuilder
+mBarsFutureBuilder.DiagnosticID = "BFB1"
 If Value.IsAvailable Then
     GStudies.Logger.Log "Creating BarsBuilder with initial bars", ProcName, ModuleName, LogLevelHighDetail
     setupBars CreateBarsBuilderWithInitialBars(Value.Value, mSession, mPriceTickSize)
@@ -218,6 +219,7 @@ Set mSession = pSession
 mPriceTickSize = pPriceTickSize
 
 Set mBarsFutureBuilder = New FutureBuilder
+mBarsFutureBuilder.DiagnosticID = "BFB2"
 
 Exit Sub
 

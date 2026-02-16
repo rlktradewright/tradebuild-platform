@@ -34,7 +34,7 @@ Public Const AttributeNameEnabled               As String = "Enabled"
 Public Const AttributeNameStudyLibraryBuiltIn   As String = "BuiltIn"
 Public Const AttributeNameStudyLibraryProgId    As String = "ProgId"
 
-Public Const BuiltInStudyLibProgId              As String = "CmnStudiesLib27.StudyLib"
+Public Const BuiltInStudyLibProgId              As String = "CommonStudiesLib.StudyLibrary"
 Public Const BuiltInStudyLibName                As String = "BuiltIn"
 
 Public Const ConfigNameStudyLibraries           As String = "StudyLibraries"
@@ -76,7 +76,7 @@ Public Const BarStudyValueHL2                   As String = "(H+L)/2"
 Public Const BarStudyValueHLC3                  As String = "(H+L+C)/3"
 Public Const BarStudyValueOHLC4                 As String = "(O+H+L+C)/4"
 
-Public Const StudyLibrariesRenderer             As String = "StudiesUI27.StudyLibConfigurer"
+Public Const StudyLibrariesRenderer             As String = "StudyUI.StudyLibConfigurer"
 
 '@================================================================================
 ' Enums

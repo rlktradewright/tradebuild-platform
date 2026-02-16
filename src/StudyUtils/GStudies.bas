@@ -20,7 +20,7 @@ Option Explicit
 '@================================================================================
 
 #If SingleDll = 0 Then
-Public Const ProjectName                        As String = "StudyUtils27"
+Public Const ProjectName                        As String = "StudyLib"
 #End If
 
 '@================================================================================
