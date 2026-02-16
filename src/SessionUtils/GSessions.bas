@@ -27,7 +27,7 @@ Option Explicit
 '@================================================================================
 
 #If SingleDll = 0 Then
-Private Const ProjectName                           As String = "SessionUtils27"
+Private Const ProjectName                           As String = "SessionLib"
 #End If
 
 Private Const ModuleName                            As String = "GSessions"
