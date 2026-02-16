@@ -27,7 +27,7 @@ Option Explicit
 '@================================================================================
 
 #If SingleDll = 0 Then
-Public Const ProjectName                            As String = "MarketDataUtils27"
+Public Const ProjectName                            As String = "MarketDataLib"
 #End If
 
 Private Const ModuleName                            As String = "GMktData"
