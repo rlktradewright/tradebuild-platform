@@ -117,7 +117,7 @@ Const ProcName As String = "buildBar"
 On Error GoTo Err
 
 Dim lTimestamp As Date
-Dim lBar As New BarUtils27.Bar
+Dim lBar As New BarLib.Bar
 
 lBar.Initialise GetTimestamp(pTokens), _
                 getValue(pTokens, OpenValue, pAnalyzer), _
