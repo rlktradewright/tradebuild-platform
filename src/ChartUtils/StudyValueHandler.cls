@@ -109,7 +109,7 @@ Private mCurrentDataPointValue                      As SValue
 Private mPrevDataPointValue                         As SValue
 Private mCurrentStringValue                         As SValue
 Private mCurrentStudyText                           As StudyText
-Private mCurrentBar                                 As BarUtils27.Bar
+Private mCurrentBar                                 As BarLib.Bar
 Private mCurrentStudyLine                           As StudyLine
 
 Private mDataSeries                                 As DataPointSeries
@@ -331,7 +331,7 @@ End Sub
 '@================================================================================
 
 Private Function AddBarToChart( _
-                ByVal timestamp As Date) As ChartSkil27.Bar
+                ByVal timestamp As Date) As ChartUI.Bar
 
 Const ProcName As String = "AddBarToChart"
 On Error GoTo Err
@@ -357,7 +357,7 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Function
 
-Private Function AddLineToChart() As ChartSkil27.line
+Private Function AddLineToChart() As ChartUI.line
 Const ProcName As String = "AddLineToChart"
 On Error GoTo Err
 
@@ -402,11 +402,11 @@ If ev.sVal.Value Is Nothing Then Exit Sub
 
 Static sCurrentBarNumber As Long
 
-Dim lBar As BarUtils27.Bar
+Dim lBar As BarLib.Bar
 Set lBar = ev.sVal.Value
 
 If mUpdatePerTick Then
-    Static sCurrentChartBar As ChartSkil27.Bar
+    Static sCurrentChartBar As ChartUI.Bar
     If sCurrentChartBar Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then
         Set sCurrentChartBar = AddBarToChart(lBar.timestamp)
         If Not lBar.Blank Then
@@ -597,7 +597,7 @@ On Error GoTo Err
 If ev.sVal.Value Is Nothing Then Exit Sub
 
 Static sCurrentBarNumber As Long
-Static sCurrentChartLine As ChartSkil27.line
+Static sCurrentChartLine As ChartUI.line
 
 Dim lStudyLine As StudyLine
 Set lStudyLine = ev.sVal.Value
@@ -633,7 +633,7 @@ Const ProcName As String = "processString"
 On Error GoTo Err
 
 Static sCurrentBarNumber As Long
-Static sCurrentText As ChartSkil27.Text
+Static sCurrentText As ChartUI.Text
 
 If mUpdatePerTick Then
     If sCurrentText Is Nothing Or ev.sVal.BarNumber <> sCurrentBarNumber Then Set sCurrentText = AddTextToChart
@@ -661,7 +661,7 @@ Const ProcName As String = "processText"
 On Error GoTo Err
 
 Static sCurrentBarNumber As Long
-Static sCurrentText As ChartSkil27.Text
+Static sCurrentText As ChartUI.Text
 
 Dim lStudyText As StudyText
 Set lStudyText = ev.sVal.Value
@@ -781,14 +781,14 @@ Err:
 gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub updateCurrentBar(ByVal pCurrentBar As BarUtils27.Bar)
+Private Sub updateCurrentBar(ByVal pCurrentBar As BarLib.Bar)
 Const ProcName As String = "updateCurrentBar"
 On Error GoTo Err
 
 If pCurrentBar Is Nothing Then Exit Sub
 If pCurrentBar.Blank Then Exit Sub
 
-Dim lChartBar As ChartSkil27.Bar
+Dim lChartBar As ChartUI.Bar
 Set lChartBar = AddBarToChart(pCurrentBar.timestamp)
 
 lChartBar.Tick pCurrentBar.OpenValue
@@ -833,7 +833,7 @@ On Error GoTo Err
 If pCurrentStudyLine Is Nothing Then Exit Sub
 If pCurrentStudyLine.Point1 Is Nothing Or pCurrentStudyLine.Point2 Is Nothing Then Exit Sub
 
-Dim lChartLine As ChartSkil27.line
+Dim lChartLine As ChartUI.line
 Set lChartLine = AddLineToChart
 
 lChartLine.SetPosition NewPoint( _

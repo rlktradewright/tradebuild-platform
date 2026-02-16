@@ -19,7 +19,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                        As String = "ChartUtils27"
+Public Const ProjectName                        As String = "ChartDeployLib"
 Private Const ModuleName                        As String = "Globals"
 
 Private Const ConfigSectionDefaultStudyConfig   As String = "DefaultStudyConfig"

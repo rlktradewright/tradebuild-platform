@@ -1214,7 +1214,7 @@ horizRulesLineSeries.ExtendBefore = True
 
 Dim studyHorizRule As StudyHorizontalRule
 For Each studyHorizRule In studyConfig.StudyHorizontalRules
-    Dim line As ChartSkil27.line
+    Dim line As ChartUI.line
     Set line = horizRulesLineSeries.Add
     line.Color = studyHorizRule.Color
     line.LineStyle = studyHorizRule.Style

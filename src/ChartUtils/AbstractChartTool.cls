@@ -128,7 +128,7 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mChartEV_RegionSelected(ByVal Region As ChartSkil27.ChartRegion)
+Private Sub mChartEV_RegionSelected(ByVal Region As ChartUI.ChartRegion)
 Const ProcName As String = "mChartEV_RegionSelected"
 
 On Error GoTo Err
