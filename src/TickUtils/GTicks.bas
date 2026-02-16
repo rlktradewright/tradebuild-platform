@@ -34,7 +34,7 @@ End Enum
 '@================================================================================
 
 #If SingleDll = 0 Then
-Public Const ProjectName                    As String = "TickUtils27"
+Public Const ProjectName                    As String = "TickLib"
 #End If
 
 Private Const ModuleName                    As String = "GTicks"
