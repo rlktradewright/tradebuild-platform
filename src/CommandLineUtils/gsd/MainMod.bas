@@ -1316,7 +1316,7 @@ End Sub
 
 Private Sub showUsage()
 gWriteLineToConsole "Usage:"
-gWriteLineToConsole "gsd27 -tws[:[<twsserver>][,[<port>][,[<clientid>]]]]"
+gWriteLineToConsole "gsd -tws[:[<twsserver>][,[<port>][,[<clientid>]]]]"
 gWriteLineToConsole "       [-scan:scanname]"
 gWriteLineToConsole "       [-resultsdir:<resultspath>] [-log:<logfilepath>]"
 gWriteLineToConsole "       [-loglevel:[ I | N | D | M | H }]"

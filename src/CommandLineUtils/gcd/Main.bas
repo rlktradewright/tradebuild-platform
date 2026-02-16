@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "gcd27"
+Public Const ProjectName                    As String = "gcd"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -297,7 +297,7 @@ End If
     
 If setupDbServiceProvider Then
     mTB.ServiceProviders.Add _
-                        ProgId:="TBInfoBase27.ContractInfoSrvcProvider", _
+                        ProgId:="TBInfoBaseLib.ContractInfoSrvcProvider", _
                         Enabled:=True, _
                         ParamString:="Role=PRIMARY" & _
                                     ";Database Name=" & database & _
@@ -353,7 +353,7 @@ End If
     
 If setupTwsServiceProvider Then
     mTB.ServiceProviders.Add _
-                        ProgId:="IBTWSSP27.ContractInfoServiceProvider", _
+                        ProgId:="IBTWSSPLib.ContractInfoServiceProvider", _
                         Enabled:=True, _
                         ParamString:="Role=PRIMARY" & _
                                     ";Server=" & server & _

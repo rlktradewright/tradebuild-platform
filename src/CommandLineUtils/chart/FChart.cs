@@ -34,18 +34,18 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-using AxTradingUI27;
-using BarFormatters27;
-using BarUtils27;
-using ChartSkil27;
-using ChartUtils27;
-using ContractUtils27;
-using HistDataUtils27;
-using MarketDataUtils27;
-using StudyUtils27;
-using TickUtils27;
-using TimeframeUtils27;
-using TradingUI27;
+using AxTradeUI;
+using BarFormatterLib;
+using BarLib;
+using ChartUI;
+using ChartDeployLib;
+using ContractLib;
+using HistDataLib;
+using MarketDataLib;
+using StudyLib;
+using TickLib;
+using TimeframeLib;
+using TradeUI;
 using TWUtilities40;
 
 namespace TradeWright.TradeBuild.Applications.Chart

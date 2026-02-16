@@ -31,10 +31,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ContractUtils27;
-using HistDataUtils27;
-using IBENHAPI27;
-using TickUtils27;
+using ContractLib;
+using HistDataLib;
+using IBEnhAPILib;
+using TickLib;
 using TWUtilities40;
 
 namespace TradeWright.TradeBuild.Applications.Chart

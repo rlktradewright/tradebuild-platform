@@ -31,7 +31,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using IBENHAPI27;
+using IBEnhAPILib;
+
 using TWUtilities40;
 
 namespace TradeWright.TradeBuild.Applications.Chart

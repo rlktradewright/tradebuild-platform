@@ -403,7 +403,7 @@ End Function
 
 Private Sub showUsage()
 gCon.WriteErrorLine "Usage:"
-gCon.WriteErrorLine "gtd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteErrorLine "gtd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
 gCon.WriteErrorLine "    -Speed:n"
 gCon.WriteErrorLine ""
 gCon.WriteErrorLine "StdIn Format:"

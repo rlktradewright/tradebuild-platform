@@ -61,46 +61,31 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Interop.AxChartSkil27">
-      <SpecificVersion>False</SpecificVersion>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.AxChartSkil27.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Interop.AxChartUI">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.AxChartUI.dll</HintPath>
     </Reference>
-    <Reference Include="Interop.AxTradingUI27">
-      <SpecificVersion>False</SpecificVersion>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.AxTradingUI27.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Interop.AxTradeUI">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.AxTradeUI.dll</HintPath>
     </Reference>
-    <Reference Include="Interop.BarFormatters27">
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BarFormatters27.dll</HintPath>
+    <Reference Include="Interop.BarFormatterLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BarFormatterLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.BarUtils27, Version=495.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.BarLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BarLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.BarUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.ChartSkil27, Version=315.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.ChartDeployLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ChartDeployLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ChartSkil27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.ChartUtils27, Version=312.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.ChartUI">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ChartUI.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ChartUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.ContractUtils27, Version=499.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.ContractLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ContractLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ContractUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="Interop.ExtProps40, Version=28.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -108,74 +93,53 @@
       <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.ExtProps40.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.HistDataUtils27">
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.HistDataUtils27.dll</HintPath>
+    <Reference Include="Interop.HistDataLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.HistDataLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.IBAPI, Version=39.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.IBBaseAPILib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.IBBaseAPILib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.IBAPI.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.IBENHAPI27">
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.IBENHAPI27.dll</HintPath>
+    <Reference Include="Interop.IBEnhAPILib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.IBEnhAPILib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.MarketDataUtils27">
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.MarketDataUtils27.dll</HintPath>
+    <Reference Include="Interop.MarketDataLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.MarketDataLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.OrderUtils27, Version=33.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.OrderLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.OrderLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.OrderUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.SessionUtils27, Version=435.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.SessionLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.SessionLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.SessionUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.StudyUtils27, Version=481.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.StudyLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.StudyLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.StudyUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.TickerUtils27, Version=302.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.TickerLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickerLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickerUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.TickfileUtils27, Version=157.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.TickfileLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickfileLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickfileUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.TickUtils27, Version=508.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.TickLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TickUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.TimeframeUtils27, Version=386.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.TimeframeLib">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TimeframeLib.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TimeframeUtils27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="Interop.TradingUI27, Version=373.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Interop.TradeUI">
+      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TradeUI.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Bin\TradeWright.TradeBuild.ComInterop\Interop.TradingUI27.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="Interop.TWUtilities40, Version=27.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -209,7 +173,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="TradeWright.TabControlExtra, Version=2.0.1.0, Culture=neutral, PublicKeyToken=f4d0df7e5886cbe9, processorArchitecture=MSIL">
       <HintPath>packages\TradeWright.TabControlExtra.2.0.1\lib\net45\TradeWright.TabControlExtra.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="VBA, Version=6.0.0.0, Culture=neutral, processorArchitecture=MSIL">

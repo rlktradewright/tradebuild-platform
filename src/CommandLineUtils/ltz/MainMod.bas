@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "ltz27"
+Public Const ProjectName                    As String = "ltz"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -102,7 +102,7 @@ End Sub
 Private Sub process()
 Dim s() As String
 Dim tzf As TimeZoneFactory
-Dim tz As TradingDO27.TimeZone
+Dim tz As TradingDOLib.TimeZone
 Dim i As Long
 
 Set tzf = gDb.TimeZoneFactory
@@ -177,7 +177,7 @@ End Function
 
 Private Sub showUsage()
 gCon.WriteErrorLine "Usage:"
-gCon.WriteErrorLine "ltz27 -todb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteErrorLine "ltz -todb:databaseserver,databasetype,catalog[,username[,password]]"
 End Sub
 
 

@@ -30,10 +30,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
-using ChartUtils27;
-using ContractUtils27;
-using MarketDataUtils27;
-using StudyUtils27;
+using ChartDeployLib;
+using ContractLib;
+using MarketDataLib;
+using StudyLib;
 using TWUtilities40;
 
 namespace TradeWright.TradeBuild.Applications.Chart

@@ -47,7 +47,7 @@ Private Const ModuleName                            As String = "BracketOrderLis
 '@================================================================================
 
 #If SingleDll = 0 Then
-Private WithEvents mBracketOrderListener            As OrderUtils27.BracketOrderListener
+Private WithEvents mBracketOrderListener            As OrderLib.BracketOrderListener
 Attribute mBracketOrderListener.VB_VarHelpID = -1
 #Else
 Private WithEvents mBracketOrderListener            As TBFoundation.BracketOrderListener
@@ -60,7 +60,7 @@ Attribute mBracketOrderListener.VB_VarHelpID = -1
 
 Private Sub Class_Initialize()
 #If SingleDll = 0 Then
-Set mBracketOrderListener = New OrderUtils27.BracketOrderListener
+Set mBracketOrderListener = New OrderLib.BracketOrderListener
 #Else
 Set mBracketOrderListener = New TBFoundation.BracketOrderListener
 #End If
@@ -253,7 +253,7 @@ End Sub
 '@================================================================================
 
 #If SingleDll = 0 Then
-Friend Property Get Base() As OrderUtils27.BracketOrderListener
+Friend Property Get Base() As OrderLib.BracketOrderListener
 #Else
 Friend Property Get Base() As TBFoundation.BracketOrderListener
 #End If

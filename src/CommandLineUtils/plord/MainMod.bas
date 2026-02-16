@@ -32,7 +32,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "plord27"
+Public Const ProjectName                            As String = "plord"
 Private Const ModuleName                            As String = "MainMod"
 
 Private Const ApiMessageLoggingSwitch               As String = "APIMESSAGELOGGING"
@@ -2836,7 +2836,7 @@ End Sub
 
 Private Sub showUsage()
 gWriteLineToConsole "Usage:"
-gWriteLineToConsole "plord27 -tws[:[<twsserver>][,[<port>][,[<clientid>]]]] [-monitor[:[yes|no]]] "
+gWriteLineToConsole "plord -tws[:[<twsserver>][,[<port>][,[<clientid>]]]] [-monitor[:[yes|no]]] "
 gWriteLineToConsole "       [-resultsdir:<resultspath>] [-stopAt:<hh:mm>] [-log:<logfilepath>]"
 gWriteLineToConsole "       [-loglevel:[ I | N | D | M | H }]"
 gWriteLineToConsole "       [-stageorders[:[yes|no]]]"

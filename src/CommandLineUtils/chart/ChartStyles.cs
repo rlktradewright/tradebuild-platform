@@ -27,7 +27,7 @@
 using System.Collections;
 using System.Drawing;
 
-using ChartSkil27;
+using ChartUI;
 using TWUtilities40;
 
 namespace TradeWright.TradeBuild.Applications.Chart

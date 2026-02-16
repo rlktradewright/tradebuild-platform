@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "gxd27"
+Public Const ProjectName                    As String = "gxd"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -213,7 +213,7 @@ End Function
 
 Private Sub showUsage()
 gCon.WriteErrorLine "Usage:"
-gCon.WriteErrorLine "gxd27 -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
+gCon.WriteErrorLine "gxd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
 gCon.WriteErrorLine ""
 gCon.WriteErrorLine "StdIn Format:"
 gCon.WriteErrorLine "*"

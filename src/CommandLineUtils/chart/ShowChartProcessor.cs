@@ -30,9 +30,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-using ChartUtils27;
-using ContractUtils27;
-using MarketDataUtils27;
+using ChartDeployLib;
+using ChartUI;
+using ContractLib;
+using MarketDataLib;
 using TWUtilities40;
 
 namespace TradeWright.TradeBuild.Applications.Chart

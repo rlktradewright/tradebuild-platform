@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "ucd27"
+Public Const ProjectName                    As String = "ucd"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -492,7 +492,7 @@ End Function
 
 Private Sub showUsage()
 gCon.WriteErrorLine "Usage:"
-gCon.WriteErrorLine "ucd27 [exchange/contractclass]"
+gCon.WriteErrorLine "ucd [exchange/contractclass]"
 gCon.WriteErrorLine "    -todb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
 gCon.WriteErrorLine "    -U     # update existing records"
 gCon.WriteErrorLine "    -O     # allow overrides to Contract Class ticksize, tickvalue and currency"
