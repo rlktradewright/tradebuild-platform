@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{948AEB4D-03C6-4FAB-ACD2-E61F7B7A0EB3}#135.0#0"; "TradeBuildUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#1.0#0"; "TradeUI.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#31.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ConfigViewer 
    BackStyle       =   0  'Transparent
@@ -80,7 +80,7 @@ Begin VB.UserControl ConfigViewer
       MouseOverBackColor=   0
       PushedBackColor =   0
    End
-   Begin DataCollector27.ContractsConfigurer ContractsConfigurer1 
+   Begin DataCollector.ContractsConfigurer ContractsConfigurer1 
       Height          =   4005
       Left            =   8520
       TabIndex        =   11
@@ -129,7 +129,7 @@ Begin VB.UserControl ConfigViewer
       Style           =   7
       Appearance      =   0
    End
-   Begin TradeBuildUI27.SPConfigurer SPConfigurer1 
+   Begin TradeBuildUI.SPConfigurer SPConfigurer1 
       Height          =   3975
       Left            =   120
       TabIndex        =   6

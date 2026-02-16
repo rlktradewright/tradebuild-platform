@@ -21,7 +21,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                                As String = "DataCollector27"
+Public Const ProjectName                                As String = "DataCollector"
 Public Const AppName                                    As String = "TradeBuild Data Collector"
 
 Private Const ModuleName                                As String = "MainModule"
@@ -114,7 +114,7 @@ Private mRightOffset                                    As Long
 Private mPosX                                           As Single
 Private mPosY                                           As Single
 
-Private mDataCollector                                  As DataCollector
+Private mCollector                                  As TBDataCollectorLib.Collector
 
 Private mStartTimeDescriptor                            As String
 Private mEndTimeDescriptor                              As String
@@ -375,7 +375,7 @@ mNoDataRestartSecs = getNoDataRestartSecs
 If mNoUI Then
     
     LogMessage "Creating data collector object"
-    Set mDataCollector = CreateDataCollector(mConfigManager.ConfigurationFile, _
+    Set mCollector = CreateCollector(mConfigManager.ConfigurationFile, _
                                             mConfig.InstanceQualifier, _
                                             mStartTimeDescriptor, _
                                             mEndTimeDescriptor, _
@@ -383,7 +383,7 @@ If mNoUI Then
     
     If mStartTimeDescriptor = "" Then
         LogMessage "Starting data collection"
-        mDataCollector.StartCollection
+        mCollector.StartCollection
     End If
     
     Do While Not gStop
@@ -397,7 +397,7 @@ If mNoUI Then
 Else
     LogMessage "Creating data collector object"
     Dim f As New fDataCollectorUI
-    Set mDataCollector = CreateDataCollector(mConfigManager.ConfigurationFile, _
+    Set mCollector = CreateCollector(mConfigManager.ConfigurationFile, _
                                             mConfig.InstanceQualifier, _
                                             IIf(mNoAutoStart, "", mStartTimeDescriptor), _
                                             mEndTimeDescriptor, _
@@ -765,10 +765,10 @@ If Trim$(Command) <> "/?" And Trim$(Command) <> "-?" Then Exit Function
     
 Dim s As String
 s = vbCrLf & _
-        "datacollector27 [configfilename]" & vbCrLf & _
+        "datacollector [configfilename]" & vbCrLf & _
         "                /setup " & vbCrLf & _
         "   or " & vbCrLf & _
-        "datacollector27 [configfilename] " & vbCrLf & _
+        "datacollector [configfilename] " & vbCrLf & _
         "                [/config:configtoload] " & vbCrLf & _
         "                [/log:filename] " & vbCrLf & _
         "                [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
@@ -798,13 +798,13 @@ s = s & vbCrLf & _
         "       All     or A"
 s = s & vbCrLf & _
         "Example 1:" & vbCrLf & _
-        "   datacollector27 /setup" & vbCrLf & _
+        "   datacollector /setup" & vbCrLf & _
         "       runs the data collector configurer, which enables you to define " & vbCrLf & _
         "       various configurations for use with different data collector " & vbCrLf & _
         "       instances. The default configuration file is used to store this" & vbCrLf & _
         "       information." & vbCrLf & _
         "Example 2:" & vbCrLf & _
-        "   datacollector27 mysettings.xml /config:""US Futures""" & vbCrLf & _
+        "   datacollector mysettings.xml /config:""US Futures""" & vbCrLf & _
         "       runs the data collector in accordance with the configuration" & vbCrLf & _
         "       called ""US Futures"" defined in the mysettings.xml file."
 MsgBox s, , "Usage"
@@ -849,7 +849,7 @@ End If
 
 LogMessage "Form position: " & mPosX & "," & mPosY
 
-pForm.Initialise mDataCollector, _
+pForm.Initialise mCollector, _
                 mConfigManager, _
                 getConfigName, _
                 getNoAutostart, _

@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TabCtl32.Ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fDataCollectorUI 
    Appearance      =   0  'Flat
    BackColor       =   &H80000005&
@@ -440,8 +440,8 @@ End Type
 ' Member variables
 '================================================================================
 
-Private WithEvents mDataCollector As DataCollector
-Attribute mDataCollector.VB_VarHelpID = -1
+Private WithEvents mCollector As TBDataCollectorLib.Collector
+Attribute mCollector.VB_VarHelpID = -1
 
 Private mTickers() As TickerTableEntry
 
@@ -948,24 +948,24 @@ gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
 '================================================================================
-' mDataCollector Event Handlers
+' mCollector Event Handlers
 '================================================================================
 
-Private Sub mDataCollector_CollectionStarted()
-Const ProcName As String = "mDataCollector_CollectionStarted"
+Private Sub mCollector_CollectionStarted()
+Const ProcName As String = "mCollector_CollectionStarted"
 On Error GoTo Err
 
 Dim s As String
-If mDataCollector.nextEndTime <> 0 Then
+If mCollector.nextEndTime <> 0 Then
     s = "Collection end: " & _
-        FormatDateTime(mDataCollector.nextEndTime, vbShortDate) & " " & _
-        FormatDateTime(mDataCollector.nextEndTime, vbShortTime)
+        FormatDateTime(mCollector.nextEndTime, vbShortDate) & " " & _
+        FormatDateTime(mCollector.nextEndTime, vbShortTime)
 End If
-If mDataCollector.exitProgramTime <> 0 Then
+If mCollector.exitProgramTime <> 0 Then
     s = IIf(s = "", "P", s & "; p") & _
         "rogram exit: " & _
-        FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
-        FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+        FormatDateTime(mCollector.exitProgramTime, vbShortDate) & " " & _
+        FormatDateTime(mCollector.exitProgramTime, vbShortTime)
 End If
 
 mStartStopTimePanel.Text = s
@@ -978,21 +978,21 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_CollectionStopped()
-Const ProcName As String = "mDataCollector_CollectionStopped"
+Private Sub mCollector_CollectionStopped()
+Const ProcName As String = "mCollector_CollectionStopped"
 On Error GoTo Err
 
 Dim s As String
-If mDataCollector.nextStartTime <> 0 Then
+If mCollector.nextStartTime <> 0 Then
     s = "Collection start: " & _
-        FormatDateTime(mDataCollector.nextStartTime, vbShortDate) & " " & _
-        FormatDateTime(mDataCollector.nextStartTime, vbShortTime)
+        FormatDateTime(mCollector.nextStartTime, vbShortDate) & " " & _
+        FormatDateTime(mCollector.nextStartTime, vbShortTime)
 End If
-If mDataCollector.exitProgramTime <> 0 Then
+If mCollector.exitProgramTime <> 0 Then
     s = IIf(s = "", "P", s & "; p") & _
         "rogram exit: " & _
-        FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
-        FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+        FormatDateTime(mCollector.exitProgramTime, vbShortDate) & " " & _
+        FormatDateTime(mCollector.exitProgramTime, vbShortTime)
 End If
 
 mStartStopTimePanel.Text = s
@@ -1005,8 +1005,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_connected()
-Const ProcName As String = "mDataCollector_connected"
+Private Sub mCollector_connected()
+Const ProcName As String = "mCollector_connected"
 On Error GoTo Err
 
 mNumTicksSinceConnected = 0
@@ -1021,8 +1021,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_connectFailed(ByVal description As String)
-Const ProcName As String = "mDataCollector_connectFailed"
+Private Sub mCollector_connectFailed(ByVal description As String)
+Const ProcName As String = "mCollector_connectFailed"
 On Error GoTo Err
 
 mConnected = False
@@ -1034,8 +1034,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_ConnectionClosed()
-Const ProcName As String = "mDataCollector_ConnectionClosed"
+Private Sub mCollector_ConnectionClosed()
+Const ProcName As String = "mCollector_ConnectionClosed"
 On Error GoTo Err
 
 mConnected = False
@@ -1048,8 +1048,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_Error(ev As ErrorEventData)
-Const ProcName As String = "mDataCollector_Error"
+Private Sub mCollector_Error(ev As ErrorEventData)
+Const ProcName As String = "mCollector_Error"
 On Error GoTo Err
 
 LogMessage "Error " & ev.ErrorCode & ": " & vbCrLf & _
@@ -1066,8 +1066,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_ExitProgram()
-Const ProcName As String = "mDataCollector_ExitProgram"
+Private Sub mCollector_ExitProgram()
+Const ProcName As String = "mCollector_ExitProgram"
 On Error GoTo Err
 
 Unload Me
@@ -1078,8 +1078,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_FatalError(ev As ErrorEventData)
-Const ProcName As String = "mDataCollector_FatalError"
+Private Sub mCollector_FatalError(ev As ErrorEventData)
+Const ProcName As String = "mCollector_FatalError"
 On Error GoTo Err
 
 Err.Raise ev.ErrorCode, ev.ErrorSource, ev.ErrorMessage
@@ -1090,8 +1090,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_Reconnecting()
-Const ProcName As String = "mDataCollector_Reconnecting"
+Private Sub mCollector_Reconnecting()
+Const ProcName As String = "mCollector_Reconnecting"
 On Error GoTo Err
 
 mConnected = False
@@ -1104,8 +1104,8 @@ Err:
 gNotifyUnhandledError ProcName, ModuleName
 End Sub
 
-Private Sub mDataCollector_TickerAdded(ByVal pTicker As Ticker)
-Const ProcName As String = "mDataCollector_TickerAdded"
+Private Sub mCollector_TickerAdded(ByVal pTicker As Ticker)
+Const ProcName As String = "mCollector_TickerAdded"
 On Error GoTo Err
 
 Dim Index As Long
@@ -1212,7 +1212,7 @@ End Sub
 '================================================================================
 
 Friend Sub Initialise( _
-                ByVal pDataCollector As DataCollector, _
+                ByVal pDataCollector As TBDataCollectorLib.Collector, _
                 ByVal pconfigManager As ConfigManager, _
                 ByVal configName As String, _
                 ByVal noAutoStart As Boolean, _
@@ -1226,7 +1226,7 @@ applyTheme mTheme
 mNoDataRestartSecs = pNoDataRestartSecs
 Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 
-Set mDataCollector = pDataCollector
+Set mCollector = pDataCollector
 
 Set mConfigManager = pconfigManager
 ConfigNameText = configName
@@ -1239,26 +1239,26 @@ Else
 End If
 
 If noAutoStart Then
-    If mDataCollector.exitProgramTime <> 0 Then
+    If mCollector.exitProgramTime <> 0 Then
         mStartStopTimePanel.Text = "Program exit: " & _
-                                    FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
-                                    FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+                                    FormatDateTime(mCollector.exitProgramTime, vbShortDate) & " " & _
+                                    FormatDateTime(mCollector.exitProgramTime, vbShortTime)
     End If
 Else
 Dim s As String
-    If mDataCollector.nextStartTime <> 0 Then
+    If mCollector.nextStartTime <> 0 Then
         s = "Collection start: " & _
-            FormatDateTime(mDataCollector.nextStartTime, vbShortDate) & " " & _
-            FormatDateTime(mDataCollector.nextStartTime, vbShortTime)
+            FormatDateTime(mCollector.nextStartTime, vbShortDate) & " " & _
+            FormatDateTime(mCollector.nextStartTime, vbShortTime)
     End If
-    If mDataCollector.exitProgramTime <> 0 Then
+    If mCollector.exitProgramTime <> 0 Then
         s = IIf(s = "", "P", s & "; p") & _
             "rogram exit: " & _
-            FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
-            FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+            FormatDateTime(mCollector.exitProgramTime, vbShortDate) & " " & _
+            FormatDateTime(mCollector.exitProgramTime, vbShortTime)
     End If
     mStartStopTimePanel.Text = s
-    If mDataCollector.nextStartTime = 0 Then
+    If mCollector.nextStartTime = 0 Then
         startCollecting "Data collection started automatically"
     End If
 End If
@@ -1582,7 +1582,7 @@ On Error GoTo Err
 
 LogMessage message
 
-mDataCollector.StartCollection
+mCollector.StartCollection
 
 Exit Sub
 
@@ -1606,7 +1606,7 @@ End If
 
 LogMessage message
 
-mDataCollector.StopCollection
+mCollector.StopCollection
 
 Dim i As Long
 For i = 0 To UBound(mTickers)

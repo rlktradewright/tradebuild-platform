@@ -87,7 +87,7 @@ Begin VB.Form fContractSpec
       Value           =   1  'Checked
       Width           =   1695
    End
-   Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
+   Begin TradeUI.ContractSpecBuilder ContractSpecBuilder1 
       Height          =   3690
       Left            =   120
       TabIndex        =   1

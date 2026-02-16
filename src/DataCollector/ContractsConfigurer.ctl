@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.UserControl ContractsConfigurer 
    ClientHeight    =   4305
    ClientLeft      =   0
@@ -267,7 +267,7 @@ End Sub
 '@================================================================================
 
 Private Sub mContractSpecForm_ContractSpecReady( _
-                ByVal contractSpec As ContractUtils27.ContractSpecifier, _
+                ByVal contractSpec As ContractLib.ContractSpecifier, _
                 ByVal enabled As Boolean, _
                 ByVal writeBidAskBars As Boolean, _
                 ByVal includeMktDepth As Boolean)

@@ -12,7 +12,7 @@ Begin VB.Form fConfig
    ScaleHeight     =   4215
    ScaleWidth      =   10230
    StartUpPosition =   2  'CenterScreen
-   Begin DataCollector27.ConfigViewer ConfigViewer1 
+   Begin DataCollector.ConfigViewer ConfigViewer1 
       Height          =   4095
       Left            =   120
       TabIndex        =   0
