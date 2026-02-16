@@ -138,7 +138,7 @@ End Sub
 #If SingleDll Then
 Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As TBFoundation.IContract)
 #Else
-Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As ContractUtils27.IContract)
+Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As ContractLib.IContract)
 #End If
 Const ProcName As String = "IContractFetchListener_NotifyContract"
 On Error GoTo Err

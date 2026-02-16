@@ -96,9 +96,9 @@ GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 #If SingleDll Then
-Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As TBFoundation.IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As TBFoundation.IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As IFuture
 #Else
-Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As ContractUtils27.IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+Private Function IContractStore_FetchOptionExpiries(ByVal pUnderlyingContractSpecifier As ContractLib.IContractSpecifier, ByVal pExchange As String, Optional ByVal pStrike As Double = 0#, Optional ByVal pCookie As Variant) As IFuture
 #End If
 Const ProcName As String = "IContractStore_FetchOptionExpiries"
 On Error GoTo Err
@@ -112,9 +112,9 @@ GTradingDB.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 #If SingleDll Then
-Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As TBFoundation.IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As TBFoundation.IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As IFuture
 #Else
-Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As ContractUtils27.IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As TWUtilities40.IFuture
+Private Function IContractStore_FetchOptionStrikes(ByVal pUnderlyingContractSpecifier As ContractLib.IContractSpecifier, ByVal pExchange As String, Optional ByVal pExpiry As String, Optional ByVal pCookie As Variant) As IFuture
 #End If
 Const ProcName As String = "IContractStore_FetchOptionStrikes"
 On Error GoTo Err

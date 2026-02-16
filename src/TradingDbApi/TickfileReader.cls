@@ -83,7 +83,7 @@ Attribute mFetchTicksTC.VB_VarHelpID = -1
 Private WithEvents mTickStream      As TBDatabase.TickStream
 Attribute mTickStream.VB_VarHelpID = -1
 #Else
-Private WithEvents mTickStream      As TradingDO27.TickStream
+Private WithEvents mTickStream      As TradingDOLib.TickStream
 Attribute mTickStream.VB_VarHelpID = -1
 #End If
 
@@ -153,7 +153,7 @@ End Sub
 #If SingleDll Then
 Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As TBFoundation.IContract)
 #Else
-Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As ContractUtils27.IContract)
+Private Sub IContractFetchListener_NotifyContract(ByVal pCookie As Variant, ByVal pContract As ContractLib.IContract)
 #End If
 Const ProcName As String = "IContractFetchListener_NotifyContract"
 On Error GoTo Err
