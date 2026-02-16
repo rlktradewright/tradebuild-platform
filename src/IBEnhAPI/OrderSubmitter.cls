@@ -170,10 +170,13 @@ GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 #If SingleDll = 0 Then
-Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As OrderUtils27.IBracketOrder)
-#Else
-Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As TBFoundation.IBracketOrder)
+Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As OrderLib.IBracketOrder)
+
+End Sub
 #End If
+
+#If SingleDll <> 0 Then
+Private Sub IOrderSubmitter_CancelCloseoutOrder(ByVal pBracketOrder As TBFoundation.IBracketOrder)
 Const ProcName As String = "IOrderSubmitter_CancelCloseoutOrder"
 On Error GoTo Err
 
@@ -184,9 +187,10 @@ Exit Sub
 Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
+#End If
 
 #If SingleDll = 0 Then
-Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As OrderUtils27.IOrder)
+Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As OrderLib.IOrder)
 #Else
 Private Sub IOrderSubmitter_CancelOrder(ByVal pOrder As TBFoundation.IOrder)
 #End If

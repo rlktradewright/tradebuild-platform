@@ -6,7 +6,7 @@ Option Explicit
 '================================================================================
 
 #If SingleDll = 0 Then
-Public Const ProjectName                        As String = "IBEnhancedAPI27"
+Public Const ProjectName                        As String = "IBEnhAPILib"
 #End If
 Private Const ModuleName                        As String = "GIBEnhApi"
 

@@ -203,7 +203,7 @@ Err:
 GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Sub
 
-Private Sub IMarketDataConsumer_NotifyMarketDataType(ByVal pTickerId As Long, ByVal pMarketDataType As IBBaseApi.TwsMarketDataTypes)
+Private Sub IMarketDataConsumer_NotifyMarketDataType(ByVal pTickerId As Long, ByVal pMarketDataType As IBApiLib.TwsMarketDataTypes)
 Const ProcName As String = "IMarketDataConsumer_NotifyMarketDataType"
 On Error GoTo Err
 
@@ -528,7 +528,7 @@ GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 #If SingleDll = 0 Then
-Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As TickUtils27.ITickStream
+Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As TickLib.ITickStream
 #Else
 Private Function IMarketDataFactory_CreateMarketDepthStream(ByVal pContractFuture As IFuture, ByVal pNumberOfRows As Long, ByVal pErrorListener As IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1) As TBFoundation.ITickStream
 #End If
@@ -544,7 +544,7 @@ GIBEnhApi.HandleUnexpectedError ProcName, ModuleName
 End Function
 
 #If SingleDll = 0 Then
-Private Function IMarketDataFactory_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TickUtils27.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TickUtils27.ITickStream
+Private Function IMarketDataFactory_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TickLib.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TickLib.ITickStream
 #Else
 Private Function IMarketDataFactory_CreateSnapshotMarketDataStream(ByVal pContractFuture As TWUtilities40.IFuture, ByVal pErrorListener As TBFoundation.IMarketDataErrorListener, Optional ByVal pStreamId As Long = -1&) As TBFoundation.ITickStream
 #End If
@@ -694,13 +694,13 @@ Case ApiConnConnected
     ' it will soon tell us
     mIsTwsConnectedToIBServers = True
     
-	' reset any market depth
-	ResetMarketDepth False
-	
-	' restart any market data and market depth tickers that were
-	' previously in operation (or were set up before connection
-	' succeeded)
-	reEstablishTickers MarketDataReestablishmentModes.All
+        ' reset any market depth
+        ResetMarketDepth False
+        
+        ' restart any market data and market depth tickers that were
+        ' previously in operation (or were set up before connection
+        ' succeeded)
+        reEstablishTickers MarketDataReestablishmentModes.All
 Case ApiConnFailed
 
 End Select
