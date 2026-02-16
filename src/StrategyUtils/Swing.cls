@@ -263,7 +263,7 @@ End Function
 '@================================================================================
 
 Private Function getSwing( _
-                ByVal Swing As ResourceIdentifier) As CmnStudiesLib27.Swing
+                ByVal Swing As ResourceIdentifier) As CommonStudiesLib.Swing
 Const ProcName As String = "getSwing"
 On Error GoTo Err
 
@@ -272,7 +272,7 @@ Assert Not Swing Is Nothing, "No Swing is currently defined"
 
 Dim lObj As Object
 Set lObj = Swing.Resource
-AssertArgument TypeOf lObj Is CmnStudiesLib27.Swing, "ResourceIdentifier does not refer to a Swing study"
+AssertArgument TypeOf lObj Is CommonStudiesLib.Swing, "ResourceIdentifier does not refer to a Swing study"
 
 Set getSwing = lObj
 

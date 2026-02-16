@@ -83,7 +83,7 @@ End Function
 '@================================================================================
 
 Private Function getSMA( _
-                ByVal SMA As ResourceIdentifier) As CmnStudiesLib27.SMA
+                ByVal SMA As ResourceIdentifier) As CommonStudiesLib.SMA
 Const ProcName As String = "getBB"
 On Error GoTo Err
 
@@ -92,7 +92,7 @@ Assert Not SMA Is Nothing, "No SMA currently defined"
 
 Dim lObj As Object
 Set lObj = SMA.Resource
-AssertArgument TypeOf lObj Is CmnStudiesLib27.SMA, "ResourceIdentifier does not refer to an SMA study"
+AssertArgument TypeOf lObj Is CommonStudiesLib.SMA, "ResourceIdentifier does not refer to an SMA study"
 
 Set getSMA = lObj
 

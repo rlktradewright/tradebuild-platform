@@ -325,7 +325,7 @@ End Function
 '@================================================================================
 
 Private Function getBars( _
-                Optional ByVal Timeframe As ResourceIdentifier) As BarUtils27.Bars
+                Optional ByVal Timeframe As ResourceIdentifier) As BarLib.Bars
 Const ProcName As String = "getBars"
 On Error GoTo Err
 

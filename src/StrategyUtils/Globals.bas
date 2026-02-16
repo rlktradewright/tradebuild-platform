@@ -40,7 +40,7 @@ End Type
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                            As String = "StrategyUtils27"
+Public Const ProjectName                            As String = "StrategyLib"
 Private Const ModuleName                            As String = "Globals"
 
 '@================================================================================

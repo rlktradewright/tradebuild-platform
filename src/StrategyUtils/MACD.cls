@@ -148,7 +148,7 @@ Public Function MACDNoStrength( _
 Const ProcName As String = "MACDNoStrength"
 On Error GoTo Err
 
-MACDNoStrength = (getMACD(MACD).strength(Ref).Value = CmnStudiesLib27.MACDNoStrength)
+MACDNoStrength = (getMACD(MACD).strength(Ref).Value = CommonStudiesLib.MACDNoStrength)
 
 Exit Function
 
@@ -176,7 +176,7 @@ Public Function MACDStrengthConfirmed( _
 Const ProcName As String = "MACDStrengthConfirmed"
 On Error GoTo Err
 
-MACDStrengthConfirmed = (getMACD(MACD).strength(Ref).Value = CmnStudiesLib27.MACDConfirmedStrength)
+MACDStrengthConfirmed = (getMACD(MACD).strength(Ref).Value = CommonStudiesLib.MACDConfirmedStrength)
 
 Exit Function
 
@@ -204,7 +204,7 @@ Public Function MACDStrengthPotential( _
 Const ProcName As String = "MACDStrengthPotential"
 On Error GoTo Err
 
-MACDStrengthPotential = (getMACD(MACD).strength(Ref).Value = CmnStudiesLib27.MACDPotentialStrength)
+MACDStrengthPotential = (getMACD(MACD).strength(Ref).Value = CommonStudiesLib.MACDPotentialStrength)
 
 Exit Function
 
@@ -260,7 +260,7 @@ Public Function MACDWeaknessConfirmed( _
 Const ProcName As String = "MACDWeaknessConfirmed"
 On Error GoTo Err
 
-MACDWeaknessConfirmed = (getMACD(MACD).strength(Ref).Value = CmnStudiesLib27.MACDConfirmedWeakness)
+MACDWeaknessConfirmed = (getMACD(MACD).strength(Ref).Value = CommonStudiesLib.MACDConfirmedWeakness)
 
 Exit Function
 
@@ -274,7 +274,7 @@ Public Function MACDWeaknessPotential( _
 Const ProcName As String = "MACDWeaknessPotential"
 On Error GoTo Err
 
-MACDWeaknessPotential = (getMACD(MACD).strength(Ref).Value = CmnStudiesLib27.MACDPotentialWeakness)
+MACDWeaknessPotential = (getMACD(MACD).strength(Ref).Value = CommonStudiesLib.MACDPotentialWeakness)
 
 Exit Function
 
@@ -287,7 +287,7 @@ End Function
 '@================================================================================
 
 Private Function getMACD( _
-                ByVal MACD As ResourceIdentifier) As CmnStudiesLib27.MACD
+                ByVal MACD As ResourceIdentifier) As CommonStudiesLib.MACD
 Const ProcName As String = "getMACD"
 On Error GoTo Err
 
@@ -296,7 +296,7 @@ Assert Not MACD Is Nothing, "No MACD is currently defined"
 
 Dim lObj As Object
 Set lObj = MACD.Resource
-AssertArgument TypeOf lObj Is CmnStudiesLib27.MACD, "ResourceIdentifier does not refer to a MACD study"
+AssertArgument TypeOf lObj Is CommonStudiesLib.MACD, "ResourceIdentifier does not refer to a MACD study"
 
 Set getMACD = lObj
 

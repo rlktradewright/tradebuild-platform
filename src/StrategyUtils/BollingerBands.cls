@@ -191,7 +191,7 @@ End Function
 '@================================================================================
 
 Private Function getBB( _
-                ByVal BB As ResourceIdentifier) As CmnStudiesLib27.BollingerBands
+                ByVal BB As ResourceIdentifier) As CommonStudiesLib.BollingerBands
 Const ProcName As String = "getBB"
 On Error GoTo Err
 
@@ -200,7 +200,7 @@ Assert Not BB Is Nothing, "No BollingerBands currently defined"
 
 Dim lObj As Object
 Set lObj = BB.Resource
-AssertArgument TypeOf lObj Is CmnStudiesLib27.BollingerBands, "ResourceIdentifier does not refer to a BollingerBands study"
+AssertArgument TypeOf lObj Is CommonStudiesLib.BollingerBands, "ResourceIdentifier does not refer to a BollingerBands study"
 
 Set getBB = lObj
 

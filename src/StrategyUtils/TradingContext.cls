@@ -436,7 +436,7 @@ gHandleUnexpectedError ProcName, ModuleName
 End Sub
 
 Public Function getBars( _
-                ByVal pTimeframe As Timeframe) As BarUtils27.Bars
+                ByVal pTimeframe As Timeframe) As BarLib.Bars
 Const ProcName As String = "GetBars"
 On Error GoTo Err
 

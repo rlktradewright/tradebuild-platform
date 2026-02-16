@@ -126,13 +126,13 @@ Friend Sub SetPrimaryStudyOfType(ByVal pStudy As ResourceIdentifier)
 Const ProcName As String = "SetPrimaryStudyOfType"
 On Error GoTo Err
 
-If TypeOf pStudy.Resource Is CmnStudiesLib27.BollingerBands Then
+If TypeOf pStudy.Resource Is CommonStudiesLib.BollingerBands Then
     If mPrimaryBollingerBands Is Nothing Then Set mPrimaryBollingerBands = pStudy
-ElseIf TypeOf pStudy.Resource Is CmnStudiesLib27.MACD Then
+ElseIf TypeOf pStudy.Resource Is CommonStudiesLib.MACD Then
     If mPrimaryMACD Is Nothing Then Set mPrimaryMACD = pStudy
-ElseIf TypeOf pStudy.Resource Is CmnStudiesLib27.SMA Then
+ElseIf TypeOf pStudy.Resource Is CommonStudiesLib.SMA Then
     If mPrimarySMA Is Nothing Then Set mPrimarySMA = pStudy
-ElseIf TypeOf pStudy.Resource Is CmnStudiesLib27.Swing Then
+ElseIf TypeOf pStudy.Resource Is CommonStudiesLib.Swing Then
     If mPrimarySwing Is Nothing Then Set mPrimarySwing = pStudy
 End If
 
