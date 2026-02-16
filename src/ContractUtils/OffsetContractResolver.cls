@@ -98,7 +98,7 @@ Else
                             -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
         Then
 #Else
-        ElseIf SessionUtils27.GetOffsetSessionTimes( _
+        ElseIf SessionLib.GetOffsetSessionTimes( _
                             lContract.ExpiryDate, _
                             -mDaysBeforeExpiryToSwitch).StartTime >= Int(CDbl(Now)) _
         Then
