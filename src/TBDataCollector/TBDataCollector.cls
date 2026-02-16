@@ -67,7 +67,7 @@ Private Const ModuleName                    As String = "GlobalClass"
 ' Methods
 '@================================================================================
 
-Public Function CreateDataCollector( _
+Public Function CreateCollector( _
                 ByVal pConfigFile As ConfigurationStore, _
                 ByVal pConfigName As String, _
                 ByVal pStartTimeDescriptor As String, _
@@ -75,12 +75,12 @@ Public Function CreateDataCollector( _
                 ByVal pExitTimeDescriptor As String, _
                 Optional ByVal pSaveIntervalSeconds As Long = 5, _
                 Optional ByVal pBarOutputMonitor As IBarOutputMonitor, _
-                Optional ByVal pTickfileOutputMonitor As ITickfileOutputMonitor) As DataCollector
-Const ProcName As String = "CreateDataCollector"
+                Optional ByVal pTickfileOutputMonitor As ITickfileOutputMonitor) As Collector
+Const ProcName As String = "CreateCollector"
 On Error GoTo Err
 
-Set CreateDataCollector = New DataCollector
-CreateDataCollector.Initialise pConfigFile, _
+Set CreateCollector = New Collector
+CreateCollector.Initialise pConfigFile, _
                             pConfigName, _
                             pStartTimeDescriptor, _
                             pEndTimeDescriptor, _
