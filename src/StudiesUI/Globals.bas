@@ -19,7 +19,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                                    As String = "StudiesUI27"
+Public Const ProjectName                                    As String = "StudyUI"
 Private Const ModuleName                As String = "Globals"
 
 

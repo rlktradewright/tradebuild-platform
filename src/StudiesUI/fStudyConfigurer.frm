@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#32.0#0"; "TWControls40.ocx"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
 Begin VB.Form fStudyConfigurer 
    BorderStyle     =   0  'None
    Caption         =   "Configure a Study"
@@ -14,10 +14,19 @@ Begin VB.Form fStudyConfigurer
    ScaleWidth      =   7320
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
+   Begin StudyUI.StudyConfigurer StudyConfigurer1 
+      Height          =   11955
+      Left            =   120
+      TabIndex        =   0
+      Top             =   120
+      Width           =   7095
+      _ExtentX        =   12515
+      _ExtentY        =   21087
+   End
    Begin TWControls40.TWButton SetDefaultButton 
       Height          =   615
       Left            =   1320
-      TabIndex        =   2
+      TabIndex        =   3
       Top             =   12120
       Width           =   1095
       _ExtentX        =   1931
@@ -41,7 +50,7 @@ Begin VB.Form fStudyConfigurer
       Cancel          =   -1  'True
       Height          =   615
       Left            =   6120
-      TabIndex        =   4
+      TabIndex        =   1
       Top             =   12120
       Width           =   1095
       _ExtentX        =   1931
@@ -65,7 +74,7 @@ Begin VB.Form fStudyConfigurer
       Default         =   -1  'True
       Height          =   615
       Left            =   4920
-      TabIndex        =   3
+      TabIndex        =   4
       Top             =   12120
       Width           =   1095
       _ExtentX        =   1931
@@ -85,19 +94,10 @@ Begin VB.Form fStudyConfigurer
       MouseOverBackColor=   0
       PushedBackColor =   0
    End
-   Begin StudiesUI27.StudyConfigurer StudyConfigurer1 
-      Height          =   11955
-      Left            =   120
-      TabIndex        =   0
-      Top             =   120
-      Width           =   7095
-      _ExtentX        =   12515
-      _ExtentY        =   21087
-   End
    Begin TWControls40.TWButton ApplyDefaultButton 
       Height          =   615
       Left            =   120
-      TabIndex        =   1
+      TabIndex        =   2
       Top             =   12120
       Width           =   1095
       _ExtentX        =   1931

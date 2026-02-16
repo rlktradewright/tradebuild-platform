@@ -132,13 +132,12 @@ Begin VB.UserControl StudyConfigurer
       TabIndex        =   16
       Top             =   4980
       Width           =   7095
-      Begin StudiesUI27.StudyValueConfigurer StudyValueConfigurer 
+      Begin StudyUI.StudyValueConfigurer StudyValueConfigurer 
          Height          =   375
          Index           =   0
          Left            =   120
          TabIndex        =   39
          Top             =   480
-         Visible         =   0   'False
          Width           =   6915
          _ExtentX        =   12197
          _ExtentY        =   661
@@ -317,7 +316,7 @@ Begin VB.UserControl StudyConfigurer
             _ExtentY        =   582
             _Version        =   393216
             BuddyControl    =   "ParameterValueText(0)"
-            BuddyDispid     =   196627
+            BuddyDispid     =   196630
             BuddyIndex      =   0
             OrigLeft        =   1920
             OrigRight       =   2175
@@ -455,6 +454,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
+
 Option Explicit
 
 '================================================================================

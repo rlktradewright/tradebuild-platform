@@ -280,7 +280,7 @@ Private Const DefaultAppConfigName              As String = "Default config"
 Private Const NewStudyLibraryName               As String = "New study library"
 Private Const BuiltInStudyLibraryName           As String = "Built-in"
 
-Private Const StudyLibrariesRenderer            As String = "StudiesUI27.StudyLibConfigurer"
+Private Const StudyLibrariesRenderer            As String = "StudyUI.StudyLibConfigurer"
 
 '@================================================================================
 ' Member variables
