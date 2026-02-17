@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "uccd27"
+Public Const ProjectName                    As String = "uccd"
 Private Const ModuleName                    As String = "MainMod"
 
 Private Const InputSep                      As String = ","
@@ -259,7 +259,7 @@ If validInput Then
     Else
         Dim lErr As ErrorItem
         For Each lErr In lInstrCl.ErrorList
-            Select Case lErr.ruleId
+            Select Case lErr.RuleId
             Case BusinessRuleIds.BusRuleInstrumentClassNameValid
                 gCon.WriteErrorLine "Line " & lineNumber & " name invalid"
             Case BusinessRuleIds.BusRuleInstrumentClassCurrencyCodeValid
@@ -340,7 +340,7 @@ End Function
 
 Private Sub showUsage()
 gCon.WriteErrorLine "Usage:"
-gCon.WriteErrorLine "uccd27 [exchange]"
+gCon.WriteErrorLine "uccd [exchange]"
 gCon.WriteErrorLine "    -todb:<databaseserver>,<databasetype>,<catalog>[,<username>[,<password>]]"
 gCon.WriteErrorLine "    -U     # update existing records"
 gCon.WriteErrorLine "StdIn Formats:"
