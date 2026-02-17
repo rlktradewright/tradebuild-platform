@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#349.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#5.0#0"; "TradeUI.ocx"
 Begin VB.Form PositionForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Form2"
@@ -26,7 +26,7 @@ Begin VB.Form PositionForm
       Top             =   3240
       Width           =   10095
    End
-   Begin TradingUI27.ExecutionsSummary ExecutionsSummary1 
+   Begin TradeUI.ExecutionsSummary ExecutionsSummary1 
       Height          =   3015
       Left            =   3120
       TabIndex        =   17

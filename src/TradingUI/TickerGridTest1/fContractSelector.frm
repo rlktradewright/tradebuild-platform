@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#375.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#5.0#0"; "TradeUI.ocx"
 Begin VB.Form fContractSelector 
    Caption         =   "Form2"
    ClientHeight    =   6510
@@ -10,7 +10,7 @@ Begin VB.Form fContractSelector
    ScaleHeight     =   6510
    ScaleWidth      =   6195
    StartUpPosition =   3  'Windows Default
-   Begin TradingUI27.ContractSearch ContractSearch1 
+   Begin TradeUI.ContractSearch ContractSearch1 
       Height          =   6255
       Left            =   120
       TabIndex        =   0

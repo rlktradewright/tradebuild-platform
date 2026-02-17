@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#374.0#0"; "TradingUI27.ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.OCX"
-Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#33.0#0"; "TWControls40.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.2#0"; "mscomctl.OCX"
+Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#5.0#0"; "TradeUI.ocx"
 Begin VB.Form Form1 
    Caption         =   "Market Chart Test1"
    ClientHeight    =   10065
@@ -50,7 +50,7 @@ Begin VB.Form Form1
       Value           =   1  'Checked
       Width           =   1215
    End
-   Begin TradingUI27.TimeframeSelector TimeframeSelector1 
+   Begin TradeUI.TimeframeSelector TimeframeSelector1 
       Height          =   270
       Left            =   1680
       TabIndex        =   7
@@ -59,7 +59,7 @@ Begin VB.Form Form1
       _ExtentX        =   4048
       _ExtentY        =   476
    End
-   Begin TradingUI27.ChartNavToolbar ChartNavToolbar1 
+   Begin TradeUI.ChartNavToolbar ChartNavToolbar1 
       Height          =   330
       Left            =   4080
       TabIndex        =   6
@@ -68,7 +68,7 @@ Begin VB.Form Form1
       _ExtentX        =   10345
       _ExtentY        =   582
    End
-   Begin TradingUI27.ChartStylePicker ChartStylePicker1 
+   Begin TradeUI.ChartStylePicker ChartStylePicker1 
       Height          =   330
       Left            =   7800
       TabIndex        =   5
@@ -86,7 +86,7 @@ Begin VB.Form Form1
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradingUI27.BarFormatterPicker BarFormatterPicker1 
+   Begin TradeUI.BarFormatterPicker BarFormatterPicker1 
       Height          =   270
       Left            =   6120
       TabIndex        =   4
@@ -104,7 +104,7 @@ Begin VB.Form Form1
          Strikethrough   =   0   'False
       EndProperty
    End
-   Begin TradingUI27.MarketChart MarketChart1 
+   Begin TradeUI.MarketChart MarketChart1 
       Height          =   6375
       Left            =   4080
       TabIndex        =   2
@@ -124,7 +124,7 @@ Begin VB.Form Form1
       Top             =   7320
       Width           =   14175
    End
-   Begin TradingUI27.ContractSearch ContractSearch 
+   Begin TradeUI.ContractSearch ContractSearch 
       Height          =   5475
       Left            =   120
       TabIndex        =   0
@@ -331,7 +331,7 @@ Set mFutureWaiter = New FutureWaiter
 
 Set mStudyLibraryManager = New StudyLibraryManager
 mStudyLibraryManager.AddBuiltInStudyLibrary
-mBarFormatterLibManager.AddBarFormatterLibrary "BarFormatters27.BarFormattersLib", True, "Built-in"
+mBarFormatterLibManager.AddBarFormatterLibrary "BarFormatterLib.BarFormattersLib", True, "Built-in"
  
 Set mConfigStore = getConfigStore
 Set mMarketDataManagerConfig = mConfigStore.AddPrivateConfigurationSection("/MarketDataManager")
@@ -359,7 +359,7 @@ Else
 End If
 
 mClientId = 413860445
-Set mDataClient = GetClient("Essy", 7497, mClientId, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
+Set mDataClient = GetClient("Sappy", 7497, mClientId, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
 mDataClient.SetTwsLogLevel TwsLogLevelDetail
 
 Set mContractStore = mDataClient.GetContractStore
@@ -695,20 +695,11 @@ End Sub
 
 Private Sub setupChartStyleAppDefault()
 Const ProcName As String = "setupChartStyleAppDefault"
-Dim lDefaultRegionStyle As ChartRegionStyle
-Dim lxAxisRegionStyle As ChartRegionStyle
-Dim lDefaultYAxisRegionStyle As ChartRegionStyle
-Dim lCrosshairLineStyle As LineStyle
-Dim lCursorTextStyle As TextStyle
-Dim lFont As StdFont
-
 On Error GoTo Err
 
 If ChartStylesManager.Contains(ChartStyleNameAppDefault) Then Exit Sub
 
-ReDim GradientFillColors(1) As Long
-
-Set lCursorTextStyle = New TextStyle
+Dim lCursorTextStyle As New TextStyle
 lCursorTextStyle.Align = AlignBoxTopCentre
 lCursorTextStyle.Box = True
 lCursorTextStyle.BoxFillWithBackgroundColor = True
@@ -717,64 +708,67 @@ lCursorTextStyle.BoxThickness = 0
 lCursorTextStyle.Color = &H80&
 lCursorTextStyle.PaddingX = 2
 lCursorTextStyle.PaddingY = 0
-Set lFont = New StdFont
+
+Dim lFont As New StdFont
 lFont.Name = "Courier New"
 lFont.Bold = True
 lFont.Size = 8
 lCursorTextStyle.Font = lFont
 
+Dim lDefaultRegionStyle As ChartRegionStyle
 Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+lDefaultRegionStyle.YScaleQuantum = 0.00001
+
+ReDim GradientFillColors(1) As Long
 GradientFillColors(0) = RGB(192, 192, 192)
 GradientFillColors(1) = RGB(248, 248, 248)
 lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
+
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.XGridLineStyle.Color = &HD0D0D0
+lDefaultRegionStyle.YGridLineStyle.Color = &HD0D0D0
     
+Dim lxAxisRegionStyle As ChartRegionStyle
 Set lxAxisRegionStyle = GetDefaultChartXAxisRegionStyle.Clone
 lxAxisRegionStyle.XCursorTextStyle = lCursorTextStyle
 GradientFillColors(0) = RGB(230, 236, 207)
 GradientFillColors(1) = RGB(222, 236, 215)
 lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
     
+Dim lDefaultYAxisRegionStyle As ChartRegionStyle
 Set lDefaultYAxisRegionStyle = GetDefaultChartYAxisRegionStyle.Clone
 lDefaultYAxisRegionStyle.YCursorTextStyle = lCursorTextStyle
 GradientFillColors(0) = RGB(234, 246, 254)
 GradientFillColors(1) = RGB(226, 246, 255)
 lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
+lDefaultYAxisRegionStyle.YScaleQuantum = 0.00001
     
-Set lCrosshairLineStyle = New LineStyle
+Dim lCrosshairLineStyle As New LineStyle
 lCrosshairLineStyle.Color = &H7F
 
-ChartStylesManager.Add ChartStyleNameAppDefault, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameAppDefault, _
                         ChartStylesManager.DefaultStyle, _
                         lDefaultRegionStyle, _
                         lxAxisRegionStyle, _
                         lDefaultYAxisRegionStyle, _
-                        lCrosshairLineStyle
+                        lCrosshairLineStyle)
 
-
+lChartStyle.ChartBackColor = RGB(192, 192, 192)
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupChartStyleBlack()
 Const ProcName As String = "setupChartStyleBlack"
-Dim lDefaultRegionStyle As ChartRegionStyle
-Dim lxAxisRegionStyle As ChartRegionStyle
-Dim lDefaultYAxisRegionStyle As ChartRegionStyle
-Dim lCrosshairLineStyle As LineStyle
-Dim lCursorTextStyle As TextStyle
-Dim lFont As StdFont
-Dim lGridLineStyle As LineStyle
-Dim lGridTextStyle As TextStyle
-
 On Error GoTo Err
 
 If ChartStylesManager.Contains(ChartStyleNameBlack) Then Exit Sub
 
-ReDim GradientFillColors(1) As Long
-
-Set lCursorTextStyle = New TextStyle
+Dim lCursorTextStyle As New TextStyle
 lCursorTextStyle.Align = AlignBoxTopCentre
 lCursorTextStyle.Box = True
 lCursorTextStyle.BoxFillWithBackgroundColor = True
@@ -783,45 +777,44 @@ lCursorTextStyle.BoxThickness = 0
 lCursorTextStyle.Color = vbRed
 lCursorTextStyle.PaddingX = 2
 lCursorTextStyle.PaddingY = 0
+
+Dim lFont As StdFont
 Set lFont = New StdFont
 lFont.Name = "Courier New"
 lFont.Bold = True
 lFont.Size = 8
 lCursorTextStyle.Font = lFont
 
+Dim lDefaultRegionStyle As ChartRegionStyle
 Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
-GradientFillColors(0) = RGB(0, 0, 0)
-GradientFillColors(1) = RGB(0, 0, 0)
+
+ReDim GradientFillColors(1) As Long
+GradientFillColors(0) = &H202020
+GradientFillColors(1) = &H202020
 lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
 
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = RGB(64, 64, 64)
-lDefaultRegionStyle.XGridLineStyle = lGridLineStyle
-lDefaultRegionStyle.YGridLineStyle = lGridLineStyle
+lDefaultRegionStyle.XGridLineStyle.Color = &H303030
+lDefaultRegionStyle.YGridLineStyle.Color = &H303030
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &H303030
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &H303030
     
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = RGB(64, 64, 64)
-lGridLineStyle.LineStyle = LineDash
-lDefaultRegionStyle.SessionEndGridLineStyle = lGridLineStyle
-    
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = RGB(64, 64, 64)
-lGridLineStyle.Thickness = 3
-lDefaultRegionStyle.SessionStartGridLineStyle = lGridLineStyle
-
+Dim lxAxisRegionStyle As ChartRegionStyle
 Set lxAxisRegionStyle = GetDefaultChartXAxisRegionStyle.Clone
 GradientFillColors(0) = RGB(0, 0, 0)
 GradientFillColors(1) = RGB(0, 0, 0)
 lxAxisRegionStyle.BackGradientFillColors = GradientFillColors
 lxAxisRegionStyle.XCursorTextStyle = lCursorTextStyle
 
-Set lGridTextStyle = New TextStyle
+Dim lGridTextStyle As New TextStyle
 lGridTextStyle.Box = True
 lGridTextStyle.BoxFillWithBackgroundColor = True
 lGridTextStyle.BoxStyle = LineInvisible
 lGridTextStyle.Color = &HD0D0D0
 lxAxisRegionStyle.XGridTextStyle = lGridTextStyle
     
+Dim lDefaultYAxisRegionStyle As ChartRegionStyle
 Set lDefaultYAxisRegionStyle = GetDefaultChartYAxisRegionStyle.Clone
 GradientFillColors(0) = RGB(0, 0, 0)
 GradientFillColors(1) = RGB(0, 0, 0)
@@ -829,88 +822,73 @@ lDefaultYAxisRegionStyle.BackGradientFillColors = GradientFillColors
 lDefaultYAxisRegionStyle.YCursorTextStyle = lCursorTextStyle
 lDefaultYAxisRegionStyle.YGridTextStyle = lGridTextStyle
     
-Set lCrosshairLineStyle = New LineStyle
-lCrosshairLineStyle.Color = vbRed
+Dim lCrosshairLineStyle As New LineStyle
+lCrosshairLineStyle.Color = &H80&
 
-ChartStylesManager.Add ChartStyleNameBlack, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameBlack, _
                         ChartStylesManager.Item(ChartStyleNameAppDefault), _
                         lDefaultRegionStyle, _
                         lxAxisRegionStyle, _
                         lDefaultYAxisRegionStyle, _
-                        lCrosshairLineStyle
+                        lCrosshairLineStyle)
 
+lChartStyle.ChartBackColor = &H202020
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupChartStyleDarkBlueFade()
 Const ProcName As String = "setupChartStyleDarkBlueFade"
-Dim lDefaultRegionStyle As ChartRegionStyle
-Dim lCrosshairLineStyle As LineStyle
-Dim lFont As StdFont
-Dim lGridLineStyle As LineStyle
-
 On Error GoTo Err
 
 If ChartStylesManager.Contains(ChartStyleNameDarkBlueFade) Then Exit Sub
 
-ReDim GradientFillColors(1) As Long
-
+Dim lDefaultRegionStyle As ChartRegionStyle
 Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
 GradientFillColors(0) = &H643232
-GradientFillColors(1) = &HF8F8F8
+GradientFillColors(1) = &H804040
 lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
     
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = &HC0C0C0
-lDefaultRegionStyle.XGridLineStyle = lGridLineStyle
-lDefaultRegionStyle.YGridLineStyle = lGridLineStyle
+lDefaultRegionStyle.XGridLineStyle.Color = &H505050
+lDefaultRegionStyle.YGridLineStyle.Color = &H505050
     
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = &HC0C0C0
-lGridLineStyle.LineStyle = LineDash
-lDefaultRegionStyle.SessionEndGridLineStyle = lGridLineStyle
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &H505050
     
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = &HC0C0C0
-lGridLineStyle.Thickness = 3
-lDefaultRegionStyle.SessionStartGridLineStyle = lGridLineStyle
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &H505050
 
-Set lCrosshairLineStyle = New LineStyle
+Dim lCrosshairLineStyle As New LineStyle
 lCrosshairLineStyle.Color = vbRed
 
-ChartStylesManager.Add ChartStyleNameDarkBlueFade, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameDarkBlueFade, _
                         ChartStylesManager.Item(ChartStyleNameAppDefault), _
                         lDefaultRegionStyle, _
                         , _
                         , _
-                        lCrosshairLineStyle
-
+                        lCrosshairLineStyle)
+lChartStyle.ChartBackColor = &H643232
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub setupChartStyleGoldFade()
 Const ProcName As String = "setupChartStyleGoldFade"
-Dim lDefaultRegionStyle As ChartRegionStyle
-Dim lCrosshairLineStyle As LineStyle
-Dim lCursorTextStyle As TextStyle
-Dim lFont As StdFont
-Dim lGridLineStyle As LineStyle
-
 On Error GoTo Err
 
 If ChartStylesManager.Contains(ChartStyleNameGoldFade) Then Exit Sub
 
-ReDim GradientFillColors(1) As Long
-
-Set lCursorTextStyle = New TextStyle
+Dim lCursorTextStyle As New TextStyle
 lCursorTextStyle.Align = AlignBoxTopCentre
 lCursorTextStyle.Box = True
 lCursorTextStyle.BoxFillWithBackgroundColor = True
@@ -919,47 +897,46 @@ lCursorTextStyle.BoxThickness = 0
 lCursorTextStyle.Color = &H80&
 lCursorTextStyle.PaddingX = 2
 lCursorTextStyle.PaddingY = 0
-Set lFont = New StdFont
+
+Dim lFont As New StdFont
 lFont.Name = "Courier New"
 lFont.Bold = True
 lFont.Size = 8
 lCursorTextStyle.Font = lFont
 
+Dim lDefaultRegionStyle As ChartRegionStyle
 Set lDefaultRegionStyle = GetDefaultChartDataRegionStyle.Clone
+
+ReDim GradientFillColors(1) As Long
 GradientFillColors(0) = &H82DFE6
 GradientFillColors(1) = &HEBFAFB
 lDefaultRegionStyle.BackGradientFillColors = GradientFillColors
     
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = &HC0C0C0
-lDefaultRegionStyle.XGridLineStyle = lGridLineStyle
-lDefaultRegionStyle.YGridLineStyle = lGridLineStyle
+lDefaultRegionStyle.XGridLineStyle.Color = &HE0E0E0
+lDefaultRegionStyle.YGridLineStyle.Color = &HE0E0E0
     
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = &HC0C0C0
-lGridLineStyle.LineStyle = LineDash
-lDefaultRegionStyle.SessionEndGridLineStyle = lGridLineStyle
+lDefaultRegionStyle.SessionEndGridLineStyle.LineStyle = LineDash
+lDefaultRegionStyle.SessionEndGridLineStyle.Color = &HE0E0E0
     
-Set lGridLineStyle = New LineStyle
-lGridLineStyle.Color = &HC0C0C0
-lGridLineStyle.Thickness = 3
-lDefaultRegionStyle.SessionStartGridLineStyle = lGridLineStyle
+lDefaultRegionStyle.SessionStartGridLineStyle.Thickness = 3
+lDefaultRegionStyle.SessionStartGridLineStyle.Color = &HE0E0E0
 
-Set lCrosshairLineStyle = New LineStyle
+Dim lCrosshairLineStyle As New LineStyle
 lCrosshairLineStyle.Color = 127
 
-ChartStylesManager.Add ChartStyleNameGoldFade, _
+Dim lChartStyle As ChartStyle
+Set lChartStyle = ChartStylesManager.Add(ChartStyleNameGoldFade, _
                         ChartStylesManager.Item(ChartStyleNameAppDefault), _
                         lDefaultRegionStyle, _
                         , _
                         , _
-                        lCrosshairLineStyle
-
+                        lCrosshairLineStyle)
+lChartStyle.ChartBackColor = &H82DFE6
 
 Exit Sub
 
 Err:
-gHandleUnexpectedError ProcName, ModuleName
+gHandleUnexpectedError pReRaise:=True, pLog:=False, pProcedureName:=ProcName, pModuleName:=ModuleName
 End Sub
 
 Private Sub showTheChart( _

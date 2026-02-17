@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#5.0#0"; "TradeUI.ocx"
 Begin VB.Form Form1 
    Caption         =   "Secs"
    ClientHeight    =   9585
@@ -100,7 +100,7 @@ Begin VB.Form Form1
       Top             =   120
       Width           =   1815
    End
-   Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
+   Begin TradeUI.ContractSpecBuilder ContractSpecBuilder1 
       Height          =   3690
       Left            =   120
       TabIndex        =   0

@@ -144,7 +144,7 @@ End Sub
 ' ITwsConnectionStateListener Interface Members
 '@================================================================================
 
-Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSource As Object, ByVal pState As IBENHAPI27.ApiConnectionStates, ByVal pMessage As String)
+Private Sub ITwsConnectionStateListener_NotifyAPIConnectionStateChange(ByVal pSource As Object, ByVal pState As IBEnhAPILib.ApiConnectionStates, ByVal pMessage As String)
 Const ProcName As String = "ITwsConnectionStateListener_NotifyAPIConnectionStateChange"
 On Error GoTo Err
 

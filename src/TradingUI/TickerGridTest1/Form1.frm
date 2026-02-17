@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#376.0#0"; "TradingUI27.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#5.0#0"; "TradeUI.ocx"
 Begin VB.Form Form1 
    Caption         =   "Ticker Grid Test1"
    ClientHeight    =   10065
@@ -10,7 +10,7 @@ Begin VB.Form Form1
    ScaleHeight     =   10065
    ScaleWidth      =   14415
    StartUpPosition =   3  'Windows Default
-   Begin TradingUI27.TickerGrid TickerGrid 
+   Begin TradeUI.TickerGrid TickerGrid 
       Height          =   7095
       Left            =   4080
       TabIndex        =   2
@@ -51,7 +51,7 @@ Begin VB.Form Form1
       Top             =   7320
       Width           =   14175
    End
-   Begin TradingUI27.ContractSearch ContractSearch 
+   Begin TradeUI.ContractSearch ContractSearch 
       Height          =   7095
       Left            =   120
       TabIndex        =   0
@@ -177,10 +177,10 @@ Else
 End If
 
 mClientId = 1132256741
-Set mDataClient = GetClient("Essy", 7497, mClientId, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
+Set mDataClient = GetClient("Sappy", 7497, mClientId, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
 mDataClient.SetTwsLogLevel TwsLogLevelDetail
 
-Set mContractClient = GetClient("Essy", 7497, mClientId + 1, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
+Set mContractClient = GetClient("Sappy", 7497, mClientId + 1, , , ApiMessageLoggingOptionDefault, ApiMessageLoggingOptionNone, False, , Me)
 
 Set mContractStore = mContractClient.GetContractStore
 Set mMarketDataManager = CreateRealtimeDataManager(mDataClient.GetMarketDataFactory, mDataClient.GetContractStore)

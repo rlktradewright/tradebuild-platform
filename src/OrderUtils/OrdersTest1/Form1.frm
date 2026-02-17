@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{6C945B95-5FA7-4850-AAF3-2D2AA0476EE1}#395.0#0"; "TradingUI27.ocx"
 Object = "{99CC0176-59AF-4A52-B7C0-192026D3FE5D}#35.0#0"; "TWControls40.ocx"
+Object = "{B5D6B2B7-57F7-4124-8F4C-794116C0226D}#5.0#0"; "TradeUI.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   12615
@@ -42,7 +42,7 @@ Begin VB.Form Form1
       Top             =   1560
       Width           =   3015
    End
-   Begin TradingUI27.DOMDisplay DOMDisplay 
+   Begin TradeUI.DOMDisplay DOMDisplay 
       Height          =   10455
       Left            =   11760
       TabIndex        =   5
@@ -51,7 +51,7 @@ Begin VB.Form Form1
       _ExtentX        =   8493
       _ExtentY        =   18441
    End
-   Begin TradingUI27.OrdersSummary OrdersSummary 
+   Begin TradeUI.OrdersSummary OrdersSummary 
       Height          =   3495
       Left            =   120
       TabIndex        =   3
@@ -60,7 +60,7 @@ Begin VB.Form Form1
       _ExtentX        =   20346
       _ExtentY        =   6165
    End
-   Begin TradingUI27.ContractSpecBuilder ContractSpecBuilder1 
+   Begin TradeUI.ContractSpecBuilder ContractSpecBuilder1 
       Height          =   3870
       Left            =   120
       TabIndex        =   1
@@ -82,7 +82,7 @@ Begin VB.Form Form1
       Top             =   9840
       Width           =   11535
    End
-   Begin TradingUI27.OrderTicket OrderTicket 
+   Begin TradeUI.OrderTicket OrderTicket 
       Height          =   6135
       Left            =   2880
       TabIndex        =   2
@@ -297,7 +297,7 @@ End Sub
 ' IOrderSubmissionListener Interface Members
 '@================================================================================
 
-Private Sub IOrderSubmissionListener_NotifyAboutToPlaceOrder(ByVal pOrder As OrderUtils27.IOrder)
+Private Sub IOrderSubmissionListener_NotifyAboutToPlaceOrder(ByVal pOrder As OrderLib.IOrder)
 End Sub
 
 Private Sub IOrderSubmissionListener_NotifyError(ByVal pOrderId As String, ByVal pErrorCode As Long, ByVal pErrorMsg As String)
