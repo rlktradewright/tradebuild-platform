@@ -11,82 +11,82 @@ call setTradeBuildVersion
 
 pushd %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Bin\TradeWright.TradeBuild.Platform
 
-call registerComponent.bat SessionUtils dll
+call registerComponent.bat SessionLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat ContractUtils dll
+call registerComponent.bat ContractLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat AccountUtils dll
+call registerComponent.bat AccountLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat BarUtils dll
+call registerComponent.bat BarLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TickUtils dll
+call registerComponent.bat TickLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat StudyUtils dll
+call registerComponent.bat StudyLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TickfileUtils dll
+call registerComponent.bat TickfileLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat HistDataUtils dll
+call registerComponent.bat HistDataLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TimeframeUtils dll
+call registerComponent.bat TimeframeLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat MarketDataUtils dll
+call registerComponent.bat MarketDataLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat OrderUtils dll
+call registerComponent.bat OrderLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TickerUtils dll
+call registerComponent.bat TickerLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat WorkspaceUtils dll
+call registerComponent.bat WorkspaceLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat ChartSkil ocx
+call registerComponent.bat ChartUi ocx NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat BarFormatters dll
+call registerComponent.bat BarFormatterLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat ChartUtils dll
+call registerComponent.bat ChartDeployLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat ChartTools dll
+call registerComponent.bat ChartToolLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat StudiesUI ocx
+call registerComponent.bat StudyUI ocx NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TradingUI ocx
+call registerComponent.bat TradeUI ocx NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat CommonStudiesLib dll
+call registerComponent.bat CommonStudiesLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat StrategyUtils dll
+call registerComponent.bat StrategyLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat Strategies dll
+call registerComponent.bat StrategiesLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TradeBuild dll
+call registerComponent.bat TradeBuildLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat ConfigUtils dll
+call registerComponent.bat ConfigLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TradeBuildUI ocx
+call registerComponent.bat TradeBuildUI ocx NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TBDataCollector dll
+call registerComponent.bat TBDataCollectorLib dll NOVERSION
 if errorlevel 1 goto :err
 
 popd
@@ -94,28 +94,28 @@ popd
 
 pushd %TB-PLATFORM-PROJECTS-DRIVE%%TB-PLATFORM-PROJECTS-PATH%\Bin\TradeWright.TradeBuild.ServiceProviders
 
-call registerComponent.bat TradingDO dll
+call registerComponent.bat TradingDOLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TradingDBApi dll
+call registerComponent.bat TradingDBApiLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat IBAPI dll NOVERSION
+call registerComponent.bat IBBaseAPILib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat IBEnhAPI dll
+call registerComponent.bat IBEnhAPILib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat IBTwsSP dll
+call registerComponent.bat IBTwsSPLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TBInfoBase dll
+call registerComponent.bat TBInfoBaseLib dll NOVERSION
 if errorlevel 1 goto :err
 
-call registerComponent.bat TickfileSP dll
+call registerComponent.bat TickfileSPLib dll NOVERSION
 if errorlevel 1 goto :err
 
-rem call registerComponent.bat QuoteTrackerSP dll
+rem call registerComponent.bat QuoteTrackerSP dll NOVERSION
 if errorlevel 1 goto :err
 
 popd

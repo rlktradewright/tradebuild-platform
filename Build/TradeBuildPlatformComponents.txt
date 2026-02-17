@@ -1,35 +1,35 @@
-..\bin\TradeWright.TradeBuild.Platform\CurrencyUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\SessionUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\ContractUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\AccountUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\BarUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\TickUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\StudyUtils27.dll
+..\bin\TradeWright.TradeBuild.Platform\CurrencyLib.dll
+..\bin\TradeWright.TradeBuild.Platform\SessionLib.dll
+..\bin\TradeWright.TradeBuild.Platform\ContractLib.dll
+..\bin\TradeWright.TradeBuild.Platform\AccountLib.dll
+..\bin\TradeWright.TradeBuild.Platform\BarLib.dll
+..\bin\TradeWright.TradeBuild.Platform\TickLib.dll
+..\bin\TradeWright.TradeBuild.Platform\StudyLib.dll
 
-..\bin\TradeWright.TradeBuild.Platform\TickfileUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\HistDataUtils27.dll
+..\bin\TradeWright.TradeBuild.Platform\TickfileLib.dll
+..\bin\TradeWright.TradeBuild.Platform\HistDataLib.dll
 
-..\bin\TradeWright.TradeBuild.Platform\TimeframeUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\MarketDataUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\OrderUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\TickerUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\StrategyUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\WorkspaceUtils27.dll
+..\bin\TradeWright.TradeBuild.Platform\TimeframeLib.dll
+..\bin\TradeWright.TradeBuild.Platform\MarketDataLib.dll
+..\bin\TradeWright.TradeBuild.Platform\OrderLib.dll
+..\bin\TradeWright.TradeBuild.Platform\TickerLib.dll
+..\bin\TradeWright.TradeBuild.Platform\StrategyLib.dll
+..\bin\TradeWright.TradeBuild.Platform\WorkspaceLib.dll
 
-..\bin\TradeWright.TradeBuild.Platform\ChartSkil27.ocx
-..\bin\TradeWright.TradeBuild.Platform\BarFormatters27.dll
-..\bin\TradeWright.TradeBuild.Platform\ChartUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\ChartTools27.dll
+..\bin\TradeWright.TradeBuild.Platform\ChartUI.ocx
+..\bin\TradeWright.TradeBuild.Platform\BarFormatterLib.dll
+..\bin\TradeWright.TradeBuild.Platform\ChartDeployLib.dll
+..\bin\TradeWright.TradeBuild.Platform\ChartToolLib.dll
 
-..\bin\TradeWright.TradeBuild.Platform\StudiesUI27.ocx
-..\bin\TradeWright.TradeBuild.Platform\TradingUI27.ocx
+..\bin\TradeWright.TradeBuild.Platform\StudyUI.ocx
+..\bin\TradeWright.TradeBuild.Platform\TradeUI.ocx
 
-..\bin\TradeWright.TradeBuild.Platform\CommonStudiesLib27.dll
+..\bin\TradeWright.TradeBuild.Platform\CommonStudiesLib.dll
 
-..\bin\TradeWright.TradeBuild.Platform\TradeBuild27.dll
-..\bin\TradeWright.TradeBuild.Platform\Strategies27.dll
-..\bin\TradeWright.TradeBuild.Platform\ConfigUtils27.dll
-..\bin\TradeWright.TradeBuild.Platform\TradeBuildUI27.ocx
+..\bin\TradeWright.TradeBuild.Platform\TradeBuildLib.dll
+..\bin\TradeWright.TradeBuild.Platform\StrategiesLib.dll
+..\bin\TradeWright.TradeBuild.Platform\ConfigLib.dll
+..\bin\TradeWright.TradeBuild.Platform\TradeBuildUI.ocx
 
-..\bin\TradeWright.TradeBuild.Platform\TBDataCollector27.dll
+..\bin\TradeWright.TradeBuild.Platform\TBDataCollectorLib.dll
 

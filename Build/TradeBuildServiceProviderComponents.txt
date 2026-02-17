@@ -1,9 +1,9 @@
-..\bin\TradeWright.TradeBuild.ServiceProviders\IBAPI.dll
-..\bin\TradeWright.TradeBuild.ServiceProviders\IBEnhAPI27.dll
-..\bin\TradeWright.TradeBuild.ServiceProviders\IBTwsSP27.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\IBBaseAPILib.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\IBEnhAPILib.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\IBTwsSPLib.dll
 
-..\bin\TradeWright.TradeBuild.ServiceProviders\TradingDO27.dll
-..\bin\TradeWright.TradeBuild.ServiceProviders\TradingDbApi27.dll
-..\bin\TradeWright.TradeBuild.ServiceProviders\TBInfoBase27.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\TradingDOLib.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\TradingDbApiLib.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\TBInfoBaseLib.dll
 
-..\bin\TradeWright.TradeBuild.ServiceProviders\TickfileSP27.dll
+..\bin\TradeWright.TradeBuild.ServiceProviders\TickfileSPLib.dll

@@ -16,23 +16,22 @@ echo.
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src
 
-call makeExe.bat ChartDemo ChartDemo /M:E %DEP%
+call makeExe.bat ChartDemo ChartDemo /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat StudyTester StudyTester /M:E %DEP%
+call makeExe.bat StudyTester StudyTester /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat DataCollector DataCollector /M:E %DEP%
+call makeExe.bat DataCollector DataCollector /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat TickfileManager TickfileManager /M:E %DEP%
+call makeExe.bat TickfileManager TickfileManager /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat StrategyHost StrategyHost /M:E %DEP%
+call makeExe.bat StrategyHost StrategyHost /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat TradeSkilDemo TradeSkilDemo /M:E %DEP%
+call makeExe.bat TradeSkilDemo TradeSkilDemo /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
 popd
-

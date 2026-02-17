@@ -99,7 +99,7 @@ if errorlevel 1 goto :err
 call unregisterComponent.bat TradingDBApi dll 
 if errorlevel 1 goto :err
 
-call unregisterComponent.bat IBAPI dll NOVERSION	
+call unregisterComponent.bat IBaseBAPI dll NOVERSION	
 if errorlevel 1 goto :err
 
 call unregisterComponent.bat IBEnhAPI dll

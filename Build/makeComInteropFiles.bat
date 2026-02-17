@@ -84,49 +84,49 @@ call :TlbImp SpriteControlLib40
 
 set SOURCE=%BIN%\TradeWright.TradeBuild.Platform
 
-call :TlbImp SessionUtils27
-call :TlbImp ContractUtils27
-call :TlbImp AccountUtils27
-call :TlbImp BarUtils27
-call :TlbImp TickUtils27
-call :TlbImp StudyUtils27
-call :TlbImp TickfileUtils27
-call :TlbImp HistDataUtils27
-call :TlbImp TimeframeUtils27
-call :TlbImp MarketDataUtils27
-call :TlbImp CurrencyUtils27
-call :TlbImp OrderUtils27
-call :TlbImp TickerUtils27
-call :TlbImp WorkspaceUtils27
+call :TlbImp SessionLib
+call :TlbImp ContractLib
+call :TlbImp AccountLib
+call :TlbImp BarLib
+call :TlbImp TickLib
+call :TlbImp StudyLib
+call :TlbImp TickfileLib
+call :TlbImp HistDataLib
+call :TlbImp TimeframeLib
+call :TlbImp MarketDataLib
+call :TlbImp CurrencyLib
+call :TlbImp OrderLib
+call :TlbImp TickerLib
+call :TlbImp WorkspaceLib
 
-call :AxImp ChartSkil27
+call :AxImp ChartUI
 
-call :TlbImp BarFormatters27
-call :TlbImp ChartUtils27
-call :TlbImp ChartTools27
+call :TlbImp BarFormatterLib
+call :TlbImp ChartDeployLib
+call :TlbImp ChartToolLib
 
-call :AxImp StudiesUI27
-call :AxImp TradingUI27
+call :AxImp StudyUI
+call :AxImp TradeUI
 
-call :TlbImp CommonStudiesLib27
-call :TlbImp StrategyUtils27
-call :TlbImp Strategies27
-call :TlbImp TradeBuild27
-call :TlbImp ConfigUtils27
+call :TlbImp CommonStudiesLib
+call :TlbImp StrategyLib
+call :TlbImp StrategiesLib
+call :TlbImp TradeBuildLib
+call :TlbImp ConfigLib
 
-call :AxImp TradeBuildUI27
+call :AxImp TradeBuildUI
 
-call :TlbImp TBDataCollector27
+call :TlbImp TBDataCollectorLIB
 
 set SOURCE=%BIN%\TradeWright.TradeBuild.ServiceProviders
 
-call :TlbImp IBAPI
-call :TlbImp IBENHAPI27
-call :TlbImp IBTWSSP27
-call :TlbImp TradingDO27
-call :TlbImp TradingDbApi27
-call :TlbImp TBInfoBase27
-call :TlbImp TickfileSP27
+call :TlbImp IBBaseAPILib
+call :TlbImp IBEnhAPILib
+call :TlbImp IBTwsSPLib
+call :TlbImp TradingDOLib
+call :TlbImp TradingDbApiLib
+call :TlbImp TBInfoBaseLib
+call :TlbImp TickfileSPLib
 
 popd
 exit /B 0

@@ -16,40 +16,40 @@ echo.
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src\IBAPI
 
-call makeExe.bat IBAPILoadTester IBAPILoadTester /M:E %DEP%
+call makeExe.bat IBAPILoadTester IBAPILoadTester /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
 popd
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src\IBEnhAPI
 
-call makeExe.bat ContractDataTest1 ContractDataTest1 /M:E %DEP%
+call makeExe.bat ContractDataTest1 ContractDataTest1 /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat MarketDataTest1 MarketDataTest1 /M:E %DEP%
+call makeExe.bat MarketDataTest1 MarketDataTest1 /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat HistDataTest1 HistDataTest1 /M:E %DEP%
+call makeExe.bat HistDataTest1 HistDataTest1 /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-:: call makeExe.bat IBOrdersTest1 IBOrdersTest1 /M:E %DEP%
+:: call makeExe.bat IBOrdersTest1 IBOrdersTest1 /M:E %DEP% /NOVERSION
 :: if errorlevel 1 pause
 
 popd
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src\OrderUtils
 
-call makeExe.bat OrdersTest1 OrdersTest1 /M:E %DEP%
+call makeExe.bat OrdersTest1 OrdersTest1 /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
 popd
 
 pushd %TB-PLATFORM-PROJECTS-PATH%\src\TradingUI
 
-call makeExe.bat MarketChartTest1 MarketChartTest1 /M:E %DEP%
+call makeExe.bat MarketChartTest1 MarketChartTest1 /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
-call makeExe.bat TickerGridTest1 TickerGridTest1 /M:E %DEP%
+call makeExe.bat TickerGridTest1 TickerGridTest1 /M:E %DEP% /NOVERSION
 if errorlevel 1 pause
 
 popd

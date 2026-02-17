@@ -24,31 +24,31 @@ if "%~1" == "" (
 	echo Making components for TradeWright.TradeBuild.Platform
 	echo.
 
-	call :SessionUtils
-	call :ContractUtils 
-	call :AccountUtils
-	call :BarUtils
-	call :TickUtils 
-	call :StudyUtils 
-	call :TickfileUtils 
-	call :HistDataUtils 
-	call :TimeframeUtils 
-	call :MarketDataUtils 
-	call :CurrencyUtils 
-	call :OrderUtils 
-	call :TickerUtils 
-	call :WorkspaceUtils 
-	call :ChartSkil 
-	call :BarFormatters 
-	call :ChartUtils 
-	call :ChartTools 
-	call :StudiesUI 
-	call :TradingUI 
-	call :CommonStudiesLib 
-	call :StrategyUtils 
+	call :Session
+	call :Contract
+	call :Account
+	call :Bar
+	call :Tick
+	call :Study
+	call :Tickfile
+	call :HistData
+	call :Timeframe
+	call :MarketData
+	call :Currency
+	call :Order
+	call :Ticker
+	call :Workspace
+	call :ChartUI
+	call :BarFormatter
+	call :ChartDeploy
+	call :ChartTool
+	call :StudyUI 
+	call :TradeUI 
+	call :CommonStudies
+	call :Strategy 
 	call :Strategies 
 	call :TradeBuild 
-	call :ConfigUtils 
+	call :Config
 	call :TradeBuildUI 
 	call :TBDataCollector 
 
@@ -78,165 +78,165 @@ exit /B
 
 
 
-:SessionUtils
+:Session
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat SessionUtils SessionUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Session SessionUtils /O:SessionLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:ContractUtils 
+:Contract
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat ContractUtils ContractUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Contract ContractUtils /O:ContractLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:AccountUtils
+:Account
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat AccountUtils AccountUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Account AccountUtils  /O:AccountLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:BarUtils
+:Bar
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat BarUtils BarUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Bar BarUtils /O:BarLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:TickUtils 
+:Tick
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TickUtils TickUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Tick TickUtils /O:TickLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:StudyUtils 
+:Study
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat StudyUtils StudyUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Study StudyUtils /O:StudyLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:TickfileUtils 
+:Tickfile
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TickfileUtils TickfileUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Tickfile TickfileUtils /O:TickFileLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:HistDataUtils 
+:HistData
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat HistDataUtils HistDataUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat HistData HistDataUtils /O:HistDataLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:TimeframeUtils 
+:Timeframe
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TimeframeUtils TimeframeUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Timeframe TimeframeUtils /O:TimeframeLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:MarketDataUtils 
+:MarketData
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat MarketDataUtils MarketDataUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat MarketData MarketDataUtils /O:MarketDataLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:CurrencyUtils 
+:Currency
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat CurrencyUtils CurrencyUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Currency CurrencyUtils /O:CurrencyLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:OrderUtils 
+:Order
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat OrderUtils OrderUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Order OrderUtils /O:OrderLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:TickerUtils 
+:Ticker
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TickerUtils TickerUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Ticker TickerUtils /O:TickerLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:WorkspaceUtils 
+:Workspace
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat WorkspaceUtils WorkspaceUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Workspace WorkspaceUtils /O:WorkspaceLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:ChartSkil 
+:ChartUI
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat ChartSkil ChartSkil /T:OCX /B:%BINARY_COMPAT%
+call makedll.bat ChartUI ChartSkil /O:ChartUI /T:OCX /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:BarFormatters 
+:BarFormatter
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat BarFormatters BarFormatters /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat BarFormatter BarFormatters /O:BarFormatterLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:ChartUtils 
+:ChartDeploy
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat ChartUtils ChartUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat ChartDeploy ChartUtils /O:ChartDeployLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:ChartTools 
+:ChartTool
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat ChartTools ChartTools /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat ChartTool ChartTools /O:ChartToolLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:StudiesUI 
+:StudyUI 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat StudiesUI StudiesUI /T:OCX /B:%BINARY_COMPAT%
+call makedll.bat StudyUI StudiesUI /O:StudyUI /T:OCX /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:TradingUI 
+:TradeUI
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TradingUI TradingUI /T:OCX /B:%BINARY_COMPAT%
+call makedll.bat TradeUI TradIngUI /T:OCX /O:TradeUI /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:CommonStudiesLib 
+:CommonStudies
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat CommonStudiesLib CommonStudiesLib /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat CommonStudies CommonStudiesLib /o:CommonStudiesLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:StrategyUtils 
+:Strategy
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat StrategyUtils StrategyUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Strategy StrategyUtils /O:StrategyLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :Strategies 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat Strategies Strategies /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Strategies Strategies /O:StrategiesLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :TradeBuild 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TradeBuild TradeBuild /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat TradeBuild TradeBuild /O:TradeBuildLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
-:ConfigUtils 
+:Config
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat ConfigUtils ConfigUtils /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat Config ConfigUtils /O:ConfigLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :TradeBuildUI 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TradeBuildUI TradeBuildUI /T:OCX /B:%BINARY_COMPAT%
+call makedll.bat TradeBuildUI TradeBuildUI /O:TradeBuildUI /T:OCX /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :TBDataCollector 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.Platform
-call makedll.bat TBDataCollector TBDataCollector /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat TBDataCollector TBDataCollector /O:TBDataCollectorLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
@@ -248,43 +248,43 @@ set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
 :: temporary fix for refusal of VB6 to compile this module if
 :: the output dll exists
 ::if exist %BIN-PATH%\IBApiV10027.dll del %BIN-PATH%\IBApiV10027.dll
-call makedll.bat IBBaseAPI IBAPI /O:IBApi /T:DLL /B:%BINARY_COMPAT% /NOVERSION
+call makedll.bat IBBaseAPI IBAPI /O:IBBaseApiLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :IBEnhAPI
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat IBEnhAPI IBEnhAPI /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat IBEnhAPI IBEnhAPI /O:IBEnhAPILib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :IBTwsSP 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat IBTwsSP IBTwsSP /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat IBTwsSP IBTwsSP /O:IBTwsSPLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :TradingDO 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat TradingDO TradingDO /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat TradingDO TradingDO /T:DLL /O:TradingDOLib /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :TradingDbApi 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat TradingDbApi TradingDbApi /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat TradingDbApi TradingDbApi /O:TradingDbApiLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :TBInfoBase 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat TBInfoBase TBInfoBase /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat TBInfoBase TBInfoBase /O:TBInfoBaseLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
 :TickfileSP 
 set BIN-PATH=%BIN_PATH_ROOT%\TradeWright.TradeBuild.ServiceProviders
-call makedll.bat TickfileSP TickfileSP /T:DLL /B:%BINARY_COMPAT%
+call makedll.bat TickfileSP TickfileSP /O:TickfileSPLib /T:DLL /B:%BINARY_COMPAT% /NOVERSION
 if errorlevel 1 pause
 goto :EOF
 
